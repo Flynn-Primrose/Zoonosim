@@ -1,3 +1,3 @@
-# Pathosim_Redux
+# Zoonosim
 
-A consolidated version of Pathosim.
+A decendent of Covasim and Pathosim aimed at studying zoonotic diseases.
