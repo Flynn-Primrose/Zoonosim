@@ -1,3 +1,3 @@
 # Zoonosim
 
-A decendent of Covasim and Pathosim aimed at studying zoonotic diseases.
+A descendant of Covasim and Pathosim aimed at studying zoonotic diseases.
