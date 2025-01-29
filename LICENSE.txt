@@ -1,12 +1,15 @@
 MIT License
 
-Copyright (c) 2020 - 2023 Bill & Melinda Gates Foundation (Covasim)
+Copyright (c) 2020 - 2023 Bill & Melinda Gates Foundation (Covasim) (MIT License)
 
-Copyright (c) 2023 Philippe Teichmann, Nathan Duarte, McGill University (Pathosim)
+Copyright (c) 2023 Philippe Teichmann, Nathan Duarte, McGill University (Pathosim)(MIT License)
 
-Copyright (c) 2025 Darren Flynn-Primrose, McGill University (Zoonosim)
+Copyright (c) 2020 - present Institute for Disease Modeling (synthpops) (Creative Commons Attribution-ShareAlike 4.0 International Public
+License)
 
 Additional contributions from: Andrew Luo, Conrad Kunadu, Ritchie Yu, and Tianrui01 (Tian Rui?); Unknown License. 
+
+Copyright (c) 2025 Darren Flynn-Primrose, McGill University (Zoonosim)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
