@@ -4,7 +4,6 @@ People and Sim classes (e.g. loading, saving, key lookups, etc.), so those class
 can be focused on the disease-specific functionality.
 '''
 
-from cmath import e
 import numpy as np
 import pandas as pd
 import sciris as sc
@@ -288,7 +287,7 @@ class BaseSim(ParsObj):
 
             # Handle other special parameters
             if pars.get('pop_type'):
-                cvpar.reset_layer_pars(pars, force=False)
+                znpar.reset_layer_pars(pars, force=False)
                   
             # Call update_pars() for ParsObj
             super().update_pars(pars=pars, create=create)
@@ -314,7 +313,7 @@ class BaseSim(ParsObj):
         # Unless no seed is supplied, reset it
         if seed != -1:
             self['rand_seed'] = seed
-        cvu.set_seed(self['rand_seed'])
+        znu.set_seed(self['rand_seed'])
         return
 
     @property
@@ -386,7 +385,7 @@ class BaseSim(ParsObj):
         '''
         Convert one or more integer days of simulation time to a date/list of dates --
         by default returns a string, or returns a datetime Date object if as_date is True.
-        See also cv.date(), which provides a partly overlapping set of date conversion
+        See also zn.date(), which provides a partly overlapping set of date conversion
         features.
 
         Args:
@@ -400,7 +399,7 @@ class BaseSim(ParsObj):
 
         **Examples**::
 
-            sim = cv.Sim()
+            sim = zn.Sim()
             sim.date(34) # Returns '2020-04-04'
             sim.date([34, 54]) # Returns ['2020-04-04', '2020-04-24']
             sim.date([34, '2020-04-24']) # Returns ['2020-04-04', '2020-04-24']
@@ -656,8 +655,8 @@ class BaseSim(ParsObj):
         Returns:
             shrunken (Sim): a Sim object with the listed attributes removed
         '''
-        from . import interventions as cvi # To avoid circular imports
-        from . import analysis as cva
+        from . import interventions as zni # To avoid circular imports
+        from . import analysis as zna
 
         # By default, skip people (~90% of memory), the popdict (which is usually empty anyway), and _orig_pars (which is just a backup)
         if skip_attrs is None:
@@ -675,7 +674,7 @@ class BaseSim(ParsObj):
         # Shrink interventions and analyzers, with a lot of checking along the way
         for key in ['interventions', 'analyzers']:
             ias = self.pars[key] # List of interventions or analyzers
-            shrunken_ias = [ia.shrink(in_place=in_place) for ia in ias if isinstance(ia, (cvi.Intervention, cva.Analyzer))]
+            shrunken_ias = [ia.shrink(in_place=in_place) for ia in ias if isinstance(ia, (zni.Intervention, zna.Analyzer))]
             self.pars[key] = shrunken_ias # Actually shrink, and re-store
 
         # Don't return if in place
@@ -719,7 +718,7 @@ class BaseSim(ParsObj):
             obj = self.shrink(skip_attrs=skip_attrs, in_place=False)
         else:
             obj = self
-        cvm.save(filename=filename, obj=obj)
+        znm.save(filename=filename, obj=obj)
 
         return filename
 
@@ -740,7 +739,7 @@ class BaseSim(ParsObj):
 
             sim = cv.Sim.load('my-simulation.sim')
         '''
-        sim = cvm.load(filename, *args, **kwargs)
+        sim = znm.load(filename, *args, **kwargs)
         if not isinstance(sim, BaseSim): # pragma: no cover
             errormsg = f'Cannot load object of {type(sim)} as a Sim object'
             raise TypeError(errormsg)
@@ -825,13 +824,13 @@ class BaseSim(ParsObj):
 
         **Examples**::
 
-            tp = cv.test_prob(symp_prob=0.1)
-            cb1 = cv.change_beta(days=5, changes=0.3, label='NPI')
-            cb2 = cv.change_beta(days=10, changes=0.3, label='Masks')
-            sim = cv.Sim(interventions=[tp, cb1, cb2])
-            cb1, cb2 = sim.get_interventions(cv.change_beta)
+            tp = zn.test_prob(symp_prob=0.1)
+            cb1 = zn.change_beta(days=5, changes=0.3, label='NPI')
+            cb2 = zn.change_beta(days=10, changes=0.3, label='Masks')
+            sim = zn.Sim(interventions=[tp, cb1, cb2])
+            cb1, cb2 = sim.get_interventions(zn.change_beta)
             tp, cb2 = sim.get_interventions([0,2])
-            ind = sim.get_interventions(cv.change_beta, as_inds=True) # Returns [1,2]
+            ind = sim.get_interventions(zn.change_beta, as_inds=True) # Returns [1,2]
             sim.get_interventions('summary') # Prints a summary
         '''
         return self._get_ia('interventions', label=label, partial=partial, as_inds=as_inds, as_list=True)
@@ -851,9 +850,9 @@ class BaseSim(ParsObj):
 
         **Examples**::
 
-            tp = cv.test_prob(symp_prob=0.1)
-            cb = cv.change_beta(days=5, changes=0.3, label='NPI')
-            sim = cv.Sim(interventions=[tp, cb])
+            tp = zn.test_prob(symp_prob=0.1)
+            cb = zn.change_beta(days=5, changes=0.3, label='NPI')
+            sim = zn.Sim(interventions=[tp, cb])
             cb = sim.get_intervention('NPI')
             cb = sim.get_intervention('NP', partial=True)
             cb = sim.get_intervention(cv.change_beta)
@@ -878,12 +877,12 @@ class BaseSim(ParsObj):
         return self._get_ia('analyzers', label=label, partial=partial, first=first, die=die, as_inds=False, as_list=False)
 
 
-#%% Define people classes
+#%% Define agent classes
 
-class BasePeople(FlexPretty):
+class BaseAgents(FlexPretty):
     '''
-    A class to handle all the boilerplate for people -- note that as with the
-    BaseSim vs Sim classes, everything interesting happens in the People class,
+    A class to handle all the boilerplate for agents -- note that as with the
+    BaseSim vs Sim classes, everything interesting happens in the Agent classes,
     whereas this class exists to handle the less interesting implementation details.
     '''
 
@@ -918,7 +917,7 @@ class BasePeople(FlexPretty):
         return
 
 
-    def validate(self, sim_pars=None, die=True, verbose=False):
+    def validate(self, sim_pars=None, die=True, verbose=False): # NOTE: This may have to change
         '''
         Perform validation on the People object.
 
@@ -978,35 +977,31 @@ class BasePeople(FlexPretty):
 
 
     def lock(self):
-        ''' Lock the people object to prevent keys from being added '''
+        ''' Lock the agents object to prevent keys from being added '''
         self._lock = True
         return
 
 
     def unlock(self):
-        ''' Unlock the people object to allow keys to be added '''
+        ''' Unlock the agents object to allow keys to be added '''
         self._lock = False
         return
 
 
     def __getitem__(self, key):
         ''' Allow people['attr'] instead of getattr(people, 'attr')
-            If the key is an integer, alias `people.person()` to return a `Person` instance
         '''
         try:
             return self.__dict__[key]
         except: # pragma: no cover
-            if isinstance(key, int):
-                return self.person(key)
-            else:
-                errormsg = f'Key "{key}" is not a valid attribute of people'
-                raise AttributeError(errormsg)
+            errormsg = f'Key "{key}" is not a valid attribute of people'
+            raise AttributeError(errormsg)
 
 
     def __setitem__(self, key, value):
         ''' Ditto '''
         if self._lock and key not in self.__dict__: # pragma: no cover
-            errormsg = f'Key "{key}" is not a current attribute of people, and the people object is locked; see people.unlock()'
+            errormsg = f'Key "{key}" is not a current attribute of agents, and the agents object is locked; see people.unlock()'
             raise AttributeError(errormsg)
         self.__dict__[key] = value
         return
@@ -1018,13 +1013,13 @@ class BasePeople(FlexPretty):
 
 
     def __iter__(self):
-        ''' Iterate over people '''
+        ''' Iterate over agents '''
         for i in range(len(self)):
             yield self[i]
 
 
     def __add__(self, people2):
-        ''' Combine two people arrays '''
+        ''' Combine two agents arrays '''
         newpeople = sc.dcp(self)
         keys = list(self.keys())
         for key in keys:
@@ -1056,7 +1051,7 @@ class BasePeople(FlexPretty):
 
     def _brief(self):
         '''
-        Return a one-line description of the people -- used internally and by repr();
+        Return a one-line description of the agents -- used internally and by repr();
         see people.brief() for the user version.
         '''
         try:
@@ -1205,7 +1200,7 @@ class BasePeople(FlexPretty):
 
     def to_arr(self):
         ''' Return as numpy array '''
-        arr = np.empty((len(self), len(self.keys())), dtype=cvd.default_float)
+        arr = np.empty((len(self), len(self.keys())), dtype=znd.default_float)
         for k,key in enumerate(self.keys()):
             if key == 'uid':
                 arr[:,k] = np.arange(len(self))
@@ -1213,27 +1208,27 @@ class BasePeople(FlexPretty):
                 arr[:,k] = self[key]
         return arr
 
+    # The Person class is supposed to be depreciated so I'm going to comment everything related to it and see what breaks.
+    # def person(self, ind):
+    #     ''' Method to create person from the people '''
+    #     p = Person()
+    #     for key in self.meta.all_states:
+    #         data = self[key]
+    #         if data.ndim == 1:
+    #             val = data[ind]
+    #         elif data.ndim == 2:
+    #             val = data[:,ind]
+    #         else:
+    #             errormsg = f'Cannot extract data from {key}: unexpected dimensionality ({data.ndim})'
+    #             raise ValueError(errormsg)
+    #         setattr(p, key, val)
 
-    def person(self, ind):
-        ''' Method to create person from the people '''
-        p = Person()
-        for key in self.meta.all_states:
-            data = self[key]
-            if data.ndim == 1:
-                val = data[ind]
-            elif data.ndim == 2:
-                val = data[:,ind]
-            else:
-                errormsg = f'Cannot extract data from {key}: unexpected dimensionality ({data.ndim})'
-                raise ValueError(errormsg)
-            setattr(p, key, val)
+    #     contacts = {}
+    #     for lkey, layer in self.contacts.items():
+    #         contacts[lkey] = layer.find_contacts(ind)
+    #     p.contacts = contacts
 
-        contacts = {}
-        for lkey, layer in self.contacts.items():
-            contacts[lkey] = layer.find_contacts(ind)
-        p.contacts = contacts
-
-        return p
+    #     return p
 
 
     def to_list(self):
@@ -1264,9 +1259,9 @@ class BasePeople(FlexPretty):
 
         **Example**::
 
-            import covasim as cv
+            import zoonosim as zn
             import networkx as nx
-            sim = cv.Sim(pop_size=50, pop_type='hybrid', contacts=dict(h=3, s=10, w=10, c=5)).run()
+            sim = zn.Sim(pop_size=50, pop_type='hybrid', contacts=dict(h=3, s=10, w=10, c=5)).run()
             G = sim.people.to_graph()
             nodes = G.nodes(data=True)
             edges = G.edges(keys=True)
@@ -1310,57 +1305,57 @@ class BasePeople(FlexPretty):
 
         **Example**::
 
-            sim = cv.Sim()
+            sim = zn.Sim()
             sim.initialize()
             sim.people.save() # Saves to a .ppl file
         '''
 
-        # Check if we're trying to save an already run People object
+        # Check if we're trying to save an already run Agent object
         if self.t > 0 and not force:
             errormsg = f'''
-The People object has already been run (t = {self.t}), which is usually not the
-correct state to save it in since it cannot be re-initialized. If this is intentional,
-use sim.people.save(force=True). Otherwise, the correct approach is:
+    The People object has already been run (t = {self.t}), which is usually not the
+    correct state to save it in since it cannot be re-initialized. If this is intentional,
+    use sim.<agent type>.save(force=True). Otherwise, the correct approach is:
 
-    sim = cv.Sim(...)
-    sim.initialize() # Create the people object but do not run
-    sim.people.save() # Save people immediately after initialization
-    sim.run() # The People object is
+    sim = zn.Sim(...)
+    sim.initialize() # Create the agent objects but do not run
+    sim.<agent type>.save() # Save <agent type> immediately after initialization
+    sim.run() # 
 '''
             raise RuntimeError(errormsg)
 
         # Handle the filename
         if filename is None:
-            filename = 'covasim.ppl'
+            filename = 'zoonosim.ppl'
         filename = sc.makefilepath(filename=filename, **kwargs)
         self.filename = filename # Store the actual saved filename
-        cvm.save(filename=filename, obj=self)
+        znm.save(filename=filename, obj=self)
 
         return filename
 
 
     @staticmethod
-    def load(filename, *args, **kwargs):
+    def load(filename, *args, **kwargs): 
         '''
         Load from disk from a gzipped pickle.
 
         Args:
             filename (str): the name or path of the file to load from
-            args (list): passed to ``cv.load()``
-            kwargs (dict): passed to ``cv.load()``
+            args (list): passed to ``zn.load()``
+            kwargs (dict): passed to ``zn.load()``
 
         Returns:
             people (People): the loaded people object
 
         **Example**::
 
-            people = cv.people.load('my-people.ppl')
+            people = zn.people.load('my-people.ppl')
         '''
-        people = cvm.load(filename, *args, **kwargs)
-        if not isinstance(people, BasePeople): # pragma: no cover
-            errormsg = f'Cannot load object of {type(people)} as a People object'
+        agents = znm.load(filename, *args, **kwargs)
+        if not isinstance(agents, BaseAgents): # pragma: no cover
+            errormsg = f'Cannot load object of {type(agents)} as a Agent object'
             raise TypeError(errormsg)
-        return people
+        return agents
 
 
 
@@ -1412,8 +1407,8 @@ use sim.people.save(force=True). Otherwise, the correct approach is:
             if 'beta' not in new_layer.keys() or len(new_layer['beta']) != n:
                 if beta is None:
                     beta = 1.0
-                beta = cvd.default_float(beta)
-                new_layer['beta'] = np.ones(n, dtype=cvd.default_float)*beta
+                beta = znd.default_float(beta)
+                new_layer['beta'] = np.ones(n, dtype=znd.default_float)*beta
 
             # Create the layer if it doesn't yet exist
             if lkey not in self.contacts:
@@ -1475,20 +1470,20 @@ use sim.people.save(force=True). Otherwise, the correct approach is:
         df.reset_index(inplace=True, drop=True)
         return df
 
-
-class Person(sc.prettyobj):
-    '''
-    Class for a single person. Note: this is largely deprecated since sim.people
-    is now based on arrays rather than being a list of people.
-    '''
-    def __init__(self, pars=None, uid=None, age=-1, sex=-1, contacts=None):
-        self.uid         = uid # This person's unique identifier
-        self.age         = cvd.default_float(age) # Age of the person (in years)
-        self.sex         = cvd.default_int(sex) # Female (0) or male (1)
-        self.contacts    = contacts # Contacts
-        # self.infected = [] #: Record the UIDs of all people this person infected
-        # self.infected_by = None #: Store the UID of the person who caused the infection. If None but person is infected, then it was an externally seeded infection
-        return
+# Ideally we will remove this class entirely as it has been depreciated.
+# class Person(sc.prettyobj):
+#     '''
+#     Class for a single person. Note: this is largely deprecated since sim.people
+#     is now based on arrays rather than being a list of people.
+#     '''
+#     def __init__(self, pars=None, uid=None, age=-1, sex=-1, contacts=None):
+#         self.uid         = uid # This person's unique identifier
+#         self.age         = znd.default_float(age) # Age of the person (in years)
+#         self.sex         = znd.default_int(sex) # Female (0) or male (1)
+#         self.contacts    = contacts # Contacts
+#         # self.infected = [] #: Record the UIDs of all people this person infected
+#         # self.infected_by = None #: Store the UID of the person who caused the infection. If None but person is infected, then it was an externally seeded infection
+#         return
 
 
 class FlexDict(dict):
@@ -1518,7 +1513,7 @@ class FlexDict(dict):
         return list(super().items())
 
 
-class Contacts(FlexDict):
+class Contacts(FlexDict): # TODO: This class will likely need to be modified to allow for multiple agent types
     '''
     A simple (for now) class for storing different contact layers.
 
@@ -1526,8 +1521,6 @@ class Contacts(FlexDict):
         data (dict): a dictionary that looks like a Contacts object
         layer_keys (list): if provided, create an empty Contacts object with these layers
         kwargs (dict): additional layer(s), merged with data
-
-    New in version 3.1.2: swapped order of arguments
     '''
     def __init__(self, data=None, layer_keys=None, **kwargs):
         data = sc.mergedicts(data, kwargs)
@@ -1567,7 +1560,7 @@ class Contacts(FlexDict):
 
         **Example**::
 
-            hospitals_layer = cv.Layer(label='hosp')
+            hospitals_layer = zn.Layer(label='hosp')
             sim.people.contacts.add_layer(hospitals=hospitals_layer)
         '''
         for lkey,layer in kwargs.items():
@@ -1619,13 +1612,13 @@ class Contacts(FlexDict):
 
 
 
-class Layer(FlexDict):
+class Layer(FlexDict): # TODO: This class may have to change to allow contacts between agents of different types. I'm leaving it as is for now.
     '''
-    A small class holding a single layer of contact edges (connections) between people.
+    A small class holding a single layer of contact edges (connections) between agents.
 
-    The input is typically three arrays: person 1 of the connection, person 2 of
+    The input is typically three arrays: agent 1 of the connection, agent 2 of
     the connection, and the weight of the connection. Connections are undirected;
-    each person is both a source and sink.
+    each agent is both a source and sink.
 
     This class is usually not invoked directly by the user, but instead is called
     as part of the population creation.
@@ -1649,22 +1642,20 @@ class Layer(FlexDict):
         p1 = np.random.randint(n_people, size=n)
         p2 = np.random.randint(n_people, size=n)
         beta = np.ones(n)
-        layer = cv.Layer(p1=p1, p2=p2, beta=beta, label='rand')
-        layer = cv.Layer(dict(p1=p1, p2=p2, beta=beta), label='rand') # Alternate method
+        layer = zn.Layer(p1=p1, p2=p2, beta=beta, label='rand')
+        layer = zn.Layer(dict(p1=p1, p2=p2, beta=beta), label='rand') # Alternate method
 
         # Convert one layer to another with extra columns
         index = np.arange(n)
         self_conn = p1 == p2
-        layer2 = cv.Layer(**layer, index=index, self_conn=self_conn, label=layer.label)
-
-    New in version 3.1.2: allow a single dictionary input
+        layer2 = zn.Layer(**layer, index=index, self_conn=self_conn, label=layer.label)
     '''
 
     def __init__(self, *args, label=None, **kwargs):
         self.meta = {
-            'p1':    cvd.default_int,   # Person 1
-            'p2':    cvd.default_int,   # Person 2
-            'beta':  cvd.default_float, # Default transmissibility for this contact type
+            'p1':    znd.default_int,   # Person 1
+            'p2':    znd.default_int,   # Person 2
+            'beta':  znd.default_float, # Default transmissibility for this contact type
         }
         self.basekey = 'p1' # Assign a base key for calculating lengths and performing other operations
         self.label = label
@@ -1805,7 +1796,7 @@ class Layer(FlexDict):
         **Example**::
 
             import networkx as nx
-            sim = cv.Sim(pop_size=20, pop_type='hybrid').run()
+            sim = zn.Sim(pop_size=20, pop_type='hybrid').run()
             G = sim.people.contacts['h'].to_graph()
             nx.draw(G)
         '''
@@ -1850,9 +1841,9 @@ class Layer(FlexDict):
             inds = np.array(inds, dtype=np.int64)
 
         # Find the contacts
-        contact_inds = cvu.find_contacts(self['p1'], self['p2'], inds)
+        contact_inds = znu.find_contacts(self['p1'], self['p2'], inds)
         if as_array:
-            contact_inds = np.fromiter(contact_inds, dtype=cvd.default_int)
+            contact_inds = np.fromiter(contact_inds, dtype=znd.default_int)
             contact_inds.sort()  # Sorting ensures that the results are reproducible for a given seed as well as being identical to previous versions of Covasim
 
         return contact_inds
@@ -1879,11 +1870,11 @@ class Layer(FlexDict):
         pop_size   = len(people) # Total number of people
         n_contacts = len(self) # Total number of contacts
         n_new = int(np.round(n_contacts*frac)) # Since these get looped over in both directions later
-        inds = cvu.choose(n_contacts, n_new)
+        inds = znu.choose(n_contacts, n_new)
 
         # Create the contacts, not skipping self-connections
-        self['p1'][inds]   = np.array(cvu.choose_r(max_n=pop_size, n=n_new), dtype=cvd.default_int) # Choose with replacement
-        self['p2'][inds]   = np.array(cvu.choose_r(max_n=pop_size, n=n_new), dtype=cvd.default_int)
-        self['beta'][inds] = np.ones(n_new, dtype=cvd.default_float)
+        self['p1'][inds]   = np.array(znu.choose_r(max_n=pop_size, n=n_new), dtype=znd.default_int) # Choose with replacement
+        self['p2'][inds]   = np.array(znu.choose_r(max_n=pop_size, n=n_new), dtype=znd.default_int)
+        self['beta'][inds] = np.ones(n_new, dtype=znd.default_float)
         return
 
