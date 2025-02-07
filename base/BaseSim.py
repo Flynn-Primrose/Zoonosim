@@ -6,9 +6,9 @@ import datetime as dt
 from . import ParsObj
 from . import Result
 from .Misc import set_metadata
-from .. import utils as znu 
-from .. import misc as znm
-from .. import parameters as znpar
+from .. import utils as znu # set_seed
+from .. import misc as znm # save, load
+from .. import parameters as znpar # reset_layer_pars
 
 __all__ = ['BaseSim']
 

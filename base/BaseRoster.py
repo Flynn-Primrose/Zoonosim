@@ -5,8 +5,8 @@ import pandas as pd
 from . import FlexPretty
 from . import Contacts
 from . import Layer
-from .. import defaults as znd # TODO: Reorganize
-from .. import misc as znm # TODO: Reorganize
+from .. import defaults as znd # get_default_float
+from .. import misc as znm # save, load
 
 __all__ = ['BaseRoster']
 

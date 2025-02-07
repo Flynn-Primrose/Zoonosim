@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 
 from . import FlexDict
-from .. import defaults as znd # TODO: is there a better way to organize default values?
-from .. import utils as znu # TODO: is there a better way to organize utility functions?
+from .. import defaults as znd # default_int, default_float
+from .. import utils as znu # choose, choose_r, find_contacts
 
 __all__ = ['Layer']
 

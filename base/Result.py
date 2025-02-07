@@ -1,7 +1,7 @@
 import sciris as sc
 import numpy as np
 
-from ... import defaults as znd 
+from ... import defaults as znd # get_default_colors. result_float
 
 __all__ = ['Result']
 
@@ -18,8 +18,8 @@ class Result(object):
 
     **Example**::
 
-        import covasim as cv
-        r1 = cv.Result(name='test1', npts=10)
+        import zoonosim as zn
+        r1 = zn.Result(name='test1', npts=10)
         r1[:5] = 20
         print(r1.values)
     '''

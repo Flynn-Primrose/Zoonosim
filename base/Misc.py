@@ -2,8 +2,8 @@
 
 import sciris as sc
 
-from .. import version as znv
-from .. import misc as znm
+from .. import version as znv # __version__
+from .. import misc as znm # git_info
 
 __all__ = ['set_metadata']
 
