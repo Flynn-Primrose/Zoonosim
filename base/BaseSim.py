@@ -5,12 +5,19 @@ import datetime as dt
 
 from . import ParsObj
 from . import Result
-from .Misc import set_metadata
 from .. import utils as znu # set_seed
 from .. import misc as znm # save, load
+from .. import version as znv # __version__
 from .. import parameters as znpar # reset_layer_pars
 
-__all__ = ['BaseSim']
+__all__ = ['set_metadata', 'BaseSim']
+
+def set_metadata(obj, **kwargs):
+    ''' Set standard metadata for an object '''
+    obj.created = kwargs.get('created', sc.now())
+    obj.version = kwargs.get('version', znv.__version__) 
+    obj.git_info = kwargs.get('git_info', znm.git_info())
+    return
 
 class BaseSim(ParsObj):
     '''

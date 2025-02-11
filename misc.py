@@ -604,7 +604,7 @@ __all__ += ['help']
 
 def help(pattern=None, source=False, ignorecase=True, flags=None, context=False, output=False):
     '''
-    Get help on Covasim in general, or search for a word/expression.
+    Get help on Zoonosim in general, or search for a word/expression.
 
     Args:
         pattern    (str):  the word, phrase, or regex to search for

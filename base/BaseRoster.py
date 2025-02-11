@@ -50,7 +50,7 @@ class BaseRoster(FlexPretty):
 
     def validate(self, sim_pars=None, die=True, verbose=False): # NOTE: This may have to change
         '''
-        Perform validation on the People object.
+        Perform validation on the roster object.
 
         Args:
             sim_pars (dict): dictionary of parameters from the sim to ensure they match the current People object

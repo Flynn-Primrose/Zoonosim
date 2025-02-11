@@ -6,7 +6,6 @@ To change the default precision from 32 bit (default) to 64 bit, use::
     zn.options.set(precision=64)
 '''
 
-from genericpath import samefile
 import numpy as np
 import numba as nb
 import sciris as sc
