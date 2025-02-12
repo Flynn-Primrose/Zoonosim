@@ -84,7 +84,6 @@ class PeopleMeta(sc.prettyobj):
             'known_contact',
             'quarantined',
             'vaccinated',
-            'alerted',       # Used to denote that a smartwatch alert was received on the current day; date_alerted refers to the date last alerted
         ]
 
         #Each field would be initialized as an matrix NxK where N is the number of pathogens in the simulation, K is the number of agents in the simulation  

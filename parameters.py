@@ -32,21 +32,7 @@ def make_pars(version=None, **kwargs):
     pars['n_pathogens'] = 1 #Number of pathogens circulating in the simulation
     pars['pathogens'] = []
     #----------------- ADDITIONAL MODULES (not in baseline multi-pathogen sim)-----------------#
-    # Multi-region
-    pars['enable_multiregion'] = False
-    pars['multiregion'] = None
-
-    # Calculate stratified statistics
-    pars['enable_stratifications'] = False
-    pars['stratification_pars'] = None 
-
-    # Smartwatch par dictionaries
-    pars['enable_smartwatches'] = False
-    pars['smartwatch_pars']     = None
-
-    # Testing par dictionaries. Note: This is used to toggle symptoms and bkg ILI, since we only need symptoms and bkg ILI when we need testing. 
-    pars['enable_testobjs'] = False 
-    pars['testobjs'] = None  # This naming convention is possibly ambiguous - do NOT supply actually test objects (do that for pars['testing'])
+ 
 
     #------------------------------------------------------------------------------------------#
     #Pathogen-pathogen interaction
@@ -111,9 +97,7 @@ def make_pars(version=None, **kwargs):
                                      3: {'n':5, 'p':0.50, 's':20}}
 
     # Events and interventions
-    pars['interventions'] = []   # The interventions present in this simulation; populated by the user
-    pars['surveillance'] = []    # The surveillance systems present in this simualtion; populated by the user
-    pars['testing'] = []         # The testing systems present in this simualtion; populated by the user. These can be populated externally, or internally by supplying a parameter dictionary. 
+    pars['interventions'] = []   # The interventions present in this simulation; populated by the user 
     pars['analyzers']     = []   # Custom analysis functions; populated by the user
     pars['timelimit']     = None # Time limit for the simulation (seconds)
     pars['stopping_func'] = None # A function to call to stop the sim partway through
