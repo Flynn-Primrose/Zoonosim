@@ -11,11 +11,10 @@ import scipy.stats as stats
 from collections import defaultdict
 from . import version as cvv
 from . import utils as cvu
-from . import defaults as cvd
+from . import config as znconfig
 from . import base as cvb
-from . import plotting as cvplt
 from . import immunity as cvi
-from . import watches as cvw
+
 
 
 __all__ = ['People']
@@ -28,11 +27,11 @@ class People(cvb.BaseRoster):
     argument is the population size, but typically the full parameters dictionary
     will get passed instead since it will be needed before the People object is
     initialized. However, ages, contacts, etc. will need to be created separately --
-    see ``cv.make_people()`` instead.
+    see ``zn.make_people()`` instead.
 
     Note that this class handles the mechanics of updating the actual people, while
-    ``cv.BasePeople`` takes care of housekeeping (saving, loading, exporting, etc.).
-    Please see the BasePeople class for additional methods.
+    ``zn.BaseRoster`` takes care of housekeeping (saving, loading, exporting, etc.).
+    Please see the BaseRoster class for additional methods.
 
     Args:
         pars (dict): the sim parameters, e.g. sim.pars -- alternatively, if a number, interpreted as pop_size
@@ -41,10 +40,10 @@ class People(cvb.BaseRoster):
 
     **Examples**::
 
-        ppl1 = cv.People(2000)
+        ppl1 = zn.People(2000)
 
-        sim = cv.Sim()
-        ppl2 = cv.People(sim.pars)
+        sim = zn.Sim()
+        ppl2 = zn.People(sim.pars)
     '''
 
     def __init__(self, pars, strict=True, **kwargs):
@@ -56,7 +55,7 @@ class People(cvb.BaseRoster):
         # Other initialization
         self.t = 0 # Keep current simulation time
         self._lock = False # Prevent further modification of keys
-        self.meta = cvd.PeopleMeta() # Store list of keys and dtypes
+        self.meta = znconfig.PeopleMeta() # Store list of keys and dtypes
         self.contacts = None
         self.init_contacts() # Initialize the contacts
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
@@ -65,21 +64,21 @@ class People(cvb.BaseRoster):
         # Set person properties -- all floats except for UID
         for key in self.meta.person:
             if key == 'uid':
-                self[key] = np.arange(self.pars['pop_size'], dtype=cvd.default_int)
+                self[key] = np.arange(self.pars['pop_size'], dtype=znconfig.default_int)
             elif key in ['n_infections', 'n_breakthroughs']:
-                self[key] = np.zeros(self.pars['pop_size'], dtype=cvd.default_int)
+                self[key] = np.zeros(self.pars['pop_size'], dtype=znconfig.default_int)
             elif key in ['cons_days_in_quar', 'cons_days_neg_rat']:
-                self[key] = np.zeros(self.pars['pop_size'], dtype=cvd.default_int)
+                self[key] = np.zeros(self.pars['pop_size'], dtype=znconfig.default_int)
             elif key in ['has_watch']:
                 self[key] = np.full(self.pars['pop_size'], False, dtype=bool)
             elif key in ['income']:
-                self[key] = np.zeros(self.pars['pop_size'], dtype=cvd.default_int)
+                self[key] = np.zeros(self.pars['pop_size'], dtype=znconfig.default_int)
             elif key in ['viral_load']:
-                self[key] = np.zeros(self.pars['pop_size'], dtype=cvd.default_float)
+                self[key] = np.zeros(self.pars['pop_size'], dtype=znconfig.default_float)
             elif key in ['rescaled_vl']:  # for tracking purposes
-                self[key] = np.zeros(self.pars['pop_size'], dtype=cvd.default_float)
+                self[key] = np.zeros(self.pars['pop_size'], dtype=znconfig.default_float)
             else:
-                self[key] = np.full(self.pars['pop_size'], np.nan, dtype=cvd.default_float)
+                self[key] = np.full(self.pars['pop_size'], np.nan, dtype=znconfig.default_float)
 
         # Set health states -- only susceptible is true by default -- booleans except exposed by variant which should return the variant that ind is exposed to
         for key in self.meta.states:
@@ -88,26 +87,26 @@ class People(cvb.BaseRoster):
 
         # Set variant states, which store info about which variant a person is exposed to
         for key in self.meta.variant_states:
-            self[key] = np.full(self.pars['pop_size'], np.nan, dtype=cvd.default_float)
+            self[key] = np.full(self.pars['pop_size'], np.nan, dtype=znconfig.default_float)
         for key in self.meta.by_variant_states:
             self[key] = np.full((self.pars['n_variants'], self.pars['pop_size']), False, dtype=bool)
 
         # Set immunity and antibody states
         for key in self.meta.imm_states:  # Everyone starts out with no immunity
-            self[key] = np.zeros((self.pars['n_variants'], self.pars['pop_size']), dtype=cvd.default_float)
+            self[key] = np.zeros((self.pars['n_variants'], self.pars['pop_size']), dtype=znconfig.default_float)
         for key in self.meta.nab_states:  # Everyone starts out with no antibodies
-            dtype = cvd.default_int if key == 't_nab_event' else cvd.default_float
+            dtype = znconfig.default_int if key == 't_nab_event' else znconfig.default_float
             self[key] = np.zeros(self.pars['pop_size'], dtype=dtype)
         for key in self.meta.vacc_states:
-            self[key] = np.zeros(self.pars['pop_size'], dtype=cvd.default_int)
+            self[key] = np.zeros(self.pars['pop_size'], dtype=znconfig.default_int)
 
         # Set dates and durations -- both floats
         for key in self.meta.dates + self.meta.durs:
-            self[key] = np.full(self.pars['pop_size'], np.nan, dtype=cvd.default_float)
+            self[key] = np.full(self.pars['pop_size'], np.nan, dtype=znconfig.default_float)
 
         # Set dates for viral load profile -- floats
         for key in self.meta.vl_points:
-            self[key] = np.full(self.pars['pop_size'], np.nan, dtype=cvd.default_float)
+            self[key] = np.full(self.pars['pop_size'], np.nan, dtype=znconfig.default_float)
 
         # Store the dtypes used in a flat dict
         self._dtypes = {key:self[key].dtype for key in self.keys()} # Assign all to float by default
@@ -138,12 +137,12 @@ class People(cvb.BaseRoster):
 
     def init_flows(self):
         ''' Initialize flows to be zero '''
-        self.flows = {key:0 for key in cvd.new_result_flows}
+        self.flows = {key:0 for key in znconfig.new_result_flows}
         self.flows_variant = {}
-        for key in cvd.new_result_flows_by_variant:
-            self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=cvd.default_float)
+        for key in znconfig.new_result_flows_by_variant:
+            self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=znconfig.default_float)
         if self.pars['enable_smartwatches']:
-            for key in cvd.new_result_flows_smartwatches:
+            for key in znconfig.new_result_flows_smartwatches:
                 self.flows[key] = 0
         if self.pars['enable_multiregion']:
             targets = ['new_diagnoses', 'new_severe']
@@ -185,7 +184,7 @@ class People(cvb.BaseRoster):
         cvu.set_seed(pars['rand_seed'])
 
         progs = pars['prognoses'] # Shorten the name
-        inds = np.fromiter((find_cutoff(progs['age_cutoffs'], this_age) for this_age in self.age), dtype=cvd.default_int, count=len(self)) # Convert ages to indices
+        inds = np.fromiter((find_cutoff(progs['age_cutoffs'], this_age) for this_age in self.age), dtype=znconfig.default_int, count=len(self)) # Convert ages to indices
         self.symp_prob[:]   = progs['symp_probs'][inds] # Probability of developing symptoms
         self.severe_prob[:] = progs['severe_probs'][inds]*progs['comorbidities'][inds] # Severe disease probability is modified by comorbidities
         self.crit_prob[:]   = progs['crit_probs'][inds] # Probability of developing critical disease
@@ -245,93 +244,6 @@ class People(cvb.BaseRoster):
                 self.contacts[lkey].update(self)
 
         return self.contacts
-
-
-    def schedule_behaviour(self, behaviour_pars):
-        ''' Schedules quarantines on the basis of results or notifications received today '''
-
-        # PEOPLE WHO BECAME SYMPTOMATIC TODAY
-        if self.pars['enable_testobjs']:
-            symptomatic_inds = cvu.true((self.date_symptomatic == self.t) | (self.date_symptomatic_ILI == self.t)) # Checks who became symptomatic today
-        else:
-            symptomatic_inds = cvu.true(self.date_symptomatic == self.t)
-        key_to_use = self.get_key_to_use(behaviour_pars['symptom_quar_pars']) # Retrieves the latest policy
-        symptomatic_who_quarantine = cvu.binomial_filter(behaviour_pars['symptom_quar_pars'][key_to_use][1], symptomatic_inds)
-        self.schedule_quarantine(symptomatic_who_quarantine, start_date=self.t, period=behaviour_pars['symptom_quar_pars'][key_to_use][0]) # Quarantines indices for that long
-
-
-        # HOUSEHOLD MEMBERS OF PEOPLE WHO BECAME SYMPTOMATIC TODAY
-        # Find baseline list of household members
-        if self.pars['enable_testobjs']:
-            symptomatic_inds = cvu.true((self.date_symptomatic == self.t) | (self.date_symptomatic_ILI == self.t)) # Checks who became symptomatic today
-        else:
-            symptomatic_inds = cvu.true(self.date_symptomatic == self.t)
-        hh_of_symptomatic_inds = self.contacts['h'].find_contacts(symptomatic_inds) # Check who they live with
-        
-        # Remove exempt household members
-        eligible_hh_of_symptomatic_inds = [x for x in hh_of_symptomatic_inds if x not in cvu.true(self.t - self.date_symptomatic < 10)] # Remove household members who already became symptomatic in the last 10 days
-        key_to_use = self.get_key_to_use(behaviour_pars['enable_hh_symp_exemption']) # Retrieves the latest policy related to EXEMPTIONS
-        if behaviour_pars['enable_hh_symp_exemption'][key_to_use]:
-            exempt = cvu.true((self.age < 18) | (self.vaccinated))
-            eligible_hh_of_symptomatic_inds = [x for x in eligible_hh_of_symptomatic_inds if x not in exempt]
-
-        # Quarantine eligible household members
-        key_to_use = self.get_key_to_use(behaviour_pars['hh_symp_quar_pars']) # Retrieves the latest policy
-        hh_of_symptomatic_who_quarantine = cvu.binomial_filter(behaviour_pars['hh_symp_quar_pars'][key_to_use][1], np.array(eligible_hh_of_symptomatic_inds))
-        self.schedule_quarantine(hh_of_symptomatic_who_quarantine, start_date=self.t, period=behaviour_pars['hh_symp_quar_pars'][key_to_use][0]) # Quarantines indices for that long
-        
-
-        # PEOPLE WHO WERE NOTIFIED TODAY THEY WERE CLOSE CONTACTS
-        contacted_inds = cvu.true(self.date_known_contact == self.t) # Checks who was contacted today
-        key_to_use = self.get_key_to_use(behaviour_pars['enable_contact_exemption']) # Retrieves the latest policy related to EXEMPTIONS
-        if behaviour_pars['enable_contact_exemption'][key_to_use]:
-            exempt = cvu.true((self.age < 18) | (self.vaccinated))
-            contacted_inds = [x for x in contacted_inds if x not in exempt]
-        key_to_use = self.get_key_to_use(behaviour_pars['contact_quar_pars']) # Retrieves the latest policy
-        contacted_who_quarantine = cvu.binomial_filter(behaviour_pars['contact_quar_pars'][key_to_use][1], np.array(contacted_inds))
-        self.schedule_quarantine(contacted_who_quarantine, start_date=self.t, period=behaviour_pars['contact_quar_pars'][key_to_use][0]) # Quarantines indices for that long
-
-
-        # PEOPLE WHO RECEIVED SMARTWATCH ALERTS
-        if self.pars['enable_smartwatches']:
-
-            # Retrieve the latest policy related to smartwatch behaviour
-            key_to_use = self.get_key_to_use(behaviour_pars['smartwatch_behaviour']) # Retrieves the latest policy related to EXEMPTIONS
-
-            # If we have enabled smartwatch behaviour on the present day
-            if behaviour_pars['smartwatch_behaviour'][key_to_use][0]:
-
-                # Get the number of alerts the person has received; if standardized, just consider current day; if historical, consider alert histories
-                n_alerts = (self.alerted).astype(np.int64)
-                if behaviour_pars['smartwatch_behaviour'][key_to_use][1] == 'hist':
-                    n_alerts = np.sum(self.alert_histories, axis=1).astype(np.int64) * self.alerted # In the historical case, only count alerts if they received one today
-
-                # Get the duration of quarantine
-                quar_len = np.zeros(len(n_alerts))
-                if behaviour_pars['smartwatch_behaviour'][key_to_use][1] == 'hist':
-                    
-                    # If considering historical behaviour, draw quarantine durations based on the number of alerts received
-                    for i in range(self.LEN_ALERT_HIST):
-                        indices = cvu.true(n_alerts == i+1)
-                        n = self.pars['alert_behav_dist_hist'][i+1]['n']
-                        a = int(self.pars['alert_behav_dist_hist'][i+1]['s'] * self.pars['alert_behav_dist_hist'][i+1]['p'])
-                        b = int(self.pars['alert_behav_dist_hist'][i+1]['s'] * (1-self.pars['alert_behav_dist_hist'][i+1]['p']))
-                        quar_len[indices] = stats.betabinom.rvs(n, a, b, size=len(indices))
-                        
-                else:
-                    # If considering standardized behaviour, draw durations from the same distribution all the time
-                    indices = cvu.true(n_alerts == 1)
-                    n = self.pars['alert_behav_dist_stan']['n']
-                    a = int(self.pars['alert_behav_dist_stan']['s'] * self.pars['alert_behav_dist_stan']['p'])
-                    b = int(self.pars['alert_behav_dist_stan']['s'] * (1-self.pars['alert_behav_dist_stan']['p']))
-                    quar_len[indices] = stats.betabinom.rvs(n, a, b, size=len(indices))
-
-                # Quarantine people accordingly, batching them by number of days to quarantine; currently assumes maximum number of days is 5
-                for i in np.arange(0,5):
-                    indices = cvu.true(quar_len == i+1)
-                    self.schedule_quarantine(indices, start_date=self.t, period=i+1)
-
-        return
 
     
     def get_key_to_use(self, policy_dict):
@@ -797,7 +709,7 @@ class People(cvb.BaseRoster):
             self.x_p2[inds] = self.x_p2[inds] + self.t
 
             # Get P3: where viral load drops below 10^6 cp/mL
-            time_recovered = np.ones(len(self.date_recovered), dtype=cvd.default_float)*self.date_recovered # This is needed to make a copy
+            time_recovered = np.ones(len(self.date_recovered), dtype=znconfig.default_float)*self.date_recovered # This is needed to make a copy
             inds_dead = ~np.isnan(self.date_dead)
             time_recovered[inds_dead] = self.date_dead[inds_dead]
             self.x_p3[inds] = np.maximum(time_recovered[inds], self.x_p2[inds])
@@ -877,26 +789,6 @@ class People(cvb.BaseRoster):
 
 
     #%% Analysis methods
-
-    def plot(self, *args, **kwargs):
-        '''
-        Plot statistics of the population -- age distribution, numbers of contacts,
-        and overall weight of contacts (number of contacts multiplied by beta per
-        layer).
-
-        Args:
-            bins      (arr)   : age bins to use (default, 0-100 in one-year bins)
-            width     (float) : bar width
-            font_size (float) : size of font
-            alpha     (float) : transparency of the plots
-            fig_args  (dict)  : passed to pl.figure()
-            axis_args (dict)  : passed to pl.subplots_adjust()
-            plot_args (dict)  : passed to pl.plot()
-            do_show   (bool)  : whether to show the plot
-            fig       (fig)   : handle of existing figure to plot into
-        '''
-        fig = cvplt.plot_people(people=self, *args, **kwargs)
-        return fig
 
 
     def story(self, uid, *args):

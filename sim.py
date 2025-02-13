@@ -1,5 +1,5 @@
 '''
-Defines the Sim class, PathoSim's core class.
+Defines the Sim class, ZoonoSim's core class.
 '''
 
 #%% Imports
@@ -11,6 +11,7 @@ from . import utils as znu
 from . import misc as znm
 from . import base as znb
 from . import defaults as znd
+from . import population as znpop
 from . import parameters as znpar
 from . import plotting as znplt
 from . import interventions as zni
@@ -46,8 +47,8 @@ class Sim(znb.BaseSim):
 
     **Examples**::
 
-        sim = cv.Sim()
-        sim = cv.Sim(pop_size=10e3, datafile='my_data.xlsx', label='Sim with data')
+        sim = zn.Sim()
+        sim = zn.Sim(pop_size=10e3, datafile='my_data.xlsx', label='Sim with data')
     '''
 
     def __init__(self, pars=None, datafile=None, label=None, simfile=None,
@@ -72,9 +73,6 @@ class Sim(znb.BaseSim):
         self._legacy_trans = None     # Whether to use the legacy transmission calculation method (slower; for reproducing earlier results)
         self._orig_pars    = None     # Store original parameters to optionally restore at the end of the simulation 
         self.initialized_pathogens = False
-        self.TestScheduler = None 
-        self.active_population_surveillance = False # Whether or not to keep track of peoples IgG levels over the course of a simulation 
-        self.aps_program = None # An active population sampling object 
 
         # Make default parameters (using values from parameters.py)
         default_pars = znpar.make_pars(version=version) # Start with default pars
@@ -363,26 +361,6 @@ class Sim(znb.BaseSim):
             for key,label in znd.result_stocks.items():
                 self.results[i][f'n_{key}'] = init_res(label, color=dcols[key])
 
-            # Stock variables for the multi-region case. 
-            if self.pars['enable_multiregion']:
-                additional_mr_keys = ['new_diagnoses', 'cum_diagnoses', 'new_severe', 'cum_severe']
-
-                for rname in self.rnames:
-                    for key,label in znd.result_stocks.items():
-                        self.results[i][f'{rname}_n_{key}'] = init_res(label, color=dcols[key])
-                    # Also track some additional keys for multi-region. 
-                    for key in additional_mr_keys:
-                        self.results[i][f'{rname}_{key}'] = init_res(key, color=dcols['default']) # Black.
-
-            if self.pars['enable_smartwatches']:
-                for key,label in znd.result_flows_smartwatches.items():
-                    if key not in dcols:
-                        color = dcols['default']
-                    else:
-                        color = dcols[key]
-                    self.results[i][f'new_{key}'] = init_res(f'Number of new {label}', color=color)
-                    self.results[i][f'cum_{key}'] = init_res(f'Cumulative {label}', color=color)
-
             # Other variables
             self.results[i]['n_imports']           = init_res('Number of imported infections', scale=True) 
             self.results[i]['n_alive']             = init_res('Number alive', scale=True)
@@ -472,18 +450,18 @@ class Sim(znb.BaseSim):
         if not self.initialized_pathogens:
             self.init_pathogens()
 
-        if self.popfile and self.popdict is None: # If we passed cv.popfile, load it into self.popdict
+        if self.popfile and self.popdict is None: # If we passed zn.popfile, load it into self.popdict
             self.popdict = znm.load(self.popfile)
 
         # Actually make the people 
         if(self.popdict is None and self.popfile is None):
-            self.people = cvpop.make_people(self, popdict = None, reset=reset, verbose=verbose, **kwargs)  #Random Population
+            self.people = znpop.make_people(self, popdict = None, reset=reset, verbose=verbose, **kwargs)  #Random Population
             
         elif (isinstance(self.popdict, znppl.People)): #input is Popfile or People (infection.People)
-            self.people = cvpop.make_people(self, popdict = self.popdict, reset=reset, verbose=verbose, **kwargs)  
+            self.people = znpop.make_people(self, popdict = self.popdict, reset=reset, verbose=verbose, **kwargs)  
 
         else: #input is BehaviourModel
-                self.people = cvpop.make_people(self, popdict = self.popdict.popdict, workplaces = self.popdict.workplaces, n_workplaces = self.popdict.n_workplaces,reset=reset, verbose=verbose, **kwargs)
+                self.people = znpop.make_people(self, popdict = self.popdict.popdict, workplaces = self.popdict.workplaces, n_workplaces = self.popdict.n_workplaces,reset=reset, verbose=verbose, **kwargs)
 
 
         self.people.initialize(sim_pars=self.pars, sim = self) # Fully initialize the people
@@ -1520,8 +1498,6 @@ class Sim(znb.BaseSim):
             sim.plot(style='seaborn-whitegrid') # Use a built-in Matplotlib style
             sim.plot(style='simple', font='Rosario', dpi=200) # Use the other house style with several customizations
 
-        | New in version 2.1.0: argument passing, date_args, and mpl_args
-        | New in version 3.1.2: updated date arguments; mpl_args renamed style_args
         '''
         fig = znplt.plot_sim(sim=self, *args, **kwargs)
         return fig
