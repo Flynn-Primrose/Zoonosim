@@ -10,18 +10,15 @@ import sciris as sc
 from . import utils as znu
 from . import misc as znm
 from . import base as znb
-from . import defaults as znd
 from . import population as znpop
 from . import parameters as znpar
-from . import plotting as znplt
-from . import interventions as zni
-from . import analysis as zna
 from . import immunity as znimm
 from . import people as znppl
 from . import pathogens as pat
 from. import pathogen_interactions as p_int
 
-from .settings import options as cvo
+from .config import options as cvo
+from .config import DataTypes as zndt
 
 # Almost everything in this file is contained in the Sim class
 __all__ = ['Sim', 'diff_sims', 'demo', 'AlreadyRunError']
@@ -267,12 +264,7 @@ class Sim(znb.BaseSim):
             errormsg = f'Population type "{choice}" not available; choices are: {choicestr}'
             raise ValueError(errormsg)
 
-        # Handle interventions, analyzers, and variants
-        for key in ['interventions', 'analyzers']: # Ensure all of them are lists
-            self[key] = sc.dcp(sc.tolist(self[key], keepnone=False)) # All of these have initialize functions that run into issues if they're reused
-        for i,interv in enumerate(self['interventions']):
-            if isinstance(interv, dict): # It's a dictionary representation of an intervention
-                self['interventions'][i] = zni.InterventionDict(**interv) 
+
 
         # Optionally handle layer parameters
         if validate_layers:
@@ -346,8 +338,6 @@ class Sim(znb.BaseSim):
             output = znb.Result(*args, **kwargs, npts=self.npts)
             return output
 
-        dcols = znd.get_default_colors() # Get default colors
-
         for i in range(len(self.pathogens)):
             self.results[i] = {}
             # Flows and cumulative flows
@@ -365,8 +355,8 @@ class Sim(znb.BaseSim):
             self.results[i]['n_imports']           = init_res('Number of imported infections', scale=True) 
             self.results[i]['n_alive']             = init_res('Number alive', scale=True)
             self.results[i]['n_naive']             = init_res('Number never infected', scale=True)
-            self.results[i]['n_preinfectious']     = init_res('Number preinfectious', scale=True, color=dcols.exposed)
-            self.results[i]['n_removed']           = init_res('Number removed', scale=True, color=dcols.recovered)
+            self.results[i]['n_preinfectious']     = init_res('Number preinfectious', scale=True)
+            self.results[i]['n_removed']           = init_res('Number removed', scale=True)
             self.results[i]['prevalence']          = init_res('Prevalence', scale=False)
             self.results[i]['incidence']           = init_res('Incidence', scale=False)
             self.results[i]['r_eff']               = init_res('Effective reproduction number', scale=False)
@@ -374,10 +364,10 @@ class Sim(znb.BaseSim):
             self.results[i]['test_yield']          = init_res('Testing yield', scale=False)
             self.results[i]['rel_test_yield']      = init_res('Relative testing yield', scale=False)
             self.results[i]['frac_vaccinated']     = init_res('Proportion vaccinated', scale=False)
-            self.results[i]['pop_imm']            = init_res('Population immunity levels', scale=False, color=dcols.pop_nabs)
-            self.results[i]['pop_nabs']            = init_res('Population nab levels', scale=False, color=dcols.pop_nabs)
-            self.results[i]['pop_protection']      = init_res('Population immunity protection', scale=False, color=dcols.pop_protection)
-            self.results[i]['pop_symp_protection'] = init_res('Population symptomatic protection', scale=False, color=dcols.pop_symp_protection)
+            self.results[i]['pop_imm']            = init_res('Population immunity levels', scale=False)
+            self.results[i]['pop_nabs']            = init_res('Population nab levels', scale=False)
+            self.results[i]['pop_protection']      = init_res('Population immunity protection', scale=False)
+            self.results[i]['pop_symp_protection'] = init_res('Population symptomatic protection', scale=False)
 
             #IgG Level Results: The result for each day is kept in an array len = num_days +1 which contains an array of 
             #people's IgG levels in the population at each day 
@@ -393,11 +383,11 @@ class Sim(znb.BaseSim):
             self.results[i]['variant']['prevalence_by_variant'] = init_res('Prevalence by variant', scale=False, n_variants=self.pathogens[i].n_variants)
             self.results[i]['variant']['incidence_by_variant']  = init_res('Incidence by variant', scale=False, n_variants=self.pathogens[i].n_variants)
             for key,label in znd.result_flows_by_variant.items():
-                self.results[i]['variant'][f'cum_{key}'] = init_res(f'Cumulative {label}', color=dcols[key], n_variants=self.pathogens[i].n_variants)  # Cumulative variables -- e.g. "Cumulative infections"
+                self.results[i]['variant'][f'cum_{key}'] = init_res(f'Cumulative {label}', n_variants=self.pathogens[i].n_variants)  # Cumulative variables -- e.g. "Cumulative infections"
             for key,label in znd.result_flows_by_variant.items():
-                self.results[i]['variant'][f'new_{key}'] = init_res(f'Number of new {label}', color=dcols[key], n_variants=self.pathogens[i].n_variants) # Flow variables -- e.g. "Number of new infections"
+                self.results[i]['variant'][f'new_{key}'] = init_res(f'Number of new {label}', n_variants=self.pathogens[i].n_variants) # Flow variables -- e.g. "Number of new infections"
             for key,label in znd.result_stocks_by_variant.items(): 
-                self.results[i]['variant'][f'n_{key}'] = init_res(label, color=dcols[key], n_variants=self.pathogens[i].n_variants)
+                self.results[i]['variant'][f'n_{key}'] = init_res(label, n_variants=self.pathogens[i].n_variants)
 
 
 
@@ -412,12 +402,12 @@ class Sim(znb.BaseSim):
         self.results_ready   = False
 
         for key,label in znd.result_flows.items():
-            self.results[f'cum_{key}'] = init_res(f'Cumulative {label}', color=dcols[key])  # Cumulative variables -- e.g. "Cumulative infections"
+            self.results[f'cum_{key}'] = init_res(f'Cumulative {label}')  # Cumulative variables -- e.g. "Cumulative infections"
                 
         for key,label in znd.result_flows.items(): # Repeat to keep all the cumulative keys together
-            self.results[f'new_{key}'] = init_res(f'Number of new {label}', color=dcols[key]) # Flow variables -- e.g. "Number of new infections"
+            self.results[f'new_{key}'] = init_res(f'Number of new {label}') # Flow variables -- e.g. "Number of new infections"
 
-        self.results['co-infections'] = init_res(f'New co-infections', color = '#000000') 
+        self.results['co-infections'] = init_res(f'New co-infections') 
 
         return
 
@@ -470,59 +460,6 @@ class Sim(znb.BaseSim):
          
 
         return self
-
-    def init_interventions(self, popdict=None, init_infections=False, reset=False, verbose=None, **kwargs):
-        ''' Initialize and validate the interventions '''
-
-        # Initialization
-        if self._orig_pars and 'interventions' in self._orig_pars:
-            self['interventions'] = self._orig_pars.pop('interventions') # Restore
-
-        for i,intervention in enumerate(self['interventions']):
-            if isinstance(intervention, zni.Intervention):
-                intervention.initialize(self)
-
-        # Validation
-        trace_ind = np.nan # Index of the tracing intervention(s)
-        test_ind = np.nan # Index of the tracing intervention(s)
-        for i,intervention in enumerate(self['interventions']):
-            if isinstance(intervention, (zni.contact_tracing)):
-                trace_ind = np.fmin(trace_ind, i) # Find the earliest-scheduled tracing intervention
-            elif isinstance(intervention, (zni.test_num, zni.test_prob)):
-                test_ind = np.fmax(test_ind, i) # Find the latest-scheduled testing intervention
-
-        if not np.isnan(trace_ind): # pragma: no cover
-            warnmsg = ''
-            if np.isnan(test_ind):
-                warnmsg = 'Note: you have defined a contact tracing intervention but no testing intervention was found. Unless this is intentional, please define at least one testing intervention.'
-            elif trace_ind < test_ind:
-                warnmsg = f'Note: contact tracing (index {trace_ind:.0f}) is scheduled before testing ({test_ind:.0f}); this creates a 1-day delay. Unless this is intentional, please reorder the interentions.'
-            if warnmsg:
-                znm.warn(warnmsg)
-
-        return
-    
-    def finalize_interventions(self):
-        for intervention in self['interventions']:
-            if isinstance(intervention, zni.Intervention):
-                intervention.finalize(self)
-
-
-    def init_analyzers(self):
-        ''' Initialize the analyzers '''
-        if self._orig_pars and 'analyzers' in self._orig_pars:
-            self['analyzers'] = self._orig_pars.pop('analyzers') # Restore
-
-        for analyzer in self['analyzers']:
-            if isinstance(analyzer, zna.Analyzer):
-                analyzer.initialize(self)
-        return
-
-
-    def finalize_analyzers(self):
-        for analyzer in self['analyzers']:
-            if isinstance(analyzer, zna.Analyzer):
-                analyzer.finalize(self)
  
 
     def init_immunity(self, create=False):
@@ -631,14 +568,12 @@ class Sim(znb.BaseSim):
             x_p1, y_p1 = people.x_p1[current_pathogen], people.y_p1[current_pathogen]
             x_p2, y_p2 = people.x_p2[current_pathogen], people.y_p2[current_pathogen]
             x_p3, y_p3 = people.x_p3[current_pathogen], people.y_p3[current_pathogen]
-            min_vl = znd.default_float(self.pathogens[current_pathogen].viral_levels['min_vl'])
-            max_vl = znd.default_float(self.pathogens[current_pathogen].viral_levels['max_vl'])
+            min_vl = zndt.default_float(self.pathogens[current_pathogen].viral_levels['min_vl'])
+            max_vl = zndt.default_float(self.pathogens[current_pathogen].viral_levels['max_vl'])
             people.viral_load[current_pathogen], viral_load[current_pathogen] = znu.compute_viral_load(t, x_p1, y_p1, x_p2, y_p2, x_p3, y_p3, min_vl, max_vl)
         
         
         # Apply interventions
-        for i,intervention in enumerate(self['interventions']):
-            intervention(self) # If it's a function, call it directly
             
         
         for current_pathogen in range(len(self.pathogens)): 
@@ -667,7 +602,7 @@ class Sim(znb.BaseSim):
                     if variant != 0: #if not wild type, multiply by variant rel_beta
                         rel_beta *= self.pathogens[current_pathogen].variants[variant-1].p['rel_beta'] 
 
-                beta = znd.default_float(self.pathogens[current_pathogen].beta * rel_beta)
+                beta = zndt.default_float(self.pathogens[current_pathogen].beta * rel_beta)
 
                 for lkey, layer in contacts.items():
                     p1 = layer['p1']
@@ -677,9 +612,9 @@ class Sim(znb.BaseSim):
                     # Compute relative transmission and susceptibility
                     inf_variant = people.p_infectious[current_pathogen] * (people.p_infectious_variant[current_pathogen] == variant) # TODO: move out of loop?
                     sus_imm = people.sus_imm[current_pathogen,variant,:]
-                    iso_factor  = znd.default_float(self['iso_factor'][lkey]) # Effect of isolating. 
-                    quar_factor = znd.default_float(self['quar_factor'][lkey]) # Ex: 0.2. Probably the effect on beta of quarantining. 
-                    beta_layer  = znd.default_float(self['beta_layer'][lkey]) # A scalar; beta for the layer. Ex: 1.0. 
+                    iso_factor  = zndt.default_float(self['iso_factor'][lkey]) # Effect of isolating. 
+                    quar_factor = zndt.default_float(self['quar_factor'][lkey]) # Ex: 0.2. Probably the effect on beta of quarantining. 
+                    beta_layer  = zndt.default_float(self['beta_layer'][lkey]) # A scalar; beta for the layer. Ex: 1.0. 
                     rel_trans, rel_sus = znu.compute_trans_sus(prel_trans, prel_sus, inf_variant, sus, beta_layer, viral_load[current_pathogen], symp, diag, iso, asymp_factor, iso_factor, quar_factor, sus_imm)
                      
                     rel_trans = p_int.mod_rel_trans(current_pathogen, people.p_exposed, self.n_pathogens, rel_trans, self['Mtrans'])
@@ -769,22 +704,6 @@ class Sim(znb.BaseSim):
         if self.t == self.npts:
             self.complete = True
         return
-
-    def update_results_mr(self, people, pathogen = 0): 
-        t = self.t
-        nv = self.pathogens[pathogen].n_variants
-
-        for rname, rstart, rsize in zip(self.rnames, self.rstarts, self.rsizes):
-            strat_indices_in_reg = np.intersect1d(self.stratification_indices, np.array((range(rstart,(rstart+rsize)))))
-            for key in znd.result_stocks.keys():
-                if key not in ['known_dead', 'quarantined', 'vaccinated', 'isolated']:
-                    self.results[pathogen][f'{rname}_n_{key}'][t] =np.count_nonzero(self.people[f'p_{key}'][pathogen,strat_indices_in_reg])
-                else:
-                    self.results[pathogen][f'{rname}_n_{key}'][t] =np.count_nonzero(self.people[key][strat_indices_in_reg]) 
-                     
-            for key in znd.result_stocks_by_variant.keys():
-                for variant in range(nv):
-                    self.results[pathogen]['variant'][f'n_{key}'][variant, t] =np.count_nonzero(self.people[f'p_{key}'][pathogen, variant, strat_indices_in_reg])
             
 
     def run(self, do_plot=False, until=None, restore_pars=True, reset_seed=True, verbose=None):
@@ -863,32 +782,6 @@ class Sim(znb.BaseSim):
         
  
         return self
-
-    def validate_people_states(self):
-        if self.pars['n_pathogens'] != 1:
-            return;
-           
-        assert np.array_equal(self.people.susceptible, self.people.p_susceptible[0]) 
-        assert np.array_equal(self.people.naive, self.people.p_naive[0]) 
-        assert np.array_equal(self.people.exposed, self.people.p_exposed[0]) 
-        assert np.array_equal(self.people.infectious, self.people.p_infectious[0]) 
-        assert np.array_equal(self.people.symptomatic, self.people.p_symptomatic[0]) 
-        assert np.array_equal(self.people.severe, self.people.p_severe[0]) 
-        assert np.array_equal(self.people.recovered, self.people.p_recovered[0]) 
-        assert np.array_equal(self.people.dead, self.people.p_dead[0]) 
-        assert np.array_equal(self.people.diagnosed, self.people.p_diagnosed[0]) 
-        assert np.array_equal(self.people.tested, self.people.p_tested[0]) 
-         
-      
-        assert np.array_equal(self.people.date_susceptible, self.people.date_p_susceptible[0], equal_nan = True)
-        assert np.array_equal(self.people.date_exposed,     self.people.date_p_exposed[0]    , equal_nan = True)
-        assert np.array_equal(self.people.date_infectious,  self.people.date_p_infectious[0] , equal_nan = True)
-        assert np.array_equal(self.people.date_symptomatic, self.people.date_p_symptomatic[0], equal_nan = True)
-        assert np.array_equal(self.people.date_severe,      self.people.date_p_severe[0]     , equal_nan = True)
-        assert np.array_equal(self.people.date_recovered,   self.people.date_p_recovered[0]  , equal_nan = True)
-        assert np.array_equal(self.people.date_dead,        self.people.date_p_dead[0]       , equal_nan = True)
-        assert np.array_equal(self.people.date_diagnosed,   self.people.date_p_diagnosed[0]  , equal_nan = True)
-        assert np.array_equal(self.people.date_tested,      self.people.date_p_tested[0]     , equal_nan = True)
  
     
     def finalize(self, verbose=None, restore_pars=True):
@@ -1325,203 +1218,6 @@ class Sim(znb.BaseSim):
         else:
             return string
 
-
-    def compute_fit(self, *args, **kwargs):
-        '''
-        Compute the fit between the model and the data. See cv.Fit() for more
-        information.
-
-        Args:
-            args   (list): passed to cv.Fit()
-            kwargs (dict): passed to cv.Fit()
-
-        Returns:
-            A Fit object
-
-        **Example**::
-
-            sim = cv.Sim(datafile='data.csv')
-            sim.run()
-            fit = sim.compute_fit()
-            fit.plot()
-        '''
-        if not self.results_ready:
-            errormsg = 'Cannot compute fit since results are not ready yet -- did you run the sim?'
-            raise RuntimeError(errormsg)
-        self.fit = zna.Fit(self, *args, **kwargs)
-        return self.fit
-
-
-    def calibrate(self, calib_pars, **kwargs):
-        '''
-        Automatically calibrate the simulation, returning a Calibration object
-        (a type of analyzer). See the documentation on that class for more information.
-
-        Args:
-            calib_pars (dict): a dictionary of the parameters to calibrate of the format dict(key1=[best, low, high])
-            kwargs (dict): passed to cv.Calibration()
-
-        Returns:
-            A Calibration object
-
-        **Example**::
-
-            sim = cv.Sim(datafile='data.csv')
-            calib_pars = dict(beta=[0.015, 0.010, 0.020])
-            calib = sim.calibrate(calib_pars, n_trials=50)
-            calib.plot()
-        '''
-        calib = zna.Calibration(sim=self, calib_pars=calib_pars, **kwargs)
-        calib.calibrate()
-        return calib
-
-
-    def make_age_histogram(self, *args, output=True, **kwargs):
-        '''
-        Calculate the age histograms of infections, deaths, diagnoses, etc. See
-        cv.age_histogram() for more information. This can be used alternatively
-        to supplying the age histogram as an analyzer to the sim. If used this
-        way, it can only record the final time point since the states of each
-        person are not saved during the sim.
-
-        Args:
-            output (bool): whether or not to return the age histogram; if not, store in sim.results
-            args   (list): passed to cv.age_histogram()
-            kwargs (dict): passed to cv.age_histogram()
-
-        **Example**::
-
-            sim = cv.Sim()
-            sim.run()
-            agehist = sim.make_age_histogram()
-            agehist.plot()
-        '''
-        if not self.results_ready:
-            errormsg = 'Cannot make age histogram since results are not ready yet -- did you run the sim?'
-            raise RuntimeError(errormsg)
-        agehist = zna.age_histogram(sim=self, *args, **kwargs)
-        if output:
-            return agehist
-        else: # pragma: no cover
-            self.results.agehist = agehist
-            return
-
-
-    def make_transtree(self, *args, output=True, **kwargs):
-        '''
-        Create a TransTree (transmission tree) object, for analyzing the pattern
-        of transmissions in the simulation. See cv.TransTree() for more information.
-
-        Args:
-            output (bool): whether or not to return the TransTree; if not, store in sim.results
-            args   (list): passed to cv.TransTree()
-            kwargs (dict): passed to cv.TransTree()
-
-        **Example**::
-
-            sim = cv.Sim()
-            sim.run()
-            tt = sim.make_transtree()
-        '''
-        if not self.results_ready:
-            errormsg = 'Cannot compute transmission tree since results are not ready yet -- did you run the sim?'
-            raise RuntimeError(errormsg)
-        tt = zna.TransTree(self, *args, **kwargs)
-        if output:
-            return tt
-        else: # pragma: no cover
-            self.results.transtree = tt
-            return
-
-
-    def plot(self, *args, **kwargs):
-        '''
-        Plot the results of a single simulation.
-
-        Args:
-            to_plot      (dict): Dict of results to plot; see get_default_plots() for structure
-            do_save      (bool): Whether or not to save the figure
-            fig_path     (str):  Path to save the figure
-            fig_args     (dict): Dictionary of kwargs to be passed to ``pl.figure()``
-            plot_args    (dict): Dictionary of kwargs to be passed to ``pl.plot()``
-            scatter_args (dict): Dictionary of kwargs to be passed to ``pl.scatter()``
-            axis_args    (dict): Dictionary of kwargs to be passed to ``pl.subplots_adjust()``
-            legend_args  (dict): Dictionary of kwargs to be passed to ``pl.legend()``; if show_legend=False, do not show
-            date_args    (dict): Control how the x-axis (dates) are shown (see below for explanation)
-            show_args    (dict): Control which "extras" get shown: uncertainty bounds, data, interventions, ticks, the legend; additionally, "outer" will show the axes only on the outer plots
-            style_args   (dict): Dictionary of kwargs to be passed to Matplotlib; options are dpi, font, fontsize, plus any valid key in ``pl.rcParams``
-            n_cols       (int):  Number of columns of subpanels to use for subplot
-            font_size    (int):  Size of the font
-            font_family  (str):  Font face
-            grid         (bool): Whether or not to plot gridlines
-            commaticks   (bool): Plot y-axis with commas rather than scientific notation
-            setylim      (bool): Reset the y limit to start at 0
-            log_scale    (bool): Whether or not to plot the y-axis with a log scale; if a list, panels to show as log
-            do_show      (bool): Whether or not to show the figure
-            colors       (dict): Custom color for each result, must be a dictionary with one entry per result key in to_plot
-            sep_figs     (bool): Whether to show separate figures for different results instead of subplots
-            fig          (fig):  Handle of existing figure to plot into
-            ax           (axes): Axes instance to plot into
-            kwargs       (dict): Parsed among figure, plot, scatter, date, and other settings (will raise an error if not recognized)
-
-        The optional dictionary "date_args" allows several settings for controlling
-        how the x-axis of plots are shown, if this axis is dates. These options are:
-
-            - ``as_dates``:   whether to format them as dates (else, format them as days since the start)
-            - ``dateformat``: string format for the date (if not provided, choose based on timeframe)
-            - ``rotation``:   whether to rotate labels
-            - ``start``:      the first day to plot
-            - ``end``:        the last day to plot
-            - ``outer``:      only show the date labels on the outer (bottom) plots
-
-        The ``show_args`` dictionary allows several other formatting options, such as:
-
-            - ``tight``:    use tight layout for the figure (default false)
-            - ``maximize``: try to make the figure full screen (default false)
-            - ``outer``:    only show outermost (bottom) date labels (default false)
-
-        Date, show, and other arguments can also be passed directly, e.g. ``sim.plot(tight=True)``.
-
-        For additional style options, see ``cv.options.with_style()``, which is the
-        final refuge of arguments that are not picked up by any of the other parsers,
-        e.g. ``sim.plot(**{'ytick.direction':'in'})``.
-
-        Returns:
-            fig: Figure handle
-
-        **Examples**::
-
-            sim = cv.Sim().run()
-            sim.plot() # Default plotting
-            sim.plot('overview') # Show overview
-            sim.plot('overview', maximize=True, outer=True, rotation=15) # Make some modifications to make plots easier to see
-            sim.plot(style='seaborn-whitegrid') # Use a built-in Matplotlib style
-            sim.plot(style='simple', font='Rosario', dpi=200) # Use the other house style with several customizations
-
-        '''
-        fig = znplt.plot_sim(sim=self, *args, **kwargs)
-        return fig
-
-
-    def plot_result(self, key, pathogen, *args, **kwargs):
-        '''
-        Simple method to plot a single result. Useful for results that aren't
-        standard outputs. See sim.plot() for explanation of other arguments.
-
-        Args:
-            key (str): the key of the result to plot
-
-        Returns:
-            fig: Figure handle
-
-        **Example**::
-
-            sim = pathosim.Sim().run()
-            sim.plot_result('r_eff')
-        '''
-        index = pathogen.pathogen_index
-        fig = znplt.plot_result(sim=self, key=key, pathogen = index, *args, **kwargs)
-        return fig
      
 
 def diff_sims(sim1, sim2, skip_key_diffs=False, skip=None, output=False, die=False):
@@ -1647,75 +1343,6 @@ def diff_sims(sim1, sim2, skip_key_diffs=False, skip=None, output=False, die=Fal
         if not output:
             print('Sims match')
     return
-
-
-def demo(preset=None, to_plot=None, scens=None, run_args=None, plot_args=None, **kwargs):
-    '''
-    Shortcut for ``cv.Sim().run().plot()``.
-
-    Args:
-        preset (str): use a preset run configuration; currently the only option is "full"
-        to_plot (str): what to plot
-        scens (dict): dictionary of scenarios to run as a multisim, if preset='full'
-        kwargs (dict): passed to Sim()
-        run_args (dict): passed to sim.run()
-        plot_args (dict): passed to sim.plot()
-
-    **Examples**::
-
-        cv.demo() # Simplest example
-        cv.demo('full') # Full example
-        cv.demo('full', overview=True) # Plot all results
-        cv.demo(beta=0.020, run_args={'verbose':0}, plot_args={'to_plot':'overview'}) # Pass in custom values
-    '''
-    from . import interventions as zni # To avoid circular imports
-    from . import run as cvr
-
-    run_args = sc.mergedicts(run_args)
-    plot_args = sc.mergedicts(plot_args)
-    if to_plot:
-        plot_args = sc.mergedicts(plot_args, {'to_plot':to_plot})
-
-    if not preset:
-        sim = Sim(**kwargs)
-        sim.run(**run_args)
-        sim.plot(**plot_args)
-        return sim
-
-    elif preset == 'full':
-
-            # Define interventions
-            cb = zni.change_beta(days=40, changes=0.5)
-            tp = zni.test_prob(start_day=20, symp_prob=0.1, asymp_prob=0.01)
-            ct = zni.contact_tracing(trace_probs=0.3, start_day=50)
-
-            # Define the parameters
-            pars = dict(
-                pop_size      = 20e3,         # Population size 
-                pop_type      = 'hybrid',     # Population to use -- "hybrid" is random with household, school,and work structure
-                n_days        = 60,           # Number of days to simulate
-                verbose       = 0,            # Don't print details of the run
-                rand_seed     = 2,            # Set a non-default seed
-                interventions = [cb, tp, ct], # Include the most common interventions
-            )
-            pars = sc.mergedicts(pars, kwargs)
-            if scens is None:
-                scens = ('beta', {'Low beta':0.012, 'Medium beta':0.016, 'High beta':0.020})
-            scenpar = scens[0]
-            scenval = scens[1]
-
-            # Run the simulations
-            sims = [Sim(pars, **{scenpar:val}, label=label) for label,val in scenval.items()]
-            msim = cvr.MultiSim(sims)
-            msim.run(**run_args)
-            msim.plot(**plot_args)
-            msim.median()
-            msim.plot(**plot_args)
-            return msim
-
-    else:
-        errormsg = f'Could not understand preset argument "{preset}"; must be None or "full"'
-        raise NotImplementedError(errormsg)
 
 
 class AlreadyRunError(RuntimeError):

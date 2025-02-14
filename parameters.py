@@ -3,7 +3,7 @@ Set the parameters for Zoonosim.
 '''
 
 import sciris as sc
-from .settings import options as cvo # For setting global options
+from .config import options as zno # For setting global options
 
 __all__ = ['make_pars', 'reset_layer_pars', 'get_vaccine_choices',
             'get_vaccine_variant_pars', 'get_vaccine_dose_pars']
@@ -54,7 +54,7 @@ def make_pars(version=None, **kwargs):
     pars['end_day']    = None         # End day of the simulation
     pars['n_days']     = 60           # Number of days to run, if end_day isn't specified
     pars['rand_seed']  = 1            # Random seed, if None, don't reset
-    pars['verbose']    = cvo.verbose  # Whether or not to display information during the run -- options are 0 (silent), 0.1 (some; default), 1 (default), 2 (everything)
+    pars['verbose']    = zno.verbose  # Whether or not to display information during the run -- options are 0 (silent), 0.1 (some; default), 1 (default), 2 (everything)
 
     # Rescaling parameters
     pars['pop_scale']         = 1    # Factor by which to scale the population -- e.g. pop_scale=10 with pop_size=100e3 means a population of 1 million
