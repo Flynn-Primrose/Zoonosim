@@ -11,6 +11,7 @@ class PeopleMeta(sc.prettyobj):
         # Set the properties of a person
         self.person = [
             'uid',              # Int
+            'roll',             # string? (i.e. owner, worker, visitor, none)
             'age',              # Float
             'sex',              # Float
             'symp_prob',        # Float
@@ -26,19 +27,12 @@ class PeopleMeta(sc.prettyobj):
             'viral_load',       # Float
             'n_infections',     # Int
             'n_breakthroughs',  # Int
-            'watch_fpr',        # Float
-            'has_watch',        # Bool
-            'income',           # Int
-            'cons_days_in_quar',    # Int
-            'cons_days_neg_rat',    # Int
-            'is_coinfected',
-            'test_pos_path'
+            'is_coinfected'
         ]
 
         # Set the states that a person can be in: these are all booleans per person -- used in people.py
         self.states = [
             'susceptible',
-            'naive',#remove
             'exposed',
             'infectious',
             'symptomatic',

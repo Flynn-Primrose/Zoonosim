@@ -17,7 +17,7 @@ from . import people as znppl
 from . import pathogens as pat
 from. import pathogen_interactions as p_int
 
-from .config import options as cvo
+from .config import options as zno
 from .config import DataTypes as zndt
 
 # Almost everything in this file is contained in the Sim class
@@ -39,7 +39,7 @@ class Sim(znb.BaseSim):
         simfile  (str):    the filename for this simulation, if it's saved
         popfile  (str):    if supplied, load the population from this file (saved People object from infection module, not behaviour module)
         people   (varies): if supplied, use these pre-generated people (either People object, or BehaviourModel object (synthpop population output)) instead of loading or generating new ones
-        version  (str):    if supplied, use default parameters from this version of Covasim instead of the latest
+        version  (str):    if supplied, use default parameters from this version of Zoonosim instead of the latest
         kwargs   (dict):   additional parameters; passed to ``cv.make_pars()``
 
     **Examples**::
@@ -59,7 +59,7 @@ class Sim(znb.BaseSim):
         self.popfile       = popfile  # The population file
         self.data          = None     # The actual data
         self.popdict       = people   # The population dictionary
-        self.people        = None     # Initialize these here so methods that check their length can see they're empty
+        self.people        = None     # TODO: how to we modify this to include multiple species?
         self.t             = None     # The current time in the simulation (during execution); outside of sim.step(), its value corresponds to next timestep to be computed
         self.results       = {}     # For storing results
         self.summary       = None     # For storing a summary of the results
@@ -67,7 +67,6 @@ class Sim(znb.BaseSim):
         self.complete      = False    # Whether a simulation has completed running
         self.results_ready = False    # Whether or not results are ready
         self._default_ver  = version  # Default version of parameters used
-        self._legacy_trans = None     # Whether to use the legacy transmission calculation method (slower; for reproducing earlier results)
         self._orig_pars    = None     # Store original parameters to optionally restore at the end of the simulation 
         self.initialized_pathogens = False
 
@@ -81,6 +80,8 @@ class Sim(znb.BaseSim):
         self.update_pars(pars, **kwargs) # Update the parameters, if provided
         self.load_data(datafile) # Load the data, if provided
         
+
+        #TODO: this has to change to support multiple species. 
         if not isinstance(self.pars['pathogens'], list):
             self.pars['pathogens'] = [self.pars['pathogens']]
         self.pathogens = self.pars['pathogens']
@@ -123,9 +124,8 @@ class Sim(znb.BaseSim):
         self.init_pathogen_interactions() #Validate pathogen-pathogen matrices
         self.init_immunity() # initialize information about immunity (if use_waning=True)
         self.init_results() # After initializing the variant, create the results structure
-        self.init_people(reset=reset, init_infections=init_infections, **kwargs)
+        self.init_people(reset=reset, init_infections=init_infections, **kwargs) # TODO: this has to change to support multiple species.
         self.init_infections()   
-        self.init_interventions()  # Initialize the interventions...
         self.validate_layer_pars() # Once the population is initialized, validate the layer parameters again
         self.set_seed() # Reset the random seed again so the random number stream is consistent
          
@@ -342,14 +342,14 @@ class Sim(znb.BaseSim):
             self.results[i] = {}
             # Flows and cumulative flows
             for key,label in znd.result_flows.items():
-                self.results[i][f'cum_{key}'] = init_res(f'Cumulative {label}', color=dcols[key])  # Cumulative variables -- e.g. "Cumulative infections"
+                self.results[i][f'cum_{key}'] = init_res(f'Cumulative {label}')  # Cumulative variables -- e.g. "Cumulative infections"
 
             for key,label in znd.result_flows.items(): # Repeat to keep all the cumulative keys together
-                self.results[i][f'new_{key}'] = init_res(f'Number of new {label}', color=dcols[key]) # Flow variables -- e.g. "Number of new infections"
+                self.results[i][f'new_{key}'] = init_res(f'Number of new {label}') # Flow variables -- e.g. "Number of new infections"
 
             # Stock variables
             for key,label in znd.result_stocks.items():
-                self.results[i][f'n_{key}'] = init_res(label, color=dcols[key])
+                self.results[i][f'n_{key}'] = init_res(label)
 
             # Other variables
             self.results[i]['n_imports']           = init_res('Number of imported infections', scale=True) 
@@ -1146,7 +1146,7 @@ class Sim(znb.BaseSim):
         summary = self.compute_summary(full=full, t=t, update=False, output=True)
 
         # Construct the output string
-        if sep is None: sep = cvo.sep # Default separator
+        if sep is None: sep = zno.sep # Default separator
         labelstr = f' "{self.label}"' if self.label else ''
         string = f'\nSimulation{labelstr} summary:\n'
         

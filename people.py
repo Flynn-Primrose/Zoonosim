@@ -5,9 +5,7 @@ the transitions between states (e.g., from susceptible to infected).
 
 #%% Imports
 import numpy as np
-import scipy.stats as stats
 import sciris as sc
-import scipy.stats as stats
 from collections import defaultdict
 from . import version as cvv
 from . import utils as cvu
@@ -67,12 +65,6 @@ class People(cvb.BaseRoster):
                 self[key] = np.arange(self.pars['pop_size'], dtype=znconfig.default_int)
             elif key in ['n_infections', 'n_breakthroughs']:
                 self[key] = np.zeros(self.pars['pop_size'], dtype=znconfig.default_int)
-            elif key in ['cons_days_in_quar', 'cons_days_neg_rat']:
-                self[key] = np.zeros(self.pars['pop_size'], dtype=znconfig.default_int)
-            elif key in ['has_watch']:
-                self[key] = np.full(self.pars['pop_size'], False, dtype=bool)
-            elif key in ['income']:
-                self[key] = np.zeros(self.pars['pop_size'], dtype=znconfig.default_int)
             elif key in ['viral_load']:
                 self[key] = np.zeros(self.pars['pop_size'], dtype=znconfig.default_float)
             elif key in ['rescaled_vl']:  # for tracking purposes
@@ -82,7 +74,7 @@ class People(cvb.BaseRoster):
 
         # Set health states -- only susceptible is true by default -- booleans except exposed by variant which should return the variant that ind is exposed to
         for key in self.meta.states:
-            val = (key in ['susceptible', 'naive']) # Default value is True for susceptible and naive, False otherwise
+            val = (key in ['susceptible']) # Default value is True for susceptible and naive, False otherwise
             self[key] = np.full(self.pars['pop_size'], val, dtype=bool)
 
         # Set variant states, which store info about which variant a person is exposed to
@@ -224,10 +216,7 @@ class People(cvb.BaseRoster):
     def update_states_post(self):
         ''' Perform post-timestep updates '''
 
-        if self.pars['enable_multiregion']:
-            self.flows['new_diagnoses'] += self.check_diagnosed_mr()
-        else:
-            self.flows['new_diagnoses'] += self.check_diagnosed()
+        self.flows['new_diagnoses'] += self.check_diagnosed()
         self.flows['new_quarantined'] += self.check_quar()
 
         del self.is_exp  # Tidy up
@@ -488,61 +477,6 @@ class People(cvb.BaseRoster):
 
     #%% Methods to make events occur (infection and diagnosis)
 
-    def make_naive(self, inds, reset_vx=False):
-        '''
-        Make a set of people naive. This is used during dynamic resampling.
-
-        Args:
-            inds (array): list of people to make naive
-            reset_vx (bool): whether to reset vaccine-derived immunity
-        '''
-        for key in self.meta.states:
-            if key in ['susceptible', 'naive']:
-                self[key][inds] = True
-            else:
-                if (key != 'vaccinated') or reset_vx: # Don't necessarily reset vaccination
-                    self[key][inds] = False
-
-        # Reset variant states
-        for key in self.meta.variant_states:
-            self[key][inds] = np.nan
-        for key in self.meta.by_variant_states:
-            self[key][:, inds] = False
-
-        # Reset immunity and antibody states
-        non_vx_inds = inds if reset_vx else inds[~self['vaccinated'][inds]]
-        for key in self.meta.imm_states:
-            self[key][:, non_vx_inds] = 0
-        for key in self.meta.nab_states + self.meta.vacc_states:
-            self[key][non_vx_inds] = 0
-
-        # Reset dates
-        for key in self.meta.dates + self.meta.durs:
-            if (key != 'date_vaccinated') or reset_vx: # Don't necessarily reset vaccination
-                self[key][inds] = np.nan
-
-        return
-
-
-    def make_nonnaive(self, inds, set_recovered=False, date_recovered=0):
-        '''
-        Make a set of people non-naive.
-
-        This can be done either by setting only susceptible and naive states,
-        or else by setting them as if they have been infected and recovered.
-        '''
-        self.make_naive(inds) # First make them naive and reset all other states
-
-        # Make them non-naive
-        for key in ['susceptible', 'naive']:
-            self[key][inds] = False
-
-        if set_recovered:
-            self.date_recovered[inds] = date_recovered # Reset date recovered
-            self.check_recovered(inds=inds, filter_inds=None) # Set recovered
-
-        return
-
 
 
     def infect(self, inds, hosp_max=None, icu_max=None, source=None, layer=None, variant=0):
@@ -603,8 +537,7 @@ class People(cvb.BaseRoster):
             self.rel_trans[new_breakthrough_inds] *= self.pars['trans_redux']
 
         # Update states, variant info, and flows
-        self.susceptible[inds]    = False
-        self.naive[inds]          = False
+        self.susceptible[inds]    = False 
         self.recovered[inds]      = False
         self.diagnosed[inds]      = False
         self.exposed[inds]        = True
