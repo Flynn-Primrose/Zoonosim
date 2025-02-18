@@ -65,7 +65,7 @@ class Flocks(cvb.BaseRoster):
 
         # Set health states -- only susceptible is true by default -- booleans except exposed by variant which should return the variant that ind is exposed to
         for key in self.meta.states:
-            val = (key in ['susceptible']) # Default value is True for susceptible and naive, False otherwise
+            val = (key in ['susceptible']) # Default value is True for susceptible, False otherwise
             self[key] = np.full(self.pars['pop_size'], val, dtype=bool)
 
         # Set variant states, which store info about which variant a person is exposed to

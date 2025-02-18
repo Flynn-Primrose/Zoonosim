@@ -10,7 +10,7 @@ class FlocksMeta(sc.prettyobj):
         # Set the properties of a flock of birds
         self.flock = [
             'uid',              # Int
-            'roll',             # string? (i.e. broiler, layer, breeder)
+            'role',             # string? (i.e. broiler, layer, breeder)
             'age',              # Float (not sure if we need this)
             'head',             # Int (headcount of flock)
             'susceptible',      # Int (number of susceptible birds)

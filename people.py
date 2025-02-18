@@ -133,15 +133,6 @@ class People(cvb.BaseRoster):
         self.flows_variant = {}
         for key in znconfig.new_result_flows_by_variant:
             self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=znconfig.default_float)
-        if self.pars['enable_smartwatches']:
-            for key in znconfig.new_result_flows_smartwatches:
-                self.flows[key] = 0
-        if self.pars['enable_multiregion']:
-            targets = ['new_diagnoses', 'new_severe']
-            regions = self.pars['multiregion']['rnames']
-            for target in targets:
-                for region in regions:
-                    self.flows[f'{region}_{target}'] = 0
         return
 
     def initialize(self, sim_pars=None):
@@ -200,10 +191,8 @@ class People(cvb.BaseRoster):
         self.flows['new_infectious']    += self.check_infectious() # For people who are exposed and not infectious, check if they begin being infectious
         self.flows['new_symptomatic']   += self.check_symptomatic()
 
-        if self.pars['enable_multiregion']:
-            self.flows['new_severe']        += self.check_severe_mr()
-        else:
-            self.flows['new_severe']        += self.check_severe()
+
+        self.flows['new_severe']        += self.check_severe()
 
         self.flows['new_critical']      += self.check_critical()
         self.flows['new_recoveries']    += self.check_recovery()
@@ -280,27 +269,6 @@ class People(cvb.BaseRoster):
         inds = self.check_inds(self.infectious, self.date_infectious, filter_inds=self.is_exp)
         self.infectious[inds] = True
         self.infectious_variant[inds] = self.exposed_variant[inds]
-
-        if self.pars['enable_stratifications']:
-            for strat, strat_pars in self.pars['stratification_pars'].items():
-                metrics = strat_pars['metrics']
-
-                if 'new_infectious' in metrics:
-                    bracs = strat_pars['brackets']
-                    
-                    # update the value for the current day, for each bracket. 
-                    for brac in bracs:
-                        brac_name = "_".join([ str(brac[0]), str(brac[1])])
-
-                        # Count the number of individuals meeting the criteria. 
-                        if strat == 'age':
-                            num_inds = np.sum( (self.age[inds] >= brac[0]) & (self.age[inds] < brac[1]) )
-                        elif strat == 'income':
-                            num_inds = np.sum( (self.income[inds] >= brac[0]) & (self.income[inds] < brac[1]) )
-                        else:
-                            raise ValueError(f"Stratification {strat} not recognized.")
-
-                        self.stratifications[strat][brac_name]['new_infectious'][self.t] += num_inds
 
         for variant in range(self.pars['n_variants']):
             this_variant_inds = cvu.itrue(self.infectious_variant[inds] == variant, inds)
@@ -393,21 +361,6 @@ class People(cvb.BaseRoster):
         self.recovered_variant[inds]  = np.nan
 
         return len(inds), len(diag_inds)
-
-
-    def check_alerted(self):
-        '''
-        Check which people received alerts on this timestep and whether they were correct or incorrect.
-        Reset alerted status to False for everyone to prepare for the next day.
-        '''
-
-        # Check who was alerted
-        n_alerted = len(cvu.true(self.alerted))
-
-        # Set the alerted status of everyone to false
-        self.alerted[:] = False
-
-        return n_alerted
 
 
     def check_diagnosed(self):

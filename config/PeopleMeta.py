@@ -11,7 +11,7 @@ class PeopleMeta(sc.prettyobj):
         # Set the properties of a person
         self.person = [
             'uid',              # Int
-            'roll',             # string? (i.e. owner, worker, visitor, none)
+            'role',             # string? (i.e. owner, worker, visitor, none)
             'age',              # Float
             'sex',              # Float
             'symp_prob',        # Float
