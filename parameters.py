@@ -36,17 +36,19 @@ def make_pars(version=None, **kwargs):
 
     #------------------------------------------------------------------------------------------#
     #Pathogen-pathogen interaction
-    pars['Mtrans']= None # Mtrans[i,j]=P(transmit Pi | co�infected with Pj) / P(transmit Pi at baseline)
-    pars['Miimm'] = None # P(infection with Pi | co�infected with Pj) / P(infection with Pi at baseline)
+    pars['Mtrans']= None # Mtrans[i,j]=P(transmit Pi | co-infected with Pj) / P(transmit Pi at baseline)
+    pars['Miimm'] = None # P(infection with Pi | co-infected with Pj) / P(infection with Pi at baseline)
     pars['Mcimm'] = None # contribution of current immunity to Pj to immunity to Pi
-    pars['Mdur'] =  None # (duration of Pi | co�infected with Pj) / (duration of Pi at baseline)
-    pars['Msev'] =  None # (severity of Pi | co�infected with Pj) / (severity of Pi at baseline)
+    pars['Mdur'] =  None # (duration of Pi | co-infected with Pj) / (duration of Pi at baseline)
+    pars['Msev'] =  None # (severity of Pi | co-infected with Pj) / (severity of Pi at baseline)
    
     #--------------------------- POPULATION & CONTACTS PARAMETERS------------------------------#
     # Population parameters
-    pars['pop_size']     = 20e3     # Number of agents, i.e., people susceptible to SARS-CoV-2
-    pars['pop_type']     = 'random' # What type of population data to use -- 'random' (fastest), 'synthpops' (best), 'hybrid' (compromise)
-    pars['location']     = None     # What location to load data from -- default Seattle
+    pars['people_pop']   = 20e3     # Number of human agents
+    pars['people_type']  = dict(owner=0.1, worker=0.2, inspector=0.1, visitor=0.1, none=0.5 ) #The relative frequency of various roles among people (this is just a guess right now)
+    pars['poultry_pop']  = 10e3     # Number of poultry flocks
+    pars['poultry_type'] = dict(broiler=0.7, laying=0.2, incubation=0.1) #The relative frequency of various types of chicken flocks. Based on a casual conversation with an expert in quebec
+    pars['location']     = None     # What location to load data from -- 
     pars['pop']          = None     # Detailed synthetic population -- this is supplied for access to workplace information for surveillance
 
     # Simulation parameters
@@ -57,12 +59,13 @@ def make_pars(version=None, **kwargs):
     pars['verbose']    = zno.verbose  # Whether or not to display information during the run -- options are 0 (silent), 0.1 (some; default), 1 (default), 2 (everything)
 
     # Rescaling parameters
-    pars['pop_scale']         = 1    # Factor by which to scale the population -- e.g. pop_scale=10 with pop_size=100e3 means a population of 1 million
-    pars['scaled_pop']        = None # The total scaled population, i.e. the number of agents times the scale factor
-    pars['rescale']           = True # Enable dynamic rescaling of the population -- starts with pop_scale=1 and scales up dynamically as the epidemic grows
-    pars['rescale_threshold'] = 0.05 # Fraction susceptible population that will trigger rescaling if rescaling
-    pars['rescale_factor']    = 1.2  # Factor by which the population is rescaled on each step
-    pars['frac_susceptible']  = 1.0  # What proportion of the population is susceptible to infection
+    # I don't think we want to use dynamic rescaling
+    #pars['pop_scale']         = 1    # Factor by which to scale the population -- e.g. pop_scale=10 with pop_size=100e3 means a population of 1 million
+    #pars['scaled_pop']        = None # The total scaled population, i.e. the number of agents times the scale factor
+    #pars['rescale']           = True # Enable dynamic rescaling of the population -- starts with pop_scale=1 and scales up dynamically as the epidemic grows
+    #pars['rescale_threshold'] = 0.05 # Fraction susceptible population that will trigger rescaling if rescaling
+    #pars['rescale_factor']    = 1.2  # Factor by which the population is rescaled on each step
+    #pars['frac_susceptible']  = 1.0  # What proportion of the population is susceptible to infection
     
     # Network parameters, generally initialized after the population has been constructed
     pars['contacts']        = None  # The number of contacts per layer; set by reset_layer_pars() below
@@ -72,33 +75,17 @@ def make_pars(version=None, **kwargs):
      
     #-------------------------------------------------------------------------------------------#
     pars['use_waning']   = True # Whether to use dynamically calculated immunity
-     
-    # Symptoms: symptom prevalence within the population
-    pars['prev_COVID'] = None
-    pars['prev_ILI'] = None
+
 
     # Efficacy of protection measures
     pars['iso_factor']   = None # Multiply beta by this factor for diagnosed cases to represent isolation; set by reset_layer_pars() below
     pars['quar_factor']  = None # Quarantine multiplier on transmissibility and susceptibility; set by reset_layer_pars() below
     pars['quar_period']  = 14   # Number of days to quarantine for; assumption based on standard policies
 
-    # Parameters that govern actions people take in response to a result or notification
-    pars['enable_behaviour'] = False                                 # Flag to use this module
-    pars['behaviour_pars'] = {'symptom_quar_pars': {0: (10, 0)},     # Symptomatic individuals quarantine for v1 days with probability v2 in key:(v1,v2) where key is the largest key such that key <= t
-                              'contact_quar_pars': {0: (10, 0)},     # Close contacts quarantine for v1 days with probability v2 in key:(v1,v2) where key is the largest key such that key <= t
-                              'hh_symp_quar_pars': {0: (10, 0)},     # People with symptomatic household members quarantine for v1 days with probability v2 in key:(v1,v2) where key is the largest key such that key <= t
-                              'enable_symp_early_end': {0: False},      # If enabled, those who have tested negative on RAT for more than two consecutive days can leave quarantine
-                              'enable_hh_symp_exemption': {0: False},   # If enabled, household members that are younger than 18 OR vaccinated are exempt
-                              'enable_contact_exemption': {0: False},   # If enabled, contacts that are younger than 18 OR vaccinated are exempt
-                              'smartwatch_behaviour': {0: (False, 'stan')}} # Quarantine according to a standardized ('stan') or historical ('hist') model of behaviour applies to alerted smartwatch users (True/False) as of the most recent key
-    pars['alert_behav_dist_stan'] = {'n':5, 'p':0.2, 's':10}
-    pars['alert_behav_dist_hist'] = {1: {'n':5, 'p':0.05, 's':20},
-                                     2: {'n':5, 'p':0.30, 's':20},
-                                     3: {'n':5, 'p':0.50, 's':20}}
 
     # Events and interventions
-    pars['interventions'] = []   # The interventions present in this simulation; populated by the user 
-    pars['analyzers']     = []   # Custom analysis functions; populated by the user
+    #pars['interventions'] = []   # The interventions present in this simulation; populated by the user 
+    #pars['analyzers']     = []   # Custom analysis functions; populated by the user
     pars['timelimit']     = None # Time limit for the simulation (seconds)
     pars['stopping_func'] = None # A function to call to stop the sim partway through
 
@@ -128,7 +115,7 @@ def make_pars(version=None, **kwargs):
 layer_pars = ['beta_layer', 'contacts', 'dynam_layer', 'iso_factor', 'quar_factor']
 
 
-def reset_layer_pars(pars, layer_keys=None, force=False): # TODO: This will likely have to change once we have a better idea of how contacts work in this new context.
+def reset_layer_pars(pars, layer_keys=None, force=False): 
     '''
     Helper function to set layer-specific parameters. If layer keys are not provided,
     then set them based on the population type. This function is not usually called
@@ -206,7 +193,7 @@ def reset_layer_pars(pars, layer_keys=None, force=False): # TODO: This will like
     return
  
  
-def get_vaccine_choices():# TODO: Find vaccine options for H5N1
+def get_vaccine_choices():# 
     '''
     Define valid pre-defined vaccine names
     '''
@@ -238,7 +225,7 @@ def _get_from_pars(pars, default=False, key=None, defaultkey='default'):
         return pars
 
     
-def get_vaccine_variant_pars(default=False, vaccine=None):# TODO: Modify to reflect H5N1 vaccines
+def get_vaccine_variant_pars(default=False, vaccine=None):# 
     '''
     Define the effectiveness of each vaccine against each variant
     '''

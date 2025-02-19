@@ -1,24 +1,22 @@
-
 import sciris as sc
 
 __all__ = ['PeopleMeta']
 
-class PeopleMeta(sc.prettyobj):
+class PoultryMeta(sc.prettyobj):
     ''' For storing all the keys relating to a person and people '''
 
     def __init__(self):
 
         # Set the properties of a person
-        self.person = [
+        self.poultry = [
             'uid',              # Int
-            'role',             # string? (i.e. owner, worker, inspector, visitor, none)
-            'age',              # Float
-            'sex',              # Float
+            'role',             # string? (i.e. broiler, laying, incubation)
+            'age',              # Float (Do we need this?)
             'symp_prob',        # Float
-            'crit_prob',        # Float
+            'crit_prob',        # Float (Do we need this?)
             'death_prob',       # Float
             'abs_symp_prob',        # Float
-            'abs_crit_prob',        # Float
+            'abs_crit_prob',        # Float (Do we need this?)
             'abs_death_prob',       # Float
             'rel_trans',        # Float
             'rel_sus',          # Float
@@ -34,16 +32,11 @@ class PeopleMeta(sc.prettyobj):
             'exposed',
             'infectious',
             'symptomatic',
-            'critical',
             'tested',
             'diagnosed',
-            'isolated',
-            'recovered',
-            'known_dead',
-            'dead',
             'known_contact',
-            'quarantined',
             'vaccinated',
+            'culled'
         ]
 
         #Each field would be initialized as an matrix NxK where N is the number of pathogens in the simulation, K is the number of agents in the simulation  
@@ -53,7 +46,6 @@ class PeopleMeta(sc.prettyobj):
             'p_exposed',        #exposed by a specific pathogen
             'p_infectious',     #infectious with a specific pathogen
             'p_symptomatic',    #symptomatic with a specific pathogen
-            'p_critical',       #in critical condition caused by specific pathogen
             'p_tested',         #tested for a specific pathogen
             'p_diagnosed',      #diagnosed for a specific pathogen
             'p_recovered',      #recovered after infectious with a specific pathogen
@@ -108,8 +100,6 @@ class PeopleMeta(sc.prettyobj):
         self.dates = [f'date_{state}' for state in self.states] # Convert each state into a date
         self.dates.append('date_pos_test') # Store the date when a person tested which will come back positive 
         
-        self.dates.append('date_end_quarantine') # Store the date when a person comes out of quarantine
-        self.dates.append('date_end_isolation') # Store the date when a person comes out of isolation
         
         self.pathogen_dates = [f'date_{state}' for state in self.pathogen_states] # Convert each state into a date, arrays of NxP where N is num of pathogen and P is num of people
         self.pathogen_dates.append('p_date_pos_test')
@@ -122,7 +112,6 @@ class PeopleMeta(sc.prettyobj):
         self.durs = [
             'dur_exp2inf',
             'dur_inf2sym',
-            'dur_sym2crit',
             'dur_disease',
         ]
 
@@ -151,6 +140,7 @@ class PeopleMeta(sc.prettyobj):
             'exposed':     'Number exposed',
             'infectious':  'Number infectious',
             'symptomatic': 'Number symptomatic',
+            'severe':      'Number of severe cases',
             'critical':    'Number of critical cases',
             'recovered':   'Number recovered',
             'dead':        'Number dead',
@@ -172,6 +162,7 @@ class PeopleMeta(sc.prettyobj):
             'reinfections': 'reinfections',
             'infectious':   'infectious',
             'symptomatic':  'symptomatic cases',
+            'severe':       'severe cases',
             'critical':     'critical cases',
             'recoveries':   'recoveries',
             'deaths':       'deaths',
@@ -187,6 +178,7 @@ class PeopleMeta(sc.prettyobj):
         self.result_flows_by_variant = {
             'infections_by_variant':  'infections by variant',
             'symptomatic_by_variant': 'symptomatic by variant',
+            'severe_by_variant':      'severe by variant',
             'infectious_by_variant':  'infectious by variant',
             'diagnoses_by_variant':   'diagnoses by variant'
         }
@@ -209,4 +201,3 @@ class PeopleMeta(sc.prettyobj):
                 raise ValueError(errormsg)
 
         return
-    
