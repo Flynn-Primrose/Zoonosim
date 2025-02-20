@@ -13,7 +13,7 @@ import collections as co
 from pathlib import Path
 from distutils.version import LooseVersion
 from . import version as znv
-from .settings import options as zno
+from .config import options as zno
 
 #%% Convenience imports from Sciris
 

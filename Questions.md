@@ -7,6 +7,7 @@
   - Worker
   - Vet?
   - Inspector?
+- How many people work on a typical poultry farm?
 - How closely does each role work with the flocks?
   - How much time on a typical day would each role spend in close proximity with the flock?
 - What type of poultry flocks are there?
@@ -36,6 +37,7 @@
   - Vets?
   - Buyers/Sellers?
   - Nosey scientists trying to learn about poultry farming?
+- What equipment is used and is it shared between farms?
 
 ## About H5N1
 

@@ -1,7 +1,7 @@
 """
 Defaults for synthpops files and data types.
 
-NOTE: The contents of this file should eventually be migrated to the config submodule for consistency.
+
 """
 import numpy as np
 import sciris as sc
@@ -15,7 +15,7 @@ default_pop_size = 200
 valid_probability_distributions = [
     'population_age_distributions',
     'household_size_distribution',
-    # 'school_size_distribution',
+
 ]
 
 default_data = {
@@ -32,7 +32,7 @@ default_layer_info = dict(
     member_uids=np.array([], dtype=int),
     )
 
-def default_datadir_path(): # TODO: Direct this to zoonosim/data/contact_data
+def default_datadir_path(): 
     """Return the path to the internal data folder."""
     thisdir = os.path.dirname(os.path.abspath(__file__)) 
     return os.path.join(thisdir, 'data')

@@ -1,21 +1,158 @@
-"""Sample distributions, either from real world data or from uniform distributions."""
-
-import numpy as np
-import numba as nb
+import numba as nb # For faster computations
+import numpy as np # For numerics
+import random # Used only for resetting the seed
+import sciris as sc # For additional utilities
 import pandas as pd
-import sciris as sc
-import random
 import itertools
 import bisect
 import scipy
 from scipy import stats as st
 import warnings
 from .. import base as znb
+from ..config import options as zno # To set options
+from ..config import DataTypes as zndt # To set default types
+from . import stats_ops as znso # For additional statistical operations
+
+# Set dtypes -- note, these cannot be changed after import since Numba functions are precompiled
+nbbool  = nb.bool_
+nbint   = zndt.nbint
+nbfloat = zndt.nbfloat
+
+safe_opts = [1, '1', 'safe'] # TODO: Move this to config
+full_opts = [2, '2', 'full'] # TODO: Move this to config
+safe_parallel = zno.numba_parallel in safe_opts + full_opts
+rand_parallel = zno.numba_parallel in full_opts
+if zno.numba_parallel not in [0, 1, 2, '0', '1', '2', 'none', 'safe', 'full']:
+    errormsg = f'Numba parallel must be "none", "safe", or "full", not "{zno.numba_parallel}"'
+    raise ValueError(errormsg)
+cache = zno.numba_cache # Turning this off can help switching parallelization options
+
+def sample(dist=None, par1=None, par2=None, size=None, **kwargs):
+    '''
+    Draw a sample from the distribution specified by the input. The available
+    distributions are:
+
+    - 'uniform'       : uniform distribution from low=par1 to high=par2; mean is equal to (par1+par2)/2
+    - 'normal'        : normal distribution with mean=par1 and std=par2
+    - 'lognormal'     : lognormal distribution with mean=par1 and std=par2 (parameters are for the lognormal distribution, *not* the underlying normal distribution)
+    - 'normal_pos'    : right-sided normal distribution (i.e. only positive values), with mean=par1 and std=par2 *of the underlying normal distribution*
+    - 'normal_int'    : normal distribution with mean=par1 and std=par2, returns only integer values
+    - 'lognormal_int' : lognormal distribution with mean=par1 and std=par2, returns only integer values
+    - 'poisson'       : Poisson distribution with rate=par1 (par2 is not used); mean and variance are equal to par1
+    - 'neg_binomial'  : negative binomial distribution with mean=par1 and k=par2; converges to Poisson with k=∞
+
+    Args:
+        dist (str):   the distribution to sample from
+        par1 (float): the "main" distribution parameter (e.g. mean)
+        par2 (float): the "secondary" distribution parameter (e.g. std)
+        size (int):   the number of samples (default=1)
+        kwargs (dict): passed to individual sampling functions
+
+    Returns:
+        A length N array of samples
+
+    **Examples**::
+
+        cv.sample() # returns Unif(0,1)
+        cv.sample(dist='normal', par1=3, par2=0.5) # returns Normal(μ=3, σ=0.5)
+        cv.sample(dist='lognormal_int', par1=5, par2=3) # returns a lognormally distributed set of values with mean 5 and std 3
+
+    Notes:
+        Lognormal distributions are parameterized with reference to the underlying normal distribution (see:
+        https://docs.scipy.org/doc/numpy-1.14.0/reference/generated/numpy.random.lognormal.html), but this
+        function assumes the user wants to specify the mean and std of the lognormal distribution.
+
+        Negative binomial distributions are parameterized with reference to the mean and dispersion parameter k
+        (see: https://en.wikipedia.org/wiki/Negative_binomial_distribution). The r parameter of the underlying
+        distribution is then calculated from the desired mean and k. For a small mean (~1), a dispersion parameter
+        of ∞ corresponds to the variance and standard deviation being equal to the mean (i.e., Poisson). For a
+        large mean (e.g. >100), a dispersion parameter of 1 corresponds to the standard deviation being equal to
+        the mean.
+    '''
+
+    # Some of these have aliases, but these are the "official" names
+    choices = [
+        'uniform',
+        'normal',
+        'normal_pos',
+        'normal_int',
+        'lognormal',
+        'lognormal_int',
+        'poisson',
+        'neg_binomial',
+    ]
+
+    # Ensure it's an integer
+    if size is not None:
+        size = int(size)
+
+    # Compute distribution parameters and draw samples
+    # NB, if adding a new distribution, also add to choices above
+    if   dist in ['unif', 'uniform']: samples = np.random.uniform(low=par1, high=par2, size=size, **kwargs)
+    elif dist in ['norm', 'normal']:  samples = np.random.normal(loc=par1, scale=par2, size=size, **kwargs)
+    elif dist == 'normal_pos':        samples = np.abs(np.random.normal(loc=par1, scale=par2, size=size, **kwargs))
+    elif dist == 'normal_int':        samples = np.round(np.abs(np.random.normal(loc=par1, scale=par2, size=size, **kwargs)))
+    elif dist == 'poisson':           samples = znso.n_poisson(rate=par1, n=size, **kwargs) # Use Numba version below for speed
+    elif dist == 'neg_binomial':      samples = znso.n_neg_binomial(rate=par1, dispersion=par2, n=size, **kwargs) # Use custom version below
+    elif dist in ['lognorm', 'lognormal', 'lognorm_int', 'lognormal_int']:
+        if par1>0:
+            mean  = np.log(par1**2 / np.sqrt(par2**2 + par1**2)) # Computes the mean of the underlying normal distribution
+            sigma = np.sqrt(np.log(par2**2/par1**2 + 1)) # Computes sigma for the underlying normal distribution
+            samples = np.random.lognormal(mean=mean, sigma=sigma, size=size, **kwargs)
+        else:
+            samples = np.zeros(size)
+        if '_int' in dist:
+            samples = np.round(samples)
+    else:
+        errormsg = f'The selected distribution "{dist}" is not implemented; choices are: {sc.newlinejoin(choices)}'
+        raise NotImplementedError(errormsg)
+
+    return samples
+
+
+
+def get_pdf(dist=None, par1=None, par2=None):
+    '''
+    Return a probability density function for the specified distribution. This
+    is used for example by test_num to retrieve the distribution of times from
+    symptom-to-swab for testing. For example, for Washington State, these values
+    are dist='lognormal', par1=10, par2=170.
+    '''
+    import scipy.stats as sps # Import here since slow
+
+    choices = [
+        'none',
+        'uniform',
+        'lognormal',
+    ]
+
+    if dist in ['None', 'none', None]:
+        return None
+    elif dist == 'uniform':
+        pdf = sps.uniform(loc=par1, scale=par2)
+    elif dist == 'lognormal':
+        mean  = np.log(par1**2 / np.sqrt(par2 + par1**2)) # Computes the mean of the underlying normal distribution
+        sigma = np.sqrt(np.log(par2/par1**2 + 1)) # Computes sigma for the underlying normal distribution
+        pdf   = sps.lognorm(sigma, loc=-0.5, scale=np.exp(mean))
+    else:
+        choicestr = '\n'.join(choices)
+        errormsg = f'The selected distribution "{dist}" is not implemented; choices are: {choicestr}'
+        raise NotImplementedError(errormsg)
+
+    return pdf
 
 
 def set_seed(seed=None):
-    """Reset the random seed -- complicated because of Numba."""
-    @nb.njit((nb.int64,), cache=True)
+    '''
+    Reset the random seed -- complicated because of Numba, which requires special
+    syntax to reset the seed. This function also resets Python's built-in random
+    number generated.
+
+    Args:
+        seed (int): the random seed
+    '''
+
+    @nb.njit((nbint,), cache=cache)
     def set_seed_numba(seed):
         return np.random.seed(seed)
 
@@ -26,14 +163,13 @@ def set_seed(seed=None):
     if seed is not None:
         seed = int(seed)
 
-    set_seed_regular(seed)  # If None, reinitializes it
-    if seed is None:  # Numba can't accept a None seed, so use our just-reinitialized Numpy stream to generate one
+    set_seed_regular(seed) # If None, reinitializes it
+    if seed is None: # Numba can't accept a None seed, so use our just-reinitialized Numpy stream to generate one
         seed = np.random.randint(1e9)
     set_seed_numba(seed)
-    random.seed(seed)  # Finally, reset Python's built-in random number generator
+    random.seed(seed) # Finally, reset Python's built-in random number generator, just in case (used by SynthPops)
 
     return
-
 
 def fast_choice(weights):
     """
