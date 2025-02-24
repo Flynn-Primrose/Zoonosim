@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 from . import FlexDict
-from .. import defaults as znd # default_int, default_float
+from ..config import DataTypes as znd # default_int, default_float
 from .. import utils as znu # choose, choose_r, find_contacts
 
 __all__ = ['Layer']
@@ -240,7 +240,7 @@ class Layer(FlexDict):
         contact_inds = znu.find_contacts(self['p1'], self['p2'], inds)
         if as_array:
             contact_inds = np.fromiter(contact_inds, dtype=znd.default_int)
-            contact_inds.sort()  # Sorting ensures that the results are reproducible for a given seed as well as being identical to previous versions of Covasim
+            contact_inds.sort()  # Sorting ensures that the results are reproducible for a given seed as well as being identical to previous versions of Zoonosim
 
         return contact_inds
 
@@ -259,7 +259,7 @@ class Layer(FlexDict):
         changing contacts for people that are severe/critical).
 
         Args:
-            people (People): the Covasim People object, which is usually used to make new contacts
+            people (People): the Zoonosim People object, which is usually used to make new contacts
             frac (float): the fraction of contacts to update on each timestep
         '''
         # Choose how many contacts to make

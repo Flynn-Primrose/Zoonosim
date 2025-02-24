@@ -1,15 +1,15 @@
 '''
-Set the parameters for Zoonosim.
+A submodule for creating and managing parameters for the simulation.
 '''
 
 import sciris as sc
-from .config import options as zno # For setting global options
+from . import options as zno # For setting global options
 
 __all__ = ['make_pars', 'reset_layer_pars', 'get_vaccine_choices',
             'get_vaccine_variant_pars', 'get_vaccine_dose_pars']
 
 
-def make_pars(version=None, **kwargs):
+def make_pars( **kwargs):
     '''
     Create the parameters for the simulation. Typically, this function is used
     internally rather than called by the user; e.g. typical use would be to do
@@ -129,55 +129,27 @@ def reset_layer_pars(pars, layer_keys=None, force=False):
         force (bool): reset the parameters even if they already exist
     '''
 
-    # Specify defaults for random -- layer 'a' for 'all'
-    layer_defaults = {}
-    layer_defaults['random'] = dict(
-        beta_layer  = dict(a=1.0), # Default beta
-        contacts    = dict(a=20),  # Default number of contacts
-        dynam_layer = dict(a=0),   # Do not use dynamic layers by default
-        iso_factor  = dict(a=0.2), # Assumed isolation factor
-        quar_factor = dict(a=0.3), # Assumed quarantine factor
+    # Specify defaults for layers
+    layer_defaults = dict(
+        beta_layer = dict(f=3.0, e=1.0, a=1.5), # Per-population beta weights; relative. This is a complete guess.
+        contacts   = dict(f=20,  e=20,  a=20), # Number of contacts per person per day, estimated
+        dynam_layer= dict(f=0,   e=0,   a=0),  # Which layers are dynamic -- none by default
+        iso_factor = dict(f=0.3, e=0.2, a=0.2), # Multiply beta by this factor for people in isolation
+        quar_factor= dict(f=0.6, e=0.3, a=0.3), # Multiply beta by this factor for people in quarantine
     )
-
-    # Specify defaults for hybrid -- household, school, work, and community layers (h, s, w, c)
-    layer_defaults['hybrid'] = dict(
-        beta_layer  = dict(h=3.0, s=0.6, w=0.6, c=0.3),  # Per-population beta weights; relative; in part based on Table S14 of https://science.sciencemag.org/content/sci/suppl/2020/04/28/science.abb8001.DC1/abb8001_Zhang_SM.pdf
-        contacts    = dict(h=2.0, s=20,  w=16,  c=20),   # Number of contacts per person per day, estimated
-        dynam_layer = dict(h=0,   s=0,   w=0,   c=0),    # Which layers are dynamic -- none by default
-        iso_factor  = dict(h=0.3, s=0.1, w=0.1, c=0.1),  # Multiply beta by this factor for people in isolation
-        quar_factor = dict(h=0.6, s=0.2, w=0.2, c=0.2),  # Multiply beta by this factor for people in quarantine
-    )
-
-    # Specify defaults for SynthPops -- same as hybrid except for LTCF layer (l)
-    l_pars = dict(beta_layer=1.5, contacts=10, dynam_layer=0, iso_factor=0.2, quar_factor=0.3)
-    layer_defaults['synthpops'] = sc.dcp(layer_defaults['hybrid'])
-    for key,val in l_pars.items():
-        layer_defaults['synthpops'][key]['l'] = val # Add LTCF layer params, since this isn't in hybrid. 
-
-    # Behaviour module is the same except for quarantine factors. 
-    layer_defaults['behaviour_module'] = sc.dcp(layer_defaults['synthpops'])
-    b_quar_factors = dict(h=0.5, s=0.1, w=0.1, c=0.1, l=0.5)
-    for key, val in b_quar_factors.items():
-        layer_defaults['behaviour_module']['quar_factor'][key] = val
-
-    # Choose the parameter defaults based on the population type, and get the layer keys
-    try:
-        defaults = layer_defaults[pars['pop_type']]
-    except Exception as E:
-        errormsg = f'Cannot load defaults for population type "{pars["pop_type"]}": must be hybrid, random, or synthpops'
-        raise ValueError(errormsg) from E
-    default_layer_keys = list(defaults['beta_layer'].keys()) # All layers should be the same, but use beta_layer for convenience
+    
+    default_layer_keys = layer_defaults['beta_layer'].keys() # Get the default layer keys, which are the same for all layers.
 
     # Actually set the parameters
     for pkey in layer_pars:
         par = {} # Initialize this parameter
-        default_val = layer_defaults['random'][pkey]['a'] # Get the default value for this parameter
+        default_val = layer_defaults[pkey] # Get the default values for this parameter
 
         # If forcing, we overwrite any existing parameter values
         if force:
-            par_dict = defaults[pkey] # Just use defaults
+            par_dict = layer_defaults[pkey] # Just use defaults
         else:
-            par_dict = sc.mergedicts(defaults[pkey], pars.get(pkey, None)) # Use user-supplied parameters if available, else default
+            par_dict = sc.mergedicts(layer_defaults[pkey], pars.get(pkey, None)) # Use user-supplied parameters if available, else default
 
         # Figure out what the layer keys for this parameter are (may be different between parameters)
         if layer_keys:
