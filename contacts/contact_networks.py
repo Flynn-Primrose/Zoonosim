@@ -1,5 +1,5 @@
 """
-This module generates the household, school, and workplace contact networks.
+This module generates contact networks.
 """
 
 import sciris as sc
@@ -24,13 +24,7 @@ def make_all_contacts(pop, structs, pars):
 
 
     Returns:
-        A popdict of people with attributes. Dictionary keys are the IDs of individuals in the population and the values are a dictionary
-        for each individual with their attributes, such as age, household ID (hhid), school ID (scid), workplace ID (wpid), workplace
-        industry code (wpindcode) if available, and the IDs of their contacts in different layers. Different layers available are
-        households ('H'), schools ('S'), and workplaces ('W'), and long term care facilities ('LTCF'). Contacts in these layers are clustered and thus form a network composed of
-        groups of people interacting with each other. For example, all household members are contacts of each other, and everyone in the
-        same school is considered a contact of each other. If use_two_group_reduction is True, then contracts within 'LTCF' are reduced
-        from fully connected.
+        A popdict of people with attributes.
 
     Notes:
         Methods to trim large groups of contacts down to better approximate a sense of close contacts (such as classroom sizes or

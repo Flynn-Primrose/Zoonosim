@@ -16,7 +16,8 @@ default_layer_info = dict(
 # available globally if needed or via defaults.py --- stores information about
 
 settings = sc.objdict()
-settings.max_age = 101
+settings.max_human_age = 101
+settings.max_poultry_age = 1 # This is just a guess
 
 
 def reset_settings_by_key(key, value):

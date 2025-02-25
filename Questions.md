@@ -23,6 +23,14 @@
       - Are incubators more/less isolated from the environment than broilers?
       - Backyard flocks vs Commercial?
       - Free-run, Free-range?
+      - To quote Beaudoin "Researchers commonly distinguish four broad types of production systems for poultry
+production ... . Two are low-biosecurity systems: backyard or village pro-
+duction, and minimally biosecure open houses with or without netting. In the former,
+poultry roam freely in domestic settings; in the latter, poultry may be allowed out-
+side of the housing, as with free-grazing duck flocks. Two other systems have greater
+biosecurity: contract farms (in which poultry are in closed facilities with basic physical
+barriers) and biosecure closed systems (with all aspects of production and transport
+conducted internally)"
 - Do farms have multiple types of flocks?
   - If so, do they come into contact with each other?
 - How many incubators does the typical farm work with?
@@ -88,6 +96,9 @@ and pathogen (currently H5N1), we need estimates of the following:
 
 - What do we include in the model and what can be excluded?
 - Whats the best way to model immunity (e.g. should we use the nab framework?)
+- Relative strength of contact types? A key aspect of the model is that contacts between agents come in a variety of types each of which modifies the probability of transmission. For example in pathosim contacts are broken down into 'work', 'home', 'school', and 'community'. Home contacts might have a weight of 2.0 where work contacts have a weight of 1.0, this would indicate that an agent is twice as likely to be infected at home as at work, all else being equal. This reflects the inherent differences in the types of contact that happen in these locations.
+  - In our case the contact types will be different but we are still interested in their relative importance. Our contact types could be:
+    - different contact type for different activities related to poultry (e.g. 'feeding', 'collecting eggs', 'removing fecal matter'...). We will want to have a rough idea of how likely transmission is during each of these activities relative to each other.
 
 ## Sources
 
@@ -97,3 +108,4 @@ and pathogen (currently H5N1), we need estimates of the following:
     Jack Ward, Joshua W. Lambert, Timothy W. Russell, James M. Azam, Adam J. Kucharski, Sebastian Funk, Billy J. Quilty, Oswaldo Gressani, Niel Hens, W. John Edmunds
     medRxiv 2024.12.11.24318702; doi: [link](https://doi.org/10.1101/2024.12.11.24318702)
 - Hui DS. Review of clinical symptoms and spectrum in humans with influenza A/H5N1 infection. Respirology. 2008 Mar;13 Suppl 1:S10-3. doi: 10.1111/j.1440-1843.2008.01247.x. PMID: 18366521.
+- Beaudoin, Amanda, and Alan G. Isaac. "Direct and indirect transmission of avian influenza: results from a calibrated agent-based model." Journal of Economic Interaction and Coordination 18.1 (2023): 191-212.
