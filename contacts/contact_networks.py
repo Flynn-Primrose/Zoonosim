@@ -24,14 +24,13 @@ def make_all_contacts(pop, structs, pars):
 
 
     Returns:
-        A popdict of people with attributes.
+        A popdict of agents with attributes.
 
     Notes:
         Methods to trim large groups of contacts down to better approximate a sense of close contacts (such as classroom sizes or
         smaller work groups are available via sp.trim_contacts() or sp.create_reduced_contacts_with_group_types(): see these methods for more details).
 
-        If with_school_types==False, completely random schools will be generated with respect to the average_class_size,
-        but other parameters such as average_additional_staff_degree will not be used.
+
     """
     pop.popdict = init_popdict_skele(structs, sexes=np.random.randint(2, size=len(structs.age_by_uid)))
 
@@ -53,61 +52,54 @@ def init_popdict_skele(structs):
 
 
 
-def get_contact_counts_by_layer(popdict, layer='S', with_layer_ids=False):
+def get_contact_counts_by_layer(popdict, layer='F', with_layer_ids=False):
     """
     Method to count the number of contacts for individuals in the population
-    based on their role in a layer and the role of their contacts. For example,
-    in schools this method can distinguish the number of contacts between
-    students, teachers, and non teaching staff in the population, as well as
-    return the number of contacts between all individuals present in a school.
-    In a population with a school layer and roles defined as students, teachers,
-    and non teaching staff, this method will return the number of contacts or
-    edges for sc_students, sc_teachers, and sc_staff to sc_student, sc_teacher,
-    sc_staff, all_staff, all. all_staff is the combination of sc_teacher and
-    sc_staff, and all is all kinds of people in schools.
+    based on their role in a layer and the role of their contacts.
 
     Args:
         popdict (dict)        : popdict of a Pop object, Dictionary keys are the IDs of individuals in the population and the values are a dictionary
-        layer (str)           : name of the physical contact layer: H for households, S for schools, W for workplaces, C for community, etc.
+        layer (str)           : name of the physical contact layer: TODO: Update once we have settled on what layers we are using.
         with_layer_ids (bool) : If True, return additional dictionary on contacts by layer group id
 
     Returns:
         If with_layer_ids is False: A dictionary with keys = people_types
-        (default to ['sc_student', 'sc_teacher', 'sc_staff']) and each value is
+        (default to [TODO: Update once decided]) and each value is
         a dictionary which stores the list of counts for each type of contact:
-        default to ['sc_student', 'sc_teacher', 'sc_staff', 'all_staff', 'all']
-        for example: contact_counter['sc_teacher']['sc_teacher'] store the
-        counts of each teacher's contacts or edges to other teachers. If
+        default to [TODO: Update when ready]
+        for example: contact_counter[dummy][dummy] store the
+        counts of each dummy's contacts or edges to other dummy. If
         with_layer_ids is True: additionally return a dictionary with keys =
-        layer_id (for example: scid, wpid...), and value is list of contact
+        layer_id (for example: fid,...), and value is list of contact
         contacts.
 
     """
     layer = layer.upper()
     # layer keys are used to identify the people in that layer
-    layer_keys = {"F": "fid",
-                  "R": "rid",
-                  "A": "aid"}
+    layer_keys = {"F": "fid", # farm id
+                  "W": "wid", # water id
+                  "E": "eid", # equipment id
+                  }
 
     # for all layers, 'all' contact_types will store counts for all contacts but
     # based on each different layer, there can be more contact_types.
-    if layer == 'F':
-        people_types = ['sc_student', 'sc_teacher', 'sc_staff']
-        contact_types = people_types + ['all_staff', 'all']
-    elif layer == "LTCF":
-        people_types = ['ltcf_res', 'ltcf_staff']
-        contact_types = people_types + ['all']
-    elif layer in ["W", "H"]:
-        people_types = [layer_keys[layer]]
-        contact_types = ['all']
+    if layer == "F":
+        agent_types = ['farm_staff', 'farm_manager', 'farm_flock']
+        contact_types = agent_types + ['all_staff', 'all']
+    elif layer == "W":
+        agent_types = ['water_flock']
+        contact_types = agent_types + ['all']
+    elif layer == "E":
+        agent_types = ['equip_staff', 'equip_flock']
+        contact_types = agent_types + ['all']
     else:
         raise NotImplementedError(f"layer {layer} not supported.")
 
     # initialize the contact counter between each people type and contact type as empty list
     contact_counter = {k: dict(zip(contact_types, ([] for _ in contact_types))) for k in
-                       dict.fromkeys(people_types)}
+                       dict.fromkeys(agent_types)}
     # index_switcher is a case-switch selector for the person selected by its type
-    index_switcher = {k: contact_counter[k] for k in people_types}
+    index_switcher = {k: contact_counter[k] for k in agent_types}
 
     # also store all contacts count per layer id in contacts_counter_by_id
     contacts_counter_by_id = dict()
@@ -125,15 +117,15 @@ def get_contact_counts_by_layer(popdict, layer='S', with_layer_ids=False):
             }
 
             contacts_counter_by_id.setdefault(person[layer_keys[layer]], [])
-            for k1 in people_types:
+            for k1 in agent_types:
                 # if this person does not belong to a particular key, we don't need to store the counts under this key
                 if person.get(k1) is not None:
-                    # store sc_teacher, sc_student, sc_staff, all_staff and all below
-                    if layer == "S":
-                        for k2 in people_types:
+                    # store 
+                    if layer == "F":
+                        for k2 in agent_types:
                             index_switcher.get(k1)[k2].append(count_switcher.get(k2))
                         index_switcher.get(k1)["all_staff"].append(
-                            count_switcher.get('sc_teacher') + count_switcher.get('sc_staff'))
+                            count_switcher.get('farm_staff') + count_switcher.get('farm_manager'))
                     # for other types, only all contacts are stored
                     index_switcher.get(k1)["all"].append(count_switcher.get('all'))
             if with_layer_ids:

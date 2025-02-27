@@ -1,0 +1,3 @@
+'''
+Contact via shared equipment
+'''

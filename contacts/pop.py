@@ -6,6 +6,7 @@ import numpy as np
 import sciris as sc
 
 from ..config import Defaults as znd
+from ..utils import sample_ops as znso
 
 from .. import base as znb
 
@@ -16,28 +17,13 @@ class Pop(sc.prettyobj):
     def __init__(self,
                  n_people=None,
                  n_poultry=None,
-                 max_contacts=None,
-                 school_pars=None,
-                 use_default=False,
-                 with_school_types=False,
-                 school_mixing_type='random',
-                 average_class_size=20,
-                 inter_grade_mixing=0.1,
-                 average_student_teacher_ratio=20,
-                 average_teacher_teacher_degree=3,
-                 teacher_age_min=25,
-                 teacher_age_max=75,
-                 with_non_teaching_staff=False,
-                 average_student_all_staff_ratio=15,
-                 average_additional_staff_degree=20,
-                 staff_age_min=20,
-                 staff_age_max=75,
+                 max_farm_contacts=None,
+                 farm_pars=None,
+                 max_water_contacts=None,
+                 water_pars=None,
+                 max_equipment_contacts=None,
+                 equipment_pars=None,
                  rand_seed=None,
-                 country_location=None,
-                 state_location=None,
-                 location=None,
-                 sheet_name=None,
-                 household_method='infer_ages',
                  smooth_ages=False,
                  window_length=7,
                  do_make=True
@@ -50,7 +36,6 @@ class Pop(sc.prettyobj):
             n_people (int)                          : The number of human agents to be created
             n_poultry (int)                         : The number of poultry flocks to be created
             max_contacts (dict)                     : A dictionary for maximum number of contacts per layer..
-            use_default (bool)                      : If True, use default data from settings.location, settings.state, settings.country.
             rand_seed (int)                         : Start point random sequence is generated from.
             smooth_ages (bool)                      : If True, use smoothed out age distribution.
             window_length (int)                     : length of window over which to average or smooth out age distribution
@@ -68,78 +53,40 @@ class Pop(sc.prettyobj):
             n_poultry = znd.default_poultry_pop
 
         # Assign all the variables
-        self.loc_pars           = sc.objdict()
-        self.school_pars        = sc.objdict()
+        self.farm_pars          = sc.objdict()
+        self.water_pars         = sc.objdict()
+        self.equipment_pars     = sc.objdict()
 
-        self.n                  = int(n)
-        self.max_contacts       = sc.mergedicts({'W': 20}, max_contacts)
+        self.n_people           = int(n_people)
+        self.n_poultry          = int(n_poultry)
+        self.max_contacts       = sc.mergedicts({'F': max_farm_contacts}, 
+                                                {'W': max_water_contacts},
+                                                {'E': max_equipment_contacts}) 
         self.rand_seed          = rand_seed
-        self.country_location   = country_location
-        self.state_location     = state_location
-        self.location           = location
-        self.sheet_name         = sheet_name
-        self.use_default        = use_default
 
         # Age distribution parameters
         self.smooth_ages                                 = smooth_ages
         self.window_length                               = window_length
 
-        # Household parameters
-        self.household_method                            = household_method
-
-        # School parameters
-        self.school_pars.with_school_types               = with_school_types
-        self.school_pars.school_mixing_type              = school_mixing_type
-        self.school_pars.average_class_size              = average_class_size
-        self.school_pars.inter_grade_mixing              = inter_grade_mixing
-        self.school_pars.average_student_teacher_ratio   = average_student_teacher_ratio
-        self.school_pars.average_teacher_teacher_degree  = average_teacher_teacher_degree
-        self.school_pars.teacher_age_min                 = teacher_age_min
-        self.school_pars.teacher_age_max                 = teacher_age_max
-        self.school_pars.with_non_teaching_staff         = with_non_teaching_staff
-        self.school_pars.average_student_all_staff_ratio = average_student_all_staff_ratio
-        self.school_pars.average_additional_staff_degree = average_additional_staff_degree
-        self.school_pars.staff_age_min                   = staff_age_min
-        self.school_pars.staff_age_max                   = staff_age_max
-
-
+        # Farm parameters
         # If any parameters are supplied as a dict to override defaults, merge them in now
-        self.school_pars = sc.objdict(sc.mergedicts(self.school_pars, school_pars))
+        self.farm_pars = sc.objdict(sc.mergedicts(self.farm_pars, farm_pars))
+
+        # Water parameters
+        # If any parameters are supplied as a dict to override defaults, merge them in now
+        self.water_pars = sc.objdict(sc.mergedicts(self.water_pars, water_pars))
+
+        # Equipment parameters
+        # If any parameters are supplied as a dict to override defaults, merge them in now
+        self.equipment_pars = sc.objdict(sc.mergedicts(self.equipment_pars, equipment_pars))
 
         # what are the layers generated?
-        self.layers = ['H', 'S', 'W', 'F']
-        self.layer_mappings = dict(H='Households', S='Schools', W='Workplaces', F = 'Farms')
+        self.layers = ['F', 'W', 'E']
+        self.layer_mappings = dict(F = 'Farms', W = 'Water', E = 'Equipment')
 
         # Handle the seed
         if self.rand_seed is not None:
-            spsamp.set_seed(self.rand_seed) # TODO: Decide where this method should be stored
-
-        # Handle data
-        if self.country_location is None:
-            self.country_location = defaults.settings.country_location
-            self.state_location   = defaults.settings.state_location
-            self.location         = defaults.settings.location
-        else:
-            print(f"========== setting country location = {country_location}")
-            cfg.set_location_defaults(country_location)
-
-        self.max_age = defaults.settings.max_age
-
-        # if country is specified, and state is not, we are doing a country population
-        if self.state_location is None:
-            self.location = None
-
-        # if sheet name is not specified, use the default
-        if self.sheet_name is None:
-            self.sheet_name = defaults.settings.sheet_name
-        self.datadir = defaults.settings.datadir  # Assume this has been reset...
-
-        # Location parameters
-        self.loc_pars.location         = self.location
-        self.loc_pars.state_location   = self.state_location
-        self.loc_pars.country_location = self.country_location
-        self.loc_pars.datadir          = self.datadir
-        self.loc_pars.use_default      = self.use_default
+            znso.set_seed(self.rand_seed) # TODO: Decide where this method should be stored
 
         # Heavy lift: make the contacts and their connections
         population = self.generate()
@@ -162,15 +109,11 @@ class Pop(sc.prettyobj):
         # TODO: unpack variables -- to be refactored to pass parameters directly
 
         # General parameters
-        datadir                         = self.datadir
-        location                        = self.location
-        state_location                  = self.state_location
-        country_location                = self.country_location
-        n                               = self.n
-        sheet_name                      = self.sheet_name
+
+        n_people                        = self.n_people
+        n_poultry                       = self.n_poultry
         max_contacts                    = self.max_contacts
-        use_default                     = self.use_default
-        loc_pars                        = self.loc_pars
+
 
         # Age distribution parameters
         smooth_ages                     = self.smooth_ages
