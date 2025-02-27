@@ -86,7 +86,7 @@ class Pop(sc.prettyobj):
 
         # Handle the seed
         if self.rand_seed is not None:
-            znso.set_seed(self.rand_seed) # TODO: Decide where this method should be stored
+            znso.set_seed(self.rand_seed)
 
         # Heavy lift: make the contacts and their connections
         population = self.generate()
