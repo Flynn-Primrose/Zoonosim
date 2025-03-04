@@ -1,13 +1,17 @@
+'''
+Defines the properties and states of collectively modeled agents
+'''
+
 import sciris as sc
 
-__all__ = ['PeopleMeta']
+__all__ = ['CollectiveMeta']
 
-class PoultryMeta(sc.prettyobj):
-    ''' For storing all the keys relating to a person and people '''
+class CollectiveMeta(sc.prettyobj):
+    ''' For storing all the keys relating to collectivly modelled agents '''
 
     def __init__(self):
 
-        # Set the properties of a person
+        # Set the properties of a collective
         self.poultry = [
             'uid',              # Int
             'role',             # string? (i.e. broiler, laying, incubation)

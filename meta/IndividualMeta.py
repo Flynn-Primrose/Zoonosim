@@ -1,23 +1,21 @@
 '''
-Currently unused.
+Defines the properties and states of individually modeled agents
 '''
-
 import sciris as sc
 
-__all__ = ['AgentMeta']
+__all__ = ['IndividualMeta']
 
-class PeopleMeta(sc.prettyobj):
-    ''' For storing all the keys relating to a person and people '''
+class individualMeta(sc.prettyobj):
+    ''' For storing all the keys relating to individually modelled agents '''
 
     def __init__(self):
 
         # Set the properties of a person
-        self.agent = [
-            'uid',              # Int, Unique identifier
-            'sid',              # Int, Species identifier
-            'role',             # string? The valid options will change depending on the species type
+        self.person = [
+            'uid',              # Int
+            'role',             # string? (i.e. owner, worker, inspector, visitor, none)
             'age',              # Float
-            # 'sex',              # Float, I don't think this is necessary
+            'sex',              # Float
             'symp_prob',        # Float
             'crit_prob',        # Float
             'death_prob',       # Float
@@ -202,7 +200,7 @@ class PeopleMeta(sc.prettyobj):
         self.cum_result_flows_by_variant = [f'cum_{key}' for key in self.result_flows_by_variant.keys()]
 
         # Validate 
-        self.state_types = ['agent', 'states','pathogen_states', 'pathogen_variants', 'imm_states',
+        self.state_types = ['person', 'states','pathogen_states', 'pathogen_variants', 'imm_states',
                             'nab_states', 'vacc_states', 'dates', 'pathogen_dates', 'durs', 'all_states', 'imm_levels', 'population_sampling']
         for state_type in self.state_types:
             states = getattr(self, state_type)
@@ -213,3 +211,4 @@ class PeopleMeta(sc.prettyobj):
                 raise ValueError(errormsg)
 
         return
+    

@@ -26,20 +26,13 @@ class Pop(sc.prettyobj):
                  rand_seed=None,
                  smooth_ages=False,
                  window_length=7,
-                 do_make=True
                  ):
         '''
         Make a full population network including both people, poultry, and
         contacts.
 
         Args:
-            n_people (int)                          : The number of human agents to be created
-            n_poultry (int)                         : The number of poultry flocks to be created
-            max_contacts (dict)                     : A dictionary for maximum number of contacts per layer..
-            rand_seed (int)                         : Start point random sequence is generated from.
-            smooth_ages (bool)                      : If True, use smoothed out age distribution.
-            window_length (int)                     : length of window over which to average or smooth out age distribution
-            do_make (bool)                          : whether to make the population
+        # TODO: Fill this in once its settled
 
         Returns:
             network (dict): A dictionary of the full population with ages, connections, and other attributes.
