@@ -85,6 +85,10 @@ and pathogen (currently H5N1), we need estimates of the following:
 - Cross-species infection
   - probability of poultry infecting human
   - probability of human infecting poultry
+- Contamination
+  - Can infections be spread via contaminated surfaces
+  - How long does H5N1 survive outside of a host
+  - How long can H5N1 survive in a body of water
 
 ## About Quebec
 
