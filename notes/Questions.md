@@ -2,12 +2,15 @@
 
 ## About poultry farms
 
+- What is the production cycle of a poultry farm?
+  - period of single flock?
+  - period of complete changeover? i.e. farm at time_1 and farm at time_2 have no individual livestock in common.
+  - number of staff
 - What roles do people play on the farm?
-  - Owner
-  - Worker
+  - Typical employee?
+  - Manager?
   - Vet?
   - Inspector?
-- How many people work on a typical poultry farm?
 - How closely does each role work with the flocks?
   - How much time on a typical day would each role spend in close proximity with the flock?
 - What type of poultry flocks are there?
@@ -32,20 +35,27 @@ biosecurity: contract farms (in which poultry are in closed facilities with basi
 barriers) and biosecure closed systems (with all aspects of production and transport
 conducted internally)"
 - Do farms have multiple types of flocks?
+  - e.g. broiler/layer, duck/chicken?
   - If so, do they come into contact with each other?
 - How many incubators does the typical farm work with?
   - Is each poultry flock replaced entirely? Or is there mixing of old and new stock?
   - Do farms consistently work with the same incubators?
+  - What is the production cycle of an incubator farm?
+  - Differences between breeding stock and production stock?
 - How frequently are flocks sent to the abattoir?
   - Is the whole flock sent at once?
   - Is the same abattoir always used?
 - What happens if a farmer suspects their flock is infected?
+  - Is there any degree of escalation? Or is it like pulling a fire alarm?
 - How frequently do outside parties visit the farm?
   - Inspectors?
   - Vets?
   - Buyers/Sellers?
   - Nosey scientists trying to learn about poultry farming?
 - What equipment is used and is it shared between farms?
+- How many barns does a typical farm have?
+  - Can we assume 1 flock per barn?
+  - Cleaning between cycles
 
 ## About H5N1
 
@@ -85,10 +95,14 @@ and pathogen (currently H5N1), we need estimates of the following:
 - Cross-species infection
   - probability of poultry infecting human
   - probability of human infecting poultry
+  - Does the probability of transmission depend only on the target species?
+  Or does the source species matter?
+
 - Contamination
   - Can infections be spread via contaminated surfaces
   - How long does H5N1 survive outside of a host
   - How long can H5N1 survive in a body of water
+  - Is H5N1 airborne?
 
 ## About Quebec
 
@@ -103,6 +117,15 @@ and pathogen (currently H5N1), we need estimates of the following:
 - Relative strength of contact types? A key aspect of the model is that contacts between agents come in a variety of types each of which modifies the probability of transmission. For example in pathosim contacts are broken down into 'work', 'home', 'school', and 'community'. Home contacts might have a weight of 2.0 where work contacts have a weight of 1.0, this would indicate that an agent is twice as likely to be infected at home as at work, all else being equal. This reflects the inherent differences in the types of contact that happen in these locations.
   - In our case the contact types will be different but we are still interested in their relative importance. Our contact types could be:
     - different contact type for different activities related to poultry (e.g. 'feeding', 'collecting eggs', 'removing fecal matter'...). We will want to have a rough idea of how likely transmission is during each of these activities relative to each other.
+- Temp./Hum.
+  - From reading I get the impression that these are carefully regulated during the production cycle.
+  - Obviously there is the question of what effect these variables have on susceptibility.
+  - There is also the possibility of using these variables as a means of detection. E.g. if stock is infected, gets a fever, and raises the local temperature.
+  - Theoretically it might be possible to 'sterilize' a barn by cycling these variables autoclave style.
+
+- Ammonia/CO2?
+  - I understand large enough operations can produce enough of these to merit specialized ventilation systems.
+  - Even at smaller scales, they will still be present. Enough to have a meaningful impact?
 
 ## Sources
 

@@ -1,3 +1,0 @@
-'''
-Initilize the meta module
-'''
