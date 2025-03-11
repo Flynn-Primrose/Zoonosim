@@ -7,12 +7,13 @@
   - period of complete changeover? i.e. farm at time_1 and farm at time_2 have no individual livestock in common.
   - number of staff
 - What roles do people play on the farm?
-  - Typical employee?
+  - Typical staff?
   - Manager?
   - Vet?
   - Inspector?
 - How closely does each role work with the flocks?
   - How much time on a typical day would each role spend in close proximity with the flock?
+  - Does every staff member contact every flock every day?
 - What type of poultry flocks are there?
   - broiler
   - laying
