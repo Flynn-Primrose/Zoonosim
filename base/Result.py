@@ -7,6 +7,8 @@ import sciris as sc
 
 from . import defaults as znd
 
+__all__ = ['Result']
+
 class Result(object):
     '''
     Stores a single result -- by default, acts like an array.

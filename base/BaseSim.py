@@ -20,6 +20,8 @@ from .. import version as znv
 from .. import misc as znm
 from .. import utils as znu
 
+__all__ = ['BaseSim']
+
 class ParsObj(FlexPretty):
     '''
     A class based around performing operations on a self.pars dict.
