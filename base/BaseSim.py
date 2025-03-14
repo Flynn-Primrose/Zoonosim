@@ -185,13 +185,14 @@ class BaseSim(ParsObj):
         # except:  # pragma: no cover # If it's None or missing
         #     return 0
 
-    @property
-    def scaled_pop_size(self):
-        ''' Get the total population size, i.e. the number of agents times the scale factor -- if it fails, assume none '''
-        try:
-            return self['pop_size']*self['pop_scale']
-        except:  # pragma: no cover # If it's None or missing
-            return 0
+    # NOTE: We arn't using scaling so this should be unnecessary
+    # @property
+    # def scaled_pop_size(self):
+    #     ''' Get the total population size, i.e. the number of agents times the scale factor -- if it fails, assume none '''
+    #     try:
+    #         return self['pop_size']*self['pop_scale']
+    #     except:  # pragma: no cover # If it's None or missing
+    #         return 0
 
     @property
     def npts(self):
