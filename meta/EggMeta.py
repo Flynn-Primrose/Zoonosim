@@ -11,6 +11,8 @@ class BarnMeta(sc.prettyobj):
         
         self.egg = [
             'uid', # int
+            'laid_by', # uid of the flock that laid this egg
+            'type', # e.g. layer, broiler, market
         ]
 
         self.states = [

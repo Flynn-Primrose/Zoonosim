@@ -14,6 +14,7 @@ class BarnMeta(sc.prettyobj):
             'bid', # Barn ID?
             'temperature',
             'humidity',
+            'flock' # uid of the flock residing here
         ]
 
         self.states = [

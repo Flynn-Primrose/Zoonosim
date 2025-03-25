@@ -11,6 +11,8 @@ class PoultryMeta(sc.prettyobj):
         
         self.poultry = [
             'uid', # int
+            'type', # e.g. breeder, layer, broiler
+            'barn' # uid of the barn where the flock is located
         ]
 
         self.states = [
