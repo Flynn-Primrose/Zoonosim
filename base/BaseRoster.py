@@ -1,5 +1,5 @@
 '''
-Defines the BaseRoster class. A roster is a list of agents as well as all values tracked about those agents (e.g. infection status, symptomatic status, age, etc.). 
+Defines the BaseRoster class. A roster is a list of agents of a single species as well as all values tracked about those agents (e.g. infection status, symptomatic status, age, etc.). 
 '''
 
 import sciris as sc
@@ -9,6 +9,8 @@ import pandas as pd
 from . import FlexPretty
 
 from .. import defaults as znd
+
+__all__= ['BaseRoster']
 
 class BaseRoster(FlexPretty):
     '''

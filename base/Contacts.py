@@ -173,8 +173,6 @@ class Layer(FlexDict):
         index = np.arange(n)
         self_conn = p1 == p2
         layer2 = cv.Layer(**layer, index=index, self_conn=self_conn, label=layer.label)
-
-    New in version 3.1.2: allow a single dictionary input
     '''
 
     def __init__(self, *args, label=None, **kwargs):

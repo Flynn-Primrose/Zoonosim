@@ -1,3 +1,7 @@
+'''
+Keys that are common amongst all agent types.
+'''
+
 import sciris as sc
 
 class AgentsMeta(sc.prettyobj):
