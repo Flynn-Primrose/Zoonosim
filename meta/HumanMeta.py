@@ -9,7 +9,7 @@ class HumanMeta(sc.prettyobj):
     def __init__(self):
 
         # Set the properties of a person
-        self.person = [
+        self.agent = [
             'uid',              # Int
             'age',              # Float
             'sex',              # Float

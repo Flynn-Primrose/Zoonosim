@@ -9,7 +9,7 @@ class BarnMeta(sc.prettyobj):
 
     def __init__(self):
         
-        self.barn = [
+        self.agent = [
             'uid', # int
             'bid', # Barn ID?
             'temperature',

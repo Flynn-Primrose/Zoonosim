@@ -9,7 +9,7 @@ class WaterMeta(sc.prettyobj):
 
     def __init__(self):
         
-        self.water = [
+        self.agent = [
             'uid', # int
             'temperature'
         ]

@@ -12,7 +12,7 @@ import sciris as sc
 import collections as co
 from pathlib import Path
 from . import version as znv
-from .config import options as zno
+from . import defaults as znd
 
 #%% Convenience imports from Sciris
 

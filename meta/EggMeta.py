@@ -9,7 +9,7 @@ class BarnMeta(sc.prettyobj):
 
     def __init__(self):
         
-        self.egg = [
+        self.agent = [
             'uid', # int
             'laid_by', # uid of the flock that laid this egg
             'type', # e.g. layer, broiler, market

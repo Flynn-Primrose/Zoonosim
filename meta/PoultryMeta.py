@@ -9,7 +9,7 @@ class PoultryMeta(sc.prettyobj):
 
     def __init__(self):
         
-        self.poultry = [
+        self.agent = [
             'uid', # int
             'type', # e.g. breeder, layer, broiler
             'barn' # uid of the barn where the flock is located
