@@ -130,19 +130,19 @@ class BaseRoster(FlexPretty):
 
 
     def lock(self):
-        ''' Lock the people object to prevent keys from being added '''
+        ''' Lock the roster object to prevent keys from being added '''
         self._lock = True
         return
 
 
     def unlock(self):
-        ''' Unlock the people object to allow keys to be added '''
+        ''' Unlock the roster object to allow keys to be added '''
         self._lock = False
         return
 
 
     def __getitem__(self, key):
-        ''' Allow people['attr'] instead of getattr(people, 'attr')
+        ''' Allow roster['attr'] instead of getattr(roster, 'attr')
         '''
         try:
             return self.__dict__[key]

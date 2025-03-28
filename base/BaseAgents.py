@@ -116,12 +116,12 @@ class BaseAgents(FlexPretty):
         Convert all agents to a networkx MultiDiGraph, including all properties of
         the agents (nodes) and contacts (edges).
 
-        **Example**::
+        **Example**:: # TODO: Revisit
 
-            import covasim as cv
+            import zoonosim as zn
             import networkx as nx
-            sim = cv.Sim(pop_size=50, pop_type='hybrid', contacts=dict(h=3, s=10, w=10, c=5)).run()
-            G = sim.people.to_graph()
+            sim = zn.Sim(<unknown args>).run() 
+            G = sim.agents.to_graph()
             nodes = G.nodes(data=True)
             edges = G.edges(keys=True)
             node_colors = [n['age'] for i,n in nodes]
@@ -281,7 +281,7 @@ use sim.people.save(force=True). Otherwise, the correct approach is:
 
     def make_edgelist(self, contacts):
         '''
-        Parse a list of people with a list of contacts per person and turn it
+        Parse a list of agents with a list of contacts per agent and turn it
         into an edge list.
         '''
 
@@ -294,8 +294,8 @@ use sim.people.save(force=True). Otherwise, the correct approach is:
         # Initialize the new contacts
         new_contacts = Contacts(layer_keys=lkeys)
         for lkey in lkeys:
-            new_contacts[lkey]['p1']    = [] # Person 1 of the contact pair
-            new_contacts[lkey]['p2']    = [] # Person 2 of the contact pair
+            new_contacts[lkey]['p1']    = [] # Agent 1 of the contact pair
+            new_contacts[lkey]['p2']    = [] # Agent 2 of the contact pair
 
         # Populate the new contacts
         for p,cdict in enumerate(contacts):
