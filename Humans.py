@@ -125,21 +125,15 @@ class HumanMeta(sc.prettyobj):
 
 class Humans(znb.BaseRoster):
     '''
-    A class to perform all the operations on the agents -- usually not invoked directly.
+    A class to perform all the operations on the human agents -- usually not invoked directly.
 
-    This class is usually created automatically by the sim. The only required input
-    argument is the population size, but typically the full parameters dictionary
-    will get passed instead since it will be needed before the People object is
-    initialized. However, ages, contacts, etc. will need to be created separately --
-    see ``cv.make_people()`` instead.
-
-    Note that this class handles the mechanics of updating the actual people, while
-    ``cv.BasePeople`` takes care of housekeeping (saving, loading, exporting, etc.).
-    Please see the BasePeople class for additional methods.
+    Note that this class handles the mechanics of updating the actual humans, while
+    ``cv.BaseRoster`` takes care of housekeeping (saving, loading, exporting, etc.).
+    Please see the BaseRoster class for additional methods.
 
     Args:
-        pars (dict): the sim parameters, e.g. sim.pars -- alternatively, if a number, interpreted as pop_size
-        strict (bool): whether or not to only create keys that are already in self.meta.person; otherwise, let any key be set
+        pars (dict): the sim parameters, e.g. sim.pars
+        strict (bool): whether or not to only create keys that are already in self.meta.agent; otherwise, let any key be set
         kwargs (dict): the actual data, e.g. from a popdict, being specified
 
     **Examples**::
@@ -156,7 +150,7 @@ class Humans(znb.BaseRoster):
         self._lock = False # Prevent further modification of keys
         self.meta = HumanMeta() # Store list of keys and dtypes
         self.contacts = None
-        self.init_contacts() # Initialize the contacts
+        # self.init_contacts() # Initialize the contacts
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
         self.stratifications = None # Gets updated in sim.py : initialize()
         
@@ -320,10 +314,16 @@ class Humans(znb.BaseRoster):
                 self.contacts[lkey].update(self)
 
         return self.contacts
+    
+    def schedule_behaviour(self, behaviour_pars):
+        ''' Schedules events on the basis of results received today '''
+
+
+        return
 
     
     def get_key_to_use(self, policy_dict):
-        ''' Helper function used to determine what policy to use when scheduling behaviour '''
+        ''' Helper function used to determine what policy to use when scheduling events '''
 
         keys = np.array(list(policy_dict.keys()))
         key_to_use = keys[znu.true(keys <= self.t)[-1]]
