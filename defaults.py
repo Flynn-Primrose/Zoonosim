@@ -28,7 +28,6 @@ variant_pars = [
     'rel_beta',
     'rel_symp_prob',
     'rel_severe_prob',
-    'rel_crit_prob',
     'rel_death_prob',
 ]
 
@@ -44,3 +43,54 @@ def get_default_colors():
     # TODO: add colours as needed
     c.default = '#1f77b4' # Default colour
     return c
+
+# States to be used for results.
+# TODO: modify to accommodate multiple agent types
+result_stocks = {
+    'susceptible': 'Number susceptible',
+    'exposed':     'Number exposed',
+    'infectious':  'Number infectious',
+    'symptomatic': 'Number symptomatic',
+    'severe':      'Number of severe cases',
+    'recovered':   'Number recovered',
+    'dead':        'Number dead',
+    'diagnosed':   'Number of confirmed cases',
+    'known_dead':  'Number of confirmed deaths',
+    'quarantined': 'Number in quarantine',
+    'vaccinated':  'Number of people vaccinated',
+}
+
+result_stocks_by_variant = {
+    'exposed_by_variant':    'Number exposed by variant',
+    'infectious_by_variant': 'Number infectious by variant',
+}
+
+# The types of result that are counted as flows -- used in sim.py; value is the label suffix
+result_flows = {
+    'infections':   'infections',
+    'reinfections': 'reinfections',
+    'infectious':   'infectious',
+    'symptomatic':  'symptomatic cases',
+    'severe':       'severe cases',
+    'recoveries':   'recoveries',
+    'deaths':       'deaths',
+    'tests':        'tests',
+    'diagnoses':    'diagnoses',
+    'known_deaths': 'known deaths',
+    'quarantined':  'quarantines started',
+    'doses':        'vaccine doses',
+    'vaccinated':   'vaccinated people'
+}
+
+result_flows_by_variant = {
+    'infections_by_variant':  'infections by variant',
+    'symptomatic_by_variant': 'symptomatic by variant',
+    'severe_by_variant':      'severe by variant',
+    'infectious_by_variant':  'infectious by variant',
+}
+
+# Define new and cumulative flows
+new_result_flows = [f'new_{key}' for key in result_flows.keys()]
+cum_result_flows = [f'cum_{key}' for key in result_flows.keys()]
+new_result_flows_by_variant = [f'new_{key}' for key in result_flows_by_variant.keys()]
+cum_result_flows_by_variant = [f'cum_{key}' for key in result_flows_by_variant.keys()]
