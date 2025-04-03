@@ -21,19 +21,27 @@ class WaterMeta(sc.prettyobj):
         ]
 
         self.states = [
-
+            'susceptible',
+            'exposed',
+            'infectious'
         ]
 
         self.variant_states = [
-
+            'exposed_variant',
+            'infectious_variant',
+            #'recovered_variant',
         ]
 
         self.by_variant_states = [
-
+            'exposed_by_variant',
+            'infectious_by_variant',
         ]
 
+        # Set the dates various events took place: these are floats per agent
+        self.dates = [f'date_{state}' for state in self.states] # Convert each state into a date
+
                 # Validate
-        self.state_types = ['egg', 'states', 'variant_states', 'by_variant_states']
+        self.state_types = ['agent', 'states', 'variant_states', 'by_variant_states']
         for state_type in self.state_types:
             states = getattr(self, state_type)
             n_states        = len(states)

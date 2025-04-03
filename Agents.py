@@ -1,6 +1,6 @@
 '''
-Defines the People class and functions associated with making people and handling
-the transitions between states (e.g., from susceptible to infected).
+Defines the Agents class and functions associated with making agents and managing the rosters 
+of each agent type.
 '''
 
 #%% Imports
@@ -143,10 +143,10 @@ class Agents(znb.BaseAgents):
 
     def init_flows(self):
         ''' Initialize flows to be zero '''
-        self.flows = {key:0 for key in cvd.new_result_flows}
+        self.flows = {key:0 for key in znd.new_result_flows}
         self.flows_variant = {}
-        for key in cvd.new_result_flows_by_variant:
-            self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=cvd.default_float)
+        for key in znd.new_result_flows_by_variant:
+            self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=znd.default_float)
         return
 
     def initialize(self, sim_pars=None):
@@ -195,11 +195,11 @@ class Agents(znb.BaseAgents):
             date (array): list that contains either a date or a Nan
         '''
         if filter_inds is None:
-            not_current = cvu.false(current)
+            not_current = znu.false(current)
         else:
-            not_current = cvu.ifalsei(current, filter_inds)
-        has_date = cvu.idefinedi(date, not_current)
-        inds     = cvu.itrue(self.t >= date[has_date], has_date)
+            not_current = znu.ifalsei(current, filter_inds)
+        has_date = znu.idefinedi(date, not_current)
+        inds     = znu.itrue(self.t >= date[has_date], has_date)
         return inds
 
 
@@ -209,29 +209,9 @@ class Agents(znb.BaseAgents):
         self.infectious[inds] = True
         self.infectious_variant[inds] = self.exposed_variant[inds]
 
-        if self.pars['enable_stratifications']:
-            for strat, strat_pars in self.pars['stratification_pars'].items():
-                metrics = strat_pars['metrics']
-
-                if 'new_infectious' in metrics:
-                    bracs = strat_pars['brackets']
-                    
-                    # update the value for the current day, for each bracket. 
-                    for brac in bracs:
-                        brac_name = "_".join([ str(brac[0]), str(brac[1])])
-
-                        # Count the number of individuals meeting the criteria. 
-                        if strat == 'age':
-                            num_inds = np.sum( (self.age[inds] >= brac[0]) & (self.age[inds] < brac[1]) )
-                        elif strat == 'income':
-                            num_inds = np.sum( (self.income[inds] >= brac[0]) & (self.income[inds] < brac[1]) )
-                        else:
-                            raise ValueError(f"Stratification {strat} not recognized.")
-
-                        self.stratifications[strat][brac_name]['new_infectious'][self.t] += num_inds
 
         for variant in range(self.pars['n_variants']):
-            this_variant_inds = cvu.itrue(self.infectious_variant[inds] == variant, inds)
+            this_variant_inds = znu.itrue(self.infectious_variant[inds] == variant, inds)
             n_this_variant_inds = len(this_variant_inds)
             self.flows_variant['new_infectious_by_variant'][variant] += n_this_variant_inds
             self.infectious_by_variant[variant, this_variant_inds] = True

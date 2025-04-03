@@ -184,4 +184,99 @@ def make_pars(set_prognoses = False, prog_by_age = False, version = None, **kwar
     #             pars[key] = version_pars[key]
     return pars
 
+def get_prognoses(agent_type, by_age=True, version=None):
+    '''
+    Return the default parameter values for prognoses
+
+    The prognoses probabilities are conditional given the previous disease state.
+
+    Args:
+        agent_type (string): type of agent for which we need to retrieve a prognoses
+        by_age (bool): whether to use age-specific values (default true)
+
+    Returns:
+        prog_pars (dict): the dictionary of prognoses probabilities
+    '''
+    match agent_type:
+        case 'human':
+            if not by_age: # All rough estimates -- almost always, prognoses by age (below) are used instead
+                prognoses = dict(
+                    age_cutoffs   = np.array([0]),
+                    sus_ORs       = np.array([1.00]),
+                    trans_ORs     = np.array([1.00]),
+                    symp_probs    = np.array([0.75]),
+                    comorbidities = np.array([1.00]),
+                    severe_probs  = np.array([0.10]),
+                    death_probs   = np.array([0.01]),
+                )
+            else:
+                prognoses = dict(
+                    age_cutoffs   = np.array([0,       10,      20,      30,      40,      50,      60,      70,      80,      90,]),     # Age cutoffs (lower limits)
+                    sus_ORs       = np.array([0.34,    0.67,    1.00,    1.00,    1.00,    1.00,    1.24,    1.47,    1.47,    1.47]),    # Odds ratios for relative susceptibility -- from Zhang et al., https://science.sciencemag.org/content/early/2020/05/04/science.abb8001; 10-20 and 60-70 bins are the average across the ORs
+                    trans_ORs     = np.array([1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00]),    # Odds ratios for relative transmissibility -- no evidence of differences
+                    comorbidities = np.array([1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00]),    # Comorbidities by age -- set to 1 by default since already included in disease progression rates
+                    symp_probs    = np.array([0.50,    0.55,    0.60,    0.65,    0.70,    0.75,    0.80,    0.85,    0.90,    0.90]),    # Overall probability of developing symptoms (based on https://www.medrxiv.org/content/10.1101/2020.03.24.20043018v1.full.pdf, scaled for overall symptomaticity)
+                    severe_probs  = np.array([0.00050, 0.00165, 0.00720, 0.02080, 0.03430, 0.07650, 0.13280, 0.20655, 0.24570, 0.24570]), # Overall probability of developing severe symptoms (derived from Table 1 of https://www.imperial.ac.uk/media/imperial-college/medicine/mrc-gida/2020-03-16-COVID19-Report-9.pdf)
+                    death_probs   = np.array([0.00002, 0.00002, 0.00010, 0.00032, 0.00098, 0.00265, 0.00766, 0.02439, 0.08292, 0.16190]), # Overall probability of dying -- from O'Driscoll et al., https://www.nature.com/articles/s41586-020-2918-0; last data point from Brazeau et al., https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-34-ifr/
+                )
+            prognoses = relative_prognoses(prognoses) # Convert to conditional probabilities
+        case 'poultry':
+            prognoses = dict(
+
+            )
+        case 'barn':
+            prognoses = dict(
+
+            )
+        case 'water':
+            prognoses = dict(
+
+            )
+    return prognoses
+
+
+    # # If version is specified, load old parameters
+    # if by_age and version is not None:
+    #     version_prognoses = znm.get_version_pars(version, verbose=False)['prognoses']
+    #     for key in version_prognoses.keys(): # Only loop over keys that have been populated
+    #         if key in version_prognoses: # Only replace keys that exist in the old version
+    #             prognoses[key] = np.array(version_prognoses[key])
+
+    # Check that lengths match
+    # expected_len = len(prognoses['age_cutoffs'])
+    # for key,val in prognoses.items():
+    #     this_len = len(prognoses[key])
+    #     if this_len != expected_len: # pragma: no cover
+    #         errormsg = f'Lengths mismatch in prognoses: {expected_len} age bins specified, but key "{key}" has {this_len} entries'
+    #         raise ValueError(errormsg)
+
+    return prognoses
+
+def relative_prognoses(prognoses):
+    '''
+    Convenience function to revert absolute prognoses into relative (conditional)
+    ones. Internally, Covasim uses relative prognoses.
+    '''
+    out = sc.dcp(prognoses)
+    out['death_probs']  /= out['severe_probs']   # Conditional probability of dying, given critical symptoms
+    out['severe_probs'] /= out['symp_probs']   # Conditional probability of symptoms becoming severe, given symptomatic
+    return out
+
+
+def absolute_prognoses(prognoses):
+    '''
+    Convenience function to revert relative (conditional) prognoses into absolute
+    ones. Used to convert internally used relative prognoses into more readable
+    absolute ones.
+
+    **Example**::
+
+        sim = cv.Sim()
+        abs_progs = cv.parameters.absolute_prognoses(sim['prognoses'])
+    '''
+    out = sc.dcp(prognoses)
+    out['severe_probs'] *= out['symp_probs']   # Absolute probability of severe symptoms
+    out['death_probs']  *= out['severe_probs']   # Absolute probability of dying
+    return out
+
 

@@ -1,22 +1,21 @@
 import numba as nb # For faster computations
 import numpy as np # For numerics
-from ..config import options as zno # To set options
-from ..config import DataTypes as zndt # To set default types
+from . import defaults as znd
 
 # Set dtypes -- note, these cannot be changed after import since Numba functions are precompiled
 nbbool  = nb.bool_
-nbint   = zndt.nbint
-nbfloat = zndt.nbfloat
+nbint   = znd.nbint
+nbfloat = znd.nbfloat
 
 # Specify whether to allow parallel Numba calculation -- 10% faster for safe and 20% faster for random, but the random number stream becomes nondeterministic for the latter
 safe_opts = [1, '1', 'safe'] # TODO: Move this to config
 full_opts = [2, '2', 'full'] # TODO: Move this to config
-safe_parallel = zno.numba_parallel in safe_opts + full_opts
-rand_parallel = zno.numba_parallel in full_opts
-if zno.numba_parallel not in [0, 1, 2, '0', '1', '2', 'none', 'safe', 'full']:
-    errormsg = f'Numba parallel must be "none", "safe", or "full", not "{zno.numba_parallel}"'
+safe_parallel = znd.numba_parallel in safe_opts + full_opts
+rand_parallel = znd.numba_parallel in full_opts
+if znd.numba_parallel not in [0, 1, 2, '0', '1', '2', 'none', 'safe', 'full']:
+    errormsg = f'Numba parallel must be "none", "safe", or "full", not "{znd.numba_parallel}"'
     raise ValueError(errormsg)
-cache = zno.numba_cache # Turning this off can help switching parallelization options
+cache = znd.numba_cache # Turning this off can help switching parallelization options
 
 @nb.njit(             (nbint,   nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:], nbfloat,    nbfloat), cache=cache, parallel=safe_parallel)
 def compute_viral_load(t,       x_p1,       y_p1,       x_p2,       y_p2,       x_p3,       y_p3,       min_vl,     max_vl): # pragma: no cover
@@ -39,8 +38,8 @@ def compute_viral_load(t,       x_p1,       y_p1,       x_p2,       y_p2,       
 
     # Set up arrays
     N = len(x_p2)
-    vl = np.zeros(N, dtype=zndt.default_float)
-    vl_rescaled = np.zeros(N, dtype=zndt.default_float)
+    vl = np.zeros(N, dtype=znd.default_float)
+    vl_rescaled = np.zeros(N, dtype=znd.default_float)
 
     # Calculate viral load for those for whom it is rising
     rising_vl = t < x_p2

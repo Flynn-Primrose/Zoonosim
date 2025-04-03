@@ -4,6 +4,7 @@ Defines default values for Zoonosim.
 import sciris as sc
 import numpy as np
 import numba as nb
+import os
 
 # Specify all externally visible functions this file defines -- other things are available as e.g. zn.defaults.default_int
 __all__ = ['default_float', 'default_int', 'nbfloat', 'nbint', 'verbose', 'get_default_colors']
@@ -23,13 +24,8 @@ nbint         = nb.int64
 
 verbose = 0.1
 
-# Parameters that can vary by variant
-variant_pars = [
-    'rel_beta',
-    'rel_symp_prob',
-    'rel_severe_prob',
-    'rel_death_prob',
-]
+numba_parallel = str(os.getenv('ZOONOSIM_NUMBA_PARALLEL', 'none'))
+numba_cache = bool(int(os.getenv('ZOONOSIM_NUMBA_CACHE', 1)))
 
 def get_default_colors():
     '''
@@ -43,6 +39,16 @@ def get_default_colors():
     # TODO: add colours as needed
     c.default = '#1f77b4' # Default colour
     return c
+
+# Parameters that can vary by variant
+variant_pars = [
+    'rel_beta',
+    'rel_symp_prob',
+    'rel_severe_prob',
+    'rel_death_prob',
+]
+
+
 
 # States to be used for results.
 # TODO: modify to accommodate multiple agent types

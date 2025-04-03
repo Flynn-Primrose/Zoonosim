@@ -35,7 +35,6 @@ class HumanMeta(sc.prettyobj):
         # Set the states that a person can be in: these are all booleans per person -- used in people.py
         self.states = [
             'susceptible',
-            'naive',
             'exposed',
             'infectious',
             'symptomatic',
@@ -82,9 +81,9 @@ class HumanMeta(sc.prettyobj):
             'vaccine_source', # index of vaccine that individual received
         ]
 
-        # Set the dates various events took place: these are floats per person -- used in people.py
+        # Set the dates various events took place: these are floats per agent
         self.dates = [f'date_{state}' for state in self.states] # Convert each state into a date
-        self.dates.append('date_pos_test') # Store the date when a person tested which will come back positive
+        #self.dates.append('date_pos_test') # Store the date when a person tested which will come back positive
         self.dates.append('date_end_quarantine') # Store the date when a person comes out of quarantine
         # Duration of different states: these are floats per person -- used in people.py
         self.durs = [
@@ -107,7 +106,7 @@ class HumanMeta(sc.prettyobj):
             'y_p3',
         ]
 
-        self.all_states = self.person + self.states + self.variant_states + self.by_variant_states + self.imm_states + self.nab_states + self.vacc_states + self.dates + self.durs + self.vl_points
+        self.all_states = self.agent + self.states + self.variant_states + self.by_variant_states + self.imm_states + self.nab_states + self.vacc_states + self.dates + self.durs + self.vl_points
 
         # Validate
         self.state_types = ['agent', 'states', 'variant_states', 'by_variant_states', 'imm_states',
