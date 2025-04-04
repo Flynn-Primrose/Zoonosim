@@ -293,3 +293,18 @@ use sim.people.save(force=True). Otherwise, the correct approach is:
         df = df[df['p1'] != df['p2']] # Remove self connections
         df.reset_index(inplace=True, drop=True)
         return df
+    
+    def type_count(self, agent_type, key):
+        '''
+        Count the number of agents of a given type that have a given key.
+
+        Args:
+            agent_type (str): the type of agent to count
+            key (str): the key to count by
+
+        Returns:
+            count (int): the number of agents of the specified type with the specified key
+        '''
+        if agent_type not in self.agent_types:
+            raise ValueError(f'Agent type "{agent_type}" not found in {self.agent_types}')
+        return self[agent_type].count(agent_type, key=key)

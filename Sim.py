@@ -535,8 +535,7 @@ class Sim(znb.BaseSim):
 
         agents.update_states_pre(t=t) # Update the state of everyone and count the flows. This isn't infecting people nor updating their SEIR's. The date of infection seems to be pre-assigned. 
         contacts = agents.update_contacts() # Compute new contacts. For dynamic contacts. 
-        hosp_max = agents.count('severe')   > self['n_beds_hosp'] if self['n_beds_hosp'] is not None else False # Check for acute bed constraint. # TODO: This should only count severe human agents
-
+        hosp_max = agents.type_count('human', 'severe')   > self['n_beds_hosp'] if self['n_beds_hosp'] is not None else False # Check for acute bed constraint.
         # Randomly infect some people (imported infections)
         if self['n_imports']:
             # n_imports = cvu.poisson(self['n_imports']/self.rescale_vec[self.t]) # Imported cases/
