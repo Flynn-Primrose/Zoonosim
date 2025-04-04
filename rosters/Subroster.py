@@ -41,7 +41,7 @@ class Subroster(BaseRoster):
             if len(mismatches):
                 errormsg = 'Validation failed due to the following mismatches between the agent object and the subroster parameters:\n'
                 for k,v in mismatches.items():
-                    errormsg += f'  {k}: agents={v.roster}, roster={v.subroster}'
+                    errormsg += f'  {k}: roster={v.roster}, subroster={v.subroster}'
                 raise ValueError(errormsg)
 
         # Check that the length of each array is consistent
@@ -68,35 +68,7 @@ class Subroster(BaseRoster):
         return
 
 
-    def __add__(self, roster2):
-        ''' Combine two subroster arrays '''
-        newroster = sc.dcp(self)
-        keys = list(self.keys())
-        for key in keys:
-            nrval = newroster[key]
-            r2val = roster2[key]
-            if nrval.ndim == 1:
-                newroster.set(key, np.concatenate([nrval, r2val], axis=0), die=False) # Allow size mismatch
-            elif nrval.ndim == 2:
-                newroster.set(key, np.concatenate([nrval, r2val], axis=1), die=False)
-            else:
-                errormsg = f'Not sure how to combine arrays of {nrval.ndim} dimensions for {key}'
-                raise NotImplementedError(errormsg)
 
-        # Validate
-        newroster.pars['pop_size'] += roster2.pars['pop_size']
-        newroster.validate()
-
-        # Reassign UIDs so they're unique
-        newroster.set('uid', np.arange(len(newroster))) # This is going to be a problem since each roster only holds a subset of the agents. TODO:revisit
-
-        return newroster
-
-
-    def __radd__(self, roster2):
-        ''' Allows sum() to work correctly '''
-        if not roster2: return self
-        else:           return self.__add__(roster2)
 
 
 
