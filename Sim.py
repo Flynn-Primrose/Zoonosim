@@ -60,7 +60,7 @@ class Sim(znb.BaseSim):
         self.popfile       = popfile  # The population file
         self.data          = None     # The actual data
         self.popdict       = agents   # The population dictionary
-        self.people        = None     # Initialize these here so methods that check their length can see they're empty
+        self.agents        = None     # Initialize these here so methods that check their length can see they're empty
         self.t             = None     # The current time in the simulation (during execution); outside of sim.step(), its value corresponds to next timestep to be computed
         self.results       = {}       # For storing results
         self.summary       = None     # For storing a summary of the results
@@ -349,9 +349,9 @@ class Sim(znb.BaseSim):
 
     def init_agents(self, popdict=None, init_infections=False, reset=False, verbose=None, **kwargs):
         '''
-        Create the people.
+        Create the agents.
 
-        Use ``init_infections=False`` for creating a fresh People object for use
+        Use ``init_infections=False`` for creating a fresh Agents object for use
         in future simulations
 
         Args:
@@ -535,7 +535,7 @@ class Sim(znb.BaseSim):
 
         agents.update_states_pre(t=t) # Update the state of everyone and count the flows. This isn't infecting people nor updating their SEIR's. The date of infection seems to be pre-assigned. 
         contacts = agents.update_contacts() # Compute new contacts. For dynamic contacts. 
-        hosp_max = agents.count('severe')   > self['n_beds_hosp'] if self['n_beds_hosp'] is not None else False # Check for acute bed constraint
+        hosp_max = agents.count('severe')   > self['n_beds_hosp'] if self['n_beds_hosp'] is not None else False # Check for acute bed constraint. # TODO: This should only count severe human agents
 
         # Randomly infect some people (imported infections)
         if self['n_imports']:

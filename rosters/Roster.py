@@ -1,56 +1,23 @@
-'''
-Base object for the Agents object. The Agents object will itself contain a list of all agents as well as all state information that is common to all agent types. 
-It will also include a pars object with the parameters needed to generate the population as well as a specific roster for each agent type. Each type specific roster 
-will contain a list of all agents of that type as well as all state information that is specific to that data type.
-'''
+
 
 
 import sciris as sc
 import numpy as np
 import pandas as pd
 
-from . import FlexPretty
-from . import Contacts
-from . import Layer
+from ..base import BaseRoster
+from ..base import Contacts
+from ..base import Layer
 
 from .. import defaults as znd
 from .. import misc as znm
 
-class BaseAgents(FlexPretty):
+class Roster(BaseRoster):
     '''
     A class to handle all the boilerplate for the Agent object -- note that as with the
     BaseSim vs Sim classes, everything interesting happens in the derived classes,
     whereas this class exists to handle the less interesting implementation details.
     '''
-
-    def set_pars(self, pars=None):
-        '''
-        Re-link the parameters stored in the people object to the sim containing it,
-        and perform some basic validation.
-        '''
-        orig_pars = self.__dict__.get('pars') # Get the current parameters using dict's get method
-        if pars is None:
-            if orig_pars is not None: # If it has existing parameters, use them
-                pars = orig_pars
-            else:
-                pars = {}
-        elif sc.isnumber(pars): # Interpret as the number of farms in the model (needed to generate population)
-            pars = {'n_farms':pars} # Ensure it's a dictionary
-
-        # Copy from old parameters to new parameters
-        if isinstance(orig_pars, dict):
-            for k,v in orig_pars.items():
-                if k not in pars:
-                    pars[k] = v
-
-        # Do minimal validation -- needed here since pop_size should be converted to an int when first set
-        if 'n_farms' not in pars:
-            errormsg = f'The parameter "n_farms" must be included in a population; keys supplied were:\n{sc.newlinejoin(pars.keys())}'
-            raise sc.KeyNotFoundError(errormsg)
-        pars['n_farms'] = int(pars['n_farms'])
-        pars.setdefault('n_variants', 1)
-        self.pars = pars # Actually store the pars
-        return
     
     def validate(self, sim_pars=None, die=True, verbose=False):
         '''
@@ -68,14 +35,14 @@ class BaseAgents(FlexPretty):
             keys = ['n_farms', 'n_variants'] # These are the keys used in generating the population
             for key in keys:
                 sim_v = sim_pars.get(key)
-                agents_v = self.pars.get(key)
-                if sim_v is not None and agents_v is not None:
-                    if sim_v != agents_v:
-                        mismatches[key] = sc.objdict(sim=sim_v, agents = agents_v)
+                roster_v = self.pars.get(key)
+                if sim_v is not None and roster_v is not None:
+                    if sim_v != roster_v:
+                        mismatches[key] = sc.objdict(sim=sim_v, roster = roster_v)
             if len(mismatches):
-                errormsg = 'Validation failed due to the following mismatches between the sim and the agents parameters:\n'
+                errormsg = 'Validation failed due to the following mismatches between the sim and the roster parameters:\n'
                 for k,v in mismatches.items():
-                    errormsg += f'  {k}: sim={v.sim}, agents={v.agents}'
+                    errormsg += f'  {k}: sim={v.sim}, roster={v.roster}'
                 raise ValueError(errormsg)
 
         # Check that the keys match
@@ -211,7 +178,7 @@ use sim.people.save(force=True). Otherwise, the correct approach is:
             people = cv.people.load('my-people.ppl')
         '''
         agents = znm.load(filename, *args, **kwargs)
-        if not isinstance(agents, BaseAgents): # pragma: no cover
+        if not isinstance(agents, Roster): # pragma: no cover
             errormsg = f'Cannot load object of {type(agents)} as an Agents object'
             raise TypeError(errormsg)
         return agents

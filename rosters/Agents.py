@@ -1,37 +1,51 @@
+'''
+Class definition for the Agents object. The Agents object will itself contain a list of all agents as well as all state information that is common to all agent types. 
+It will also include a pars object with the parameters needed to generate the population as well as a subroster for each agent type. Each type specific subroster 
+will contain a list of all agents of that type as well as all state information that is specific to that data type.
+
+'''
+
+#%% Imports
 import numpy as np
-import scipy.stats as stats
 import sciris as sc
-import scipy.stats as stats
-from collections import defaultdict
-from . import version as znv
-from . import utils as znu
-from . import defaults as znd
-from . import base as znb
+from .. import version as znv
+from .. import utils as znu
+from .. import defaults as znd
 
-__all__ = ['Barns']
+from .Roster import Roster
 
-class BarnMeta(sc.prettyobj):
-    ''' Defines all keys that are used by barns '''
+#from . import plotting as cvplt
+#from . import immunity as cvi
+#from . import watches as cvw
+
+
+__all__ = ['Agents']
+
+class AgentsMeta(sc.prettyobj):
+    '''
+    For storing all keys that are common across all agent types
+    '''
 
     def __init__(self):
-        
+
         self.agent = [
-            'uid', # int
-            'temperature',
-            'humidity',
-            'flock' # uid of the flock residing here
+            'uid', #Int
+            'agent_type', #string? the type of agent, must be one of pars['agent_types']
+            'agent_type', #string? or int?
+            'rel_trans', # float - relative transmissibility of the agent
+            'rel_sus', # float - relative susceptibility of the agent
         ]
 
-        self.states = [
-            'susceptible',
-            'exposed',
-            'infectious'
+        self.states = [ # all boolean
+            'susceptible', #?
+            'exposed', #?
+            'infectious', #?
+
         ]
 
-        self.variant_states = [
-            'exposed_variant',
-            'infectious_variant',
-            #'recovered_variant',
+        self.variant_states =[
+            'exposed_variant', # int
+            'infectious_variant' # int
         ]
 
         self.by_variant_states = [
@@ -39,11 +53,12 @@ class BarnMeta(sc.prettyobj):
             'infectious_by_variant',
         ]
 
-        # Set the dates various events took place: these are floats per agent
-        self.dates = [f'date_{state}' for state in self.states] # Convert each state into a date
+        self.dates = [f'date_{state}' for state in self.states]
 
-                # Validate
-        self.state_types = ['agent', 'states', 'variant_states', 'by_variant_states']
+        self.all_states = self.agent + self.states +self.variant_states + self.by_variant_states + self.dates
+
+        # Validate
+        self.state_types = ['agent', 'states', 'variant_states', 'by_variant_states', 'dates', 'all_states']
         for state_type in self.state_types:
             states = getattr(self, state_type)
             n_states        = len(states)
@@ -53,28 +68,22 @@ class BarnMeta(sc.prettyobj):
                 raise ValueError(errormsg)
 
         return
-    
 
-class Barns(znb.BaseRoster):
+class Agents(Roster):
     '''
     A class to perform all the operations on the agents -- usually not invoked directly.
 
-    This class is usually created automatically by the sim. The only required input
-    argument is the population size, but typically the full parameters dictionary
-    will get passed instead since it will be needed before the People object is
-    initialized. However, ages, contacts, etc. will need to be created separately --
-    see ``cv.make_people()`` instead.
-
     Note that this class handles the mechanics of updating the actual agents, while
-    ``cv.BaseRoster`` takes care of housekeeping (saving, loading, exporting, etc.).
-    Please see the BaseRoster class for additional methods.
+    ``cv.BaseAgents`` takes care of housekeeping (saving, loading, exporting, etc.).
+    Please see the BaseAgents class for additional methods.
 
     Args:
-        pars (dict): the sim parameters, e.g. sim.pars
+        pars (dict): the sim parameters, e.g. sim.pars -- alternatively, if a number, interpreted as pop_size
         strict (bool): whether or not to only create keys that are already in self.meta.person; otherwise, let any key be set
         kwargs (dict): the actual data, e.g. from a popdict, being specified
 
     **Examples**::
+
     '''
 
     def __init__(self, pars, strict=True, **kwargs):
@@ -86,20 +95,27 @@ class Barns(znb.BaseRoster):
         # Other initialization
         self.t = 0 # Keep current simulation time
         self._lock = False # Prevent further modification of keys
-        self.meta = BarnMeta() # Store list of keys and dtypes
+        self.meta = AgentsMeta() # Store list of keys and dtypes
         self.contacts = None
-        # self.init_contacts() # Initialize the contacts
+        self.init_contacts() # Initialize the contacts
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
-        self.stratifications = None # Gets updated in sim.py : initialize()
+
+        # Set the population size
+
+        # if self.pars['pop_size'] is None:
+        #     pop_size = 0
+        #     for type in self.pars['agent_types']:
+        #         pop_size += self.pars['pop_size_by_type'][type]
+        #     self.pars['pop_size'] = pop_size
         
-        # Set person properties -- all floats except for UID
-        for key in self.meta.person:
+        # Set agent properties -- all floats except for UID
+        for key in self.meta.agent:
             if key == 'uid':
-                self[key] = np.arange(self.pars['pop_size'], dtype=znd.default_int) # TODO: This won't work as UIDs need to be unique across all agent types
+                self[key] = np.arange(self.pars['pop_size'], dtype=znd.default_int)
 
         # Set health states -- only susceptible is true by default -- booleans except exposed by variant which should return the variant that ind is exposed to
         for key in self.meta.states:
-            val = (key in ['susceptible']) # Default value is True for susceptible and naive, False otherwise
+            val = (key in ['susceptible']) # Default value is True for susceptible, False otherwise
             self[key] = np.full(self.pars['pop_size'], val, dtype=bool)
 
         # Set variant states, which store info about which variant a person is exposed to
@@ -107,10 +123,6 @@ class Barns(znb.BaseRoster):
             self[key] = np.full(self.pars['pop_size'], np.nan, dtype=znd.default_float)
         for key in self.meta.by_variant_states:
             self[key] = np.full((self.pars['n_variants'], self.pars['pop_size']), False, dtype=bool)
-
-        # Set dates and durations -- both floats
-        for key in self.meta.dates + self.meta.durs:
-            self[key] = np.full(self.pars['pop_size'], np.nan, dtype=znd.default_float)
 
         # Store the dtypes used in a flat dict
         self._dtypes = {key:self[key].dtype for key in self.keys()} # Assign all to float by default
@@ -145,7 +157,6 @@ class Barns(znb.BaseRoster):
         self.flows_variant = {}
         for key in znd.new_result_flows_by_variant:
             self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=znd.default_float)
-
         return
 
     def initialize(self, sim_pars=None):
@@ -156,27 +167,6 @@ class Barns(znb.BaseRoster):
         self.initialized = True
         return
 
-
-    def set_prognoses(self):
-        '''
-        Set the prognoses for each person based on age during initialization. Need
-        to reset the seed because viral loads are drawn stochastically.
-        '''
-
-        pars = self.pars # Shorten
-        if 'prognoses' not in pars or 'rand_seed' not in pars:
-            errormsg = 'This Barns object does not have the required parameters ("prognoses" and "rand_seed").'
-            raise sc.KeyNotFoundError(errormsg)
-
-
-        znu.set_seed(pars['rand_seed'])
-
-
-        return
-
-
-
-
     def update_states_pre(self, t):
         ''' Perform all state updates at the current timestep '''
 
@@ -184,21 +174,15 @@ class Barns(znb.BaseRoster):
         self.t = t
         self.is_exp = self.true('exposed') # For storing the interim values since used in every subsequent calculation
 
-        # Perform updates
-        self.init_flows()
-        self.flows['new_infectious']    += self.check_infectious() # For Barns that are exposed and not infectious, check if they begin being infectious
         return
 
 
     def update_states_post(self):
         ''' Perform post-timestep updates '''
 
-
         del self.is_exp  # Tidy up
 
         return
-
-
 
     def update_contacts(self):
         ''' Refresh dynamic contacts, e.g. community '''
@@ -208,23 +192,6 @@ class Barns(znb.BaseRoster):
                 self.contacts[lkey].update(self)
 
         return self.contacts
-
-
-    def schedule_behaviour(self, behaviour_pars):
-        ''' Schedules events on the basis of results received today '''
-
-
-        return
-
-    
-    def get_key_to_use(self, policy_dict):
-        ''' Helper function used to determine what policy to use when scheduling behaviour '''
-
-        keys = np.array(list(policy_dict.keys()))
-        key_to_use = keys[znu.true(keys <= self.t)[-1]]
-
-        return key_to_use
-
 
     #%% Methods for updating state
 
@@ -259,103 +226,27 @@ class Barns(znb.BaseRoster):
         return len(inds)
 
 
+    def check_symptomatic(self):
+        ''' Check for new progressions to symptomatic '''
+        inds = self.check_inds(self.symptomatic, self.date_symptomatic, filter_inds=self.is_exp)
+        self.symptomatic[inds] = True
+        return len(inds)
 
-    def check_cleaned(self):
-        ''' Check which barns get cleaned this timestep '''
+    
+    def check_severe(self):
+        ''' Check for new progressions to severe '''
+        inds = self.check_inds(self.severe, self.date_severe, filter_inds=self.is_exp)
+        
+        self.severe[inds] = True
+        return len(inds)
 
+
+    def check_death(self):
+        ''' Check whether or not this agent died on this timestep  '''
+        inds = self.check_inds(self.dead, self.date_dead, filter_inds=self.is_exp)
 
 
     #%% Methods to make events occur (infection and diagnosis)
-
-
-
-
-    def infect(self, inds, source=None, layer=None, variant=0):
-        '''
-        '''
-
-        if len(inds) == 0:
-            return 0
-
-        # Remove duplicates
-        inds, unique = np.unique(inds, return_index=True)
-        if source is not None:
-            source = source[unique]
-
-        # Keep only susceptibles
-        keep = self.susceptible[inds] # Unique indices in inds and source that are also susceptible
-        inds = inds[keep]
-        if source is not None:
-            source = source[keep]
-
-        # Deal with variant parameters
-        variant_keys = ['rel_symp_prob', 'rel_severe_prob', 'rel_crit_prob', 'rel_death_prob']
-        infect_pars = {k:self.pars[k] for k in variant_keys}
-        variant_label = self.pars['variant_map'][variant]
-        if variant:
-            for k in variant_keys:
-                infect_pars[k] *= self.pars['variant_pars'][variant_label][k]
-
-        n_infections = len(inds)
-        durpars      = self.pars['dur']
-
-        # Retrieve those with a breakthrough infection (defined nabs)
-        breakthrough_inds = inds[znu.true(self.peak_nab[inds])]
-        if len(breakthrough_inds):
-            no_prior_breakthrough = (self.n_breakthroughs[breakthrough_inds] == 0) # We only adjust transmissibility for the first breakthrough
-            new_breakthrough_inds = breakthrough_inds[no_prior_breakthrough]
-            self.rel_trans[new_breakthrough_inds] *= self.pars['trans_redux']
-
-        # Update states, variant info, and flows
-        self.susceptible[inds]    = False
-        self.exposed[inds]        = True
-        self.exposed_variant[inds] = variant
-        self.exposed_by_variant[variant, inds] = True
-        self.flows_variant['new_infections_by_variant'][variant] += len(inds)
-
-        # Record transmissions
-        for i, target in enumerate(inds):
-            entry = dict(source=source[i] if source is not None else None, target=target, date=self.t, layer=layer, variant=variant_label)
-            self.infection_log.append(entry)
-
-        # Calculate how long before this person can infect other people
-        self.dur_exp2inf[inds] = znu.sample(**durpars['exp2inf'], size=n_infections)
-        self.date_exposed[inds] = self.t
-        self.date_infectious[inds] = self.dur_exp2inf[inds] + self.t
-
-
-        return n_infections # For incrementing counters
-
-
-    def test(self, inds, test_sensitivity=1.0, loss_prob=0.0, test_delay=0):
-        '''
-        Method to test agents. Typically not to be called by the user directly;
-        see the test_num() and test_prob() interventions.
-
-        Args:
-            inds: indices of who to test
-            test_sensitivity (float): probability of a true positive
-            loss_prob (float): probability of loss to follow-up
-            test_delay (int): number of days before test results are ready
-        '''
-
-        inds = np.unique(inds)
-        self.tested[inds] = True
-        self.date_tested[inds] = self.t # Only keep the last time they tested
-
-        is_infectious = znu.itruei(self.infectious, inds)
-        pos_test      = znu.n_binomial(test_sensitivity, len(is_infectious))
-        is_inf_pos    = is_infectious[pos_test]
-
-        not_diagnosed = is_inf_pos[np.isnan(self.date_diagnosed[is_inf_pos])]
-        not_lost      = znu.n_binomial(1.0-loss_prob, len(not_diagnosed))
-        final_inds    = not_diagnosed[not_lost]
-
-        # Store the date the person will be diagnosed, as well as the date they took the test which will come back positive
-        self.date_diagnosed[final_inds] = self.t + test_delay
-        self.date_pos_test[final_inds] = self.t
-
-        return final_inds
 
 
 

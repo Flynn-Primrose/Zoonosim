@@ -32,10 +32,11 @@ def make_pars(set_prognoses = False, prog_by_age = False, version = None, **kwar
     # Population pars
     pars['agent_types'] = ['human', 'poultry', 'barn', 'water'] # Every type of agent in the model
     pars['n_farms'] = 10 # Number of farms in the simulation. This is used to generate the rest of the population
-    pars['pop_sizes'] = {}
+    pars['pop_size'] = None # The total number of agents in the simulation. This should be equal to the sum of the population sizes of all agent types.
+    pars['pop_size_by_type'] = {}
 
     for type in pars['agent_types']:
-        pars['pop_sizes'][type] = None # This will be set after the population has been created
+        pars['pop_size_by_type'][type] = None # This will be set after the population has been created
 
     # Simulation parameters
     pars['start_day']  = '2020-03-01' # Start day of the simulation

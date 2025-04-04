@@ -522,7 +522,7 @@ class BaseSim(ParsObj):
 
         # By default, skip people (~90% of memory), the popdict (which is usually empty anyway), and _orig_pars (which is just a backup)
         if skip_attrs is None:
-            skip_attrs = ['popdict', 'people', '_orig_pars'] # TODO: Modify these to reflect the actual attributes to skip. Ideally this should be set in defaults.py
+            skip_attrs = ['popdict', 'agents', '_orig_pars'] # TODO: Modify these to reflect the actual attributes to skip. Ideally this should be set in defaults.py
         # Create the new object, and copy original dict, skipping the skipped attributes
         if in_place:
             shrunken = self

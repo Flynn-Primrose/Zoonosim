@@ -4,10 +4,10 @@ import scipy.stats as stats
 import sciris as sc
 import scipy.stats as stats
 from collections import defaultdict
-from . import version as znv
-from . import utils as znu
-from . import defaults as znd
-from . import base as znb
+from .. import version as znv
+from .. import utils as znu
+from .. import defaults as znd
+from .. import base as znb
 
 __all__ = ['Humans']
 
@@ -148,10 +148,8 @@ class Humans(znb.BaseRoster):
         self.t = 0 # Keep current simulation time
         self._lock = False # Prevent further modification of keys
         self.meta = HumanMeta() # Store list of keys and dtypes
-        self.contacts = None
         # self.init_contacts() # Initialize the contacts
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
-        self.stratifications = None # Gets updated in sim.py : initialize()
         
         # Set person properties -- all floats except for UID
         for key in self.meta.agent:

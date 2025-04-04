@@ -3,22 +3,23 @@ import scipy.stats as stats
 import sciris as sc
 import scipy.stats as stats
 from collections import defaultdict
-from . import version as znv
-from . import utils as znu
-from . import defaults as znd
-from . import base as znb
+from .. import version as znv
+from .. import utils as znu
+from .. import defaults as znd
+from .. import base as znb
 
-__all__ = ['Poultry']
+__all__ = ['Barns']
 
-class PoultryMeta(sc.prettyobj):
+class BarnMeta(sc.prettyobj):
     ''' Defines all keys that are used by barns '''
 
     def __init__(self):
         
         self.agent = [
             'uid', # int
-            'type', # e.g. breeder, layer, broiler
-            'barn' # uid of the barn where the flock is located
+            'temperature',
+            'humidity',
+            'flock' # uid of the flock residing here
         ]
 
         self.states = [
@@ -30,7 +31,7 @@ class PoultryMeta(sc.prettyobj):
         self.variant_states = [
             'exposed_variant',
             'infectious_variant',
-            'recovered_variant',
+            #'recovered_variant',
         ]
 
         self.by_variant_states = [
@@ -54,21 +55,26 @@ class PoultryMeta(sc.prettyobj):
         return
     
 
-class Poultry(znb.BaseRoster):
+class Barns(znb.BaseRoster):
     '''
-    A class to perform all the operations on the poultry agents -- usually not invoked directly.
+    A class to perform all the operations on the agents -- usually not invoked directly.
 
-    Note that this class handles the mechanics of updating the actual poultry, while
+    This class is usually created automatically by the sim. The only required input
+    argument is the population size, but typically the full parameters dictionary
+    will get passed instead since it will be needed before the People object is
+    initialized. However, ages, contacts, etc. will need to be created separately --
+    see ``cv.make_people()`` instead.
+
+    Note that this class handles the mechanics of updating the actual agents, while
     ``cv.BaseRoster`` takes care of housekeeping (saving, loading, exporting, etc.).
     Please see the BaseRoster class for additional methods.
 
     Args:
         pars (dict): the sim parameters, e.g. sim.pars
-        strict (bool): whether or not to only create keys that are already in self.meta.agent; otherwise, let any key be set
+        strict (bool): whether or not to only create keys that are already in self.meta.person; otherwise, let any key be set
         kwargs (dict): the actual data, e.g. from a popdict, being specified
 
     **Examples**::
-
     '''
 
     def __init__(self, pars, strict=True, **kwargs):
@@ -80,7 +86,7 @@ class Poultry(znb.BaseRoster):
         # Other initialization
         self.t = 0 # Keep current simulation time
         self._lock = False # Prevent further modification of keys
-        self.meta = PoultryMeta() # Store list of keys and dtypes
+        self.meta = BarnMeta() # Store list of keys and dtypes
         self.contacts = None
         # self.init_contacts() # Initialize the contacts
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
@@ -89,14 +95,14 @@ class Poultry(znb.BaseRoster):
         # Set person properties -- all floats except for UID
         for key in self.meta.person:
             if key == 'uid':
-                self[key] = np.arange(self.pars['pop_size'], dtype=znd.default_int)# TODO: This won't work as UIDs need to be unique across all agents
+                self[key] = np.arange(self.pars['pop_size'], dtype=znd.default_int) # TODO: This won't work as UIDs need to be unique across all agent types
 
         # Set health states -- only susceptible is true by default -- booleans except exposed by variant which should return the variant that ind is exposed to
         for key in self.meta.states:
             val = (key in ['susceptible']) # Default value is True for susceptible and naive, False otherwise
             self[key] = np.full(self.pars['pop_size'], val, dtype=bool)
 
-        # Set variant states, which store info about which variant an agent is exposed to
+        # Set variant states, which store info about which variant a person is exposed to
         for key in self.meta.variant_states:
             self[key] = np.full(self.pars['pop_size'], np.nan, dtype=znd.default_float)
         for key in self.meta.by_variant_states:
@@ -104,10 +110,6 @@ class Poultry(znb.BaseRoster):
 
         # Set dates and durations -- both floats
         for key in self.meta.dates + self.meta.durs:
-            self[key] = np.full(self.pars['pop_size'], np.nan, dtype=znd.default_float)
-
-        # Set dates for viral load profile -- floats
-        for key in self.meta.vl_points:
             self[key] = np.full(self.pars['pop_size'], np.nan, dtype=znd.default_float)
 
         # Store the dtypes used in a flat dict
@@ -143,6 +145,7 @@ class Poultry(znb.BaseRoster):
         self.flows_variant = {}
         for key in znd.new_result_flows_by_variant:
             self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=znd.default_float)
+
         return
 
     def initialize(self, sim_pars=None):
@@ -159,13 +162,15 @@ class Poultry(znb.BaseRoster):
         Set the prognoses for each person based on age during initialization. Need
         to reset the seed because viral loads are drawn stochastically.
         '''
-        # TODO: Figure out how to model infections in poultry
+
         pars = self.pars # Shorten
         if 'prognoses' not in pars or 'rand_seed' not in pars:
-            errormsg = 'This poultry object does not have the required parameters ("prognoses" and "rand_seed"). Create a sim (or parameters), then do e.g. people.set_pars(sim.pars).'
+            errormsg = 'This Barns object does not have the required parameters ("prognoses" and "rand_seed").'
             raise sc.KeyNotFoundError(errormsg)
 
+
         znu.set_seed(pars['rand_seed'])
+
 
         return
 
@@ -181,21 +186,13 @@ class Poultry(znb.BaseRoster):
 
         # Perform updates
         self.init_flows()
-        self.flows['new_infectious']    += self.check_infectious() # For people who are exposed and not infectious, check if they begin being infectious
-        self.flows['new_symptomatic']   += self.check_symptomatic()
-
-        self.flows['new_critical']      += self.check_critical()
-        self.flows['new_recoveries']    += self.check_recovery()
-        new_deaths, new_known_deaths     = self.check_death()
-        self.flows['new_deaths']        += new_deaths
-        self.flows['new_known_deaths']  += new_known_deaths
+        self.flows['new_infectious']    += self.check_infectious() # For Barns that are exposed and not infectious, check if they begin being infectious
         return
 
 
     def update_states_post(self):
         ''' Perform post-timestep updates '''
 
-        # Update the status of flocks
 
         del self.is_exp  # Tidy up
 
@@ -262,109 +259,9 @@ class Poultry(znb.BaseRoster):
         return len(inds)
 
 
-    def check_symptomatic(self):
-        ''' Check for new progressions to symptomatic '''
-        inds = self.check_inds(self.symptomatic, self.date_symptomatic, filter_inds=self.is_exp)
-        self.symptomatic[inds] = True
-        return len(inds)
 
-
-
-    def check_severe(self):
-        ''' Check for new progressions to severe '''
-        inds = self.check_inds(self.severe, self.date_severe, filter_inds=self.is_exp)
-        
-        #  STRATIFICATION
-        if self.pars['enable_stratifications']:
-            for strat, strat_pars in self.pars['stratification_pars'].items():
-                metrics = strat_pars['metrics']
-
-                if 'new_severe' in metrics:
-                    bracs = strat_pars['brackets']
-                    
-                    # update the value for the current day, for each bracket. 
-                    for brac in bracs:
-                        brac_name = "_".join([ str(brac[0]), str(brac[1])])
-
-                        # Count the number of individuals meeting the criteria. 
-                        if strat == 'age':
-                            num_inds = np.sum( (self.age[inds] >= brac[0]) & (self.age[inds] < brac[1]) )
-                        elif strat == 'income':
-                            num_inds = np.sum( (self.income[inds] >= brac[0]) & (self.income[inds] < brac[1]) )
-                        else:
-                            raise ValueError(f"Stratification {strat} not recognized.")
-
-                        self.stratifications[strat][brac_name]['new_severe'][self.t] += num_inds
-        
-        self.severe[inds] = True
-        return len(inds)
-
-
-
-
-
-    def check_recovery(self, inds=None, filter_inds='is_exp'):
-        '''
-        Check for recovery.
-
-        More complex than other functions to allow for recovery to be manually imposed
-        for a specified set of indices.
-        '''
-
-        # Handle more flexible options for setting indices
-        if filter_inds == 'is_exp':
-            filter_inds = self.is_exp
-        if inds is None:
-            inds = self.check_inds(self.recovered, self.date_recovered, filter_inds=filter_inds)
-
-        # Now reset all disease states
-        self.exposed[inds]          = False
-        self.infectious[inds]       = False
-        self.symptomatic[inds]      = False
-        self.severe[inds]           = False
-        self.critical[inds]         = False
-        self.recovered[inds]        = True
-        self.recovered_variant[inds] = self.exposed_variant[inds]
-        self.infectious_variant[inds] = np.nan
-        self.exposed_variant[inds]    = np.nan
-        self.exposed_by_variant[:, inds] = False
-        self.infectious_by_variant[:, inds] = False
-
-        # Handle immunity aspects
-        if self.pars['use_waning']:
-
-            # Reset additional states
-            self.susceptible[inds] = True
-            self.diagnosed[inds]   = False # Reset their diagnosis state because they might be reinfected
-
-        # # Handle instances of false positive diagnoses; if someone is not exposed, is diagnosed, and has passed the required time in isolation, un-diagnose them
-        # fp_diagnoses = znu.true((~self.exposed) & (self.diagnosed) & (self.t - self.date_diagnosed >= 14))
-        # self.diagnosed[fp_diagnoses] = False
-
-        return len(inds)
-
-
-    def check_death(self):
-        ''' Check whether or not this agent died on this timestep  '''
-        inds = self.check_inds(self.dead, self.date_dead, filter_inds=self.is_exp) 
-        
-        self.dead[inds]             = True
-        diag_inds = inds[self.diagnosed[inds]] # Check whether the person was diagnosed before dying
-        # self.known_dead[diag_inds]  = True
-        # self.susceptible[inds]      = False
-        # self.exposed[inds]          = False
-        # self.infectious[inds]       = False
-        # self.symptomatic[inds]      = False
-        # self.severe[inds]           = False
-        # self.critical[inds]         = False
-        # self.known_contact[inds]    = False
-        # self.quarantined[inds]      = False
-        # self.recovered[inds]        = False
-        # self.infectious_variant[inds] = np.nan
-        # self.exposed_variant[inds]    = np.nan
-        # self.recovered_variant[inds]  = np.nan
-
-        return len(inds), len(diag_inds)
+    def check_cleaned(self):
+        ''' Check which barns get cleaned this timestep '''
 
 
 
@@ -375,25 +272,6 @@ class Poultry(znb.BaseRoster):
 
     def infect(self, inds, source=None, layer=None, variant=0):
         '''
-        Infect agents and determine their eventual outcomes.
-
-            * Every infected person can infect other people, regardless of whether they develop symptoms
-            * Infected people that develop symptoms are disaggregated into mild vs. severe (=requires hospitalization) vs. critical (=requires ICU)
-            * Every asymptomatic, mildly symptomatic, and severely symptomatic person recovers
-            * Critical cases either recover or die
-            * If the simulation is being run with waning, this method also sets/updates agents' neutralizing antibody levels
-
-        Method also deduplicates input arrays in case one agent is infected many times
-        and stores who infected whom in infection_log list.
-
-        Args:
-            inds     (array): array of agents to infect
-            source   (array): source indices of the agent who transmitted this infection (None if an importation or seed infection)
-            layer    (str):   contact layer this infection was transmitted on
-            variant  (int):   the variant agents are being infected by
-
-        Returns:
-            count (int): number of poultry agents infected
         '''
 
         if len(inds) == 0:
@@ -410,8 +288,8 @@ class Poultry(znb.BaseRoster):
         if source is not None:
             source = source[keep]
 
-                # Deal with variant parameters
-        variant_keys = ['rel_symp_prob', 'rel_severe_prob', 'rel_death_prob']
+        # Deal with variant parameters
+        variant_keys = ['rel_symp_prob', 'rel_severe_prob', 'rel_crit_prob', 'rel_death_prob']
         infect_pars = {k:self.pars[k] for k in variant_keys}
         variant_label = self.pars['variant_map'][variant]
         if variant:
@@ -421,15 +299,18 @@ class Poultry(znb.BaseRoster):
         n_infections = len(inds)
         durpars      = self.pars['dur']
 
+        # Retrieve those with a breakthrough infection (defined nabs)
+        breakthrough_inds = inds[znu.true(self.peak_nab[inds])]
+        if len(breakthrough_inds):
+            no_prior_breakthrough = (self.n_breakthroughs[breakthrough_inds] == 0) # We only adjust transmissibility for the first breakthrough
+            new_breakthrough_inds = breakthrough_inds[no_prior_breakthrough]
+            self.rel_trans[new_breakthrough_inds] *= self.pars['trans_redux']
+
         # Update states, variant info, and flows
         self.susceptible[inds]    = False
-        self.recovered[inds]      = False
-        self.diagnosed[inds]      = False
         self.exposed[inds]        = True
         self.exposed_variant[inds] = variant
         self.exposed_by_variant[variant, inds] = True
-        self.flows['new_infections']   += len(inds)
-        self.flows['new_reinfections'] += len(znu.defined(self.date_recovered[inds])) # Record reinfections
         self.flows_variant['new_infections_by_variant'][variant] += len(inds)
 
         # Record transmissions
@@ -442,12 +323,13 @@ class Poultry(znb.BaseRoster):
         self.date_exposed[inds] = self.t
         self.date_infectious[inds] = self.dur_exp2inf[inds] + self.t
 
-        return # For incrementing counters
+
+        return n_infections # For incrementing counters
 
 
     def test(self, inds, test_sensitivity=1.0, loss_prob=0.0, test_delay=0):
         '''
-        Method to test poultry. Typically not to be called by the user directly;
+        Method to test agents. Typically not to be called by the user directly;
         see the test_num() and test_prob() interventions.
 
         Args:
@@ -469,7 +351,7 @@ class Poultry(znb.BaseRoster):
         not_lost      = znu.n_binomial(1.0-loss_prob, len(not_diagnosed))
         final_inds    = not_diagnosed[not_lost]
 
-        # Store the date the flock will be diagnosed, as well as the date they took the test which will come back positive
+        # Store the date the person will be diagnosed, as well as the date they took the test which will come back positive
         self.date_diagnosed[final_inds] = self.t + test_delay
         self.date_pos_test[final_inds] = self.t
 
