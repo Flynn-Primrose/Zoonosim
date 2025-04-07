@@ -88,36 +88,32 @@ def make_popdict(sim, **kwargs):
     '''
 
     n_farms = sim.pars['n_farms']
+    n_water = round(n_farms * pop_pars['avg_water_per_farm']) # Number of water sources
 
+    # Set pop_pars, these are required parameters for creating the population. For the most part they
+    # define the means of the distributions used to create the population. The default values are set in defaults.py
+    # and can be overridden by passing them in as kwargs.
+    # The default values are currently just dummy values and should be changed to reflect the actual population parameters.
     if 'pop_pars' in kwargs:
         pop_pars = kwargs['pop_pars']
     else:
         pop_pars = znd.default_pop_pars
 
-    farmdict = {}
-    farmdict['farm_id'] = np.arange(n_farms) # Farm IDs
-    farmdict['n_barns'] = znu.n_poisson(pop_pars['avg_barns_per_farm'], n_farms) # Number of barns per farm
-
+    farm_id = np.arange(n_farms) # Farm IDs
+    n_barns = znu.n_poisson(pop_pars['avg_barns_per_farm'], n_farms) # Number of barns per farm
+    n_occupied_barns = np.zeros(n_farms) # Number of occupied barns per farm
+    n_workers = np.zeros(n_farms) # Number of workers per farm
+    
+    water_id = np.arange(n_water) # Water IDs
 
     for farm in range(n_farms):
-        farmdict['n_occupied_barns'][farm] = sum(znu.n_binomial(pop_pars['avg_barn_occupancy'], farmdict['n_barns'][farm])) # Number of occupied barns per farm
-        farmdict['n_workers'][farm] = sum(znu.n_binomial(pop_pars['avg_workers_per_barn'], farmdict['n_barns'][farm])) # Number of workers per barn
+        n_occupied_barns[farm] = sum(znu.n_binomial(pop_pars['avg_barn_occupancy'], n_barns[farm])) # Number of occupied barns per farm
+        n_workers[farm] = sum(znu.n_binomial(pop_pars['avg_workers_per_barn'], n_barns[farm])) # Number of workers per barn
 
-    n_water = round(n_farms * pop_pars['avg_water_per_farm']) # Number of water sources
-    farmdict['water_id'] = znu.choose_r(n_water, n_farms) # Water IDs
 
-    popdict = {}
+    water_id = znu.choose_r(n_water, n_farms) # Water IDs
 
-    pop_size_by_type = {
-        'human': sum(farmdict['n_workers']),
-        'barn': sum(farmdict['n_barns']),
-        'water': n_water,
-        'poultry': sum(farmdict['n_occupied_barns']),
-    }
 
-    pop_size = sum(pop_size_by_type.values()) # Total population size
-
-    popdict['uid'] = np.arange(pop_size) # Unique IDs for each agent
 
 
 
