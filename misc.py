@@ -713,11 +713,11 @@ def warn(msg, category=None, verbose=None, die=None):
     ''' Helper function to handle warnings -- not for the user '''
 
     # Handle inputs
-    warnopt = zno.warnings if not die else 'error'
+    warnopt = znd.warnings if not die else 'error'
     if category is None:
         category = RuntimeWarning
     if verbose is None:
-        verbose = zno.verbose
+        verbose = znd.verbose
 
     # Handle the different options
     if warnopt in ['error', 'errors']: # Include alias since hard to remember

@@ -31,7 +31,6 @@ class AgentsMeta(sc.prettyobj):
         self.agent = [
             'uid', #Int
             'agent_type', #string? the type of agent, must be one of pars['agent_types']
-            'agent_type', #string? or int?
             'rel_trans', # float - relative transmissibility of the agent
             'rel_sus', # float - relative susceptibility of the agent
         ]
