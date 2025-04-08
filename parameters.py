@@ -30,7 +30,7 @@ def make_pars(set_prognoses = False, prog_by_age = False, version = None, **kwar
     pars = {}
 
     # Population pars
-    pars['agent_types'] = ['human', 'poultry', 'barn', 'water'] # Every type of agent in the model
+    pars['agent_types'] = ['human', 'flock', 'barn', 'water'] # Every type of agent in the model
     pars['n_farms'] = 10 # Number of farms in the simulation. This is used to generate the rest of the population
     pars['pop_size'] = None # The total number of agents in the simulation. This should be equal to the sum of the population sizes of all agent types.
     pars['pop_size_by_type'] = {}
@@ -69,7 +69,7 @@ def make_pars(set_prognoses = False, prog_by_age = False, version = None, **kwar
         'viral_levels':dict(min_vl=0.75, max_vl=2) # Specifies the range within which viral load should be scaled so it can contribute to relative transmissibility
     }
 
-    pars['transmission_pars']['poultry'] = {
+    pars['transmission_pars']['flock'] = {
 
     }
 
@@ -136,7 +136,7 @@ def make_pars(set_prognoses = False, prog_by_age = False, version = None, **kwar
         'prognoses'    :None # The actual arrays of prognoses by age; this is populated later
     }
 
-    pars['dur']['poultry'] = None
+    pars['dur']['flock'] = None
     pars['dur']['barn'] = None
     pars['dur']['water'] = None
 

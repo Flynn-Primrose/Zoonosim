@@ -85,7 +85,7 @@ class HumanMeta(sc.prettyobj):
         self.dates = [f'date_{state}' for state in self.states] # Convert each state into a date
         #self.dates.append('date_pos_test') # Store the date when a person tested which will come back positive
         self.dates.append('date_end_quarantine') # Store the date when a person comes out of quarantine
-        # Duration of different states: these are floats per person -- used in people.py
+        # Duration of different states: these are floats per human.
         self.durs = [
             'dur_exp2inf',
             'dur_inf2sym',
@@ -148,7 +148,6 @@ class Humans(znb.BaseRoster):
         self.t = 0 # Keep current simulation time
         self._lock = False # Prevent further modification of keys
         self.meta = HumanMeta() # Store list of keys and dtypes
-        # self.init_contacts() # Initialize the contacts
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
         
         # Set person properties -- all floats except for UID

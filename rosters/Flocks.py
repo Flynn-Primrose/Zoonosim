@@ -8,10 +8,10 @@ from .. import utils as znu
 from .. import defaults as znd
 from .. import base as znb
 
-__all__ = ['Poultry']
+__all__ = ['Flocks']
 
-class PoultryMeta(sc.prettyobj):
-    ''' Defines all keys that are used by barns '''
+class FlocksMeta(sc.prettyobj):
+    ''' Defines all keys that are used by flocks '''
 
     def __init__(self):
         
@@ -54,9 +54,9 @@ class PoultryMeta(sc.prettyobj):
         return
     
 
-class Poultry(znb.BaseRoster):
+class Flocks(znb.BaseRoster):
     '''
-    A class to perform all the operations on the poultry agents -- usually not invoked directly.
+    A class to perform all the operations on the flock agents -- usually not invoked directly.
 
     Note that this class handles the mechanics of updating the actual poultry, while
     ``cv.BaseRoster`` takes care of housekeeping (saving, loading, exporting, etc.).
@@ -80,7 +80,7 @@ class Poultry(znb.BaseRoster):
         # Other initialization
         self.t = 0 # Keep current simulation time
         self._lock = False # Prevent further modification of keys
-        self.meta = PoultryMeta() # Store list of keys and dtypes
+        self.meta = FlocksMeta() # Store list of keys and dtypes
         self.contacts = None
         # self.init_contacts() # Initialize the contacts
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
