@@ -87,7 +87,7 @@ class Flocks(Subroster):
         self.stratifications = None # Gets updated in sim.py : initialize()
         
         # Set person properties -- all floats except for UID
-        for key in self.meta.person:
+        for key in self.meta.agent:
             if key == 'uid':
                 self[key] = np.arange(self.pars['pop_size'], dtype=znd.default_int)# TODO: This won't work as UIDs need to be unique across all agents
 

@@ -69,12 +69,11 @@ class Water(Subroster):
         self.t = 0 # Keep current simulation time
         self._lock = False # Prevent further modification of keys
         self.meta = WaterMeta() # Store list of keys and dtypes
-        self.contacts = None
         # self.init_contacts() # Initialize the contacts
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
         
         # Set person properties -- all floats except for UID
-        for key in self.meta.person:
+        for key in self.meta.agent:
             if key == 'uid':
                 self[key] = np.arange(self.pars['pop_size'], dtype=znd.default_int) # TODO: This won't work, UIDs need to be unique across all agent types
 
