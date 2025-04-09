@@ -38,12 +38,12 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
 
     validate_popdict(popdict, sim.pars) # Check the popdict is valid
 
-    humans = make_humans(popdict)
-    flocks = make_flocks(popdict)
-    barns = make_barns(popdict)
-    water = make_water(popdict)
+    humans = make_humans(sim.pars, popdict['human_uids'])
+    flocks = make_flocks(sim.pars, popdict['flock_uids'], popdict['flock2barn'])
+    barns = make_barns(sim.pars, popdict['barn_uids'], popdict['flock2barn'], popdict['barn2water'])
+    water = make_water(sim.pars, popdict['water_uids'], popdict['barn2water'])
 
-    contacts = make_contacts(popdict)
+    contacts = make_contacts(popdict['contactdict'])
 
     agents = znr.Agents(sim.pars, 
                         uid = popdict['uid'], 
@@ -70,7 +70,16 @@ def validate_popdict(popdict, pars, verbose=True):
         raise TypeError(errormsg) from E
 
     # Check keys and lengths
-    required_keys = ['uid', 'agent_type']
+    required_keys = ['uid',
+                     'agent_type',
+                     'human_uids',
+                     'barn_uids',
+                     'flock_uids',
+                     'water_uids',
+                     'contactdict',
+                     'barn2water',
+                     'flock2barn',
+                     ]
     popdict_keys = popdict.keys()
     for key in required_keys:
 
@@ -83,9 +92,9 @@ def validate_popdict(popdict, pars, verbose=True):
             errormsg = f'Population not fully created: {isnan:,} NaNs found in {key}. This can be caused by calling zn.Agents() instead of zn.make_agents().'
             raise ValueError(errormsg)
 
-    if ('contacts' not in popdict_keys) and (not hasattr(popdict, 'contacts')) and verbose:
-        warnmsg = 'No contacts found. Please remember to add contacts before running the simulation.'
-        znm.warn(warnmsg)
+    # if ('contacts' not in popdict_keys) and (not hasattr(popdict, 'contacts')) and verbose:
+    #     warnmsg = 'No contacts found. Please remember to add contacts before running the simulation.'
+    #     znm.warn(warnmsg)
 
     return
 
@@ -102,6 +111,7 @@ def make_popdict(sim, **kwargs):
     '''
 
     popdict = {}
+    contactdict = {}
 
     # Set pop_pars, these are required parameters for creating the population. For the most part they
     # define the means of the distributions used to create the population. The default values are set in defaults.py
@@ -115,13 +125,11 @@ def make_popdict(sim, **kwargs):
 
     # Farms
     n_farms = sim.pars['n_farms']
-    farm_id = np.arange(n_farms) # Farm IDs
+
 
 
     # Create water sources
     n_water = round(n_farms * pop_pars['avg_water_per_farm']) # Number of water sources
-    water_id = np.arange(n_water) # Water IDs
-    water_id_by_farm = znu.choose_r(water_id, n_farms) # assign water id's to farms.
 
     # Create barns
     n_barns_by_farm = znu.n_poisson(pop_pars['avg_barns_per_farm'], n_farms) # Number of barns per farm
@@ -149,30 +157,58 @@ def make_popdict(sim, **kwargs):
                                            np.repeat('flock', n_flocks), 
                                            np.repeat('barn', n_barns), 
                                            np.repeat('water', n_water))
+    popdict['human_uids'] = popdict['uid'][popdict['agent_type'] == 'human']
+    popdict['barn_uids'] = popdict['uid'][popdict['agent_type'] == 'barn']
+    popdict['flock_uids'] = popdict['uid'][popdict['agent_type'] == 'flock']
+    popdict['water_uids'] = popdict['uid'][popdict['agent_type'] == 'water']
+
+    human_index = 1
+    barn_index = 1
+    flock_index = 1
+    water_index = znu.choose_r(n_water, n_farms) # Randomly assign water sources to farms
+    flock2barn = {}
+    barn2water = {}
+
+    for farm in range(n_farms):
+        contactdict[farm] = {
+            'humans':popdict['human_uids'][human_index:human_index + n_humans_by_farm[farm]],
+            'barns':popdict['barn_uids'][barn_index:barn_index + n_barns_by_farm[farm]],
+            'flocks':popdict['flock_uids'][flock_index:flock_index + n_flocks_by_farm[farm]],
+            'water':popdict['water_uids'][water_index[farm]],
+        }
+        human_index += n_humans_by_farm[farm]
+        barn_index += n_barns_by_farm[farm]
+        flock_index += n_flocks_by_farm[farm]
+
+        occupied_barns = znu.choose(n_barns_by_farm[farm], n_occupied_barns_by_farm[farm])
+        contactdict[farm][flock2barn] = dict(zip(contactdict[farm]['flocks'], contactdict[farm]['barns'][occupied_barns]))# Map flocks to barns for this farm
+
+        contactdict[farm][barn2water] = {barn :contactdict[farm]['water'][0] for barn in contactdict[farm]['barns']} # Map barns to water sources for this farm
 
 
-
-
-
-
+        flock2barn.update(contactdict[farm][flock2barn]) # Map flocks to barns for all farms
+        barn2water.update(contactdict[farm][barn2water]) # Map barns to water sources for all farms
+    
+    popdict['contactdict'] = contactdict # Add the contact dictionary to the population dictionary
+    popdict['barn2water'] = barn2water # Add the barn to water mapping to the population dictionary
+    popdict['flock2barn'] = flock2barn # Add the flock to barn mapping to the population dictionary
     return popdict
 
-def make_humans(popdict):
+def make_humans():
+
+    return
+def make_flocks():
 
     return
 
-def make_flocks(popdict):
+def make_barns():
 
     return
 
-def make_barns(popdict):
+def make_water():
 
     return
 
-def make_water(popdict):
-
-    return
-
-def make_contacts(popdict):
+def make_contacts():
 
     return
