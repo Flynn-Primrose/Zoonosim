@@ -6,7 +6,7 @@ from collections import defaultdict
 from .. import version as znv
 from .. import utils as znu
 from .. import defaults as znd
-from .. import base as znb
+from .Subroster import Subroster
 
 __all__ = ['Water']
 
@@ -53,7 +53,7 @@ class WaterMeta(sc.prettyobj):
         return
     
 
-class Water(znb.BaseRoster):
+class Water(Subroster):
     '''
     A class to perform all the operations on the agents -- usually not invoked directly.
 
@@ -107,9 +107,6 @@ class Water(znb.BaseRoster):
         # Although we have called init(), we still need to call initialize()
         self.initialized = False
 
-        # Handle contacts, if supplied (note: they usually are)
-        if 'contacts' in kwargs:
-            self.add_contacts(kwargs.pop('contacts'))
 
         # Handle all other values, e.g. age
         for key,value in kwargs.items():

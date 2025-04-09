@@ -13,7 +13,7 @@ from . import misc as znm
 from . import base as znb
 from . import defaults as znd
 from . import interventions as zni
-from . import analyzers as zna
+from . import analysis as zna
 from . import parameters as znpar
 from . import population as znpop
 from . import immunity as znimm
@@ -48,9 +48,7 @@ class Sim(znb.BaseSim):
                  popfile=None, agents=None, version=None, **kwargs):
 
         """
-        Arguments:
-            sp_people: Stands for Synthpops-Format People. For access to attributes like workplace and school membership. 
-            Useful because normally the SP-format people get deleted after conversion to CV-format. 
+
         """
         # Set attributes
         self.label         = label    # The label/name of the simulation
@@ -81,11 +79,6 @@ class Sim(znb.BaseSim):
         self.update_pars(pars, **kwargs) # Update the parameters, if provided
         self.load_data(datafile) # Load the data, if provided
 
-
-        # Process test object pars
-        # if self.pars['enable_testobjs']: 
-        #     self.process_testobj_pars()
-        #     print("COVID-19 testing is enabled!")
 
         return
 
