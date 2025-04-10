@@ -53,8 +53,8 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
 
     humans = make_humans(sim.pars, popdict['human_uids'])
     flocks = make_flocks(sim.pars, popdict['flock_uids'], popdict['flock2barn'])
-    barns = make_barns(sim.pars, popdict['barn_uids'], popdict['flock2barn'], popdict['barn2water'])
-    water = make_water(sim.pars, popdict['water_uids'], popdict['barn2water'])
+    barns = make_barns(sim.pars, popdict['barn_uids'], popdict['barn2flock'])
+    water = make_water(sim.pars, popdict['water_uids'])
 
     contacts = make_contacts(popdict['contactdict'])
 
@@ -205,6 +205,7 @@ def make_popdict(sim, **kwargs):
     popdict['contactdict'] = contactdict # Add the contact dictionary to the population dictionary
     popdict['barn2water'] = barn2water # Add the barn to water mapping to the population dictionary
     popdict['flock2barn'] = flock2barn # Add the flock to barn mapping to the population dictionary
+    popdict['barn2flock'] = {v: k for k, v in flock2barn.items()}
     return popdict
 
 def make_humans():
@@ -214,13 +215,22 @@ def make_flocks():
 
     return
 
-def make_barns():
+def make_barns(sim_pars, uid, barn2flock):
+    temperature = znu.n_poisson(22.5, len(uid)) # NOTE: Dummy values
+    humidity = znu.n_poisson(45, len(uid)) # NOTE: Dummy values
+    flock = np.empty(len(uid), dtype=znd.default_int)
+    for index in range(len(uid)): # NOTE: There is probably a better way of doing this
+        flock[index] = barn2flock.get(uid[index])
+        
+    barns = znr.Barns(sim_pars, uid=uid, temperature = temperature, humidity = humidity, flock = flock)
+    return barns
 
-    return
+def make_water(sim_pars, uid):
 
-def make_water():
-
-    return
+    temperature = znu.n_poisson(22.5, len(uid)) # NOTE: Dummy values
+    water = znr.Water(sim_pars, uid = uid, temperature = temperature)
+    
+    return water
 
 def make_contacts():
 
