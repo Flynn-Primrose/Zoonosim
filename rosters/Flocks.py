@@ -17,7 +17,7 @@ class FlocksMeta(sc.prettyobj):
         
         self.agent = [
             'uid', # int
-            'type', # e.g. breeder, layer, broiler
+            'breed', # e.g. breeder, layer, broiler
             'barn' # uid of the barn where the flock is located
         ]
 
@@ -84,31 +84,29 @@ class Flocks(Subroster):
         self.contacts = None
         # self.init_contacts() # Initialize the contacts
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
-        self.stratifications = None # Gets updated in sim.py : initialize()
         
+        pop_size = pars['pop_size_by_type']['flock']
+
         # Set person properties -- all floats except for UID
         for key in self.meta.agent:
             if key == 'uid':
-                self[key] = np.arange(self.pars['pop_size'], dtype=znd.default_int)# TODO: This won't work as UIDs need to be unique across all agents
+                self[key] = np.empty(pop_size, dtype=znd.default_int)# NOTE: values get passed as kwargs by make_flock
 
         # Set health states -- only susceptible is true by default -- booleans except exposed by variant which should return the variant that ind is exposed to
         for key in self.meta.states:
-            val = (key in ['susceptible']) # Default value is True for susceptible and naive, False otherwise
-            self[key] = np.full(self.pars['pop_size'], val, dtype=bool)
+            val = (key in ['susceptible']) # Default value is True for susceptible, False otherwise
+            self[key] = np.full(pop_size, val, dtype=bool)
 
         # Set variant states, which store info about which variant an agent is exposed to
         for key in self.meta.variant_states:
-            self[key] = np.full(self.pars['pop_size'], np.nan, dtype=znd.default_float)
+            self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
         for key in self.meta.by_variant_states:
-            self[key] = np.full((self.pars['n_variants'], self.pars['pop_size']), False, dtype=bool)
+            self[key] = np.full((self.pars['n_variants'], pop_size), False, dtype=bool)
 
         # Set dates and durations -- both floats
         for key in self.meta.dates + self.meta.durs:
-            self[key] = np.full(self.pars['pop_size'], np.nan, dtype=znd.default_float)
+            self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
 
-        # Set dates for viral load profile -- floats
-        for key in self.meta.vl_points:
-            self[key] = np.full(self.pars['pop_size'], np.nan, dtype=znd.default_float)
 
         # Store the dtypes used in a flat dict
         self._dtypes = {key:self[key].dtype for key in self.keys()} # Assign all to float by default
@@ -156,7 +154,7 @@ class Flocks(Subroster):
         Set the prognoses for each person based on age during initialization. Need
         to reset the seed because viral loads are drawn stochastically.
         '''
-        # TODO: Figure out how to model infections in poultry
+        # TODO: Figure out how to model infections in flocks
         pars = self.pars # Shorten
         if 'prognoses' not in pars or 'rand_seed' not in pars:
             errormsg = 'This poultry object does not have the required parameters ("prognoses" and "rand_seed"). Create a sim (or parameters), then do e.g. people.set_pars(sim.pars).'

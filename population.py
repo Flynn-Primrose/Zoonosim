@@ -211,9 +211,16 @@ def make_popdict(sim, **kwargs):
 def make_humans():
 
     return
-def make_flocks():
 
-    return
+def make_flocks(sim_pars, uid, flock2barn):
+    breed_index = znu.n_multinomial(znd.default_flock_breed_freqs, len(uid))
+    breed = znd.default_flock_breeds[breed_index]
+    barn = np.empty(len(uid), dtype=znd.default_int)
+    for index in range(len(uid)):
+        barn[index] = flock2barn.get(uid[index])
+
+    flocks = znr.Flocks(sim_pars, uid=uid, breed = breed, barn = barn)
+    return flocks
 
 def make_barns(sim_pars, uid, barn2flock):
     temperature = znu.n_poisson(22.5, len(uid)) # NOTE: Dummy values

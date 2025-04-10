@@ -36,6 +36,9 @@ default_pop_pars = {
     'avg_water_per_farm': 1.0,
 }
 
+default_flock_breeds = ['breeder', 'layer', 'broiler'] # Breeds of flocks present
+default_flock_breed_freqs = [0.1, 0.2, 0.7] # frequency of the different breed types
+
 def get_default_colors():
     '''
     Specify plot colors -- used in sim.py.
