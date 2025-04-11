@@ -5,7 +5,7 @@ Defines functions for creating agents
 import numpy as np # Needed for a few things not provided by pl
 import sciris as sc
 
-from . import misc as znm
+from . import base as znb
 from . import rosters as znr
 from . import defaults as znd
 from . import utils as znu
@@ -208,9 +208,13 @@ def make_popdict(sim, **kwargs):
     popdict['barn2flock'] = {v: k for k, v in flock2barn.items()}
     return popdict
 
-def make_humans():
+def make_humans(sim_pars, uid):
+    sex = znu.n_binomial(0.5, len(uid))
+    age  = np.maximum(18, znu.n_poisson(40, len(uid))) # NOTE: Dummy values (assume average worker age of 40)
 
-    return
+    humans = znr.Humans(sim_pars, uid = uid, age = age, sex = sex)
+
+    return humans
 
 def make_flocks(sim_pars, uid, flock2barn):
     breed_index = znu.n_multinomial(znd.default_flock_breed_freqs, len(uid))
@@ -239,6 +243,212 @@ def make_water(sim_pars, uid):
     
     return water
 
-def make_contacts():
+def make_contacts(contactdict):
+    
+    fb_layer = make_fb_contacts(contactdict) # Flock-barn contacts
+    bw_layer = make_bw_contacts(contactdict) # Barn-water contacts
+    fw_layer = make_fw_contacts(contactdict) # Flock-water contacts
+    hb_layer = make_hb_contacts(contactdict) # Human-barn contacts
+    hf_layer = make_hf_contacts(contactdict) # Human-flock contacts
+    hh_layer = make_hh_contacts(contactdict) # Human-human contacts
 
-    return
+    return znb.Contacts(fb = fb_layer,
+                        bw = bw_layer,
+                        fw = fw_layer,
+                        hb = hb_layer,
+                        hf = hf_layer,
+                        hh = hh_layer,
+                        )
+
+def make_fb_contacts(contactdict):
+    '''
+    Create flock-barn contacts for the simulation.
+
+    Args:
+        sim_pars        (Sim)  : the simulation object; population parameters are taken from the sim object
+        contactdict     (dict) : dictionary containing the contacts between agents
+
+    Returns:
+        fb_layer: a Layer object containing the flock-barn contacts
+    '''
+
+    fb_p1 = []
+
+    fb_p2 = []
+
+    for farm, farm_contacts in contactdict.items():
+        for flock in farm_contacts['flocks']:
+            fb_p1.append(flock)
+            fb_p2.append(farm_contacts['flock2barn'][flock]) # Get the barn for this flock
+
+    beta = np.repeat(0.25, len(fb_p1)) # NOTE: Dummy values
+
+    fb_layer = znb.Layer(p1 = fb_p1,
+                         p2 = fb_p2,
+                         beta = beta,
+                         label = 'flock-barn contacts'
+                        )
+
+    return fb_layer
+
+def make_bw_contacts(contactdict):
+    '''
+    Create barn-water contacts for the simulation.
+
+    Args:
+        sim_pars        (Sim)  : the simulation object; population parameters are taken from the sim object
+        contactdict     (dict) : dictionary containing the contacts between agents
+
+    Returns:
+        bw_layer: a Layer object containing the barn-water contacts
+    '''
+
+    bw_p1 = []
+
+    bw_p2 = []
+
+    for farm, farm_contacts in contactdict.items():
+        for barn in farm_contacts['barns']:
+            bw_p1.append(barn)
+            bw_p2.append(farm_contacts['barn2water'][barn]) # Get the water source for this barn
+
+    beta = np.repeat(0.25, len(bw_p1)) # NOTE: Dummy values
+
+    bw_layer = znb.Layer(p1 = bw_p1,
+                         p2 = bw_p2,
+                         beta = beta,
+                         label = 'barn-water contacts'
+                        )
+
+    return bw_layer
+
+def make_fw_contacts(contactdict):
+    '''
+    Create flock-water contacts for the simulation.
+
+    Args:
+        sim_pars        (Sim)  : the simulation object; population parameters are taken from the sim object
+        contactdict     (dict) : dictionary containing the contacts between agents
+
+    Returns:
+        fw_layer: a Layer object containing the flock-water contacts
+    '''
+
+    fw_p1 = []
+
+    fw_p2 = []
+
+    for farm, farm_contacts in contactdict.items():
+        for flock in farm_contacts['flocks']:
+            fw_p1.append(flock) # Get the barn for this flock
+            fw_p2.append(farm_contacts['barn2water'][farm_contacts['flock2barn'][flock]]) # Get the water source for this flock
+
+    beta = np.repeat(0.25, len(fw_p1)) # NOTE: Dummy values
+
+    fw_layer = znb.Layer(p1 = fw_p1,
+                         p2 = fw_p2,
+                         beta = beta,
+                         label = 'flock-water contacts'
+                        )
+
+    return fw_layer
+
+def make_hb_contacts(contactdict):
+    '''
+    Create human-barn contacts for the simulation.
+
+    Args:
+        sim_pars        (Sim)  : the simulation object; population parameters are taken from the sim object
+        contactdict     (dict) : dictionary containing the contacts between agents
+
+    Returns:
+        hb_layer: a Layer object containing the human-barn contacts
+    '''
+
+    hb_p1 = []
+
+    hb_p2 = []
+
+    for farm, farm_contacts in contactdict.items():
+        for human in farm_contacts['humans']:
+            for barn in farm_contacts['barns']:
+                hb_p1.append(human)
+                hb_p2.append(barn) # Get the barn for this human
+                # NOTE: This assumes that humans have contact with all barns on the farm
+
+    beta = np.repeat(0.25, len(hb_p1)) # NOTE: Dummy values
+
+    hb_layer = znb.Layer(p1 = hb_p1,
+                         p2 = hb_p2,
+                         beta = beta,
+                         label = 'human-barn contacts'
+                        )
+
+    return hb_layer
+
+def make_hf_contacts(contactdict):
+    '''
+    Create human-flock contacts for the simulation.
+
+    Args:
+        sim_pars        (Sim)  : the simulation object; population parameters are taken from the sim object
+        contactdict     (dict) : dictionary containing the contacts between agents
+
+    Returns:
+        hf_layer: a Layer object containing the human-flock contacts
+    '''
+
+    hf_p1 = []
+
+    hf_p2 = []
+
+    for farm, farm_contacts in contactdict.items():
+        for human in farm_contacts['humans']:
+            for flock in farm_contacts['flocks']:
+                hf_p1.append(human)
+                hf_p2.append(flock) # Get the barn for this flock
+                # NOTE: This assumes that humans have contact with all flocks on the farm
+
+    beta = np.repeat(1, len(hf_p1)) # NOTE: Dummy values
+
+    hf_layer = znb.Layer(p1 = hf_p1,
+                         p2 = hf_p2,
+                         beta = beta,
+                         label = 'human-flock contacts'
+                        )
+
+    return hf_layer
+
+def make_hh_contacts(contactdict):
+    '''
+    Create human-human contacts for the simulation.
+
+    Args:
+        sim_pars        (Sim)  : the simulation object; population parameters are taken from the sim object
+        contactdict     (dict) : dictionary containing the contacts between agents
+
+    Returns:
+        hh_layer: a Layer object containing the human-human contacts
+    '''
+
+    hh_p1 = []
+
+    hh_p2 = []
+
+    for farm, farm_contacts in contactdict.items():
+        for human1 in farm_contacts['humans']:
+            for human2 in farm_contacts['humans']:
+                if human1 != human2:
+                    hh_p1.append(human1)
+                    hh_p2.append(human2) # Get the barn for this human
+                    # NOTE: This assumes that humans have contact with all humans on the farm
+
+    beta = np.repeat(0.25, len(hh_p1)) # NOTE: Dummy values
+
+    hh_layer = znb.Layer(p1 = hh_p1,
+                         p2 = hh_p2,
+                         beta = beta,
+                         label = 'human-human contacts'
+                        )
+
+    return hh_layer
