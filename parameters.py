@@ -281,3 +281,324 @@ def absolute_prognoses(prognoses):
     return out
 
 
+def get_variant_choices():
+    '''
+    Define valid pre-defined variant names
+    '''
+    # List of choices currently available: new ones can be added to the list along with their aliases
+    choices = {
+        'wild':  ['wild', 'default', 'pre-existing', 'original'],
+        'alpha': ['alpha', 'b117', 'uk', 'united kingdom', 'kent'],
+        'beta':  ['beta', 'b1351', 'sa', 'south africa'],
+        'gamma': ['gamma', 'p1', 'b11248', 'brazil'],
+        'delta': ['delta', 'b16172', 'india'],
+        'omicron': ['omicron']
+    }
+    mapping = {name:key for key,synonyms in choices.items() for name in synonyms} # Flip from key:value to value:key
+    return choices, mapping
+
+
+def get_vaccine_choices():
+    '''
+    Define valid pre-defined vaccine names
+    '''
+    # List of choices currently available: new ones can be added to the list along with their aliases
+    choices = {
+        'default': ['default', None],
+        'pfizer':  ['pfizer', 'biontech', 'pfizer-biontech', 'pf', 'pfz', 'pz', 'bnt162b2', 'comirnaty'],
+        'moderna': ['moderna', 'md', 'spikevax'],
+        'novavax': ['novavax', 'nova', 'covovax', 'nvx', 'nv'],
+        'az':      ['astrazeneca', 'az', 'covishield', 'oxford', 'vaxzevria'],
+        'jj':      ['jnj', 'johnson & johnson', 'janssen', 'jj'],
+        'sinovac': ['sinovac', 'coronavac'],
+        'sinopharm': ['sinopharm']
+    }
+    mapping = {name:key for key,synonyms in choices.items() for name in synonyms} # Flip from key:value to value:key
+    return choices, mapping
+
+
+def _get_from_pars(pars, default=False, key=None, defaultkey='default'):
+    ''' Helper function to get the right output from vaccine and variant functions '''
+
+    # If a string was provided, interpret it as a key and swap
+    if isinstance(default, str):
+        key, default = default, key
+
+    # Handle output
+    if key is not None:
+        try:
+            return pars[key]
+        except Exception as E:
+            errormsg = f'Key "{key}" not found; choices are: {sc.strjoin(pars.keys())}'
+            raise sc.KeyNotFoundError(errormsg) from E
+    elif default:
+        return pars[defaultkey]
+    else:
+        return pars
+
+
+def get_variant_pars(default=False, variant=None):
+    '''
+    Define the default parameters for the different variants
+    '''
+    pars = dict(
+
+        wild = dict(
+            rel_beta        = 1.0, # Default values
+            rel_symp_prob   = 1.0, # Default values
+            rel_severe_prob = 1.0, # Default values
+            rel_crit_prob   = 1.0, # Default values
+            rel_death_prob  = 1.0, # Default values
+        ),
+
+        alpha = dict(
+            rel_beta        = 1.67, # Midpoint of the range reported in https://science.sciencemag.org/content/372/6538/eabg3055
+            rel_symp_prob   = 1.0,  # Inconclusive evidence on the likelihood of symptom development. See https://www.thelancet.com/journals/lanpub/article/PIIS2468-2667(21)00055-4/fulltext
+            rel_severe_prob = 1.64, # From https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3792894, and consistent with https://www.eurosurveillance.org/content/10.2807/1560-7917.ES.2021.26.16.2100348 and https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/961042/S1095_NERVTAG_update_note_on_B.1.1.7_severity_20210211.pdf
+            rel_crit_prob   = 1.0,  # Various studies have found increased mortality for B117 (summary here: https://www.thelancet.com/journals/laninf/article/PIIS1473-3099(21)00201-2/fulltext#tbl1), but not necessarily when conditioned on having developed severe disease
+            rel_death_prob  = 1.0,  # See comment above
+        ),
+
+        beta = dict(
+            rel_beta        = 1.0, # No increase in transmissibility; B1351's fitness advantage comes from the reduction in neutralisation
+            rel_symp_prob   = 1.0,
+            rel_severe_prob = 3.6, # From https://www.eurosurveillance.org/content/10.2807/1560-7917.ES.2021.26.16.2100348
+            rel_crit_prob   = 1.0,
+            rel_death_prob  = 1.0,
+        ),
+
+        gamma = dict(
+            rel_beta        = 2.05, # Estimated to be 1.7–2.4-fold more transmissible than wild-type: https://science.sciencemag.org/content/early/2021/04/13/science.abh2644
+            rel_symp_prob   = 1.0,
+            rel_severe_prob = 2.6, # From https://www.eurosurveillance.org/content/10.2807/1560-7917.ES.2021.26.16.2100348
+            rel_crit_prob   = 1.0,
+            rel_death_prob  = 1.0,
+        ),
+
+        delta = dict(
+            rel_beta        = 2.2, # Estimated to be 1.25-1.6-fold more transmissible than B117: https://www.researchsquare.com/article/rs-637724/v1
+            rel_symp_prob   = 1.0,
+            rel_severe_prob = 3.2, # 2x more transmissible than alpha from https://mobile.twitter.com/dgurdasani1/status/1403293582279294983
+            rel_crit_prob   = 1.0,
+            rel_death_prob  = 1.0,
+        ),
+
+        omicron = dict(
+            rel_beta        = 2.5, # Made-up parameters. (Learned in calibration)
+            rel_symp_prob   = 1.0,
+            rel_severe_prob = 0.5,
+            rel_crit_prob   = 1.0,
+            rel_death_prob  = 1.0,
+        )
+    )
+
+    return _get_from_pars(pars, default, key=variant, defaultkey='wild')
+
+
+def get_cross_immunity(default=False, variant=None):
+    '''
+    Get the cross immunity between each variant in a sim
+    '''
+    pars = dict(
+
+        wild = dict(
+            wild  = 1.0, # Default for own-immunity
+            alpha = 0.5, # Assumption
+            beta  = 0.5, # https://www.nature.com/articles/s41586-021-03471-w
+            gamma = 0.34, # Assumption
+            delta = 0.374, # Assumption
+            omicron = 15/315 # https://www.medrxiv.org/content/10.1101/2021.12.24.21268317v6
+        ),
+
+        alpha = dict(
+            wild  = 0.5, # Assumption
+            alpha = 1.0, # Default for own-immunity
+            beta  = 0.8, # Assumption
+            gamma = 0.8, # Assumption
+            delta = 0.689,  # Assumption
+            omicron = 0.5*6/301 # https://www.medrxiv.org/content/10.1101/2021.12.24.21268317v6
+        ),
+
+        beta = dict(
+            wild  = 0.066, # https://www.nature.com/articles/s41586-021-03471-w
+            alpha = 0.5,   # Assumption
+            beta  = 1.0,   # Default for own-immunity
+            gamma = 0.5,   # Assumption
+            delta = 0.086,    # Assumption
+            omicron = 0.066*8/91 # https://www.medrxiv.org/content/10.1101/2021.12.24.21268317v6
+        ),
+
+        gamma = dict(
+            wild  = 0.34, # Previous (non-P.1) infection provides 54–79% of the protection against infection with P.1 that it provides against non-P.1 lineages: https://science.sciencemag.org/content/early/2021/04/13/science.abh2644
+            alpha = 0.4,  # Assumption based on the above
+            beta  = 0.4,  # Assumption based on the above
+            gamma = 1.0,  # Default for own-immunity
+            delta = 0.088,   # Assumption
+            omicron = 0.05 # ASSUMPTION
+        ),
+
+        delta = dict( # Parameters from https://www.cell.com/cell/fulltext/S0092-8674(21)00755-8
+            wild  = 0.374,
+            alpha = 0.689,
+            beta  = 0.086,
+            gamma = 0.088,
+            delta = 1.0, # Default for own-immunity
+            omicron = 0.374*42/464 # https://www.medrxiv.org/content/10.1101/2021.12.24.21268317v6
+        ),
+
+        omicron = dict(
+            wild  = 0.2, # ASSUMPTION
+            alpha = 0.2, # ASSUMPTION
+            beta  = 0.2, # ASSUMPTION
+            gamma = 0.2, # ASSUMPTION
+            delta = 28/46, # https://www.nature.com/articles/s41586-022-04830-x
+            omicron = 1.0 # Default for own-immunity
+        ),
+    )
+
+    return _get_from_pars(pars, default, key=variant, defaultkey='wild')
+
+
+def get_vaccine_variant_pars(default=False, vaccine=None):
+    '''
+    Define the effectiveness of each vaccine against each variant
+    '''
+    pars = dict(
+
+        default = dict(
+            wild  = 1.0,
+            alpha = 1.0,
+            beta  = 1.0,
+            gamma = 1.0,
+            delta = 1.0,
+        ),
+
+        pfizer = dict(
+            wild  = 1.0,
+            alpha = 1/2.0, # https://www.nejm.org/doi/full/10.1056/nejmc2100362
+            beta  = 1/10.3, # https://www.nejm.org/doi/full/10.1056/nejmc2100362
+            gamma = 1/6.7, # https://www.nejm.org/doi/full/10.1056/nejmc2100362
+            delta = 1/2.9, # https://www.researchsquare.com/article/rs-637724/v1
+            omicron = 26/802 # https://www.science.org/doi/full/10.1126/sciimmunol.abo2202
+        ),
+
+        moderna = dict(
+            wild  = 1.0,
+            alpha = 1/1.8,
+            beta  = 1/4.5,
+            gamma = 1/8.6, # https://www.nejm.org/doi/full/10.1056/nejmc2100362
+            delta = 1/2.9,  # https://www.researchsquare.com/article/rs-637724/v1
+            omicron = 58/1997 # https://www.science.org/doi/full/10.1126/sciimmunol.abo2202
+        ),
+
+        az = dict(
+            wild  = 1.0,
+            alpha = 1/2.3,
+            beta  = 1/9,
+            gamma = 1/2.9,
+            delta = 1/6.2,  # https://www.researchsquare.com/article/rs-637724/v1
+            omicron = 20/411  # https://www.science.org/doi/full/10.1126/sciimmunol.abo2202
+        ),
+
+        jj = dict(
+            wild  = 1.0,
+            alpha = 1.0,
+            beta  = 1/3.6,  # https://www.biorxiv.org/content/10.1101/2021.07.01.450707v1.full.pdf
+            gamma = 1/3.4,  # https://www.biorxiv.org/content/10.1101/2021.07.01.450707v1.full.pdf
+            delta = 1/1.6,  # https://www.biorxiv.org/content/10.1101/2021.07.01.450707v1.full.pdf
+            omicron = 15/163 # https://www.science.org/doi/full/10.1126/sciimmunol.abo2202
+        ),
+
+        novavax = dict( # Data from https://ir.novavax.com/news-releases/news-release-details/novavax-covid-19-vaccine-demonstrates-893-efficacy-uk-phase-3
+            wild  = 1.0,
+            alpha = 1/1.12,
+            beta  = 1/4.7,
+            gamma = 1/8.6, # Assumption, no data available yet
+            delta = 1/6.2, # Assumption, no data available yet
+        ),
+
+        sinovac = dict(
+            wild  = 1.0,
+            alpha = 1/1.12,
+            beta  = 1/4.7,
+            gamma = 1/8.6, # Assumption, no data available yet
+            delta = 1/6.2, # Assumption, no data available yet
+        ),
+
+        sinopharm = dict(
+            wild  = 1.0,
+            alpha = 1/1.12,
+            beta  = 1/4.7,
+            gamma = 1/8.6, # Assumption, no data available yet
+            delta = 1/6.2, # Assumption, no data available yet
+        )
+    )
+
+    return _get_from_pars(pars, default=default, key=vaccine)
+
+
+def get_vaccine_dose_pars(default=False, vaccine=None):
+    '''
+    Define the parameters for each vaccine
+    '''
+
+    pars = dict(
+
+        default = dict(
+            nab_init  = dict(dist='normal', par1=0, par2=2), # Initial distribution of NAbs
+            nab_boost = 2, # Factor by which a dose increases existing NABs
+            doses     = 1, # Number of doses for this vaccine
+            interval  = None, # Interval between doses
+        ),
+
+        pfizer = dict(
+            nab_init  = dict(dist='normal', par1=-1, par2=2),
+            nab_boost = 4,
+            doses     = 2,
+            interval  = 21,
+        ),
+
+        moderna = dict(
+            nab_init  = dict(dist='normal', par1=-1, par2=2),
+            nab_boost = 8,
+            doses     = 2,
+            interval  = 28,
+        ),
+
+        az = dict(
+            nab_init  = dict(dist='normal', par1=-1.5, par2=2),
+            nab_boost = 2,
+            doses     = 2,
+            interval  = 21,
+        ),
+
+        jj = dict(
+            nab_init  = dict(dist='normal', par1=1, par2=2),
+            nab_boost = 3,
+            doses     = 1,
+            interval  = None,
+        ),
+
+        novavax = dict(
+            nab_init  = dict(dist='normal', par1=-0.9, par2=2),
+            nab_boost = 3,
+            doses     = 2,
+            interval  = 21,
+        ),
+
+        sinovac = dict(
+            nab_init  = dict(dist='normal', par1=-2, par2=2),
+            nab_boost = 2,
+            doses     = 2,
+            interval  = 14,
+        ),
+
+        sinopharm = dict(
+            nab_init  = dict(dist='normal', par1=-1, par2=2),
+            nab_boost = 2,
+            doses     = 2,
+            interval  = 21,
+        )
+    )
+
+    return _get_from_pars(pars, default, key=vaccine)
