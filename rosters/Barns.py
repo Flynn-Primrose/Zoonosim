@@ -23,20 +23,15 @@ class BarnMeta(sc.prettyobj):
         ]
 
         self.states = [
-            'susceptible',
-            'exposed',
-            'infectious'
+            'contaminated'
         ]
 
         self.variant_states = [
-            'exposed_variant',
-            'infectious_variant',
-            #'recovered_variant',
+            'contaminated_variant'
         ]
 
         self.by_variant_states = [
-            'exposed_by_variant',
-            'infectious_by_variant',
+            'contaminated_by_variant'
         ]
 
         # Set the dates various events took place: these are floats per agent

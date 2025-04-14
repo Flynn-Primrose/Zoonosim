@@ -63,54 +63,119 @@ variant_pars = [
 ]
 
 
+# tracked stocks and flows -- used in sim.py; value is the label suffix
 
-# States to be used for results.
-# TODO: modify to accommodate multiple agent types
-result_stocks = {
-    'susceptible': 'Number susceptible',
-    'exposed':     'Number exposed',
-    'infectious':  'Number infectious',
-    'symptomatic': 'Number symptomatic',
-    'severe':      'Number of severe cases',
-    'recovered':   'Number recovered',
-    'dead':        'Number dead',
-    'diagnosed':   'Number of confirmed cases',
-    'known_dead':  'Number of confirmed deaths',
-    'quarantined': 'Number in quarantine',
-    'vaccinated':  'Number of people vaccinated',
+human_stocks = {
+    'susceptible_humans': 'Number of susceptible humans',
+    'exposed_humans':    'Number of exposed humans',
+    'infectious_humans':   'Number of infectious humans',
+    'symptomatic_humans':  'Number of symptomatic humans',
+    'severe_humans':       'Number of severe humans',
+    'recovered_humans':    'Number of recovered humans',
+    'dead_humans':         'Number of dead humans',
 }
 
-result_stocks_by_variant = {
-    'exposed_by_variant':    'Number exposed by variant',
-    'infectious_by_variant': 'Number infectious by variant',
+flock_stocks = {
+    'susceptible_flocks': 'Number of susceptible flocks',
+    'exposed_flocks':     'Number of exposed flocks',
+    'infectious_flocks':  'Number of infectious flocks',
+    'symptomatic_flocks': 'Number of symptomatic flocks',
+    'severe_flocks':      'Number of severe flocks',
 }
+
+barn_stocks = {
+    'contaminated_barns': 'Number of contaminated barns',
+}
+
+water_stocks = {
+    'contaminated_water': 'Number of contaminated waters',
+}
+
+all_stocks = {**human_stocks, **flock_stocks, **barn_stocks, **water_stocks}
+
+human_stocks_by_variant = {
+    'exposed_by_variant_humans':    'Number exposed humans by variant',
+    'infectious_by_variant_humans': 'Number infectious humans by variant',
+    'symptomatic_by_variant_humans': 'Number symptomatic humans by variant',
+    'severe_by_variant_humans':      'Number severe humans by variant',
+}
+
+flock_stocks_by_variant = {
+    'exposed_by_variant_flocks':     'Number exposed flocks by variant',
+    'infectious_by_variant_flocks':  'Number infectious flocks by variant',
+    'symptomatic_by_variant_flocks': 'Number symptomatic flocks by variant',
+}
+
+
+barn_stocks_by_variant = {
+    'contaminated_by_variant_barns': 'Number contaminated barns by variant',
+}
+
+water_stocks_by_variant = {
+    'contaminated_by_variant_water': 'Number contaminated water by variant',
+}
+
+all_stocks_by_variant = {**human_stocks_by_variant, **flock_stocks_by_variant, **barn_stocks_by_variant, **water_stocks_by_variant}
+
 
 # The types of result that are counted as flows -- used in sim.py; value is the label suffix
-result_flows = {
-    'infections':   'infections',
-    'reinfections': 'reinfections',
-    'infectious':   'infectious',
-    'symptomatic':  'symptomatic cases',
-    'severe':       'severe cases',
-    'recoveries':   'recoveries',
-    'deaths':       'deaths',
-    'tests':        'tests',
-    'diagnoses':    'diagnoses',
-    'known_deaths': 'known deaths',
-    'quarantined':  'quarantines started',
-    'doses':        'vaccine doses',
-    'vaccinated':   'vaccinated people'
+human_flows = {
+    'human_reinfections': 'reinfections',
+    'human_infections':   'infections',
+    'human_infectious':   'infectious',
+    'human_symptomatic':  'symptomatic cases',
+    'human_severe':       'severe cases',
+    'human_recoveries':   'recoveries',
+    'human_deaths':       'deaths',
+    'human_tests':        'tests',
+    'human_diagnoses':    'diagnoses',
+    'human_known_deaths': 'known deaths',
+    'human_quarantined':  'quarantines started',
+    'human_doses':        'vaccine doses',
+    'human_vaccinated':   'vaccinated people'
 }
 
-result_flows_by_variant = {
-    'infections_by_variant':  'infections by variant',
-    'symptomatic_by_variant': 'symptomatic by variant',
-    'severe_by_variant':      'severe by variant',
-    'infectious_by_variant':  'infectious by variant',
+flock_flows = {
+    'flock_infections':   'infections',
+    'flock_infectious':   'infectious',
+    'flock_symptomatic':  'symptomatic cases',
 }
+
+barn_flows = {
+    'barn_contaminated': 'contaminated',
+}
+
+water_flows = {
+    'water_contaminated': 'contaminated',
+}
+
+all_flows = {**human_flows, **flock_flows, **barn_flows, **water_flows}
+
+human_flows_by_variant = {
+    'human_infections_by_variant':  'infections by variant',
+    'human_symptomatic_by_variant': 'symptomatic by variant',
+    'human_severe_by_variant':      'severe by variant',
+    'human_infectious_by_variant':  'infectious by variant',
+}
+
+flock_flows_by_variant = {
+    'flock_infections_by_variant':  'infections by variant',
+    'flock_infectious_by_variant':  'infectious by variant',
+    'flock_symptomatic_by_variant': 'symptomatic by variant',
+}
+
+barn_flows_by_variant = {
+    'barn_contaminated_by_variant': 'contaminated by variant',
+}
+
+water_flows_by_variant = {
+    'water_contaminated_by_variant': 'contaminated by variant',
+}
+
+all_flows_by_variant = {**human_flows_by_variant, **flock_flows_by_variant, **barn_flows_by_variant, **water_flows_by_variant}
 
 # Define new and cumulative flows
-new_result_flows = [f'new_{key}' for key in result_flows.keys()]
-cum_result_flows = [f'cum_{key}' for key in result_flows.keys()]
-new_result_flows_by_variant = [f'new_{key}' for key in result_flows_by_variant.keys()]
-cum_result_flows_by_variant = [f'cum_{key}' for key in result_flows_by_variant.keys()]
+new_result_flows = [f'new_{key}' for key in all_flows.keys()]
+cum_result_flows = [f'cum_{key}' for key in all_flows.keys()]
+new_result_flows_by_variant = [f'new_{key}' for key in all_flows_by_variant.keys()]
+cum_result_flows_by_variant = [f'cum_{key}' for key in all_flows_by_variant.keys()]

@@ -24,13 +24,14 @@ class FlocksMeta(sc.prettyobj):
         self.states = [
             'susceptible',
             'exposed',
-            'infectious'
+            'infectious',
+            'symptomatic',
         ]
 
         self.variant_states = [
             'exposed_variant',
             'infectious_variant',
-            'recovered_variant',
+            'symptomatic_variant',
         ]
 
         self.by_variant_states = [
