@@ -121,7 +121,6 @@ class Sim(znb.BaseSim):
         self.init_agents(reset=reset, init_infections=init_infections, **kwargs) #TODO: change init_infections so that we can specify which agent types to infect
 
         self.init_interventions()  # Initialize the interventions...
-        #self.init_testobjs() # TODO: Ritchie Toggle. Andrew, I don't think any toggling needs to done here, since 'process_testobj_pars' is toggled. 
         #self.init_analyzers() # ...and the analyzers...
         self.validate_layer_pars() # Once the population is initialized, validate the layer parameters again
         self.set_seed() # Reset the random seed again so the random number stream is consistent
