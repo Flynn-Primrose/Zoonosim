@@ -5,7 +5,7 @@ Defines the Result class, which stores a single result -- by default, acts like 
 import numpy as np
 import sciris as sc
 
-from . import defaults as znd
+from .. import defaults as znd
 
 __all__ = ['Result']
 

@@ -80,14 +80,14 @@ class BaseRoster(FlexPretty):
         try:
             return self.__dict__[key]
         except: # pragma: no cover
-            errormsg = f'Key "{key}" is not a valid attribute of the {self.pars['agent_type']} roster'
+            errormsg = f'Key "{key}" is not a valid attribute of the this roster'
             raise AttributeError(errormsg)
 
 
     def __setitem__(self, key, value):
         ''' Ditto '''
         if self._lock and key not in self.__dict__: # pragma: no cover
-            errormsg = f'Key "{key}" is not a current attribute of {self.pars['agent_type']} roster, and the roster object is locked; see roster.unlock()'
+            errormsg = f'Key "{key}" is not a current attribute of this roster, and the roster object is locked; see roster.unlock()'
             raise AttributeError(errormsg)
         self.__dict__[key] = value
         return

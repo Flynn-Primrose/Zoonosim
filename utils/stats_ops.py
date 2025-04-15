@@ -1,6 +1,5 @@
 import numba as nb # For faster computations
 import numpy as np # For numerics
-import sciris as sc # For additional utilities
 from .. import defaults as znd # For default settings
 
 # Set dtypes -- note, these cannot be changed after import since Numba functions are precompiled

@@ -9,23 +9,22 @@ import scipy
 from scipy import stats as st
 import warnings
 from .. import base as znb
-from ..config import options as zno # To set options
-from ..config import DataTypes as zndt # To set default types
+from .. import defaults as znd
 from . import stats_ops as znso # For additional statistical operations
 
 # Set dtypes -- note, these cannot be changed after import since Numba functions are precompiled
 nbbool  = nb.bool_
-nbint   = zndt.nbint
-nbfloat = zndt.nbfloat
+nbint   = znd.nbint
+nbfloat = znd.nbfloat
 
 safe_opts = [1, '1', 'safe'] # TODO: Move this to config
 full_opts = [2, '2', 'full'] # TODO: Move this to config
-safe_parallel = zno.numba_parallel in safe_opts + full_opts
-rand_parallel = zno.numba_parallel in full_opts
-if zno.numba_parallel not in [0, 1, 2, '0', '1', '2', 'none', 'safe', 'full']:
-    errormsg = f'Numba parallel must be "none", "safe", or "full", not "{zno.numba_parallel}"'
+safe_parallel = znd.numba_parallel in safe_opts + full_opts
+rand_parallel = znd.numba_parallel in full_opts
+if znd.numba_parallel not in [0, 1, 2, '0', '1', '2', 'none', 'safe', 'full']:
+    errormsg = f'Numba parallel must be "none", "safe", or "full", not "{znd.numba_parallel}"'
     raise ValueError(errormsg)
-cache = zno.numba_cache # Turning this off can help switching parallelization options
+cache = znd.numba_cache # Turning this off can help switching parallelization options
 
 def sample(dist=None, par1=None, par2=None, size=None, **kwargs):
     '''
