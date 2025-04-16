@@ -269,33 +269,32 @@ def calc_VE_symp(nab, pars):
 def init_immunity(sim, create=False):
     ''' Initialize immunity matrices with all variants that will eventually be in the sim'''
 
-    # Don't use this function if immunity is turned off
-    if not sim['use_waning']:
-        return
-
     # Pull out all of the circulating variants for cross-immunity
     nv = sim['n_variants']
 
-    # If immunity values have been provided, process them
-    if sim['immunity'] is None or create:
+    for type in sim['agent_types']:
+        if not sim['immunity_pars'][type]['use_waning']:
+            continue
+        # If immunity values have been provided, process them
+        if sim['immunity_pars'][type]['immunity'] is None or create:
 
-        # Firstly, initialize immunity matrix with defaults. These are then overwitten with variant-specific values below
-        # Susceptibility matrix is of size sim['n_variants']*sim['n_variants']
-        immunity = np.ones((nv, nv), dtype=znd.default_float)  # Fill with defaults
+            # Firstly, initialize immunity matrix with defaults. These are then overwitten with variant-specific values below
+            # Susceptibility matrix is of size sim['n_variants']*sim['n_variants']
+            immunity = np.ones((nv, nv), dtype=znd.default_float)  # Fill with defaults
 
-        # Next, overwrite these defaults with any known immunity values about specific variants
-        default_cross_immunity = znpar.get_cross_immunity()
-        for i in range(nv):
-            label_i = sim['variant_map'][i]
-            for j in range(nv):
-                label_j = sim['variant_map'][j]
-                if label_i in default_cross_immunity and label_j in default_cross_immunity:
-                    immunity[j][i] = default_cross_immunity[label_j][label_i]
+            # Next, overwrite these defaults with any known immunity values about specific variants
+            default_cross_immunity = znpar.get_cross_immunity()
+            for i in range(nv):
+                label_i = sim['variant_map'][i]
+                for j in range(nv):
+                    label_j = sim['variant_map'][j]
+                    if label_i in default_cross_immunity and label_j in default_cross_immunity:
+                        immunity[j][i] = default_cross_immunity[label_j][label_i]
 
-        sim['immunity'] = immunity
+            sim['immunity_pars'][type]['immunity'] = immunity
 
-    # Next, precompute the NAb kinetics and store these for access during the sim
-    sim['nab_kin'] = precompute_waning(length=sim.npts, pars=sim['nab_decay'])
+        # Next, precompute the NAb kinetics and store these for access during the sim
+        sim['immunity_pars'][type]['nab_kin'] = precompute_waning(length=sim.npts, pars=sim['immunity_pars'][type]['nab_decay'])
 
     return
 

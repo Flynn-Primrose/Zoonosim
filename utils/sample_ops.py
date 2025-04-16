@@ -12,6 +12,11 @@ from .. import base as znb
 from .. import defaults as znd
 from . import stats_ops as znso # For additional statistical operations
 
+__all__ = ['sample', 'get_pdf', 'set_seed', 'fast_choice',
+           'sample_single_dict', 'sample_single_arr', 'resample_age',
+           'sample_from_range', 'check_dist', 'check_normal', 'check_poisson',
+           'check_truncated_poisson', 'statistic_test']
+
 # Set dtypes -- note, these cannot be changed after import since Numba functions are precompiled
 nbbool  = nb.bool_
 nbint   = znd.nbint

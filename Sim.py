@@ -201,7 +201,7 @@ class Sim(znb.BaseSim):
         return
 
 
-    def validate_pars(self, validate_layers=True):
+    def validate_pars(self, validate_layers=False):
         '''
         Some parameters can take multiple types; this makes them consistent.
 
@@ -468,8 +468,7 @@ class Sim(znb.BaseSim):
 
     def init_immunity(self, create=False):
         ''' Initialize immunity matrices and precompute nab waning for each variant '''
-        if self['use_waning']:
-            znimm.init_immunity(self, create=create)
+        znimm.init_immunity(self, create=create)
         return
 
 

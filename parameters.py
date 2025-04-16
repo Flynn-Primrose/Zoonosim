@@ -53,9 +53,11 @@ def make_pars(set_prognoses = False, prog_by_age = False, version = None, **kwar
     # pars['frac_susceptible']  = 1.0  # What proportion of the population is susceptible to infection
 
     # Network parameters, generally initialized after the population has been constructed
-    pars['contacts']        = None  # The number of contacts per layer; set by reset_layer_pars() below
+    #pars['contacts']        = None  # The number of contacts per layer; set by reset_layer_pars() below
     pars['dynam_layer']     = None  # Which layers are dynamic; set by reset_layer_pars() below
     pars['beta_layer']      = None  # Transmissibility per layer; set by reset_layer_pars() below
+    pars['quar_factor']     = None  # Quarantine multiplier on transmissibility and susceptibility; set by reset_layer_pars() below
+    pars['quar_period']     = 14  # Number of days to quarantine for. Assumption based on standard policies
 
     # Basic disease transmission parameters
     pars['transmission_pars'] = {}
@@ -90,7 +92,7 @@ def make_pars(set_prognoses = False, prog_by_age = False, version = None, **kwar
     pars['immunity_pars'] = {}
 
     pars['immunity_pars']['human'] = {
-        'use_waning':True, # Whether to use dynamically calculated immunity NOTE: I think this will always be true in our case
+        'use_waning': True, # Whether or not to use waning immunity; set to True for humans by default
         'nab_init':dict(dist='normal', par1=0, par2=2),  # Parameters for the distribution of the initial level of log2(nab) following natural infection, taken from fig1b of https://doi.org/10.1101/2021.03.09.21252641
         'nab_decay':dict(form='nab_growth_decay', growth_time=21, decay_rate1=np.log(2) / 50, decay_time1=150, decay_rate2=np.log(2) / 250, decay_time2=365), # NOTE: I have no idea where this comes from
         'nab_kin': None, # Constructed during sim initialization using the nab_decay parameters
@@ -100,9 +102,9 @@ def make_pars(set_prognoses = False, prog_by_age = False, version = None, **kwar
         'immunity':None, # Matrix of immunity and cross-immunity factors, set by init_immunity() in immunity.py
         'trans_redux':0.59 # Reduction in transmission for breakthrough infections, https://www.medrxiv.org/content/10.1101/2021.07.13.21260393v
     }
-    pars['immunity_pars']['poultry'] = None
-    pars['immunity_pars']['barn'] = None
-    pars['immunity_pars']['water'] = None
+    pars['immunity_pars']['flock'] = {'use_waning': False} # No waning immunity for flock agents
+    pars['immunity_pars']['barn'] = {'use_waning': False} # No waning immunity for barn agents
+    pars['immunity_pars']['water'] = {'use_waning': False} # No waning immunity for water agents
 
 
     # Variant-specific disease transmission parameters. By default, these are set up for a single variant, but can all be modified for multiple variants
@@ -184,6 +186,62 @@ def make_pars(set_prognoses = False, prog_by_age = False, version = None, **kwar
     #         if key in version_pars: # Only replace keys that exist in the old version
     #             pars[key] = version_pars[key]
     return pars
+
+# Define which parameters need to be specified as a dictionary by layer -- define here so it's available at the module level for sim.py
+layer_pars = ['beta_layer', 'dynam_layer', 'quar_factor']
+
+def reset_layer_pars(pars, layer_keys=None, force=False):
+    '''
+    Helper function to set layer-specific parameters. If layer keys are not provided,
+    then set them based on the population type. This function is not usually called
+    directly by the user, although it can sometimes be used to fix layer key mismatches
+    (i.e. if the contact layers in the population do not match the parameters). More
+    commonly, however, mismatches need to be fixed explicitly.
+
+    NOTE:   fb = Flock-Barn
+            bw = Barn-Water
+            fw = Flock-Water
+            hb = Human-Barn
+            hf = Human-Flock
+            hh = Human-Human
+
+    Args:
+        pars (dict): the parameters dictionary
+        layer_keys (list): the layer keys of the population, if available
+        force (bool): reset the parameters even if they already exist
+    '''
+
+    layer_defaults = dict(
+        beta_layer = dict(fb=1.0, bw=1.0, fw = 1.0, hb = 1.0, hf = 1.0, hh = 1.0), # Transmissibility per layer -- set to one by default
+        dynam_layer = dict(fb=0.0, bw=0.0, fw = 0.0, hb = 0.0, hf = 0.0, hh = 0.0), # Dynamic layer -- set to zero by default
+        quar_factor = dict(fb=1.0, bw=1.0, fw = 1.0, hb = 1.0, hf = 1.0, hh = 1.0), # Quarantine factor -- set to one by default
+    )
+
+    default_val = 1.0 # Default value for parameters that are not specified
+    default_layer_keys = list(layer_defaults['beta_layer'].keys()) # Get the default layer keys from the first parameter
+
+        # Actually set the parameters
+    for pkey in layer_pars:
+        par = {} # Initialize this parameter
+
+        # If forcing, we overwrite any existing parameter values
+        if force:
+            par_dict = layer_defaults[pkey] # Just use defaults
+        else:
+            par_dict = sc.mergedicts(layer_defaults[pkey], pars.get(pkey, None)) # Use user-supplied parameters if available, else default
+
+        # Figure out what the layer keys for this parameter are (may be different between parameters)
+        if layer_keys:
+            par_layer_keys = layer_keys # Use supplied layer keys
+        else:
+            par_layer_keys = list(sc.odict.fromkeys(default_layer_keys + list(par_dict.keys())))  # If not supplied, use the defaults, plus any extra from the par_dict; adapted from https://www.askpython.com/python/remove-duplicate-elements-from-list-python
+
+        # Construct this parameter, layer by layer
+        for lkey in par_layer_keys: # Loop over layers
+            par[lkey] = par_dict.get(lkey, default_val) # Get the value for this layer if available, else use the default for random
+        pars[pkey] = par # Save this parameter to the dictionary
+
+
 
 def get_prognoses(agent_type, version=None):
     '''
