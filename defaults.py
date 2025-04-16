@@ -29,10 +29,9 @@ numba_parallel = str(os.getenv('ZOONOSIM_NUMBA_PARALLEL', 'none'))
 numba_cache = bool(int(os.getenv('ZOONOSIM_NUMBA_CACHE', 1)))
 
 default_pop_pars = {
-    'avg_barns_per_farm': 1.0,
-    'avg_humans_per_barn': 1.0,
-    'avg_barn_occupancy': 1.0, # Probability that a barn is occupied by a flock at any given time
-    'avg_flock_size': 1.0,
+    'avg_barns_per_farm': 3.0,
+    'avg_humans_per_barn': 2.0,
+    'avg_flock_size': 1000.0,
     'avg_water_per_farm': 1.0,
 }
 
