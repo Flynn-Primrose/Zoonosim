@@ -35,7 +35,14 @@ class WaterMeta(sc.prettyobj):
         # Set the dates various events took place: these are floats per agent
         self.dates = [f'date_{state}' for state in self.states] # Convert each state into a date
 
-                # Validate
+        # Duration of different states: these are floats per Water.
+        self.durs = [
+            'dur_contamination', # Duration of contamination
+        ]
+
+        self.all_states = self.agent + self.states + self.variant_states + self.by_variant_states + self.dates + self.durs
+
+        # Validate
         self.state_types = ['agent', 'states', 'variant_states', 'by_variant_states']
         for state_type in self.state_types:
             states = getattr(self, state_type)
@@ -72,7 +79,9 @@ class Water(Subroster):
         # Set person properties -- all floats except for UID
         for key in self.meta.agent:
             if key == 'uid':
-                self[key] = np.empty(pop_size, dtype=znd.default_int) # The actual uids will be passed in kwargs by make_water()
+                self[key] = np.zeros(pop_size, dtype=znd.default_int) # NOTE: The actual uids will be passed in kwargs by make_water()
+            else:
+                self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
 
 
         # Set health states -- only susceptible is true by default -- booleans except exposed by variant which should return the variant that ind is exposed to

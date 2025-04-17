@@ -308,3 +308,14 @@ use sim.people.save(force=True). Otherwise, the correct approach is:
         if agent_type not in self.agent_types:
             raise ValueError(f'Agent type "{agent_type}" not found in {self.agent_types}')
         return self[agent_type].count(agent_type, key=key)
+    
+    def layer_keys(self):
+        ''' Get the available contact keys -- try contacts first, then beta_layer '''
+        try:
+            keys = list(self.contacts.keys())
+        except: # If not fully initialized
+            try:
+                keys = list(self.pars['beta_layer'].keys())
+            except:  # pragma: no cover # If not even partially initialized
+                keys = []
+        return keys

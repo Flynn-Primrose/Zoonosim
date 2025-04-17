@@ -154,7 +154,7 @@ class Humans(Subroster):
         # Set person properties -- all floats except for UID
         for key in self.meta.agent:
             if key == 'uid':
-                self[key] = np.arange(self.pars['pop_size'], dtype=znd.default_int) # TODO: This doesn't work since the UIDs must be unique among all agents not just humans
+                self[key] = np.zeros(self.pars['pop_size'], dtype=znd.default_int) 
             elif key in ['n_infections', 'n_breakthroughs']:
                 self[key] = np.zeros(self.pars['pop_size'], dtype=znd.default_int)
             elif key in ['viral_load']:

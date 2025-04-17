@@ -137,9 +137,16 @@ def make_pars(set_prognoses = False, prog_by_age = False, version = None, **kwar
         'prognoses'    :None # The actual arrays of prognoses by age; this is populated later
     }
 
-    pars['dur']['flock'] = None
-    pars['dur']['barn'] = None
-    pars['dur']['water'] = None
+    pars['dur']['flock'] = {
+        'exp2inf': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration from exposed to infectious. NOTE: This data is just a guess, and should be replaced with real data
+        'inf2sym': dict(dist='lognormal_int', par1=1.1, par2=0.9), # Duration from infectious to symptomatic. NOTE: This data is just a guess, and should be replaced with real data
+    }
+    pars['dur']['barn'] = {
+        'contamination': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration of contamination. NOTE: This data is just a guess, and should be replaced with real data
+    }
+    pars['dur']['water'] = {
+        'contamination': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration of contamination. NOTE: This data is just a guess, and should be replaced with real data
+    }
 
     # Efficacy of non-pharmaceutical interventions (NPIs)
     pars['NPIs'] = {}

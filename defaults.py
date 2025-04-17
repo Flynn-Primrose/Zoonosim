@@ -17,6 +17,7 @@ result_float = np.float64 # Always use float64 for results, for simplicity
 #nbfloat       = nb.float32
 #nbint         = nb.int32
 
+default_str = str # Use str for strings, for simplicity
 default_float = np.float64
 default_int   = np.int64
 nbfloat       = nb.float64

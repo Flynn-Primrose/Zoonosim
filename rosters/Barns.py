@@ -37,7 +37,14 @@ class BarnMeta(sc.prettyobj):
         # Set the dates various events took place: these are floats per agent
         self.dates = [f'date_{state}' for state in self.states] # Convert each state into a date
 
-                # Validate
+        # Duration of different states: these are floats per Barn.
+        self.durs = [
+            'dur_contamination', # Duration of contamination
+        ]
+
+        self.all_states = self.agent + self.states + self.variant_states + self.by_variant_states + self.dates + self.durs
+
+        # Validate
         self.state_types = ['agent', 'states', 'variant_states', 'by_variant_states']
         for state_type in self.state_types:
             states = getattr(self, state_type)
@@ -91,7 +98,11 @@ class Barns(Subroster):
         # Set person properties -- all floats except for UID
         for key in self.meta.agent:
             if key == 'uid':
-                self[key] = np.empty(pop_size, dtype=znd.default_int) # NOTE: The uid values are passed in kwargs by make_barn()
+                self[key] = np.zeros(pop_size, dtype=znd.default_int) # NOTE: The uid values are passed in kwargs by make_barn()
+            elif key == 'flock':
+                self[key] = np.zeros(pop_size, dtype=znd.default_int) # NOTE: The flock values are passed in kwargs by make_barn()
+            else:
+                self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
 
         # Set health states -- only susceptible is true by default -- booleans except exposed by variant which should return the variant that ind is exposed to
         for key in self.meta.states:

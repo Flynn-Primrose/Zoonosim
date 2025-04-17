@@ -52,12 +52,11 @@ class AgentsMeta(sc.prettyobj):
             'infectious_by_variant',
         ]
 
-        self.dates = [f'date_{state}' for state in self.states]
 
-        self.all_states = self.agent + self.states +self.variant_states + self.by_variant_states + self.dates
+        self.all_states = self.agent + self.states +self.variant_states + self.by_variant_states
 
         # Validate
-        self.state_types = ['agent', 'states', 'variant_states', 'by_variant_states', 'dates', 'all_states']
+        self.state_types = ['agent', 'states', 'variant_states', 'by_variant_states', 'all_states']
         for state_type in self.state_types:
             states = getattr(self, state_type)
             n_states        = len(states)
@@ -78,7 +77,7 @@ class Agents(Roster):
 
     Args:
         pars (dict): the sim parameters, e.g. sim.pars -- alternatively, if a number, interpreted as pop_size
-        strict (bool): whether or not to only create keys that are already in self.meta.person; otherwise, let any key be set
+        strict (bool): whether or not to only create keys that are already in self.meta.agents; otherwise, let any key be set
         kwargs (dict): the actual data, e.g. from a popdict, being specified
 
     **Examples**::
@@ -96,6 +95,10 @@ class Agents(Roster):
         self._lock = False # Prevent further modification of keys
         self.meta = AgentsMeta() # Store list of keys and dtypes
         self.contacts = None
+        self.humans = kwargs['humans'] if 'humans' in kwargs else None 
+        self.flocks = kwargs['flocks'] if 'flocks' in kwargs else None
+        self.barns = kwargs['barns'] if 'barns' in kwargs else None
+        self.water = kwargs['water'] if 'water' in kwargs else None        
         self.init_contacts() # Initialize the contacts
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
 
@@ -111,6 +114,10 @@ class Agents(Roster):
         for key in self.meta.agent:
             if key == 'uid':
                 self[key] = np.arange(self.pars['pop_size'], dtype=znd.default_int)
+            elif key == 'agent_type':
+                self[key] = np.full(self.pars['pop_size'], 'unknown', dtype=znd.default_str)
+            else:
+                self[key] = np.full(self.pars['pop_size'], np.nan, dtype=znd.default_float)
 
         # Set health states -- only susceptible is true by default -- booleans except exposed by variant which should return the variant that ind is exposed to
         for key in self.meta.states:
@@ -140,10 +147,11 @@ class Agents(Roster):
 
         # Handle all other values, e.g. age
         for key,value in kwargs.items():
-            if strict:
-                self.set(key, value)
-            else:
-                self[key] = value
+            if key not in ['humans', 'flocks', 'barns', 'water']: # These are handled separately
+                if strict:
+                    self.set(key, value)
+                else:
+                    self[key] = value
 
         # self._pending_quarantine = defaultdict(list)  # Internal cache to record people that need to be quarantined on each timestep {t:(person, quarantine_end_day)}
 
@@ -162,7 +170,6 @@ class Agents(Roster):
         ''' Perform initializations '''
         self.validate(sim_pars=sim_pars) # First, check that essential-to-match parameters match
         self.set_pars(sim_pars) # Replace the saved parameters with this simulation's
-        self.set_prognoses()
         self.initialized = True
         return
 
