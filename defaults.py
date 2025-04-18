@@ -51,7 +51,62 @@ def get_default_colors():
     '''
     c = sc.objdict()
     # TODO: add colours as needed
-    c.default = '#1f77b4' # Default colour
+    c.default = '#000000' # Default colour (black)
+    # Stocks
+    c.susceptible_humans = '#00FF00' # Green
+    c.exposed_humans = '#FFFF00' # Yellow
+    c.infectious_humans = '#FF0000' # Red
+    c.symptomatic_humans = '#FF8000' # Orange
+    c.severe_humans = '#800000' # Dark red
+    c.recovered_humans = '#00FFFF' # Cyan
+    c.dead_humans = '#0000FF' # Blue
+    c.susceptible_flocks = '#00FF00' # Green
+    c.exposed_flocks = '#FFFF00' # Yellow
+    c.infectious_flocks = '#FF0000' # Red
+    c.symptomatic_flocks = '#FF8000' # Orange
+    c.severe_flocks = '#800000' # Dark red
+    c.contaminated_barns = '#00FFFF' # Cyan
+    c.contaminated_water = '#0000FF' # Blue
+    # Stocks by variant
+    c.exposed_by_variant_humans = '#FFFF00' # Yellow
+    c.infectious_by_variant_humans = '#FF0000' # Red
+    c.symptomatic_by_variant_humans = '#FF8000' # Orange
+    c.severe_by_variant_humans = '#800000' # Dark red
+    c.exposed_by_variant_flocks = '#FFFF00' # Yellow
+    c.infectious_by_variant_flocks = '#FF0000' # Red
+    c.symptomatic_by_variant_flocks = '#FF8000' # Orange
+    c.severe_by_variant_flocks = '#800000' # Dark red
+    c.contaminated_by_variant_barns = '#00FFFF' # Cyan
+    c.contaminated_by_variant_water = '#0000FF' # Blue
+    # Flows
+    c.human_reinfections = '#FF00FF' # Magenta
+    c.human_infections = '#FF00FF' # Magenta
+    c.human_infectious = '#FF00FF' # Magenta
+    c.human_symptomatic = '#FF00FF' # Magenta
+    c.human_severe = '#FF00FF' # Magenta
+    c.human_recoveries = '#FF00FF' # Magenta
+    c.human_deaths = '#FF00FF' # Magenta
+    c.human_tests = '#FF00FF' # Magenta
+    c.human_diagnoses = '#FF00FF' # Magenta
+    c.human_known_deaths = '#FF00FF' # Magenta
+    c.human_quarantined = '#FF00FF' # Magenta
+    c.human_doses = '#FF00FF' # Magenta
+    c.human_vaccinated = '#FF00FF' # Magenta
+    c.flock_infections = '#FF00FF' # Magenta
+    c.flock_infectious = '#FF00FF' # Magenta
+    c.flock_symptomatic = '#FF00FF' # Magenta
+    c.barn_contaminated = '#FF00FF' # Magenta
+    c.water_contaminated = '#FF00FF' # Magenta
+    # Flows by variant
+    c.human_infections_by_variant = '#FF00FF' # Magenta
+    c.human_symptomatic_by_variant = '#FF00FF' # Magenta
+    c.human_severe_by_variant = '#FF00FF' # Magenta
+    c.human_infectious_by_variant = '#FF00FF' # Magenta
+    c.flock_infections_by_variant = '#FF00FF' # Magenta
+    c.flock_infectious_by_variant = '#FF00FF' # Magenta
+    c.flock_symptomatic_by_variant = '#FF00FF' # Magenta
+    c.barn_contaminated_by_variant = '#FF00FF' # Magenta
+    c.water_contaminated_by_variant = '#FF00FF' # Magenta
     return c
 
 # Parameters that can vary by variant

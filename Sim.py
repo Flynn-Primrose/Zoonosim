@@ -267,7 +267,6 @@ class Sim(znb.BaseSim):
 
         return
 
-    # TODO: rewrite this to use the new results structure once it is implemented
     def init_results(self):
         '''
         Create the main results structure.
@@ -287,9 +286,16 @@ class Sim(znb.BaseSim):
 
         # Flows and cumulative flows
 
+        for key,label in znd.all_flows.items():
+            self.results[f'cum_{key}'] = init_res(f'Cumulative {label}', color=dcols[key])  # Cumulative variables -- e.g. "Cumulative infections"
+
+        for key,label in znd.all_flows.items(): # Repeat to keep all the cumulative keys together
+            self.results[f'new_{key}'] = init_res(f'Number of new {label}', color=dcols[key]) # Flow variables -- e.g. "Number of new infections"
 
         # Stock variables
 
+        for key,label in znd.all_stocks.items():
+            self.results[f'n_{key}'] = init_res(label, color=dcols[key])
 
 
         # Other variables
@@ -298,6 +304,17 @@ class Sim(znb.BaseSim):
 
 
         # Handle variants
+
+        nv = self['n_variants']
+        self.results['variant'] = {}
+        self.results['variant']['prevalence_by_variant'] = init_res('Prevalence by variant', scale=False, n_variants=nv)
+        self.results['variant']['incidence_by_variant']  = init_res('Incidence by variant', scale=False, n_variants=nv)
+        for key,label in znd.all_flows_by_variant.items():
+            self.results['variant'][f'cum_{key}'] = init_res(f'Cumulative {label}', color=dcols[key], n_variants=nv)  # Cumulative variables -- e.g. "Cumulative infections"
+        for key,label in znd.all_flows_by_variant.items():
+            self.results['variant'][f'new_{key}'] = init_res(f'Number of new {label}', color=dcols[key], n_variants=nv) # Flow variables -- e.g. "Number of new infections"
+        for key,label in znd.all_stocks_by_variant.items():
+            self.results['variant'][f'n_{key}'] = init_res(label, color=dcols[key], n_variants=nv)
 
 
         # Populate the rest of the results
