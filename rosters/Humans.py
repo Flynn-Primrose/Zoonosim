@@ -300,14 +300,6 @@ class Humans(Subroster):
 
 
 
-    def update_contacts(self):
-        ''' Refresh dynamic contacts, e.g. community '''
-        # Figure out if anything needs to be done -- e.g. {'h':False, 'c':True}
-        for lkey, is_dynam in self.pars['dynam_layer'].items():
-            if is_dynam:
-                self.contacts[lkey].update(self)
-
-        return self.contacts
     
     def schedule_behaviour(self, behaviour_pars):
         ''' Schedules events on the basis of results received today '''
@@ -446,6 +438,13 @@ class Humans(Subroster):
 
 
     #%% Methods to make events occur (infection and diagnosis)
+
+    def make_nonnaive(self, inds):
+        self.susceptible[inds] = False
+        self.exposed[inds] = True
+        # TODO: Do we have to set the prognosis here?
+
+        return
 
 
 

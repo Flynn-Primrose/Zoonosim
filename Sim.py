@@ -493,7 +493,56 @@ class Sim(znb.BaseSim):
     def init_infections(self, force=False, verbose=None):
         if verbose is None:
             verbose = self['verbose']
-        # TODO: this must be completely reworked to accommodate the new population structure
+        
+        human_pop_size = self.pars['pop_size_by_type']['human']
+        flock_pop_size = self.pars['pop_size_by_type']['flock']
+        barn_pop_size = self.pars['pop_size_by_type']['barn']
+        water_pop_size = self.pars['pop_size_by_type']['water']
+
+
+        requested_human_exposures = self.pars['initial_conditions']['human']
+        requested_flock_exposures = self.pars['initial_conditions']['flock']
+        requested_barn_contaminations = self.pars['initial_conditions']['barn']
+        requested_water_contaminations = self.pars['initial_conditions']['water']
+
+
+        if (self.agents.count('exposed') == 0 and self.agents.count('infectious')==0) or force:
+            if requested_human_exposures > 0:
+                if human_pop_size >= requested_human_exposures:
+                    inds = znu.choose(human_pop_size, requested_human_exposures)
+                    self.agents.make_type_nonnaive('human', inds, update=False)
+                else:
+                    errormsg = (f'requested number of exposed humans ({requested_human_exposures}) '
+                    f'is greater than the human population size ({human_pop_size})')
+                    ValueError(errormsg)
+            if requested_flock_exposures > 0:
+                if flock_pop_size >= requested_flock_exposures:
+                    inds = znu.choose(flock_pop_size, requested_flock_exposures)
+                    self.agents.make_type_nonnaive('flock', inds, update=False)
+                else:
+                    errormsg = (f'requested number of exposed flocks ({requested_flock_exposures}) '
+                                f'is greater than the flock population ({flock_pop_size})')
+                    ValueError(errormsg)
+            if requested_barn_contaminations > 0:
+                if barn_pop_size >= requested_barn_contaminations:
+                    inds = znu.choose(barn_pop_size, requested_barn_contaminations)
+                    self.agents.make_type_nonnaive('barn', inds, update = False)
+                else:
+                    errormsg = (f'requested number of contaminated barns ({requested_barn_contaminations}) '
+                                f'is greater than the barn population ({barn_pop_size})')
+                    ValueError(errormsg)
+            if requested_water_contaminations > 0:
+                if water_pop_size >= requested_water_contaminations:
+                    inds = znu.choose(water_pop_size, requested_water_contaminations)
+                    self.agents.make_type_nonnaive('water', inds, update = False)
+                else:
+                    errormsg = (f'requested number of contaminated waterbodies ({requested_water_contaminations}) '
+                                f'is greater than the waterbody population ({water_pop_size})')
+                    ValueError(errormsg)
+            
+            self.agents.update_from_subrosters()
+        elif verbose:
+            print(f'agents are already initialized with {self.agents.count('exposed')} exposed and {self.agents.count('infectious')} infectious')
 
         return
 

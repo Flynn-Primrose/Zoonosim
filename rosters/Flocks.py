@@ -379,7 +379,11 @@ class Flocks(Subroster):
 
 
     #%% Methods to make events occur (infection and diagnosis)
-
+    def make_nonnaive(self, inds):
+        self.susceptible[inds] = False
+        self.exposed[inds] = True
+        # TODO: Set prognosis at this time?
+        return
 
 
 

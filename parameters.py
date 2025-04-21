@@ -37,6 +37,13 @@ def make_pars(set_prognoses = False, prog_by_age = False, version = None, **kwar
     for type in pars['agent_types']:
         pars['pop_size_by_type'][type] = None # This will be set after the population has been created
 
+    pars['initial_conditions'] = {
+        'human': 0, # Number of initial humans exposed
+        'flock': 3, # Number of initial flocks exposed
+        'barn': 0, # Number of initial contaminated barns
+        'water': 0 # Number of initial contaminated water
+    }
+
     # Simulation parameters
     pars['start_day']  = '2020-03-01' # Start day of the simulation
     pars['end_day']    = None         # End day of the simulation

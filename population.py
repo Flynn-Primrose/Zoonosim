@@ -51,9 +51,9 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
     sim.pars.update(new_pars) # Update the simulation parameters with the new population size
     sim.popdict = popdict # Store the population dictionary in the simulation object
 
-    humans = make_humans(sim.pars, popdict['human_uids'])
-    flocks = make_flocks(sim.pars, popdict['flock_uids'], popdict['flock2barn'])
-    barns = make_barns(sim.pars, popdict['barn_uids'], popdict['barn2flock'])
+    human = make_humans(sim.pars, popdict['human_uids'])
+    flock = make_flocks(sim.pars, popdict['flock_uids'], popdict['flock2barn'])
+    barn = make_barns(sim.pars, popdict['barn_uids'], popdict['barn2flock'])
     water = make_water(sim.pars, popdict['water_uids'])
 
     contacts = make_contacts(popdict['contactdict'])
@@ -61,9 +61,9 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
     agents = znr.Agents(sim.pars, 
                         uid = popdict['uid'], 
                         agent_type = popdict['agent_type'], 
-                        humans = humans,
-                        flocks = flocks,
-                        barns = barns,
+                        human = human,
+                        flock = flock,
+                        barn = barn,
                         water = water,
                         contacts = contacts)
 

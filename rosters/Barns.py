@@ -271,7 +271,10 @@ class Barns(Subroster):
 
     #%% Methods to make events occur (infection and diagnosis)
 
-
+    def make_nonaive(self, inds):
+        self.contaminated[inds] = True
+        #TODO: set prognosis?
+        return
 
 
     def infect(self, inds, source=None, layer=None, variant=0):

@@ -95,9 +95,9 @@ class Agents(Roster):
         self._lock = False # Prevent further modification of keys
         self.meta = AgentsMeta() # Store list of keys and dtypes
         self.contacts = None
-        self.humans = kwargs['humans'] if 'humans' in kwargs else None 
-        self.flocks = kwargs['flocks'] if 'flocks' in kwargs else None
-        self.barns = kwargs['barns'] if 'barns' in kwargs else None
+        self.human = kwargs['human'] if 'human' in kwargs else None 
+        self.flock = kwargs['flock'] if 'flock' in kwargs else None
+        self.barn = kwargs['barn'] if 'barn' in kwargs else None
         self.water = kwargs['water'] if 'water' in kwargs else None        
         self.init_contacts() # Initialize the contacts
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
@@ -172,6 +172,7 @@ class Agents(Roster):
         self.set_pars(sim_pars) # Replace the saved parameters with this simulation's
         self.initialized = True
         return
+    
 
     def update_states_pre(self, t):
         ''' Perform all state updates at the current timestep '''
@@ -198,6 +199,10 @@ class Agents(Roster):
                 self.contacts[lkey].update(self)
 
         return self.contacts
+    
+    def update_from_subrosters(self):
+            #TODO: update agents to reflect changes to subrosters
+        return
 
     #%% Methods for updating state
 
@@ -232,27 +237,14 @@ class Agents(Roster):
         return len(inds)
 
 
-    def check_symptomatic(self):
-        ''' Check for new progressions to symptomatic '''
-        inds = self.check_inds(self.symptomatic, self.date_symptomatic, filter_inds=self.is_exp)
-        self.symptomatic[inds] = True
-        return len(inds)
-
-    
-    def check_severe(self):
-        ''' Check for new progressions to severe '''
-        inds = self.check_inds(self.severe, self.date_severe, filter_inds=self.is_exp)
-        
-        self.severe[inds] = True
-        return len(inds)
-
-
-    def check_death(self):
-        ''' Check whether or not this agent died on this timestep  '''
-        inds = self.check_inds(self.dead, self.date_dead, filter_inds=self.is_exp)
 
 
     #%% Methods to make events occur (infection and diagnosis)
+
+    def make_type_nonnaive(self, agent_type, inds, update = True):
+        self[agent_type].make_nonnaive(inds)
+        if update: self.update_from_subrosters()
+        return
 
 
 

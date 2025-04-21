@@ -259,10 +259,14 @@ class Water(Subroster):
 
     #%% Methods to make events occur (infection and diagnosis)
 
+    def make_nonnaive(self, inds):
+        self.contaminated[inds] = True
+        # TODO: set prognosis
+
+        return
 
 
-
-    def infect(self, inds, hosp_max=None, icu_max=None, source=None, layer=None, variant=0):
+    def infect(self, inds, source=None, layer=None, variant=0):
         '''
   
         '''
