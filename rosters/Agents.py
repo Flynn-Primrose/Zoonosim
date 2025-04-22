@@ -147,7 +147,7 @@ class Agents(Roster):
 
         # Handle all other values, e.g. age
         for key,value in kwargs.items():
-            if key not in ['humans', 'flocks', 'barns', 'water']: # These are handled separately
+            if key not in ['human', 'flock', 'barn', 'water']: # These are handled separately
                 if strict:
                     self.set(key, value)
                 else:

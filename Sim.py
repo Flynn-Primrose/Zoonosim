@@ -510,7 +510,7 @@ class Sim(znb.BaseSim):
             if requested_human_exposures > 0:
                 if human_pop_size >= requested_human_exposures:
                     inds = znu.choose(human_pop_size, requested_human_exposures)
-                    self.agents.make_type_nonnaive('human', inds, update=False)
+                    self.agents.infect_type('human', inds, update=False)
                 else:
                     errormsg = (f'requested number of exposed humans ({requested_human_exposures}) '
                     f'is greater than the human population size ({human_pop_size})')
@@ -518,7 +518,7 @@ class Sim(znb.BaseSim):
             if requested_flock_exposures > 0:
                 if flock_pop_size >= requested_flock_exposures:
                     inds = znu.choose(flock_pop_size, requested_flock_exposures)
-                    self.agents.make_type_nonnaive('flock', inds, update=False)
+                    self.agents.infect_type('flock', inds, update=False)
                 else:
                     errormsg = (f'requested number of exposed flocks ({requested_flock_exposures}) '
                                 f'is greater than the flock population ({flock_pop_size})')
@@ -526,7 +526,7 @@ class Sim(znb.BaseSim):
             if requested_barn_contaminations > 0:
                 if barn_pop_size >= requested_barn_contaminations:
                     inds = znu.choose(barn_pop_size, requested_barn_contaminations)
-                    self.agents.make_type_nonnaive('barn', inds, update = False)
+                    self.agents.infect_type('barn', inds, update = False)
                 else:
                     errormsg = (f'requested number of contaminated barns ({requested_barn_contaminations}) '
                                 f'is greater than the barn population ({barn_pop_size})')
@@ -534,7 +534,7 @@ class Sim(znb.BaseSim):
             if requested_water_contaminations > 0:
                 if water_pop_size >= requested_water_contaminations:
                     inds = znu.choose(water_pop_size, requested_water_contaminations)
-                    self.agents.make_type_nonnaive('water', inds, update = False)
+                    self.agents.infect_type('water', inds, update = False)
                 else:
                     errormsg = (f'requested number of contaminated waterbodies ({requested_water_contaminations}) '
                                 f'is greater than the waterbody population ({water_pop_size})')
@@ -542,7 +542,9 @@ class Sim(znb.BaseSim):
             
             self.agents.update_states_from_subrosters()
         elif verbose:
-            print(f'agents are already initialized with {self.agents.count('exposed')} exposed and {self.agents.count('infectious')} infectious')
+            n_exposed = self.agents.count('exposed')
+            n_infectious = self.agents.count('infectious')
+            print(f'agents are already initialized with {n_exposed} exposed agents and {n_infectious} infectious agents')
 
         return
 

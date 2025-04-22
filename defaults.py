@@ -214,30 +214,30 @@ cum_water_flows = [f'cum_{key}' for key in water_flows.keys()]
 all_flows = {**human_flows, **flock_flows, **barn_flows, **water_flows}
 
 human_flows_by_variant = {
-    'humans_infections_by_variant':  'infections by variant',
-    'humans_symptomatic_by_variant': 'symptomatic by variant',
-    'humans_severe_by_variant':      'severe by variant',
-    'humans_infectious_by_variant':  'infectious by variant',
+    'human_infections_by_variant':  'infections by variant',
+    'human_symptomatic_by_variant': 'symptomatic by variant',
+    'human_severe_by_variant':      'severe by variant',
+    'human_infectious_by_variant':  'infectious by variant',
 }
 new_human_flows_by_variant = [f'new_{key}' for key in human_flows_by_variant.keys()]
 cum_human_flows_by_variant = [f'cum_{key}' for key in human_flows_by_variant.keys()]
 
 flock_flows_by_variant = {
-    'flocks_infections_by_variant':  'infections by variant',
-    'flocks_infectious_by_variant':  'infectious by variant',
-    'flocks_symptomatic_by_variant': 'symptomatic by variant',
+    'flock_infections_by_variant':  'infections by variant',
+    'flock_infectious_by_variant':  'infectious by variant',
+    'flock_symptomatic_by_variant': 'symptomatic by variant',
 }
 new_flock_flows_by_variant = [f'new_{key}' for key in flock_flows_by_variant.keys()]
 cum_flock_flows_by_variant = [f'cum_{key}' for key in flock_flows_by_variant.keys()]
 
 barn_flows_by_variant = {
-    'barns_contaminated_by_variant': 'contaminated by variant',
+    'barn_contaminated_by_variant': 'contaminated by variant',
 }
 new_barn_flows_by_variant = [f'new_{key}' for key in barn_flows_by_variant.keys()]
 cum_barn_flows_by_variant = [f'cum_{key}' for key in barn_flows_by_variant.keys()]
 
 water_flows_by_variant = {
-    'waters_contaminated_by_variant': 'contaminated by variant',
+    'water_contaminated_by_variant': 'contaminated by variant',
 }
 new_water_flows_by_variant = [f'new_{key}' for key in water_flows_by_variant.keys()]
 cum_water_flows_by_variant = [f'cum_{key}' for key in water_flows_by_variant.keys()]
