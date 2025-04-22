@@ -218,9 +218,9 @@ class Humans(Subroster):
 
     def init_flows(self):
         ''' Initialize flows to be zero '''
-        self.flows = {key:0 for key in znd.new_result_flows}
+        self.flows = {key:0 for key in znd.new_human_flows}
         self.flows_variant = {}
-        for key in znd.new_result_flows_by_variant:
+        for key in znd.new_human_flows_by_variant:
             self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=znd.default_float)
         return
 

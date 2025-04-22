@@ -127,9 +127,9 @@ class Water(Subroster):
 
     def init_flows(self):
         ''' Initialize flows to be zero '''
-        self.flows = {key:0 for key in znd.new_result_flows}
+        self.flows = {key:0 for key in znd.new_water_flows}
         self.flows_variant = {}
-        for key in znd.new_result_flows_by_variant:
+        for key in znd.new_water_flows_by_variant:
             self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=znd.default_float)
         return
 
@@ -259,12 +259,6 @@ class Water(Subroster):
 
     #%% Methods to make events occur (infection and diagnosis)
 
-    def make_nonnaive(self, inds):
-        self.contaminated[inds] = True
-        # TODO: set prognosis
-
-        return
-
 
     def infect(self, inds, source=None, layer=None, variant=0):
         '''
@@ -286,12 +280,7 @@ class Water(Subroster):
             source = source[keep]
 
         # Deal with variant parameters
-        variant_keys = ['rel_symp_prob', 'rel_severe_prob', 'rel_crit_prob', 'rel_death_prob']
-        infect_pars = {k:self.pars[k] for k in variant_keys}
         variant_label = self.pars['variant_map'][variant]
-        if variant:
-            for k in variant_keys:
-                infect_pars[k] *= self.pars['variant_pars'][variant_label][k]
 
         n_infections = len(inds)
         durpars      = self.pars['dur']
@@ -315,8 +304,7 @@ class Water(Subroster):
         self.date_infectious[inds] = self.dur_exp2inf[inds] + self.t
 
         # Reset all other dates
-        for key in ['date_symptomatic', 'date_severe', 'date_critical', 'date_diagnosed', 'date_recovered']:
-            self[key][inds] = np.nan
+
 
         return n_infections # For incrementing counters
 

@@ -26,6 +26,8 @@ class FlocksMeta(sc.prettyobj):
             'exposed',
             'infectious',
             'symptomatic',
+            'recovered',
+            'diagnosed',
         ]
 
         self.variant_states = [
@@ -37,6 +39,7 @@ class FlocksMeta(sc.prettyobj):
         self.by_variant_states = [
             'exposed_by_variant',
             'infectious_by_variant',
+            'symptomatic_by_variant',
         ]
 
         # Set the dates various events took place: these are floats per agent
@@ -149,9 +152,9 @@ class Flocks(Subroster):
 
     def init_flows(self):
         ''' Initialize flows to be zero '''
-        self.flows = {key:0 for key in znd.new_result_flows}
+        self.flows = {key:0 for key in znd.new_flock_flows}
         self.flows_variant = {}
-        for key in znd.new_result_flows_by_variant:
+        for key in znd.new_flock_flows_by_variant:
             self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=znd.default_float)
         return
 
@@ -172,7 +175,7 @@ class Flocks(Subroster):
         # TODO: Figure out how to model infections in flocks
         pars = self.pars # Shorten
         if 'prognoses' not in pars or 'rand_seed' not in pars:
-            errormsg = 'This poultry object does not have the required parameters ("prognoses" and "rand_seed"). Create a sim (or parameters), then do e.g. people.set_pars(sim.pars).'
+            errormsg = 'This flock object does not have the required parameters ("prognoses" and "rand_seed"). Create a sim (or parameters), then do e.g. people.set_pars(sim.pars).'
             raise sc.KeyNotFoundError(errormsg)
 
         znu.set_seed(pars['rand_seed'])
@@ -193,8 +196,6 @@ class Flocks(Subroster):
         self.init_flows()
         self.flows['new_infectious']    += self.check_infectious() # For people who are exposed and not infectious, check if they begin being infectious
         self.flows['new_symptomatic']   += self.check_symptomatic()
-
-        self.flows['new_critical']      += self.check_critical()
         self.flows['new_recoveries']    += self.check_recovery()
         new_deaths, new_known_deaths     = self.check_death()
         self.flows['new_deaths']        += new_deaths
@@ -280,39 +281,6 @@ class Flocks(Subroster):
 
 
 
-    def check_severe(self):
-        ''' Check for new progressions to severe '''
-        inds = self.check_inds(self.severe, self.date_severe, filter_inds=self.is_exp)
-        
-        #  STRATIFICATION
-        if self.pars['enable_stratifications']:
-            for strat, strat_pars in self.pars['stratification_pars'].items():
-                metrics = strat_pars['metrics']
-
-                if 'new_severe' in metrics:
-                    bracs = strat_pars['brackets']
-                    
-                    # update the value for the current day, for each bracket. 
-                    for brac in bracs:
-                        brac_name = "_".join([ str(brac[0]), str(brac[1])])
-
-                        # Count the number of individuals meeting the criteria. 
-                        if strat == 'age':
-                            num_inds = np.sum( (self.age[inds] >= brac[0]) & (self.age[inds] < brac[1]) )
-                        elif strat == 'income':
-                            num_inds = np.sum( (self.income[inds] >= brac[0]) & (self.income[inds] < brac[1]) )
-                        else:
-                            raise ValueError(f"Stratification {strat} not recognized.")
-
-                        self.stratifications[strat][brac_name]['new_severe'][self.t] += num_inds
-        
-        self.severe[inds] = True
-        return len(inds)
-
-
-
-
-
     def check_recovery(self, inds=None, filter_inds='is_exp'):
         '''
         Check for recovery.
@@ -331,8 +299,6 @@ class Flocks(Subroster):
         self.exposed[inds]          = False
         self.infectious[inds]       = False
         self.symptomatic[inds]      = False
-        self.severe[inds]           = False
-        self.critical[inds]         = False
         self.recovered[inds]        = True
         self.recovered_variant[inds] = self.exposed_variant[inds]
         self.infectious_variant[inds] = np.nan
@@ -379,20 +345,13 @@ class Flocks(Subroster):
 
 
     #%% Methods to make events occur (infection and diagnosis)
-    def make_nonnaive(self, inds):
-        self.susceptible[inds] = False
-        self.exposed[inds] = True
-        # TODO: Set prognosis at this time?
-        return
-
 
 
     def infect(self, inds, source=None, layer=None, variant=0):
         '''
         Infect agents and determine their eventual outcomes.
 
-            * Every infected person can infect other people, regardless of whether they develop symptoms
-            * Infected people that develop symptoms are disaggregated into mild vs. severe (=requires hospitalization) vs. critical (=requires ICU)
+            * Every infected agent can infect other agent, regardless of whether they develop symptoms
             * Every asymptomatic, mildly symptomatic, and severely symptomatic person recovers
             * Critical cases either recover or die
             * If the simulation is being run with waning, this method also sets/updates agents' neutralizing antibody levels
@@ -407,7 +366,7 @@ class Flocks(Subroster):
             variant  (int):   the variant agents are being infected by
 
         Returns:
-            count (int): number of poultry agents infected
+            count (int): number of flocks infected
         '''
 
         if len(inds) == 0:
@@ -424,8 +383,8 @@ class Flocks(Subroster):
         if source is not None:
             source = source[keep]
 
-                # Deal with variant parameters
-        variant_keys = ['rel_symp_prob', 'rel_severe_prob', 'rel_death_prob']
+        # Deal with variant parameters
+        variant_keys = ['rel_symp_prob', 'rel_death_prob']
         infect_pars = {k:self.pars[k] for k in variant_keys}
         variant_label = self.pars['variant_map'][variant]
         if variant:
@@ -437,7 +396,6 @@ class Flocks(Subroster):
 
         # Update states, variant info, and flows
         self.susceptible[inds]    = False
-        self.recovered[inds]      = False
         self.diagnosed[inds]      = False
         self.exposed[inds]        = True
         self.exposed_variant[inds] = variant
@@ -456,7 +414,11 @@ class Flocks(Subroster):
         self.date_exposed[inds] = self.t
         self.date_infectious[inds] = self.dur_exp2inf[inds] + self.t
 
-        return # For incrementing counters
+        # Reset all other dates
+        for key in ['date_symptomatic', 'date_diagnosed', 'date_recovered']:
+            self[key][inds] = np.nan
+
+        return n_infections # For incrementing counters
 
 
     def test(self, inds, test_sensitivity=1.0, loss_prob=0.0, test_delay=0):

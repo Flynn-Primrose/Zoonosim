@@ -135,7 +135,6 @@ flock_stocks = {
     'exposed_flocks':     'Number of exposed flocks',
     'infectious_flocks':  'Number of infectious flocks',
     'symptomatic_flocks': 'Number of symptomatic flocks',
-    'severe_flocks':      'Number of severe flocks',
 }
 
 barn_stocks = {
@@ -189,43 +188,59 @@ human_flows = {
     'human_doses':        'vaccine doses',
     'human_vaccinated':   'vaccinated people'
 }
+new_human_flows = [f'new_{key}' for key in human_flows.keys()]
+cum_human_flows = [f'cum_{key}' for key in human_flows.keys()]
 
 flock_flows = {
     'flock_infections':   'infections',
     'flock_infectious':   'infectious',
     'flock_symptomatic':  'symptomatic cases',
 }
+new_flock_flows = [f'new_{key}' for key in flock_flows.keys()]
+cum_flock_flows = [f'cum_{key}' for key in flock_flows.keys()]
 
 barn_flows = {
     'barn_contaminated': 'contaminated',
 }
+new_barn_flows = [f'new_{key}' for key in barn_flows.keys()]
+cum_barn_flows = [f'cum_{key}' for key in barn_flows.keys()]
 
 water_flows = {
     'water_contaminated': 'contaminated',
 }
+new_water_flows = [f'new_{key}' for key in water_flows.keys()]
+cum_water_flows = [f'cum_{key}' for key in water_flows.keys()]
 
 all_flows = {**human_flows, **flock_flows, **barn_flows, **water_flows}
 
 human_flows_by_variant = {
-    'human_infections_by_variant':  'infections by variant',
-    'human_symptomatic_by_variant': 'symptomatic by variant',
-    'human_severe_by_variant':      'severe by variant',
-    'human_infectious_by_variant':  'infectious by variant',
+    'humans_infections_by_variant':  'infections by variant',
+    'humans_symptomatic_by_variant': 'symptomatic by variant',
+    'humans_severe_by_variant':      'severe by variant',
+    'humans_infectious_by_variant':  'infectious by variant',
 }
+new_human_flows_by_variant = [f'new_{key}' for key in human_flows_by_variant.keys()]
+cum_human_flows_by_variant = [f'cum_{key}' for key in human_flows_by_variant.keys()]
 
 flock_flows_by_variant = {
-    'flock_infections_by_variant':  'infections by variant',
-    'flock_infectious_by_variant':  'infectious by variant',
-    'flock_symptomatic_by_variant': 'symptomatic by variant',
+    'flocks_infections_by_variant':  'infections by variant',
+    'flocks_infectious_by_variant':  'infectious by variant',
+    'flocks_symptomatic_by_variant': 'symptomatic by variant',
 }
+new_flock_flows_by_variant = [f'new_{key}' for key in flock_flows_by_variant.keys()]
+cum_flock_flows_by_variant = [f'cum_{key}' for key in flock_flows_by_variant.keys()]
 
 barn_flows_by_variant = {
-    'barn_contaminated_by_variant': 'contaminated by variant',
+    'barns_contaminated_by_variant': 'contaminated by variant',
 }
+new_barn_flows_by_variant = [f'new_{key}' for key in barn_flows_by_variant.keys()]
+cum_barn_flows_by_variant = [f'cum_{key}' for key in barn_flows_by_variant.keys()]
 
 water_flows_by_variant = {
-    'water_contaminated_by_variant': 'contaminated by variant',
+    'waters_contaminated_by_variant': 'contaminated by variant',
 }
+new_water_flows_by_variant = [f'new_{key}' for key in water_flows_by_variant.keys()]
+cum_water_flows_by_variant = [f'cum_{key}' for key in water_flows_by_variant.keys()]
 
 all_flows_by_variant = {**human_flows_by_variant, **flock_flows_by_variant, **barn_flows_by_variant, **water_flows_by_variant}
 

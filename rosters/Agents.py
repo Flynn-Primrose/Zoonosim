@@ -200,8 +200,31 @@ class Agents(Roster):
 
         return self.contacts
     
-    def update_from_subrosters(self):
-            #TODO: update agents to reflect changes to subrosters
+    def update_states_from_subrosters(self):
+        susceptible_human_uids = self.human['uid'][self.human['susceptible']==True]
+        exposed_human_uids = self.human['uid'][self.human['exposed']==True]
+        infectious_human_uids = self.human['uid'][self.human['infectious']==True]
+
+        susceptible_flock_uids = self.flock['uid'][self.flock['susceptible']==True]
+        exposed_flock_uids = self.flock['uid'][self.flock['exposed']==True]
+        infectious_flock_uids = self.flock['uid'][self.flock['infectious']==True]
+
+        susceptible_barn_uids = self.barn['uid'][self.barn['contaminated']==False]
+        exposed_barn_uids = self.barn['uid'][self.barn['contaminated']==True]
+        infectious_barn_uids = self.barn['uid'][self.barn['contaminated']==True]
+
+        susceptible_water_uids = self.water['uid'][self.water['contaminated']==False]
+        exposed_water_uids = self.water['uid'][self.water['contaminated']==True]
+        infectious_water_uids = self.water['uid'][self.water['contaminated']==True]
+
+        susceptible_uids = susceptible_human_uids + susceptible_flock_uids + susceptible_barn_uids + susceptible_water_uids
+        exposed_uids = exposed_human_uids + exposed_flock_uids + exposed_barn_uids + exposed_water_uids
+        infectious_uids = infectious_human_uids + infectious_flock_uids + infectious_barn_uids + infectious_water_uids
+
+        self.susceptible = np.isin(self['uid'], susceptible_uids)
+        self.exposed = np.isin(self['uid'], exposed_uids)
+        self.infectious = np.isin(self['uid'], infectious_uids)
+
         return
 
     #%% Methods for updating state
@@ -241,9 +264,9 @@ class Agents(Roster):
 
     #%% Methods to make events occur (infection and diagnosis)
 
-    def make_type_nonnaive(self, agent_type, inds, update = True):
-        self[agent_type].make_nonnaive(inds)
-        if update: self.update_from_subrosters()
+    def infect_type(self, agent_type, inds, update = True):
+        self[agent_type].infect(inds = inds, layer = 'seed_infections')
+        if update: self.update_states_from_subrosters()
         return
 
 

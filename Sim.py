@@ -540,7 +540,7 @@ class Sim(znb.BaseSim):
                                 f'is greater than the waterbody population ({water_pop_size})')
                     ValueError(errormsg)
             
-            self.agents.update_from_subrosters()
+            self.agents.update_states_from_subrosters()
         elif verbose:
             print(f'agents are already initialized with {self.agents.count('exposed')} exposed and {self.agents.count('infectious')} infectious')
 

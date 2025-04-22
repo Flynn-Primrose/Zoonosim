@@ -8,7 +8,7 @@ from . import defaults as znd
 
 __all__ = ['make_pars']
 
-def make_pars(set_prognoses = False, prog_by_age = False, version = None, **kwargs):
+def make_pars(set_prognoses = False, version = None, **kwargs):
 
     '''
     Create the parameters for the simulation. Typically, this function is used
@@ -73,20 +73,21 @@ def make_pars(set_prognoses = False, prog_by_age = False, version = None, **kwar
         'beta_dist': dict(dist='neg_binomial', par1=1.0, par2=0.45, step=0.01), # Distribution to draw individual level transmissibility; dispersion from https://www.researchsquare.com/article/rs-29548/v1
         'viral_dist':dict(frac_time=0.3, load_ratio=2, high_cap=4), # The time varying viral load (transmissibility); estimated from Lescure 2020, Lancet, https://doi.org/10.1016/S1473-3099(20)30200-0
         'asymp_factor': 1.0,  # Multiply beta by this factor for asymptomatic cases; no statistically significant difference in transmissibility: https://www.sciencedirect.com/science/article/pii/S1201971220302502
-        'enable_vl':False, # Specifies whether we should use the updated viral load calculation; False = use native calculation NOTE: Im note sure how to set this yet
+        'enable_vl':True, # Specifies whether we should use the updated viral load calculation; False = use native calculation NOTE: Im note sure how to set this yet
         'viral_levels':dict(min_vl=0.75, max_vl=2) # Specifies the range within which viral load should be scaled so it can contribute to relative transmissibility
     }
 
     pars['transmission_pars']['flock'] = {
-
+        'beta_dist': dict(dist='neg_binomial', par1=1.0, par2=0.45, step=0.01), # NOTE: Dummy variables
+        'asymp_factor': 1.0
     }
 
     pars['transmission_pars']['barn'] = {
-        
+        'beta_dist': dict(dist='neg_binomial', par1=1.0, par2=0.45, step=0.01), # NOTE: Dummy variables
     }
 
     pars['transmission_pars']['water'] = {
-        
+        'beta_dist': dict(dist='neg_binomial', par1=1.0, par2=0.45, step=0.01), # NOTE: Dummy variables
     }
 
     # Parameters that control settings and defaults for multi-variant runs
@@ -133,15 +134,6 @@ def make_pars(set_prognoses = False, prog_by_age = False, version = None, **kwar
         'mild2rec': dict(dist='lognormal_int', par1=8.0,  par2=2.0), # Duration for people with mild symptoms to recover; see Wölfel et al., https://www.nature.com/articles/s41586-020-2196-x
         'sev2rec': dict(dist='lognormal_int', par1=18.1, par2=6.3), # Duration for people with severe symptoms to recover, 24.7 days total; see Verity et al., https://www.thelancet.com/journals/laninf/article/PIIS1473-3099(20)30243-7/fulltext; 18.1 days = 24.7 onset-to-recovery - 6.6 sym2sev; 6.3 = 0.35 coefficient of variation * 18.1; see also https://doi.org/10.1017/S0950268820001259 (22 days) and https://doi.org/10.3390/ijerph17207560 (3-10 days)
         'sev2die': dict(dist='lognormal_int', par1=10.7, par2=4.8), # Duration from critical symptoms to death, 18.8 days total; see Verity et al., https://www.thelancet.com/journals/laninf/article/PIIS1473-3099(20)30243-7/fulltext; 10.7 = 18.8 onset-to-death - 6.6 sym2sev - 1.5 sev2crit; 4.8 = 0.45 coefficient of variation * 10.7
-
-        # Severity:
-
-        'rel_symp_prob':1.0,  # Scale factor for proportion of symptomatic cases
-        'rel_severe_prob':1.0,  # Scale factor for proportion of symptomatic cases that become severe
-        'rel_crit_prob'  :1.0,  # Scale factor for proportion of severe cases that become critical
-        'rel_death_prob' :1.0,  # Scale factor for proportion of critical cases that result in death
-        'prog_by_age'    :prog_by_age, # Whether to set disease progression based on the person's age NOTE: I'm not sure if we will end up using this or not
-        'prognoses'    :None # The actual arrays of prognoses by age; this is populated later
     }
 
     pars['dur']['flock'] = {
@@ -154,6 +146,23 @@ def make_pars(set_prognoses = False, prog_by_age = False, version = None, **kwar
     pars['dur']['water'] = {
         'contamination': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration of contamination. NOTE: This data is just a guess, and should be replaced with real data
     }
+
+    # Severity pars
+    pars['sev'] = {}
+    pars['sev']['human'] = {
+        'rel_symp_prob':1.0,  # Scale factor for proportion of symptomatic cases
+        'rel_severe_prob':1.0,  # Scale factor for proportion of symptomatic cases that become severe
+        'rel_crit_prob'  :1.0,  # Scale factor for proportion of severe cases that become critical
+        'rel_death_prob' :1.0,  # Scale factor for proportion of critical cases that result in death
+        'prog_by_age'    : True, # Whether to set disease progression based on the person's age NOTE: I'm not sure if we will end up using this or not
+        'prognoses'    :None # The actual arrays of prognoses by age; this is populated later
+    }
+    pars['sev']['flock'] = {
+        'rel_symp_prob':1.0, # Scale factor for proportion of symptomatic cases
+        'prog_by_breed':True # Whether to set disease progression based on the flocks breed. NOTE: I'm not sure if this is needed.
+    }
+
+
 
     # Efficacy of non-pharmaceutical interventions (NPIs)
     pars['NPIs'] = {}

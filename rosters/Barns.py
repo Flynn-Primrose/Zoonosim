@@ -145,9 +145,9 @@ class Barns(Subroster):
 
     def init_flows(self):
         ''' Initialize flows to be zero '''
-        self.flows = {key:0 for key in znd.new_result_flows}
+        self.flows = {key:0 for key in znd.new_barn_flows}
         self.flows_variant = {}
-        for key in znd.new_result_flows_by_variant:
+        for key in znd.new_barn_flows_by_variant:
             self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=znd.default_float)
 
         return
@@ -266,15 +266,12 @@ class Barns(Subroster):
 
     def check_cleaned(self):
         ''' Check which barns get cleaned this timestep '''
+        # TODO: create this function
+        return
 
 
 
     #%% Methods to make events occur (infection and diagnosis)
-
-    def make_nonaive(self, inds):
-        self.contaminated[inds] = True
-        #TODO: set prognosis?
-        return
 
 
     def infect(self, inds, source=None, layer=None, variant=0):
@@ -296,29 +293,18 @@ class Barns(Subroster):
             source = source[keep]
 
         # Deal with variant parameters
-        variant_keys = ['rel_symp_prob', 'rel_severe_prob', 'rel_crit_prob', 'rel_death_prob']
-        infect_pars = {k:self.pars[k] for k in variant_keys}
         variant_label = self.pars['variant_map'][variant]
-        if variant:
-            for k in variant_keys:
-                infect_pars[k] *= self.pars['variant_pars'][variant_label][k]
 
         n_infections = len(inds)
         durpars      = self.pars['dur']
 
-        # Retrieve those with a breakthrough infection (defined nabs)
-        breakthrough_inds = inds[znu.true(self.peak_nab[inds])]
-        if len(breakthrough_inds):
-            no_prior_breakthrough = (self.n_breakthroughs[breakthrough_inds] == 0) # We only adjust transmissibility for the first breakthrough
-            new_breakthrough_inds = breakthrough_inds[no_prior_breakthrough]
-            self.rel_trans[new_breakthrough_inds] *= self.pars['trans_redux']
 
         # Update states, variant info, and flows
         self.susceptible[inds]    = False
-        self.exposed[inds]        = True
-        self.exposed_variant[inds] = variant
-        self.exposed_by_variant[variant, inds] = True
-        self.flows_variant['new_infections_by_variant'][variant] += len(inds)
+        self.contaminated[inds]        = True
+        self.contaminated_variant[inds] = variant
+        self.contaminated_by_variant[variant, inds] = True
+        self.flows_variant['new_contaminated_by_variant'][variant] += len(inds)
 
         # Record transmissions
         for i, target in enumerate(inds):
