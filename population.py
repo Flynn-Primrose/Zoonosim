@@ -69,6 +69,9 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
 
     return agents
 
+
+
+
 def validate_popdict(popdict, pars, verbose=True):
     '''
     Check that the popdict is the correct type, has the correct keys, and has

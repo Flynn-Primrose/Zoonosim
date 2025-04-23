@@ -148,19 +148,17 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     }
 
     # Severity pars
-    pars['sev'] = {}
-    pars['sev']['human'] = {
-        'rel_symp_prob':1.0,  # Scale factor for proportion of symptomatic cases
-        'rel_severe_prob':1.0,  # Scale factor for proportion of symptomatic cases that become severe
-        'rel_crit_prob'  :1.0,  # Scale factor for proportion of severe cases that become critical
-        'rel_death_prob' :1.0,  # Scale factor for proportion of critical cases that result in death
-        'prog_by_age'    : True, # Whether to set disease progression based on the person's age NOTE: I'm not sure if we will end up using this or not
-        'prognoses'    :None # The actual arrays of prognoses by age; this is populated later
-    }
-    pars['sev']['flock'] = {
-        'rel_symp_prob':1.0, # Scale factor for proportion of symptomatic cases
-        'prog_by_breed':True # Whether to set disease progression based on the flocks breed. NOTE: I'm not sure if this is needed.
-    }
+    pars['rel_symp_prob'] = 1.00
+    pars['rel_severe_prob'] = 1.00
+    pars['rel_death_prob'] = 1.00
+
+
+    # Prognoses
+    pars['prognoses'] = {}
+    pars['prognoses']['human'] = relative_human_prognoses(znd.default_human_prognoses)
+    pars['prognoses']['flock'] = relative_flock_prognoses(znd.default_flock_prognoses)
+    pars['prognoses']['barn'] = relative_barn_prognoses(znd.default_barn_prognoses)
+    pars['prognoses']['water'] = relative_water_prognoses(znd.default_water_prognoses)
 
 
 
@@ -265,47 +263,6 @@ def reset_layer_pars(pars, layer_keys=None, force=False):
         pars[pkey] = par # Save this parameter to the dictionary
 
 
-
-def get_prognoses(agent_type, version=None):
-    '''
-    Return the default parameter values for prognoses
-
-    The prognoses probabilities are conditional given the previous disease state.
-
-    Args:
-        agent_type (string): type of agent for which we need to retrieve a prognoses
-
-    Returns:
-        prog_pars (dict): the dictionary of prognoses probabilities
-    '''
-    
-    prognoses = {}    
-
-    prognoses['human'] = dict(
-        age_cutoffs   = np.array([0,       10,      20,      30,      40,      50,      60,      70,      80,      90,]),     # Age cutoffs (lower limits)
-        sus_ORs       = np.array([0.34,    0.67,    1.00,    1.00,    1.00,    1.00,    1.24,    1.47,    1.47,    1.47]),    # Odds ratios for relative susceptibility -- from Zhang et al., https://science.sciencemag.org/content/early/2020/05/04/science.abb8001; 10-20 and 60-70 bins are the average across the ORs
-        trans_ORs     = np.array([1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00]),    # Odds ratios for relative transmissibility -- no evidence of differences
-        comorbidities = np.array([1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00]),    # Comorbidities by age -- set to 1 by default since already included in disease progression rates
-        symp_probs    = np.array([0.50,    0.55,    0.60,    0.65,    0.70,    0.75,    0.80,    0.85,    0.90,    0.90]),    # Overall probability of developing symptoms (based on https://www.medrxiv.org/content/10.1101/2020.03.24.20043018v1.full.pdf, scaled for overall symptomaticity)
-        severe_probs  = np.array([0.00050, 0.00165, 0.00720, 0.02080, 0.03430, 0.07650, 0.13280, 0.20655, 0.24570, 0.24570]), # Overall probability of developing severe symptoms (derived from Table 1 of https://www.imperial.ac.uk/media/imperial-college/medicine/mrc-gida/2020-03-16-COVID19-Report-9.pdf)
-        death_probs   = np.array([0.00002, 0.00002, 0.00010, 0.00032, 0.00098, 0.00265, 0.00766, 0.02439, 0.08292, 0.16190]), # Overall probability of dying -- from O'Driscoll et al., https://www.nature.com/articles/s41586-020-2918-0; last data point from Brazeau et al., https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-34-ifr/
-            )
-    prognoses['human'] = relative_prognoses(prognoses['human']) # Convert to conditional probabilities
-
-    prognoses['poultry'] = dict( #TODO: develop poultry prognosis
-            
-        )
-
-    prognoses['barn'] = dict( #TODO: develop barn prognosis
-
-        )
-
-    prognoses['water'] = dict( #TODO: develop water prognosis
-
-        )
-    return prognoses
-
-
     # # If version is specified, load old parameters
     # if by_age and version is not None:
     #     version_prognoses = znm.get_version_pars(version, verbose=False)['prognoses']
@@ -321,20 +278,43 @@ def get_prognoses(agent_type, version=None):
     #         errormsg = f'Lengths mismatch in prognoses: {expected_len} age bins specified, but key "{key}" has {this_len} entries'
     #         raise ValueError(errormsg)
 
-    return prognoses
+    return 
 
-def relative_prognoses(prognoses):
+def relative_human_prognoses(prognoses):
     '''
-    Convenience function to revert absolute prognoses into relative (conditional)
-    ones. Internally, Covasim uses relative prognoses.
+    Convenience function to revert absolute human prognoses into relative (conditional)
+    ones. Internally, Zoonosim uses relative prognoses.
     '''
     out = sc.dcp(prognoses)
     out['death_probs']  /= out['severe_probs']   # Conditional probability of dying, given critical symptoms
     out['severe_probs'] /= out['symp_probs']   # Conditional probability of symptoms becoming severe, given symptomatic
     return out
 
+def relative_flock_prognoses(prognoses):
+        '''
+    Convenience function to revert absolute flock prognoses into relative (conditional)
+    ones. Internally, Zoonosim uses relative prognoses.
+    '''
+        out = sc.dcp(prognoses)
+        return(out)
 
-def absolute_prognoses(prognoses):
+def relative_barn_prognoses(prognoses):
+        '''
+    Convenience function to revert absolute flock prognoses into relative (conditional)
+    ones. Internally, Zoonosim uses relative prognoses.
+    '''
+        out = sc.dcp(prognoses)
+        return(out)
+
+def relative_water_prognoses(prognoses):
+        '''
+    Convenience function to revert absolute flock prognoses into relative (conditional)
+    ones. Internally, Zoonosim uses relative prognoses.
+    '''
+        out = sc.dcp(prognoses)
+        return(out)
+
+def absolute_human_prognoses(prognoses):
     '''
     Convenience function to revert relative (conditional) prognoses into absolute
     ones. Used to convert internally used relative prognoses into more readable

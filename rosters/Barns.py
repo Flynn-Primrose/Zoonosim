@@ -111,7 +111,7 @@ class Barns(Subroster):
 
         # Set variant states, which store info about which variant a person is exposed to
         for key in self.meta.variant_states:
-            self[key] = np.full(self.pars['pop_size'], np.nan, dtype=znd.default_float)
+            self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
         for key in self.meta.by_variant_states:
             self[key] = np.full((self.pars['n_variants'], pop_size), False, dtype=bool)
 
@@ -296,7 +296,7 @@ class Barns(Subroster):
         variant_label = self.pars['variant_map'][variant]
 
         n_infections = len(inds)
-        durpars      = self.pars['dur']
+        durpars      = self.pars['dur']['barn']
 
 
         # Update states, variant info, and flows
@@ -304,7 +304,8 @@ class Barns(Subroster):
         self.contaminated[inds]        = True
         self.contaminated_variant[inds] = variant
         self.contaminated_by_variant[variant, inds] = True
-        self.flows_variant['new_contaminated_by_variant'][variant] += len(inds)
+        self.flows['new_barn_contaminated'] += len(inds)
+        self.flows_variant['new_barn_contaminated_by_variant'][variant] += len(inds)
 
         # Record transmissions
         for i, target in enumerate(inds):

@@ -283,15 +283,15 @@ class Water(Subroster):
         variant_label = self.pars['variant_map'][variant]
 
         n_infections = len(inds)
-        durpars      = self.pars['dur']
+        durpars      = self.pars['dur']['water']
 
 
         # Update states, variant info, and flows
         self.susceptible[inds]    = False
         self.exposed_variant[inds] = variant
         self.exposed_by_variant[variant, inds] = True
-        self.flows['new_infections']   += len(inds)
-        self.flows_variant['new_infections_by_variant'][variant] += len(inds)
+        self.flows['new_water_contaminated']   += len(inds)
+        self.flows_variant['new_water_contaminated_by_variant'][variant] += len(inds)
 
         # Record transmissions
         for i, target in enumerate(inds):

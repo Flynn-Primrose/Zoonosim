@@ -26,8 +26,6 @@ class FlocksMeta(sc.prettyobj):
             'exposed',
             'infectious',
             'symptomatic',
-            'recovered',
-            'diagnosed',
         ]
 
         self.variant_states = [
@@ -169,16 +167,23 @@ class Flocks(Subroster):
 
     def set_prognoses(self):
         '''
-        Set the prognoses for each person based on age during initialization. Need
+        Set the prognoses for each flock based on breed. Need
         to reset the seed because viral loads are drawn stochastically.
         '''
-        # TODO: Figure out how to model infections in flocks
         pars = self.pars # Shorten
         if 'prognoses' not in pars or 'rand_seed' not in pars:
             errormsg = 'This flock object does not have the required parameters ("prognoses" and "rand_seed"). Create a sim (or parameters), then do e.g. people.set_pars(sim.pars).'
             raise sc.KeyNotFoundError(errormsg)
 
+
         znu.set_seed(pars['rand_seed'])
+
+        progs = pars['prognoses']['flock']
+        breed_to_index = {breed: index for index, breed in enumerate(progs['breeds'])}
+        inds = np.fromiter((breed_to_index[this_breed] for this_breed in self.breed))
+        self.symp_prob[:] = progs['symp_prob'][inds]
+        self.rel_sus[:] = progs['sus_ORs'][inds]
+        self.rel_trans[:] = progs['trans_ORs'][inds]
 
         return
 
@@ -392,17 +397,15 @@ class Flocks(Subroster):
                 infect_pars[k] *= self.pars['variant_pars'][variant_label][k]
 
         n_infections = len(inds)
-        durpars      = self.pars['dur']
+        durpars      = self.pars['dur']['flock']
 
         # Update states, variant info, and flows
         self.susceptible[inds]    = False
-        self.diagnosed[inds]      = False
         self.exposed[inds]        = True
         self.exposed_variant[inds] = variant
         self.exposed_by_variant[variant, inds] = True
-        self.flows['new_infections']   += len(inds)
-        self.flows['new_reinfections'] += len(znu.defined(self.date_recovered[inds])) # Record reinfections
-        self.flows_variant['new_infections_by_variant'][variant] += len(inds)
+        self.flows['new_flock_infections']   += len(inds)
+        self.flows_variant['new_flock_infections_by_variant'][variant] += len(inds)
 
         # Record transmissions
         for i, target in enumerate(inds):
@@ -415,7 +418,7 @@ class Flocks(Subroster):
         self.date_infectious[inds] = self.dur_exp2inf[inds] + self.t
 
         # Reset all other dates
-        for key in ['date_symptomatic', 'date_diagnosed', 'date_recovered']:
+        for key in ['date_symptomatic']:
             self[key][inds] = np.nan
 
         return n_infections # For incrementing counters

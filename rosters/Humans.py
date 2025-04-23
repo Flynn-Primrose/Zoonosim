@@ -151,46 +151,48 @@ class Humans(Subroster):
         self.meta = HumanMeta() # Store list of keys and dtypes
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
         
+        pop_size = self.pars['pop_size_by_type']['human']
+
         # Set person properties -- all floats except for UID
         for key in self.meta.agent:
             if key == 'uid':
-                self[key] = np.zeros(self.pars['pop_size'], dtype=znd.default_int) 
+                self[key] = np.zeros(pop_size, dtype=znd.default_int) 
             elif key in ['n_infections', 'n_breakthroughs']:
-                self[key] = np.zeros(self.pars['pop_size'], dtype=znd.default_int)
+                self[key] = np.zeros(pop_size, dtype=znd.default_int)
             elif key in ['viral_load']:
-                self[key] = np.zeros(self.pars['pop_size'], dtype=znd.default_float)
+                self[key] = np.zeros(pop_size, dtype=znd.default_float)
             elif key in ['rescaled_vl']:  # for tracking purposes
-                self[key] = np.zeros(self.pars['pop_size'], dtype=znd.default_float)
+                self[key] = np.zeros(pop_size, dtype=znd.default_float)
             else:
-                self[key] = np.full(self.pars['pop_size'], np.nan, dtype=znd.default_float)
+                self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
 
         # Set health states -- only susceptible is true by default -- booleans except exposed by variant which should return the variant that ind is exposed to
         for key in self.meta.states:
             val = (key in ['susceptible']) # Default value is True for susceptible, False otherwise
-            self[key] = np.full(self.pars['pop_size'], val, dtype=bool)
+            self[key] = np.full(pop_size, val, dtype=bool)
 
         # Set variant states, which store info about which variant a person is exposed to
         for key in self.meta.variant_states:
-            self[key] = np.full(self.pars['pop_size'], np.nan, dtype=znd.default_float)
+            self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
         for key in self.meta.by_variant_states:
-            self[key] = np.full((self.pars['n_variants'], self.pars['pop_size']), False, dtype=bool)
+            self[key] = np.full((self.pars['n_variants'], pop_size), False, dtype=bool)
 
         # Set immunity and antibody states
         for key in self.meta.imm_states:  # Everyone starts out with no immunity
-            self[key] = np.zeros((self.pars['n_variants'], self.pars['pop_size']), dtype=znd.default_float)
+            self[key] = np.zeros((self.pars['n_variants'], pop_size), dtype=znd.default_float)
         for key in self.meta.nab_states:  # Everyone starts out with no antibodies
             dtype = znd.default_int if key == 't_nab_event' else znd.default_float
-            self[key] = np.zeros(self.pars['pop_size'], dtype=dtype)
+            self[key] = np.zeros(pop_size, dtype=dtype)
         for key in self.meta.vacc_states:
-            self[key] = np.zeros(self.pars['pop_size'], dtype=znd.default_int)
+            self[key] = np.zeros(pop_size, dtype=znd.default_int)
 
         # Set dates and durations -- both floats
         for key in self.meta.dates + self.meta.durs:
-            self[key] = np.full(self.pars['pop_size'], np.nan, dtype=znd.default_float)
+            self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
 
         # Set dates for viral load profile -- floats
         for key in self.meta.vl_points:
-            self[key] = np.full(self.pars['pop_size'], np.nan, dtype=znd.default_float)
+            self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
 
         # Store the dtypes used in a flat dict
         self._dtypes = {key:self[key].dtype for key in self.keys()} # Assign all to float by default
@@ -255,7 +257,7 @@ class Humans(Subroster):
 
         znu.set_seed(pars['rand_seed'])
 
-        progs = pars['prognoses'] # Shorten the name
+        progs = pars['prognoses']['human']
         inds = np.fromiter((find_cutoff(progs['age_cutoffs'], this_age) for this_age in self.age), dtype=znd.default_int, count=len(self)) # Convert ages to indices
         self.symp_prob[:]   = progs['symp_probs'][inds] # Probability of developing symptoms
         self.severe_prob[:] = progs['severe_probs'][inds]*progs['comorbidities'][inds] # Severe disease probability is modified by comorbidities
@@ -439,13 +441,6 @@ class Humans(Subroster):
 
     #%% Methods to make events occur (infection and diagnosis)
 
-    def make_nonnaive(self, inds):
-        self.susceptible[inds] = False
-        self.exposed[inds] = True
-        # TODO: Do we have to set the prognosis here?
-
-        return
-
 
 
 
@@ -495,7 +490,7 @@ class Humans(Subroster):
                 infect_pars[k] *= self.pars['variant_pars'][variant_label][k]
 
         n_infections = len(inds)
-        durpars      = self.pars['dur']
+        durpars      = self.pars['dur']['human']
 
         # Retrieve those with a breakthrough infection (defined nabs)
         breakthrough_inds = inds[znu.true(self.peak_nab[inds])]
@@ -513,9 +508,9 @@ class Humans(Subroster):
         self.n_breakthroughs[breakthrough_inds] += 1
         self.exposed_variant[inds] = variant
         self.exposed_by_variant[variant, inds] = True
-        self.flows['new_infections']   += len(inds)
-        self.flows['new_reinfections'] += len(znu.defined(self.date_recovered[inds])) # Record reinfections
-        self.flows_variant['new_infections_by_variant'][variant] += len(inds)
+        self.flows['new_human_infections']   += len(inds)
+        self.flows['new_human_reinfections'] += len(znu.defined(self.date_recovered[inds])) # Record reinfections
+        self.flows_variant['new_human_infections_by_variant'][variant] += len(inds)
 
         # Record transmissions
         for i, target in enumerate(inds):
