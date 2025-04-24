@@ -96,7 +96,7 @@ class HumanMeta(sc.prettyobj):
         ]
 
         # Timing of control points for viral load
-        self.vl_points = [
+        self.ctrl_points = [
             'x_p_inf',
             'y_p_inf',
             'x_p1',
@@ -107,11 +107,11 @@ class HumanMeta(sc.prettyobj):
             'y_p3',
         ]
 
-        self.all_states = self.agent + self.states + self.variant_states + self.by_variant_states + self.imm_states + self.nab_states + self.vacc_states + self.dates + self.durs + self.vl_points
+        self.all_states = self.agent + self.states + self.variant_states + self.by_variant_states + self.imm_states + self.nab_states + self.vacc_states + self.dates + self.durs + self.ctrl_points
 
         # Validate
         self.state_types = ['agent', 'states', 'variant_states', 'by_variant_states', 'imm_states',
-                            'nab_states', 'vacc_states', 'dates', 'durs', 'all_states']
+                            'nab_states', 'vacc_states', 'dates', 'durs', 'ctrl_points', 'all_states']
         for state_type in self.state_types:
             states = getattr(self, state_type)
             n_states        = len(states)
@@ -191,7 +191,7 @@ class Humans(Subroster):
             self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
 
         # Set dates for viral load profile -- floats
-        for key in self.meta.vl_points:
+        for key in self.meta.ctrl_points:
             self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
 
         # Store the dtypes used in a flat dict

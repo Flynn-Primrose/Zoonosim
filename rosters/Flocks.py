@@ -18,7 +18,11 @@ class FlocksMeta(sc.prettyobj):
         self.agent = [
             'uid', # int
             'breed', # e.g. breeder, layer, broiler
-            'barn' # uid of the barn where the flock is located
+            'barn', # uid of the barn where the flock is located
+            'headcount', # Number of birds in the flock
+            'infected_headcount', 
+            'symptomatic_headcount',
+            'dead_headcount'
         ]
 
         self.states = [
@@ -47,6 +51,18 @@ class FlocksMeta(sc.prettyobj):
         self.durs = [
             'dur_exp2inf',
             'dur_inf2sym',
+        ]
+
+        # Control points for infection progression
+        self.ctrl_points = [
+            'x_p_inf',
+            'y_p_inf',
+            'x_p1',
+            'y_p1',
+            'x_p2',
+            'y_p2',
+            'x_p3',
+            'y_p3',
         ]
 
         self.all_states = self.agent + self.states + self.variant_states + self.by_variant_states + self.dates + self.durs
@@ -123,6 +139,9 @@ class Flocks(Subroster):
         for key in self.meta.dates + self.meta.durs:
             self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
 
+        # Set dates for infection profile -- floats
+        for key in self.meta.ctrl_points:
+            self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
 
         # Store the dtypes used in a flat dict
         self._dtypes = {key:self[key].dtype for key in self.keys()} # Assign all to float by default

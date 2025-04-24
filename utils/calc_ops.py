@@ -41,7 +41,6 @@ def compute_viral_load(t,       x_p1,       y_p1,       x_p2,       y_p2,       
     # Set up arrays
     N = len(x_p2)
     vl = np.zeros(N, dtype=znd.default_float)
-    vl_rescaled = np.zeros(N, dtype=znd.default_float)
 
     # Calculate viral load for those for whom it is rising
     rising_vl = t < x_p2
@@ -56,12 +55,11 @@ def compute_viral_load(t,       x_p1,       y_p1,       x_p2,       y_p2,       
     infected_vl = vl[infected]
     infected_vl = min_vl + (max_vl - min_vl)*(infected_vl - 6)/(11 - 6)
     infected_vl[infected_vl < min_vl] = 0
-    vl_rescaled[infected] = infected_vl
 
     # Clip viral load when it falls below 10^0 cp/mL to reflect LoD
     vl[vl <= 0] = 0
 
-    return vl, vl_rescaled
+    return vl
 
 # jit means you let Numba's combiler optimize this function. 
 @nb.njit(            (nbfloat[:], nbfloat[:], nbbool[:], nbbool[:], nbfloat,    nbfloat[:], nbbool[:], nbbool[:], nbbool[:], nbfloat,      nbfloat,    nbfloat,     nbfloat[:]), cache=cache, parallel=safe_parallel)

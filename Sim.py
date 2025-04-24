@@ -299,7 +299,9 @@ class Sim(znb.BaseSim):
 
 
         # Other variables
-
+        self.results['n_human_imports'] = init_res('Number of imported human infections', scale = True)
+        self.results['n_flock_imports'] = init_res('Number of imported flock infections', scale = True)
+        self.results['n_water_imports'] = init_res('Number of imported water infections', scale = True)
 
 
 
@@ -595,13 +597,17 @@ class Sim(znb.BaseSim):
         agents.update_states_pre(t=t) # Update the state of everyone and count the flows. This isn't infecting people nor updating their SEIR's. The date of infection seems to be pre-assigned. 
         contacts = agents.update_contacts() # Compute new contacts. For dynamic contacts. 
         hosp_max = agents.type_count('human', 'severe')   > self['n_beds_hosp'] if self['n_beds_hosp'] is not None else False # Check for acute bed constraint.
+        
         # Randomly infect some people (imported infections)
-        if self['n_imports']:
-            # n_imports = cvu.poisson(self['n_imports']/self.rescale_vec[self.t]) # Imported cases/
-            n_imports = self['n_imports']
-            if n_imports>0:
-                # TODO: Modify to accommodate multiple populations
-                self.results['n_imports'][t] += n_imports
+        if self['n_imports']['human']>0:
+            n_human_imports = znu.poisson(self['n_imports']['human']) # imported human cases
+            self.results['n_human_imports'][t] += n_human_imports
+        if self['n_imports']['flock']>0:
+            n_flock_imports = znu.poisson(self['n_imports']['flock']) # imported flock cases
+            self.results['n_flock_imports'][t] += n_flock_imports
+        if self['n_imports']['water']>0:
+            n_water_imports = znu.poisson(self['n_imports']['water']) # imported water contaminations
+            self.results['n_water_imports'][t] += n_water_imports
 
         # Add variants
         for variant in self['variants']:
@@ -611,14 +617,13 @@ class Sim(znb.BaseSim):
 
         # Compute viral loads
 
-        x_p1, y_p1 = agents.humans.x_p1, agents.humans.y_p1
-        x_p2, y_p2 = agents.humans.x_p2, agents.humans.y_p2
-        x_p3, y_p3 = agents.humans.x_p3, agents.humans.y_p3
-        min_vl = znd.default_float(self['viral_levels']['min_vl'])
-        max_vl = znd.default_float(self['viral_levels']['max_vl'])
+        x_p1, y_p1 = agents.human.x_p1, agents.human.y_p1
+        x_p2, y_p2 = agents.human.x_p2, agents.human.y_p2
+        x_p3, y_p3 = agents.human.x_p3, agents.human.y_p3
+        min_vl = znd.default_float(self['transmission_pars']['human']['viral_levels']['min_vl'])
+        max_vl = znd.default_float(self['transmission_pars']['human']['viral_levels']['max_vl'])
 
-        agents.humans.viral_load, viral_load = znu.compute_viral_load(t, x_p1, y_p1, x_p2, y_p2, x_p3, y_p3, min_vl, max_vl)
-        #people.rescaled_vl = viral_load  # for tracking purposes
+        agents.human.viral_load = znu.compute_viral_load(t, x_p1, y_p1, x_p2, y_p2, x_p3, y_p3, min_vl, max_vl)
 
 
         # Apply interventions
@@ -661,10 +666,14 @@ class Sim(znb.BaseSim):
                 # Compute relative transmission and susceptibility
                 inf_variant = agents.infectious * (agents.infectious_variant == variant) # TODO: move out of loop?
                 sus_imm = agents.sus_imm[variant,:]
-                iso_factor  = znd.default_float(self['iso_factor'][lkey]) # Effect of isolating. 
                 quar_factor = znd.default_float(self['quar_factor'][lkey]) # Ex: 0.2. Probably the effect on beta of quarantining. 
                 beta_layer  = znd.default_float(self['beta_layer'][lkey]) # A scalar; beta for the layer. Ex: 1.0. 
-                rel_trans, rel_sus = znu.compute_trans_sus(prel_trans, prel_sus, inf_variant, sus, beta_layer, viral_load, symp, diag, quar, asymp_factor, iso_factor, quar_factor, sus_imm)
+                # TODO: The following line must be reworked to accomodate multiple agent types
+                #rel_trans, rel_sus = znu.compute_trans_sus(prel_trans, prel_sus, inf_variant, sus, beta_layer, viral_load, symp, diag, quar, asymp_factor, iso_factor, quar_factor, sus_imm)
+
+                # NOTE: Temporary work around for dev purposes only
+                rel_trans = self.agents['rel_trans'] # NOTE: for development only
+                rel_sus = self.agents['rel_sus'] # NOTE: for development only
 
                 # Calculate actual transmission
                 pairs = [[p1,p2]] 

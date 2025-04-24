@@ -91,9 +91,12 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     }
 
     # Parameters that control settings and defaults for multi-variant runs
-    pars['n_imports']  = {} 
-    for type in pars['agent_types']:# Average daily number of imported cases for the given agent type (actual number is drawn from Poisson distribution)
-        pars['n_imports'][type] = 0
+    pars['n_imports']  = {
+        'human': 0,
+        'flock': 1,
+        'water': 1
+    } 
+
     pars['n_variants'] = 1 # The number of variants circulating in the population
 
     # Parameters used to calculate immunity
