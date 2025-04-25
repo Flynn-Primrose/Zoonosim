@@ -118,7 +118,7 @@ class Sim(znb.BaseSim):
         self.init_immunity() # initialize information about immunity (if use_waning=True)
         self.init_results() # After initializing the variant, create the results structure
 
-        self.init_agents(reset=reset, init_infections=init_infections, **kwargs) #TODO: change init_infections so that we can specify which agent types to infect
+        self.init_agents(reset=reset, init_infections=init_infections, **kwargs)
 
         self.init_interventions()  # Initialize the interventions...
         #self.init_analyzers() # ...and the analyzers...
@@ -615,7 +615,7 @@ class Sim(znb.BaseSim):
                 variant.apply(self)
 
 
-        # Compute viral loads
+        # Compute viral loads in humans
 
         x_p1, y_p1 = agents.human.x_p1, agents.human.y_p1
         x_p2, y_p2 = agents.human.x_p2, agents.human.y_p2
@@ -624,6 +624,9 @@ class Sim(znb.BaseSim):
         max_vl = znd.default_float(self['transmission_pars']['human']['viral_levels']['max_vl'])
 
         agents.human.viral_load = znu.compute_viral_load(t, x_p1, y_p1, x_p2, y_p2, x_p3, y_p3, min_vl, max_vl)
+
+        # Compute infection levels in flocks
+        # TODO: COmpute infection levels in flocks
 
 
         # Apply interventions
@@ -638,7 +641,7 @@ class Sim(znb.BaseSim):
         nv = self['n_variants'] # Shorten number of variants
         sus = agents.susceptible
         symp = agents.symptomatic
-        diag = agents.diagnosed
+        #diag = agents.diagnosed
         quar = agents.quarantined
         prel_trans = agents.rel_trans
         prel_sus   = agents.rel_sus
@@ -647,8 +650,8 @@ class Sim(znb.BaseSim):
         for variant in range(nv):
 
             # Check immunity
-            if self['use_waning']:
-                znimm.check_immunity(agents.humans, variant)
+            
+            znimm.check_immunity(agents.human, variant)# NOTE: needs to be fixed
 
             # Deal with variant parameters
             rel_beta = self['rel_beta']
@@ -669,7 +672,8 @@ class Sim(znb.BaseSim):
                 quar_factor = znd.default_float(self['quar_factor'][lkey]) # Ex: 0.2. Probably the effect on beta of quarantining. 
                 beta_layer  = znd.default_float(self['beta_layer'][lkey]) # A scalar; beta for the layer. Ex: 1.0. 
                 # TODO: The following line must be reworked to accomodate multiple agent types
-                #rel_trans, rel_sus = znu.compute_trans_sus(prel_trans, prel_sus, inf_variant, sus, beta_layer, viral_load, symp, diag, quar, asymp_factor, iso_factor, quar_factor, sus_imm)
+                # NOTE: I think this step might be better done in the subrosters so the pars can vary by agent type
+                #rel_trans, rel_sus = znu.compute_trans_sus(prel_trans, prel_sus, inf_variant, sus, beta_layer, viral_load, symp, quar, asymp_factor, quar_factor, sus_imm)
 
                 # NOTE: Temporary work around for dev purposes only
                 rel_trans = self.agents['rel_trans'] # NOTE: for development only

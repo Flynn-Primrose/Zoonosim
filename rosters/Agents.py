@@ -36,9 +36,11 @@ class AgentsMeta(sc.prettyobj):
         ]
 
         self.states = [ # all boolean
+            'symptomatic', #?
             'susceptible', #?
             'exposed', #?
             'infectious', #?
+            'quarantined'
 
         ]
 
@@ -149,6 +151,7 @@ class Agents(Roster):
         for key,value in kwargs.items():
             if key not in ['human', 'flock', 'barn', 'water']: # These are handled separately
                 if strict:
+
                     self.set(key, value)
                 else:
                     self[key] = value
@@ -201,29 +204,37 @@ class Agents(Roster):
         return self.contacts
     
     def update_states_from_subrosters(self):
-        susceptible_human_uids = np.array(self.human['uid'][self.human['susceptible']==True])
-        exposed_human_uids = np.array(self.human['uid'][self.human['exposed']==True])
-        infectious_human_uids = np.array(self.human['uid'][self.human['infectious']==True])
+        susceptible_human_uids = np.array(self.human['uid'][znu.true(self.human['susceptible'])])
+        exposed_human_uids = np.array(self.human['uid'][znu.true(self.human['exposed'])])
+        infectious_human_uids = np.array(self.human['uid'][znu.true(self.human['infectious'])])
+        symptomatic_human_uids = np.array(self.human['uid'][znu.true(self.human['symptomatic'])])
+        quarantined_human_uids = np.array(self.human['uid'][znu.true(self.human['quarantined'])])
 
-        susceptible_flock_uids = np.array(self.flock['uid'][self.flock['susceptible']==True])
-        exposed_flock_uids = np.array(self.flock['uid'][self.flock['exposed']==True])
-        infectious_flock_uids = np.array(self.flock['uid'][self.flock['infectious']==True])
+        susceptible_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['susceptible'])])
+        exposed_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['exposed'])])
+        infectious_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['infectious'])])
+        symptomatic_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['symptomatic'])])
+        quarantined_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['quarantined'])])
 
-        susceptible_barn_uids = np.array(self.barn['uid'][self.barn['contaminated']==False])
-        exposed_barn_uids = np.array(self.barn['uid'][self.barn['contaminated']==True])
-        infectious_barn_uids = np.array(self.barn['uid'][self.barn['contaminated']==True])
+        susceptible_barn_uids = np.array(self.barn['uid'][znu.false(self.barn['contaminated'])])
+        exposed_barn_uids = np.array(self.barn['uid'][znu.true(self.barn['contaminated'])])
+        infectious_barn_uids = np.array(self.barn['uid'][znu.true(self.barn['contaminated'])])
 
-        susceptible_water_uids = np.array(self.water['uid'][self.water['contaminated']==False])
-        exposed_water_uids = np.array(self.water['uid'][self.water['contaminated']==True])
-        infectious_water_uids = np.array(self.water['uid'][self.water['contaminated']==True])
+        susceptible_water_uids = np.array(self.water['uid'][znu.false(self.water['contaminated'])])
+        exposed_water_uids = np.array(self.water['uid'][znu.true(self.water['contaminated'])])
+        infectious_water_uids = np.array(self.water['uid'][znu.true(self.water['contaminated'])])
 
         susceptible_uids = np.concatenate((susceptible_human_uids, susceptible_flock_uids, susceptible_barn_uids, susceptible_water_uids))
         exposed_uids = np.concatenate((exposed_human_uids, exposed_flock_uids, exposed_barn_uids, exposed_water_uids))
         infectious_uids = np.concatenate((infectious_human_uids, infectious_flock_uids, infectious_barn_uids, infectious_water_uids))
+        symptomatic_uids = np.concatenate((symptomatic_human_uids, symptomatic_flock_uids))
+        quarantined_uids = np.concatenate((quarantined_human_uids, quarantined_flock_uids))
 
         self.susceptible = np.isin(self['uid'], susceptible_uids)
         self.exposed = np.isin(self['uid'], exposed_uids)
         self.infectious = np.isin(self['uid'], infectious_uids)
+        self.symptomatic = np.isin(self['uid'], symptomatic_uids)
+        self.quarantined = np.isin(self['uid'], quarantined_uids)
 
         return
 

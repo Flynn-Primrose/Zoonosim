@@ -66,20 +66,22 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['quar_factor']     = None  # Quarantine multiplier on transmissibility and susceptibility; set by reset_layer_pars() below
     pars['quar_period']     = 14  # Number of days to quarantine for. Assumption based on standard policies
 
+    pars['asymp_factor']    = 1.0 #TODO: Refactor so each agent type has a different asymp factor
+
     # Basic disease transmission parameters
     pars['transmission_pars'] = {}
 
     pars['transmission_pars']['human'] = {
         'beta_dist': dict(dist='neg_binomial', par1=1.0, par2=0.45, step=0.01), # Distribution to draw individual level transmissibility; dispersion from https://www.researchsquare.com/article/rs-29548/v1
         'viral_dist':dict(frac_time=0.3, load_ratio=2, high_cap=4), # The time varying viral load (transmissibility); estimated from Lescure 2020, Lancet, https://doi.org/10.1016/S1473-3099(20)30200-0
-        'asymp_factor': 1.0,  # Multiply beta by this factor for asymptomatic cases; no statistically significant difference in transmissibility: https://www.sciencedirect.com/science/article/pii/S1201971220302502
+        #'asymp_factor': 1.0,  # Multiply beta by this factor for asymptomatic cases; no statistically significant difference in transmissibility: https://www.sciencedirect.com/science/article/pii/S1201971220302502
         'enable_vl':True, # Specifies whether we should use the updated viral load calculation; False = use native calculation NOTE: Im note sure how to set this yet
         'viral_levels':dict(min_vl=0.75, max_vl=2) # Specifies the range within which viral load should be scaled so it can contribute to relative transmissibility
     }
 
     pars['transmission_pars']['flock'] = {
         'beta_dist': dict(dist='neg_binomial', par1=1.0, par2=0.45, step=0.01), # NOTE: Dummy variables
-        'asymp_factor': 1.0
+        #'asymp_factor': 1.0
     }
 
     pars['transmission_pars']['barn'] = {

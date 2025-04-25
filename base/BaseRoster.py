@@ -95,7 +95,8 @@ class BaseRoster(FlexPretty):
 
     def __len__(self):
         ''' This is just a scalar, but validate() and _resize_arrays() make sure it's right '''
-        return int(self.pars['pop_size'])
+        #return int(self.pars['pop_size'])
+        return len(self.uid) # NOTE: this is probably a lot slower but it's necessary because self.pars['pop_size'] will always equal the size of the total population.
 
 
     def __iter__(self):

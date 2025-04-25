@@ -30,6 +30,7 @@ class FlocksMeta(sc.prettyobj):
             'exposed',
             'infectious',
             'symptomatic',
+            'quarantined'
         ]
 
         self.variant_states = [

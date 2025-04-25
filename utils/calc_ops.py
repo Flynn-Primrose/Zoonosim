@@ -5,15 +5,14 @@ from .. import defaults as znd
 __all__ = ['compute_viral_load', 'compute_trans_sus', 'compute_infections', 'find_contacts']
 
 # Set dtypes -- note, these cannot be changed after import since Numba functions are precompiled
-nbbool  = nb.bool_
+nbbool  = znd.nbbool
 nbint   = znd.nbint
 nbfloat = znd.nbfloat
 
 # Specify whether to allow parallel Numba calculation -- 10% faster for safe and 20% faster for random, but the random number stream becomes nondeterministic for the latter
-safe_opts = [1, '1', 'safe'] # TODO: Move this to config
-full_opts = [2, '2', 'full'] # TODO: Move this to config
-safe_parallel = znd.numba_parallel in safe_opts + full_opts
-rand_parallel = znd.numba_parallel in full_opts
+
+safe_parallel = znd.numba_parallel in znd.safe_opts + znd.full_opts
+rand_parallel = znd.numba_parallel in znd.full_opts
 if znd.numba_parallel not in [0, 1, 2, '0', '1', '2', 'none', 'safe', 'full']:
     errormsg = f'Numba parallel must be "none", "safe", or "full", not "{znd.numba_parallel}"'
     raise ValueError(errormsg)
@@ -62,13 +61,12 @@ def compute_viral_load(t,       x_p1,       y_p1,       x_p2,       y_p2,       
     return vl
 
 # jit means you let Numba's combiler optimize this function. 
-@nb.njit(            (nbfloat[:], nbfloat[:], nbbool[:], nbbool[:], nbfloat,    nbfloat[:], nbbool[:], nbbool[:], nbbool[:], nbfloat,      nbfloat,    nbfloat,     nbfloat[:]), cache=cache, parallel=safe_parallel)
-def compute_trans_sus(rel_trans,  rel_sus,    inf,       sus,       beta_layer, viral_load, symp,      iso,      quar,      asymp_factor, iso_factor, quar_factor, immunity_factors): # pragma: no cover
+@nb.njit(            (nbfloat[:], nbfloat[:], nbbool[:], nbbool[:], nbfloat,    nbfloat[:], nbbool[:], nbbool[:], nbfloat,  nbfloat,     nbfloat[:]), cache=cache, parallel=safe_parallel)
+def compute_trans_sus(rel_trans,  rel_sus,    inf,       sus,       beta_layer, viral_load, symp,      quar,      asymp_factor,  quar_factor, immunity_factors): # pragma: no cover
     ''' Calculate relative transmissibility and susceptibility '''
     f_asymp   =  symp + ~symp * asymp_factor # Asymptomatic factor, changes e.g. [0,1] with a factor of 0.8 to [0.8,1.0]
-    f_iso     = ~iso +  iso * iso_factor # Isolation factor, changes e.g. [0,1] with a factor of 0.2 to [1,0.2]
     f_quar    = ~quar +  quar * quar_factor # Quarantine, changes e.g. [0,1] with a factor of 0.5 to [1,0.5] 
-    rel_trans = rel_trans * inf * f_quar * f_asymp * f_iso * beta_layer * viral_load # Recalculate transmissibility
+    rel_trans = rel_trans * inf * f_quar * f_asymp * beta_layer * viral_load # Recalculate transmissibility
     rel_sus   = rel_sus * sus * f_quar * (1-immunity_factors) # Recalculate susceptibility 
     return rel_trans, rel_sus
 

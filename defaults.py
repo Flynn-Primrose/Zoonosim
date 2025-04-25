@@ -22,9 +22,13 @@ default_float = np.float64
 default_int   = np.int64
 nbfloat       = nb.float64
 nbint         = nb.int64
+nbbool        = nb.bool_
 
 verbose = 0.1
 warnings = 'warn' # must be one of 'warn', 'print', or 'error'
+
+safe_opts = [1, '1', 'safe'] 
+full_opts = [2, '2', 'full'] 
 
 numba_parallel = str(os.getenv('ZOONOSIM_NUMBA_PARALLEL', 'none'))
 numba_cache = bool(int(os.getenv('ZOONOSIM_NUMBA_CACHE', 1)))
