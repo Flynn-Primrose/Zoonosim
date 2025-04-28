@@ -336,8 +336,6 @@ def check_immunity(people, variant):
         for num,key in vx_map.items():
             imm_arr[num] = vx_pars[key][var_key]
         imm[is_vacc] = imm_arr[vacc_source]
-    print(len(current_nabs))
-    print(len(imm))
     current_nabs *= imm
     people.sus_imm[variant,:]  = calc_VE(current_nabs, 'sus',  nab_eff)
     people.symp_imm[variant,:] = calc_VE(current_nabs, 'symp', nab_eff)

@@ -21,6 +21,7 @@ class WaterMeta(sc.prettyobj):
         ]
 
         self.states = [
+            'clean',
             'contaminated'
         ]
 
@@ -274,10 +275,10 @@ class Water(Subroster):
             source = source[unique]
 
         # Keep only susceptibles
-        keep = self.susceptible[inds] # Unique indices in inds and source that are also susceptible
-        inds = inds[keep]
-        if source is not None:
-            source = source[keep]
+        #keep = self.susceptible[inds] # Unique indices in inds and source that are also susceptible
+        #inds = inds[keep]
+        #if source is not None:
+        #    source = source[keep]
 
         # Deal with variant parameters
         variant_label = self.pars['variant_map'][variant]
@@ -287,11 +288,11 @@ class Water(Subroster):
 
 
         # Update states, variant info, and flows
-        self.susceptible[inds]    = False
-        self.exposed_variant[inds] = variant
-        self.exposed_by_variant[variant, inds] = True
-        self.flows['new_water_contaminated']   += len(inds)
-        self.flows_variant['new_water_contaminated_by_variant'][variant] += len(inds)
+        #self.susceptible[inds]    = False
+        self.contaminated_variant[inds] = variant
+        self.contaminated_by_variant[variant, inds] = True
+        self.flows['new_contaminated']   += len(inds)
+        self.flows_variant['new_contaminated_by_variant'][variant] += len(inds)
 
         # Record transmissions
         for i, target in enumerate(inds):
@@ -299,9 +300,9 @@ class Water(Subroster):
             self.infection_log.append(entry)
 
         # Calculate how long before this person can infect other people
-        self.dur_exp2inf[inds] = znu.sample(**durpars['exp2inf'], size=n_infections)
-        self.date_exposed[inds] = self.t
-        self.date_infectious[inds] = self.dur_exp2inf[inds] + self.t
+        self.dur_contamination[inds] = znu.sample(**durpars['contamination'], size=n_infections)
+        self.date_contaminated[inds] = self.t
+        self.date_clean[inds] = self.dur_contamination[inds] + self.t
 
         # Reset all other dates
 

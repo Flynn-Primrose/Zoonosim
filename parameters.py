@@ -67,6 +67,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['quar_period']     = 14  # Number of days to quarantine for. Assumption based on standard policies
 
     pars['asymp_factor']    = 1.0 #TODO: Refactor so each agent type has a different asymp factor
+    pars['beta'] = 0.016 # NOTE: Carryover value from covasim. TODO: Refactor so all agent types have a different beta.
 
     # Basic disease transmission parameters
     pars['transmission_pars'] = {}
@@ -100,6 +101,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     } 
 
     pars['n_variants'] = 1 # The number of variants circulating in the population
+
 
     # Parameters used to calculate immunity
     pars['immunity_pars'] = {}

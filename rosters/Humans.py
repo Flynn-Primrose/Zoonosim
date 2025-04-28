@@ -58,8 +58,11 @@ class HumanMeta(sc.prettyobj):
 
         # Variant states -- these are ints, by variant
         self.by_variant_states = [
+            'symptomatic_by_variant',
             'exposed_by_variant',
             'infectious_by_variant',
+            'infections_by_variant',
+            'severe_by_variant'
         ]
 
         # Immune states, by variant
@@ -459,6 +462,7 @@ class Humans(Subroster):
 
         Args:
             inds     (array): array of people to infect
+            hosp_max (bool): are all the hospital beds occupied
             source   (array): source indices of the people who transmitted this infection (None if an importation or seed infection)
             layer    (str):   contact layer this infection was transmitted on
             variant  (int):   the variant people are being infected by
@@ -508,9 +512,9 @@ class Humans(Subroster):
         self.n_breakthroughs[breakthrough_inds] += 1
         self.exposed_variant[inds] = variant
         self.exposed_by_variant[variant, inds] = True
-        self.flows['new_human_infections']   += len(inds)
-        self.flows['new_human_reinfections'] += len(znu.defined(self.date_recovered[inds])) # Record reinfections
-        self.flows_variant['new_human_infections_by_variant'][variant] += len(inds)
+        self.flows['new_infections']   += len(inds)
+        self.flows['new_reinfections'] += len(znu.defined(self.date_recovered[inds])) # Record reinfections
+        self.flows_variant['new_infections_by_variant'][variant] += len(inds)
 
         # Record transmissions
         for i, target in enumerate(inds):
@@ -563,41 +567,41 @@ class Humans(Subroster):
         
 
         # CASE 2.2.1: Did not die
-        dur_crit2rec = znu.sample(**durpars['sev2rec'], size=len(alive_inds))
-        self.date_recovered[alive_inds] = self.date_critical[alive_inds] + dur_crit2rec # Date they recover
-        self.dur_disease[alive_inds] = self.dur_exp2inf[alive_inds] + self.dur_inf2sym[alive_inds] + self.dur_sym2sev[alive_inds] + self.dur_sev2crit[alive_inds] + dur_crit2rec  # Store how long this person had COVID-19
+        dur_sev2rec = znu.sample(**durpars['sev2rec'], size=len(alive_inds))
+        self.date_recovered[alive_inds] = self.date_severe[alive_inds] + dur_sev2rec # Date they recover
+        self.dur_disease[alive_inds] = self.dur_exp2inf[alive_inds] + self.dur_inf2sym[alive_inds] + self.dur_sym2sev[alive_inds] + self.dur_sev2crit[alive_inds] + dur_sev2rec  # Store how long this person had COVID-19
 
         # CASE 2.2.2: Did die
-        dur_crit2die = znu.sample(**durpars['sev2die'], size=len(dead_inds))
-        self.date_dead[dead_inds] = self.date_critical[dead_inds] + dur_crit2die # Date of death
-        self.dur_disease[dead_inds] = self.dur_exp2inf[dead_inds] + self.dur_inf2sym[dead_inds] + self.dur_sym2sev[dead_inds] + self.dur_sev2crit[dead_inds] + dur_crit2die   # Store how long this person had COVID-19
+        dur_sev2die = znu.sample(**durpars['sev2die'], size=len(dead_inds))
+        self.date_dead[dead_inds] = self.date_severe[dead_inds] + dur_sev2die # Date of death
+        self.dur_disease[dead_inds] = self.dur_exp2inf[dead_inds] + self.dur_inf2sym[dead_inds] + self.dur_sym2sev[dead_inds] + self.dur_sev2crit[dead_inds] + dur_sev2die   # Store how long this person had COVID-19
         self.date_recovered[dead_inds] = np.nan # If they did die, remove them from recovered
 
         # HANDLE VIRAL LOAD CONTROL POINTS
-        if self.pars['enable_vl']:
-            # Get P_inf: where viral load crosses 10^6 cp/mL
-            self.x_p_inf[inds] = self.dur_exp2inf[inds]
-            self.y_p_inf[inds] = 6
+        
+        # Get P_inf: where viral load crosses 10^6 cp/mL
+        self.x_p_inf[inds] = self.dur_exp2inf[inds]
+        self.y_p_inf[inds] = 6
 
-            # Get P1: where viral load crosses 10^3 cp/mL; time difference obtained empirically through simulation
-            self.x_p1[inds] = np.maximum(self.x_p_inf[inds] - (np.random.gamma(2, 0.35, size=len(inds)) + 0.25), 0)
-            self.y_p1[inds] = 3
+        # Get P1: where viral load crosses 10^3 cp/mL; time difference obtained empirically through simulation
+        self.x_p1[inds] = np.maximum(self.x_p_inf[inds] - (np.random.gamma(2, 0.35, size=len(inds)) + 0.25), 0)
+        self.y_p1[inds] = 3
 
-            # Get P2: where viral load peaks; time difference obtained empirically through simulation
-            self.x_p2[inds] = self.x_p_inf[inds] + (np.random.gamma(3, 0.26, size=len(inds)) + 0.1)
-            self.y_p2[inds] = ((self.y_p_inf[inds] - self.y_p1[inds])*(self.x_p2[inds] - self.x_p1[inds])/(self.x_p_inf[inds] - self.x_p1[inds])) + self.y_p1[inds]
+        # Get P2: where viral load peaks; time difference obtained empirically through simulation
+        self.x_p2[inds] = self.x_p_inf[inds] + (np.random.gamma(3, 0.26, size=len(inds)) + 0.1)
+        self.y_p2[inds] = ((self.y_p_inf[inds] - self.y_p1[inds])*(self.x_p2[inds] - self.x_p1[inds])/(self.x_p_inf[inds] - self.x_p1[inds])) + self.y_p1[inds]
 
-            # Align P1, P_inf, and P2 to current time
-            self.x_p1[inds] = self.x_p1[inds] + self.t
-            self.x_p_inf[inds] = self.x_p_inf[inds] + self.t
-            self.x_p2[inds] = self.x_p2[inds] + self.t
+        # Align P1, P_inf, and P2 to current time
+        self.x_p1[inds] = self.x_p1[inds] + self.t
+        self.x_p_inf[inds] = self.x_p_inf[inds] + self.t
+        self.x_p2[inds] = self.x_p2[inds] + self.t
 
-            # Get P3: where viral load drops below 10^6 cp/mL
-            time_recovered = np.ones(len(self.date_recovered), dtype=znd.default_float)*self.date_recovered # This is needed to make a copy
-            inds_dead = ~np.isnan(self.date_dead)
-            time_recovered[inds_dead] = self.date_dead[inds_dead]
-            self.x_p3[inds] = np.maximum(time_recovered[inds], self.x_p2[inds])
-            self.y_p3[inds] = 6
+        # Get P3: where viral load drops below 10^6 cp/mL
+        time_recovered = np.ones(len(self.date_recovered), dtype=znd.default_float)*self.date_recovered # This is needed to make a copy
+        inds_dead = ~np.isnan(self.date_dead)
+        time_recovered[inds_dead] = self.date_dead[inds_dead]
+        self.x_p3[inds] = np.maximum(time_recovered[inds], self.x_p2[inds])
+        self.y_p3[inds] = 6
 
             # # For testing purposes
             # if self.t < self.pars['x_p1'].shape[1]:

@@ -57,60 +57,42 @@ def get_default_colors():
     # TODO: add colours as needed
     c.default = '#000000' # Default colour (black)
     # Stocks
-    c.susceptible_humans = '#00FF00' # Green
-    c.exposed_humans = '#FFFF00' # Yellow
-    c.infectious_humans = '#FF0000' # Red
-    c.symptomatic_humans = '#FF8000' # Orange
-    c.severe_humans = '#800000' # Dark red
-    c.recovered_humans = '#00FFFF' # Cyan
-    c.dead_humans = '#0000FF' # Blue
-    c.susceptible_flocks = '#00FF00' # Green
-    c.exposed_flocks = '#FFFF00' # Yellow
-    c.infectious_flocks = '#FF0000' # Red
-    c.symptomatic_flocks = '#FF8000' # Orange
-    c.severe_flocks = '#800000' # Dark red
-    c.contaminated_barns = '#00FFFF' # Cyan
-    c.contaminated_water = '#0000FF' # Blue
+    c.susceptible = '#00FF00' # Green
+    c.exposed = '#FFFF00' # Yellow
+    c.infectious = '#FF0000' # Red
+    c.symptomatic = '#FF8000' # Orange
+    c.severe = '#800000' # Dark red
+    c.recovered = '#00FFFF' # Cyan
+    c.dead = '#0000FF' # Blue
+    c.contaminated = '#00FFFF' # Cyan
+
     # Stocks by variant
-    c.exposed_by_variant_humans = '#FFFF00' # Yellow
-    c.infectious_by_variant_humans = '#FF0000' # Red
-    c.symptomatic_by_variant_humans = '#FF8000' # Orange
-    c.severe_by_variant_humans = '#800000' # Dark red
-    c.exposed_by_variant_flocks = '#FFFF00' # Yellow
-    c.infectious_by_variant_flocks = '#FF0000' # Red
-    c.symptomatic_by_variant_flocks = '#FF8000' # Orange
-    c.severe_by_variant_flocks = '#800000' # Dark red
+    c.exposed_by_variant = '#FFFF00' # Yellow
+    c.infectious_by_variant = '#FF0000' # Red
+    c.symptomatic_by_variant = '#FF8000' # Orange
+    c.severe_by_variant = '#800000' # Dark red
     c.contaminated_by_variant_barns = '#00FFFF' # Cyan
-    c.contaminated_by_variant_water = '#0000FF' # Blue
     # Flows
-    c.human_reinfections = '#FF00FF' # Magenta
-    c.human_infections = '#FF00FF' # Magenta
-    c.human_infectious = '#FF00FF' # Magenta
-    c.human_symptomatic = '#FF00FF' # Magenta
-    c.human_severe = '#FF00FF' # Magenta
-    c.human_recoveries = '#FF00FF' # Magenta
-    c.human_deaths = '#FF00FF' # Magenta
-    c.human_tests = '#FF00FF' # Magenta
-    c.human_diagnoses = '#FF00FF' # Magenta
-    c.human_known_deaths = '#FF00FF' # Magenta
-    c.human_quarantined = '#FF00FF' # Magenta
-    c.human_doses = '#FF00FF' # Magenta
-    c.human_vaccinated = '#FF00FF' # Magenta
-    c.flock_infections = '#FF00FF' # Magenta
-    c.flock_infectious = '#FF00FF' # Magenta
-    c.flock_symptomatic = '#FF00FF' # Magenta
-    c.barn_contaminated = '#FF00FF' # Magenta
-    c.water_contaminated = '#FF00FF' # Magenta
+    c.reinfections = '#FF00FF' # Magenta
+    c.infections = '#FF00FF' # Magenta
+    c.infectious = '#FF00FF' # Magenta
+    c.symptomatic = '#FF00FF' # Magenta
+    c.severe = '#FF00FF' # Magenta
+    c.recoveries = '#FF00FF' # Magenta
+    c.deaths = '#FF00FF' # Magenta
+    c.tests = '#FF00FF' # Magenta
+    c.diagnoses = '#FF00FF' # Magenta
+    c.known_deaths = '#FF00FF' # Magenta
+    c.quarantined = '#FF00FF' # Magenta
+    c.doses = '#FF00FF' # Magenta
+    c.vaccinated = '#FF00FF' # Magenta
     # Flows by variant
-    c.human_infections_by_variant = '#FF00FF' # Magenta
-    c.human_symptomatic_by_variant = '#FF00FF' # Magenta
-    c.human_severe_by_variant = '#FF00FF' # Magenta
-    c.human_infectious_by_variant = '#FF00FF' # Magenta
-    c.flock_infections_by_variant = '#FF00FF' # Magenta
-    c.flock_infectious_by_variant = '#FF00FF' # Magenta
-    c.flock_symptomatic_by_variant = '#FF00FF' # Magenta
-    c.barn_contaminated_by_variant = '#FF00FF' # Magenta
-    c.water_contaminated_by_variant = '#FF00FF' # Magenta
+    c.infections_by_variant = '#FF00FF' # Magenta
+    c.symptomatic_by_variant = '#FF00FF' # Magenta
+    c.severe_by_variant = '#FF00FF' # Magenta
+    c.infectious_by_variant = '#FF00FF' # Magenta
+    c.infections_by_variant = '#FF00FF' # Magenta
+    c.contaminated_by_variant = '#FF00FF' # Magenta
     return c
 
 # Parameters that can vary by variant
@@ -152,131 +134,131 @@ default_water_prognoses = dict(
 # tracked stocks and flows -- used in sim.py; value is the label suffix
 
 human_stocks = {
-    'susceptible_humans': 'Number of susceptible humans',
-    'exposed_humans':    'Number of exposed humans',
-    'infectious_humans':   'Number of infectious humans',
-    'symptomatic_humans':  'Number of symptomatic humans',
-    'severe_humans':       'Number of severe humans',
-    'recovered_humans':    'Number of recovered humans',
-    'dead_humans':         'Number of dead humans',
+    'susceptible': 'Number of susceptible humans',
+    'exposed':    'Number of exposed humans',
+    'infectious':   'Number of infectious humans',
+    'symptomatic':  'Number of symptomatic humans',
+    'severe':       'Number of severe humans',
+    'recovered':    'Number of recovered humans',
+    'dead':         'Number of dead humans',
 }
 
 flock_stocks = {
-    'susceptible_flocks': 'Number of susceptible flocks',
-    'exposed_flocks':     'Number of exposed flocks',
-    'infectious_flocks':  'Number of infectious flocks',
-    'symptomatic_flocks': 'Number of symptomatic flocks',
+    'susceptible': 'Number of susceptible flocks',
+    'exposed':     'Number of exposed flocks',
+    'infectious':  'Number of infectious flocks',
+    'symptomatic': 'Number of symptomatic flocks',
 }
 
 barn_stocks = {
-    'contaminated_barns': 'Number of contaminated barns',
+    'contaminated': 'Number of contaminated barns',
 }
 
 water_stocks = {
-    'contaminated_water': 'Number of contaminated waters',
+    'contaminated': 'Number of contaminated waters',
 }
 
-all_stocks = {**human_stocks, **flock_stocks, **barn_stocks, **water_stocks}
+#all_stocks = {**human_stocks, **flock_stocks, **barn_stocks, **water_stocks}
 
 human_stocks_by_variant = {
-    'exposed_by_variant_humans':    'Number exposed humans by variant',
-    'infectious_by_variant_humans': 'Number infectious humans by variant',
-    'symptomatic_by_variant_humans': 'Number symptomatic humans by variant',
-    'severe_by_variant_humans':      'Number severe humans by variant',
+    'exposed_by_variant':    'Number exposed humans by variant',
+    'infectious_by_variant': 'Number infectious humans by variant',
+    'symptomatic_by_variant': 'Number symptomatic humans by variant',
+    'severe_by_variant':      'Number severe humans by variant',
 }
 
 flock_stocks_by_variant = {
-    'exposed_by_variant_flocks':     'Number exposed flocks by variant',
-    'infectious_by_variant_flocks':  'Number infectious flocks by variant',
-    'symptomatic_by_variant_flocks': 'Number symptomatic flocks by variant',
+    'exposed_by_variant':     'Number exposed flocks by variant',
+    'infectious_by_variant':  'Number infectious flocks by variant',
+    'symptomatic_by_variant': 'Number symptomatic flocks by variant',
 }
 
 
 barn_stocks_by_variant = {
-    'contaminated_by_variant_barns': 'Number contaminated barns by variant',
+    'contaminated_by_variant': 'Number contaminated barns by variant',
 }
 
 water_stocks_by_variant = {
-    'contaminated_by_variant_water': 'Number contaminated water by variant',
+    'contaminated_by_variant': 'Number contaminated water by variant',
 }
 
-all_stocks_by_variant = {**human_stocks_by_variant, **flock_stocks_by_variant, **barn_stocks_by_variant, **water_stocks_by_variant}
+#all_stocks_by_variant = {**human_stocks_by_variant, **flock_stocks_by_variant, **barn_stocks_by_variant, **water_stocks_by_variant}
 
 
 # The types of result that are counted as flows -- used in sim.py; value is the label suffix
 human_flows = {
-    'human_reinfections': 'reinfections',
-    'human_infections':   'infections',
-    'human_infectious':   'infectious',
-    'human_symptomatic':  'symptomatic cases',
-    'human_severe':       'severe cases',
-    'human_recoveries':   'recoveries',
-    'human_deaths':       'deaths',
-    'human_tests':        'tests',
-    'human_diagnoses':    'diagnoses',
-    'human_known_deaths': 'known deaths',
-    'human_quarantined':  'quarantines started',
-    'human_doses':        'vaccine doses',
-    'human_vaccinated':   'vaccinated people'
+    'reinfections': 'human reinfections',
+    'infections':   'human infections',
+    'infectious':   'infectious humans',
+    'symptomatic':  'symptomatic human cases',
+    'severe':       'severe human cases',
+    'recoveries':   'human recoveries',
+    'deaths':       'human deaths',
+    'tests':        'human tests',
+    'diagnoses':    'human diagnoses',
+    'known_deaths': 'known human deaths',
+    'quarantined':  'human quarantines started',
+    'doses':        'human vaccine doses',
+    'vaccinated':   'vaccinated humans'
 }
 new_human_flows = [f'new_{key}' for key in human_flows.keys()]
 cum_human_flows = [f'cum_{key}' for key in human_flows.keys()]
 
 flock_flows = {
-    'flock_infections':   'infections',
-    'flock_infectious':   'infectious',
-    'flock_symptomatic':  'symptomatic cases',
+    'infections':   'flock infections',
+    'infectious':   'infectious flocks',
+    'symptomatic':  'symptomatic flock cases',
 }
 new_flock_flows = [f'new_{key}' for key in flock_flows.keys()]
 cum_flock_flows = [f'cum_{key}' for key in flock_flows.keys()]
 
 barn_flows = {
-    'barn_contaminated': 'contaminated',
+    'contaminated': 'contaminated barns',
 }
 new_barn_flows = [f'new_{key}' for key in barn_flows.keys()]
 cum_barn_flows = [f'cum_{key}' for key in barn_flows.keys()]
 
 water_flows = {
-    'water_contaminated': 'contaminated',
+    'contaminated': 'contaminated waterbodies',
 }
 new_water_flows = [f'new_{key}' for key in water_flows.keys()]
 cum_water_flows = [f'cum_{key}' for key in water_flows.keys()]
 
-all_flows = {**human_flows, **flock_flows, **barn_flows, **water_flows}
+#all_flows = {**human_flows, **flock_flows, **barn_flows, **water_flows}
 
 human_flows_by_variant = {
-    'human_infections_by_variant':  'infections by variant',
-    'human_symptomatic_by_variant': 'symptomatic by variant',
-    'human_severe_by_variant':      'severe by variant',
-    'human_infectious_by_variant':  'infectious by variant',
+    'infections_by_variant':  'human infections by variant',
+    'symptomatic_by_variant': 'symptomatic humans by variant',
+    'severe_by_variant':      'severe humans by variant',
+    'infectious_by_variant':  'infectious humans by variant',
 }
 new_human_flows_by_variant = [f'new_{key}' for key in human_flows_by_variant.keys()]
 cum_human_flows_by_variant = [f'cum_{key}' for key in human_flows_by_variant.keys()]
 
 flock_flows_by_variant = {
-    'flock_infections_by_variant':  'infections by variant',
-    'flock_infectious_by_variant':  'infectious by variant',
-    'flock_symptomatic_by_variant': 'symptomatic by variant',
+    'infections_by_variant':  'flock infections by variant',
+    'infectious_by_variant':  'infectious flocks by variant',
+    'symptomatic_by_variant': 'symptomatic flocks by variant',
 }
 new_flock_flows_by_variant = [f'new_{key}' for key in flock_flows_by_variant.keys()]
 cum_flock_flows_by_variant = [f'cum_{key}' for key in flock_flows_by_variant.keys()]
 
 barn_flows_by_variant = {
-    'barn_contaminated_by_variant': 'contaminated by variant',
+    'contaminated_by_variant': 'contaminated barns by variant',
 }
 new_barn_flows_by_variant = [f'new_{key}' for key in barn_flows_by_variant.keys()]
 cum_barn_flows_by_variant = [f'cum_{key}' for key in barn_flows_by_variant.keys()]
 
 water_flows_by_variant = {
-    'water_contaminated_by_variant': 'contaminated by variant',
+    'contaminated_by_variant': 'contaminated waterbodies by variant',
 }
 new_water_flows_by_variant = [f'new_{key}' for key in water_flows_by_variant.keys()]
 cum_water_flows_by_variant = [f'cum_{key}' for key in water_flows_by_variant.keys()]
 
-all_flows_by_variant = {**human_flows_by_variant, **flock_flows_by_variant, **barn_flows_by_variant, **water_flows_by_variant}
+#all_flows_by_variant = {**human_flows_by_variant, **flock_flows_by_variant, **barn_flows_by_variant, **water_flows_by_variant}
 
 # Define new and cumulative flows
-new_result_flows = [f'new_{key}' for key in all_flows.keys()]
-cum_result_flows = [f'cum_{key}' for key in all_flows.keys()]
-new_result_flows_by_variant = [f'new_{key}' for key in all_flows_by_variant.keys()]
-cum_result_flows_by_variant = [f'cum_{key}' for key in all_flows_by_variant.keys()]
+#new_result_flows = [f'new_{key}' for key in all_flows.keys()]
+#cum_result_flows = [f'cum_{key}' for key in all_flows.keys()]
+#new_result_flows_by_variant = [f'new_{key}' for key in all_flows_by_variant.keys()]
+#cum_result_flows_by_variant = [f'cum_{key}' for key in all_flows_by_variant.keys()]

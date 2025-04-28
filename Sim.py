@@ -286,16 +286,43 @@ class Sim(znb.BaseSim):
 
         # Flows and cumulative flows
 
-        for key,label in znd.all_flows.items():
-            self.results[f'cum_{key}'] = init_res(f'Cumulative {label}', color=dcols[key])  # Cumulative variables -- e.g. "Cumulative infections"
+        for key,label in znd.human_flows.items():
+            self.results[f'cum_human_{key}'] = init_res(f'Cumulative {label}', color=dcols[key])  # Cumulative variables -- e.g. "Cumulative infections"
 
-        for key,label in znd.all_flows.items(): # Repeat to keep all the cumulative keys together
-            self.results[f'new_{key}'] = init_res(f'Number of new {label}', color=dcols[key]) # Flow variables -- e.g. "Number of new infections"
+        for key,label in znd.human_flows.items():
+            self.results[f'new_human_{key}'] = init_res(f'Number of new {label}', color=dcols[key]) # Flow variables -- e.g. "Number of new infections"
+
+        for key,label in znd.flock_flows.items():
+            self.results[f'cum_flock_{key}'] = init_res(f'Cumulative {label}', color=dcols[key])
+
+        for key,label in znd.flock_flows.items():
+            self.results[f'new_flock_{key}'] = init_res(f'Number of new {label}', color=dcols[key])
+
+        for key,label in znd.barn_flows.items():
+            self.results[f'cum_barn_{key}'] = init_res(f'Cumulative {label}', color=dcols[key])
+
+        for key,label in znd.barn_flows.items():
+            self.results[f'new_barn_{key}'] = init_res(f'Number of new {label}', color=dcols[key])
+
+        for key,label in znd.water_flows.items():
+            self.results[f'cum_barn_{key}'] = init_res(f'Cumulative {label}', color=dcols[key])
+
+        for key,label in znd.water_flows.items():
+            self.results[f'new_water_{key}'] = init_res(f'Number of new {label}', color=dcols[key])
 
         # Stock variables
 
-        for key,label in znd.all_stocks.items():
-            self.results[f'n_{key}'] = init_res(label, color=dcols[key])
+        for key,label in znd.human_stocks.items():
+            self.results[f'n_human_{key}'] = init_res(label, color=dcols[key])
+
+        for key,label in znd.flock_stocks.items():
+            self.results[f'n_flock_{key}'] = init_res(label, color=dcols[key])
+
+        for key,label in znd.barn_stocks.items():
+            self.results[f'n_barn_{key}'] = init_res(label, color=dcols[key])
+
+        for key,label in znd.water_stocks.items():
+            self.results[f'n_water_{key}'] = init_res(label, color=dcols[key])
 
 
         # Other variables
@@ -309,15 +336,46 @@ class Sim(znb.BaseSim):
 
         nv = self['n_variants']
         self.results['variant'] = {}
-        self.results['variant']['prevalence_by_variant'] = init_res('Prevalence by variant', scale=False, n_variants=nv)
-        self.results['variant']['incidence_by_variant']  = init_res('Incidence by variant', scale=False, n_variants=nv)
-        for key,label in znd.all_flows_by_variant.items():
-            self.results['variant'][f'cum_{key}'] = init_res(f'Cumulative {label}', color=dcols[key], n_variants=nv)  # Cumulative variables -- e.g. "Cumulative infections"
-        for key,label in znd.all_flows_by_variant.items():
-            self.results['variant'][f'new_{key}'] = init_res(f'Number of new {label}', color=dcols[key], n_variants=nv) # Flow variables -- e.g. "Number of new infections"
-        for key,label in znd.all_stocks_by_variant.items():
-            self.results['variant'][f'n_{key}'] = init_res(label, color=dcols[key], n_variants=nv)
+        #self.results['variant']['prevalence_by_variant'] = init_res('Prevalence by variant', scale=False, n_variants=nv)
+        #self.results['variant']['incidence_by_variant']  = init_res('Incidence by variant', scale=False, n_variants=nv)
+        for key,label in znd.human_flows_by_variant.items():
+            self.results['variant'][f'cum_human_{key}'] = init_res(f'Cumulative {label}', color=dcols[key], n_variants=nv)  # Cumulative variables -- e.g. "Cumulative infections"
 
+        for key,label in znd.flock_flows_by_variant.items():
+            self.results['variant'][f'cum_flock_{key}'] = init_res(f'Cumulative {label}', color=dcols[key], n_variants=nv )
+
+        for key,label in znd.barn_flows_by_variant.items():
+            self.results['variant'][f'cum_barn_{key}'] = init_res(f'Cumulative {label}', color=dcols[key], n_variants=nv )
+
+        for key,label in znd.water_flows_by_variant.items():
+            self.results['variant'][f'cum_water_{key}'] = init_res(f'Cumulative {label}', color=dcols[key], n_variants=nv )
+
+
+
+        for key,label in znd.human_flows_by_variant.items():
+            self.results['variant'][f'new_human_{key}'] = init_res(f'Number of new {label}', color=dcols[key], n_variants=nv) # Flow variables -- e.g. "Number of new infections"
+
+        for key,label in znd.flock_flows_by_variant.items():
+            self.results['variant'][f'new_flock_{key}'] = init_res(f'Number of new {label}', color=dcols[key], n_variants=nv)
+
+        for key,label in znd.barn_flows_by_variant.items():
+            self.results['variant'][f'new_barn_{key}'] = init_res(f'Number of new {label}', color=dcols[key], n_variants=nv)
+
+        for key,label in znd.water_flows_by_variant.items():
+            self.results['variant'][f'new_water_{key}'] = init_res(f'Number of new {label}', color=dcols[key], n_variants=nv)
+
+
+        for key,label in znd.human_stocks_by_variant.items():
+            self.results['variant'][f'n_human_{key}'] = init_res(label, color=dcols[key], n_variants=nv)
+
+        for key,label in znd.flock_stocks_by_variant.items():
+            self.results['variant'][f'n_flock_{key}'] = init_res(label, color=dcols[key], n_variants=nv)
+
+        for key,label in znd.barn_stocks_by_variant.items():
+            self.results['variant'][f'n_barn_{key}'] = init_res(label, color=dcols[key], n_variants=nv)
+
+        for key,label in znd.water_stocks_by_variant.items():
+            self.results['variant'][f'n_water_{key}'] = init_res(label, color=dcols[key], n_variants=nv)
 
         # Populate the rest of the results
 
@@ -682,22 +740,46 @@ class Sim(znb.BaseSim):
                 # Calculate actual transmission
                 pairs = [[p1,p2]] 
                 for p1,p2 in pairs:
-                    source_inds, target_inds = znu.compute_infections(beta, p1, p2, betas, rel_trans, rel_sus, legacy=self._legacy_trans)  # Calculate transmission!
+                    source_inds, target_inds = znu.compute_infections(beta, p1, p2, betas, rel_trans, rel_sus)  # Calculate transmission!
                     agents.infect(inds=target_inds, hosp_max=hosp_max, source=source_inds, layer=lkey, variant=variant)  # Actually infect people
 
         ##### CALCULATE STATISTICS #####
-        # NOTE: This section cannot be reworked untill we have figured out how to handle the new population structure
+        
+        # Update counts for this time step: Human Stocks
+        for key in znd.human_stocks:
+            self.results[f'n_human_{key}'][t] = agents.human.count(key)
+        
+        # Update counts for this time step: Flock stocks
+        for key in znd.flock_stocks:
+            self.results[f'n_flock_{key}'][t] = agents.flock.count(key)
 
-        # # Update counts for this time step: stocks.
-        # for key in cvd.result_stocks.keys():
-        #     self.results[f'n_{key}'][t] = people.count(key)
+        # Update counts for this time step: Barn stocks
+        for key in znd.barn_stocks:
+            self.results[f'n_barn_{key}'][t] = agents.barn.count(key)
 
-        # for key in cvd.result_stocks_by_variant.keys():
-        #     for variant in range(nv):
-        #         self.results['variant'][f'n_{key}'][variant, t] = people.count_by_variant(key, variant)
+        # Update counts for this time step: Water Stocks
+        for key in znd.water_stocks:
+            self.results[f'n_water_{key}'][t] = agents.water.count(key)
 
-        # # Update stock counts for multi-region.
-        # if self.pars['enable_multiregion']: self.update_results_mr(people)
+        # Update stocks_by_variant: Human
+        for key in znd.human_stocks_by_variant:
+            for variant in range(nv):
+                self.results['variant'][f'n_human_{key}'][variant, t] = agents.human.count_by_variant(key, variant)
+
+        # Update stocks_by_variant: Flock
+        for key in znd.flock_stocks_by_variant:
+            for variant in range(nv):
+                self.results['variant'][f'n_flock_{key}'][variant, t] = agents.flock.count_by_variant(key, variant)
+
+        # Update stocks_by_variant: Barn
+        for key in znd.barn_stocks_by_variant:
+            for variant in range(nv):
+                self.results['variant'][f'n_barn_{key}'][variant, t] = agents.barn.count_by_variant(key, variant)
+        
+        # Update stocks_by_variant: Water
+        for key in znd.water_stocks_by_variant:
+            for variant in range(nv):
+                self.results['variant'][f'n_water_{key}'][variant, t] = agents.water.count_by_variant(key, variant)
         
         # # Update counts for this time step: flows
         # for key,count in people.flows.items():
@@ -716,9 +798,6 @@ class Sim(znb.BaseSim):
         # self.results['pop_nabs'][t]            = np.sum(people.nab[inds_alive[cvu.true(people.nab[inds_alive])]])/len(inds_alive)
         # self.results['pop_protection'][t]      = np.nanmean(people.sus_imm)
         # self.results['pop_symp_protection'][t] = np.nanmean(people.symp_imm)
-        
-
-        # Calculate per-region statistics 
 
         ##### DONE CALCULATING STATISTICS #####
 

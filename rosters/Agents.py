@@ -54,11 +54,17 @@ class AgentsMeta(sc.prettyobj):
             'infectious_by_variant',
         ]
 
+        self.imm_states = [
+            'sus_imm',  # Float, by variant
+            'symp_imm', # Float, by variant
+            'sev_imm',  # Float, by variant
+        ]
 
-        self.all_states = self.agent + self.states +self.variant_states + self.by_variant_states
+
+        self.all_states = self.agent + self.states +self.variant_states + self.by_variant_states + self.imm_states
 
         # Validate
-        self.state_types = ['agent', 'states', 'variant_states', 'by_variant_states', 'all_states']
+        self.state_types = ['agent', 'states', 'variant_states', 'by_variant_states', 'imm_states', 'all_states']
         for state_type in self.state_types:
             states = getattr(self, state_type)
             n_states        = len(states)
@@ -132,13 +138,17 @@ class Agents(Roster):
         for key in self.meta.by_variant_states:
             self[key] = np.full((self.pars['n_variants'], self.pars['pop_size']), False, dtype=bool)
 
+        # Set immunity and antibody states
+        for key in self.meta.imm_states:  # Everyone starts out with no immunity
+            self[key] = np.zeros((self.pars['n_variants'], self.pars['pop_size']), dtype=znd.default_float)
+
         # Store the dtypes used in a flat dict
         self._dtypes = {key:self[key].dtype for key in self.keys()} # Assign all to float by default
         if strict:
             self.lock() # If strict is true, stop further keys from being set (does not affect attributes)
 
         # Store flows to be computed during simulation
-        self.init_flows()
+        #self.init_flows()
 
         # Although we have called init(), we still need to call initialize()
         self.initialized = False
@@ -276,9 +286,42 @@ class Agents(Roster):
     #%% Methods to make events occur (infection and diagnosis)
 
     def infect_type(self, agent_type, inds, update = True):
+        '''
+        Add infections to a specific subroster. Used by init_infections.
+
+        Args:
+            agent_type (str): Which subroster to add the infections to
+            inds (array): Indices of the agents to be infected. NOTE: this refers to the indices in the subroster not the roster
+            update (bool): True means update the roster based on the subrosters 
+        '''
         self[agent_type].infect(inds = inds, layer = 'seed_infections')
         if update: self.update_states_from_subrosters()
         return
+    
+    def infect(self, inds, hosp_max, source, layer, variant):
+
+        #NOTE: do we need a section here that ensures all agents referred to in inds are susceptible
+
+        human_inds = np.where(np.isin(self.human.uid, self.uid[inds]))
+        #human_inds = np.array([i for i, uid in enumerate(self.human.uid) if uid in set(self.uid[inds])]) # Supposedly faster if self.uid[inds] is large
+
+        flock_inds = np.where(np.isin(self.flock.uid, self.uid[inds])) 
+        #flock_inds = np.array([i fo i,uid in enumerate(self.flock.uid) if uid in set(self.uid[inds])])
+
+        barn_inds = np.where(np.isin(self.barn.uid, self.uid[inds]))
+        #barn_inds = np.array([i fo i,uid in enumerate(self.barn.uid) if uid in set(self.uid[inds])])
+
+        water_inds = np.where(np.isin(self.water.uid, self.uid[inds]))
+        #barn_inds = np.array([i fo i,uid in enumerate(self.barn.uid) if uid in set(self.uid[inds])])
+
+        self.human.infect(human_inds, hosp_max, source, layer, variant)
+        self.flock.infect(flock_inds, source, layer, variant)
+        self.barn.infect(barn_inds, source, layer, variant)
+        self.water.infect(water_inds, source, layer, variant)
+
+        self.update_states_from_subrosters()
+        return
+
 
 
     #%% Analysis methods

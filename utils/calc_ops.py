@@ -71,8 +71,8 @@ def compute_trans_sus(rel_trans,  rel_sus,    inf,       sus,       beta_layer, 
     return rel_trans, rel_sus
 
 
-@nb.njit(             (nbfloat,  nbint[:],  nbint[:], nbfloat[:],   nbfloat[:], nbfloat[:], nbbool), cache=cache, parallel=rand_parallel)
-def compute_infections(beta,     p1,        p2,       layer_betas,  rel_trans,  rel_sus,    legacy=False): # pragma: no cover
+@nb.njit(             (nbfloat,  nbint[:],  nbint[:], nbfloat[:],   nbfloat[:], nbfloat[:]), cache=cache, parallel=rand_parallel)
+def compute_infections(beta,     p1,        p2,       layer_betas,  rel_trans,  rel_sus): # pragma: no cover
     '''
     Compute who infects whom
 
@@ -87,11 +87,10 @@ def compute_infections(beta,     p1,        p2,       layer_betas,  rel_trans,  
         layer_betas: per-contact transmissibilities
         rel_trans: the source's relative transmissibility
         rel_sus: the target's relative susceptibility
-        legacy: whether to use the slower legacy (pre 3.1.1) calculation method
     '''
     slist = np.empty(0, dtype=nbint)
     tlist = np.empty(0, dtype=nbint)
-    pairs = [[p1,p2], [p2,p1]] if not legacy else [[p1,p2]]
+    pairs = [[p1,p2], [p2,p1]]
     for sources,targets in pairs:
         source_trans     = rel_trans[sources] # Pull out the transmissibility of the sources (0 for non-infectious people). Cx1 array. 
         inf_inds         = source_trans.nonzero()[0] # Infectious indices -- remove noninfectious people. Smaller array of the non-zero inds.

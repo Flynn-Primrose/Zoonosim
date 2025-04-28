@@ -403,10 +403,10 @@ class Flocks(Subroster):
             source = source[unique]
 
         # Keep only susceptibles
-        keep = self.susceptible[inds] # Unique indices in inds and source that are also susceptible
-        inds = inds[keep]
-        if source is not None:
-            source = source[keep]
+        #keep = self.susceptible[inds] # Unique indices in inds and source that are also susceptible
+        #inds = inds[keep]
+        #if source is not None:
+        #    source = source[keep]
 
         # Deal with variant parameters
         variant_keys = ['rel_symp_prob', 'rel_death_prob']
@@ -424,8 +424,8 @@ class Flocks(Subroster):
         self.exposed[inds]        = True
         self.exposed_variant[inds] = variant
         self.exposed_by_variant[variant, inds] = True
-        self.flows['new_flock_infections']   += len(inds)
-        self.flows_variant['new_flock_infections_by_variant'][variant] += len(inds)
+        self.flows['new_infections']   += len(inds)
+        self.flows_variant['new_infections_by_variant'][variant] += len(inds)
 
         # Record transmissions
         for i, target in enumerate(inds):
