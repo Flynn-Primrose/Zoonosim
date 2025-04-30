@@ -681,11 +681,17 @@ class Sim(znb.BaseSim):
         min_vl = znd.default_float(self['transmission_pars']['human']['viral_levels']['min_vl'])
         max_vl = znd.default_float(self['transmission_pars']['human']['viral_levels']['max_vl'])
 
-        agents.human.viral_load = znu.compute_viral_load(t, x_p1, y_p1, x_p2, y_p2, x_p3, y_p3, min_vl, max_vl)
+        agents.human.viral_load, human_viral_load = znu.compute_viral_load(t, x_p1, y_p1, x_p2, y_p2, x_p3, y_p3, min_vl, max_vl)
 
         # Compute infection levels in flocks
-        # TODO: COmpute infection levels in flocks
+        x_p1, y_p1 = agents.flock.x_p1, agents.flock.y_p1
+        x_p2, y_p2 = agents.flock.x_p2, agents.flock.y_p2
+        x_p3, y_p3 = agents.flock.x_p3, agents.flock.y_p3
+        headcount = agents.flock.headcount
+        agents.flock.infected_headcount, flock_infection_level = znu.compute_infection_level(t, x_p1, y_p1, x_p2, y_p2, x_p3, y_p3, headcount)
 
+        # Set modifiers for all agent types
+        misc_modifiers = human_viral_load + flock_infection_level + np.repeat(0.5, len(agents.barn)) + np.repeat(0.5, len(agents.water)) # NOTE: Currently barn and water have no modifiers, I'm setting them to 0.5 for now.
 
         # Apply interventions
         for i,intervention in enumerate(self['interventions']):
@@ -729,13 +735,12 @@ class Sim(znb.BaseSim):
                 sus_imm = agents.sus_imm[variant,:]
                 quar_factor = znd.default_float(self['quar_factor'][lkey]) # Ex: 0.2. Probably the effect on beta of quarantining. 
                 beta_layer  = znd.default_float(self['beta_layer'][lkey]) # A scalar; beta for the layer. Ex: 1.0. 
-                # TODO: The following line must be reworked to accomodate multiple agent types
-                # NOTE: I think this step might be better done in the subrosters so the pars can vary by agent type
-                #rel_trans, rel_sus = znu.compute_trans_sus(prel_trans, prel_sus, inf_variant, sus, beta_layer, viral_load, symp, quar, asymp_factor, quar_factor, sus_imm)
+
+                rel_trans, rel_sus = znu.compute_trans_sus(prel_trans, prel_sus, inf_variant, sus, beta_layer, misc_modifiers, symp, quar, asymp_factor, quar_factor, sus_imm)
 
                 # NOTE: Temporary work around for dev purposes only
-                rel_trans = self.agents['rel_trans'] # NOTE: for development only
-                rel_sus = self.agents['rel_sus'] # NOTE: for development only
+                #rel_trans = self.agents['rel_trans'] # NOTE: for development only
+                #rel_sus = self.agents['rel_sus'] # NOTE: for development only
 
                 # Calculate actual transmission
                 pairs = [[p1,p2]] 

@@ -21,8 +21,7 @@ cache = znd.numba_cache # Turning this off can help switching parallelization op
 @nb.njit(             (nbint,   nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:], nbfloat,    nbfloat), cache=cache, parallel=safe_parallel)
 def compute_viral_load(t,       x_p1,       y_p1,       x_p2,       y_p2,       x_p3,       y_p3,       min_vl,     max_vl): # pragma: no cover
     '''
-    Calculate relative transmissibility for time t. Includes time varying
-    viral load, pre/asymptomatic factor, diagnosis factor, etc.
+    Calculate viral load for infectious humans?
 
     Args:
         t: (int) timestep
@@ -40,6 +39,7 @@ def compute_viral_load(t,       x_p1,       y_p1,       x_p2,       y_p2,       
     # Set up arrays
     N = len(x_p2)
     vl = np.zeros(N, dtype=znd.default_float)
+    vl_rescaled = np.zeros(N, dtype=znd.default_float)
 
     # Calculate viral load for those for whom it is rising
     rising_vl = t < x_p2
@@ -50,15 +50,55 @@ def compute_viral_load(t,       x_p1,       y_p1,       x_p2,       y_p2,       
     vl[falling_vl] = y_p2[falling_vl] + (y_p3[falling_vl] - y_p2[falling_vl])*(t - x_p2[falling_vl])/(x_p3[falling_vl] - x_p2[falling_vl])
 
     # Rescale viral load for Covasim computation
+    # NOTE: I think I need to talk to Ritchie about this -- I don't understand how this works
     infected = ~np.isnan(x_p2)
     infected_vl = vl[infected]
-    infected_vl = min_vl + (max_vl - min_vl)*(infected_vl - 6)/(11 - 6)
+    infected_vl = min_vl + (max_vl - min_vl)*(infected_vl - 6)/(11 - 6) 
     infected_vl[infected_vl < min_vl] = 0
+    vl_rescaled[infected] = infected_vl
 
     # Clip viral load when it falls below 10^0 cp/mL to reflect LoD
     vl[vl <= 0] = 0
 
-    return vl
+    return vl, vl_rescaled
+
+@nb.njit(                   (nbint,   nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:]), cache=cache, parallel=safe_parallel)
+def compute_infection_levels(t,       x_p1,       y_p1,       x_p2,       y_p2,       x_p3,       y_p3,       headcount): # pragma: no cover
+    '''
+    Calculate infection levels for infected flocks?
+
+        Args:
+        t: (int) timestep
+        x_p1: (float[]) date of first infection
+        y_p1: (float[]) initial number of infected birds
+        x_p2: (float[]) date of peak infection
+        y_p2: (float[]) number of infected birds at peak infection
+        x_p3: (float[]) date of equilibrium infection
+        y_p3: (float[]) number of birds infected at equilibrium
+        headcount: (int[]) total number of birds in the flock
+
+    Returns:
+        infected_headcount (int): the number of infected birds in the flock
+        infected_headcount_rescaled (int): the number of infected birds in the flock, rescaled to a fraction of total headcount
+    '''
+        # Set up arrays
+    N = len(x_p2)
+    il = np.zeros(N, dtype=znd.default_float)
+    il_rescaled = np.zeros(N, dtype=znd.default_float)
+
+    # Calculate viral load for those for whom it is rising
+    rising_il = t < x_p2
+    il[rising_il] = y_p1[rising_il] + (y_p2[rising_il] - y_p1[rising_il])*(t - x_p1[rising_il])/(x_p2[rising_il] - x_p1[rising_il])
+
+    # Calculate viral load for those for whom it is falling
+    falling_il = t >= x_p2
+    il[falling_il] = y_p2[falling_il] + (y_p3[falling_il] - y_p2[falling_il])*(t - x_p2[falling_il])/(x_p3[falling_il] - x_p2[falling_il])
+
+    il_rescaled = il / headcount # Rescale to fraction of total headcount
+    il_rescaled[il_rescaled < 0] = 0 # Clip to 0
+    il_rescaled[il_rescaled > 1] = 1 # Clip to 1
+
+    return il, il_rescaled
 
 # jit means you let Numba's combiler optimize this function. 
 @nb.njit(            (nbfloat[:], nbfloat[:], nbbool[:], nbbool[:], nbfloat,    nbfloat[:], nbbool[:], nbbool[:], nbfloat,  nbfloat,     nbfloat[:]), cache=cache, parallel=safe_parallel)

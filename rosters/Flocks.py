@@ -438,8 +438,34 @@ class Flocks(Subroster):
         self.date_infectious[inds] = self.dur_exp2inf[inds] + self.t
 
         # Reset all other dates
-        for key in ['date_symptomatic']:
-            self[key][inds] = np.nan
+        #for key in ['date_symptomatic']:
+        #    self[key][inds] = np.nan
+
+        # HANDLE INFECTION LEVEL CONTROL POINTS
+        
+        # Get P_inf:
+        self.x_p_inf[inds] = self.dur_exp2inf[inds]
+        self.y_p_inf[inds] = 6
+
+        # Get P1: 
+        self.x_p1[inds] = np.maximum(self.x_p_inf[inds] - (np.random.gamma(2, 0.35, size=len(inds)) + 0.25), 0) # Date of first infections NOTE: I'm not sure the best way to do this, but I think this is the best way to get a gamma distribution that is always positive
+        self.y_p1[inds] = 3 # Initial number of infections. TODO: This should be sampled from a distribution, but I don't know what the best distribution is.
+
+        # Get P2: 
+        self.x_p2[inds] = self.x_p_inf[inds] + (np.random.gamma(3, 0.26, size=len(inds)) + 0.1) # Date of peak infections
+        self.y_p2[inds] = 0.7*self.headcount[inds] # Peak number of infections. TODO: This should be sampled from a distribution, but I don't know what the best distribution is.
+
+        # Align P1, P_inf, and P2 to current time
+        self.x_p1[inds] = self.x_p1[inds] + self.t
+        self.x_p_inf[inds] = self.x_p_inf[inds] + self.t
+        self.x_p2[inds] = self.x_p2[inds] + self.t
+
+        # Get P3: 
+        time_recovered = np.ones(len(self.date_recovered), dtype=znd.default_float)*self.date_recovered # This is needed to make a copy
+        inds_dead = ~np.isnan(self.date_dead)
+        time_recovered[inds_dead] = self.date_dead[inds_dead]
+        self.x_p3[inds] = np.maximum(time_recovered[inds], self.x_p2[inds])
+        self.y_p3[inds] = 6
 
         return n_infections # For incrementing counters
 
