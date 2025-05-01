@@ -691,7 +691,7 @@ class Sim(znb.BaseSim):
         agents.flock.infected_headcount, flock_infection_level = znu.compute_infection_level(t, x_p1, y_p1, x_p2, y_p2, x_p3, y_p3, headcount)
 
         # Set modifiers for all agent types
-        misc_modifiers = human_viral_load + flock_infection_level + np.repeat(0.5, len(agents.barn)) + np.repeat(0.5, len(agents.water)) # NOTE: Currently barn and water have no modifiers, I'm setting them to 0.5 for now.
+        misc_modifiers = np.concatenate((human_viral_load, flock_infection_level, np.repeat(0.5, len(agents.barn)), np.repeat(0.5, len(agents.water)))) # NOTE: Currently barn and water have no modifiers, I'm setting them to 0.5 for now.
 
         # Apply interventions
         for i,intervention in enumerate(self['interventions']):

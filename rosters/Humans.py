@@ -583,11 +583,11 @@ class Humans(Subroster):
         self.x_p_inf[inds] = self.dur_exp2inf[inds]
         self.y_p_inf[inds] = 6
 
-        # Get P1: where viral load crosses 10^3 cp/mL; time difference obtained empirically through simulation
+        # Get P1: where viral load crosses 10^3 cp/mL;  dummy value for now
         self.x_p1[inds] = np.maximum(self.x_p_inf[inds] - (np.random.gamma(2, 0.35, size=len(inds)) + 0.25), 0)
         self.y_p1[inds] = 3
 
-        # Get P2: where viral load peaks; time difference obtained empirically through simulation
+        # Get P2: where viral load peaks; dummy value for now
         self.x_p2[inds] = self.x_p_inf[inds] + (np.random.gamma(3, 0.26, size=len(inds)) + 0.1)
         self.y_p2[inds] = ((self.y_p_inf[inds] - self.y_p1[inds])*(self.x_p2[inds] - self.x_p1[inds])/(self.x_p_inf[inds] - self.x_p1[inds])) + self.y_p1[inds]
 

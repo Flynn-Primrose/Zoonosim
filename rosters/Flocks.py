@@ -51,7 +51,8 @@ class FlocksMeta(sc.prettyobj):
         # Duration of different states: these are floats per flock.
         self.durs = [
             'dur_exp2inf',
-            'dur_inf2sym',
+            'dur_inf2peak',
+            'dur_peak2eq',
         ]
 
         # Control points for infection progression
@@ -433,7 +434,9 @@ class Flocks(Subroster):
             self.infection_log.append(entry)
 
         # Calculate how long before this person can infect other people
-        self.dur_exp2inf[inds] = znu.sample(**durpars['exp2inf'], size=n_infections)
+        self.dur_exp2inf[inds] = np.maximum(znu.sample(**durpars['exp2inf'], size=n_infections), 0) # Ensure that this is not negative
+        self.dur_inf2peak[inds] = np.maximum(znu.sample(**durpars['inf2peak'], size=n_infections), 0) # Ensure that this is not negative
+        self.dur_peak2eq[inds] = np.maximum(znu.sample(**durpars['peak2eq'], size=n_infections), 0) # Ensure that this is not negative
         self.date_exposed[inds] = self.t
         self.date_infectious[inds] = self.dur_exp2inf[inds] + self.t
 
@@ -442,30 +445,19 @@ class Flocks(Subroster):
         #    self[key][inds] = np.nan
 
         # HANDLE INFECTION LEVEL CONTROL POINTS
-        
-        # Get P_inf:
-        self.x_p_inf[inds] = self.dur_exp2inf[inds]
-        self.y_p_inf[inds] = 6
 
         # Get P1: 
-        self.x_p1[inds] = np.maximum(self.x_p_inf[inds] - (np.random.gamma(2, 0.35, size=len(inds)) + 0.25), 0) # Date of first infections NOTE: I'm not sure the best way to do this, but I think this is the best way to get a gamma distribution that is always positive
+        self.x_p1[inds] = self.date_infectious[inds] # Date of first infections.
         self.y_p1[inds] = 3 # Initial number of infections. TODO: This should be sampled from a distribution, but I don't know what the best distribution is.
 
         # Get P2: 
-        self.x_p2[inds] = self.x_p_inf[inds] + (np.random.gamma(3, 0.26, size=len(inds)) + 0.1) # Date of peak infections
+        self.x_p2[inds] = self.x_p1[inds] + self.dur_inf2peak[inds] # Date of peak infections.
         self.y_p2[inds] = 0.7*self.headcount[inds] # Peak number of infections. TODO: This should be sampled from a distribution, but I don't know what the best distribution is.
 
-        # Align P1, P_inf, and P2 to current time
-        self.x_p1[inds] = self.x_p1[inds] + self.t
-        self.x_p_inf[inds] = self.x_p_inf[inds] + self.t
-        self.x_p2[inds] = self.x_p2[inds] + self.t
-
         # Get P3: 
-        time_recovered = np.ones(len(self.date_recovered), dtype=znd.default_float)*self.date_recovered # This is needed to make a copy
-        inds_dead = ~np.isnan(self.date_dead)
-        time_recovered[inds_dead] = self.date_dead[inds_dead]
-        self.x_p3[inds] = np.maximum(time_recovered[inds], self.x_p2[inds])
-        self.y_p3[inds] = 6
+
+        self.x_p3[inds] = self.x_p2[inds] + self.dur_peak2eq[inds] # Date of equilibrium infections.
+        self.y_p3[inds] = 0.1*self.headcount[inds] # Equilibrium number of infections. TODO: This should be sampled from a distribution, but I don't know what the best distribution is.
 
         return n_infections # For incrementing counters
 

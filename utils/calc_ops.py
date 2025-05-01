@@ -2,7 +2,7 @@ import numba as nb # For faster computations
 import numpy as np # For numerics
 from .. import defaults as znd
 
-__all__ = ['compute_viral_load', 'compute_trans_sus', 'compute_infections', 'find_contacts']
+__all__ = ['compute_viral_load', 'compute_infection_level', 'compute_trans_sus', 'compute_infections', 'find_contacts']
 
 # Set dtypes -- note, these cannot be changed after import since Numba functions are precompiled
 nbbool  = znd.nbbool
@@ -63,7 +63,7 @@ def compute_viral_load(t,       x_p1,       y_p1,       x_p2,       y_p2,       
     return vl, vl_rescaled
 
 @nb.njit(                   (nbint,   nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:]), cache=cache, parallel=safe_parallel)
-def compute_infection_levels(t,       x_p1,       y_p1,       x_p2,       y_p2,       x_p3,       y_p3,       headcount): # pragma: no cover
+def compute_infection_level(t,       x_p1,       y_p1,       x_p2,       y_p2,       x_p3,       y_p3,       headcount): # pragma: no cover
     '''
     Calculate infection levels for infected flocks?
 
