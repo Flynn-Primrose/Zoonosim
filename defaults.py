@@ -4,6 +4,7 @@ Defines default values for Zoonosim.
 import sciris as sc
 import numpy as np
 import numba as nb
+import pylab as pl
 import os
 
 # Specify all externally visible functions this file defines -- other things are available as e.g. zn.defaults.default_int
@@ -33,15 +34,146 @@ full_opts = [2, '2', 'full']
 numba_parallel = str(os.getenv('ZOONOSIM_NUMBA_PARALLEL', 'none'))
 numba_cache = bool(int(os.getenv('ZOONOSIM_NUMBA_CACHE', 1)))
 
-default_pop_pars = {
-    'avg_barns_per_farm': 3.0,
-    'avg_humans_per_barn': 2.0,
-    'avg_flock_size': 1000.0,
-    'avg_water_per_farm': 1.0,
-}
 
-default_flock_breeds = ['breeder', 'layer', 'broiler'] # Breeds of flocks present
-default_flock_breed_freqs = [0.1, 0.2, 0.7] # frequency of the different breed types
+show = True # Show figures by default
+close = False # Close figures by default
+returnfig = True # Return figures by default
+dpi = pl.rcParams['figure.dpi'] # Default DPI for figures
+font = pl.rcParams['font.family'] # Default font family for figures
+fontsize = pl.rcParams['font.size'] # Default font size for figures
+backend = pl.get_backend() # Default backend for figures
+sep = ',' # Default thousands separator for text output
+precision = 32 # Default arithmetic precision for Numba -- 32-bit by default for efficiency
+
+# Define the 'overview plots', i.e. the most useful set of plots to explore different aspects of a simulation
+overview_plots = [
+
+]
+
+overview_variant_plots = [
+
+]
+
+def get_default_plots(which='default', kind='sim', sim=None):
+    '''
+    Specify which quantities to plot; used in sim.py.
+
+    Args:
+        which (str): either 'default' or 'overview'
+    '''
+    which = str(which).lower() # To make comparisons easier
+
+    # Check that kind makes sense
+    sim_kind   = 'sim'
+    scens_kind = 'scens'
+    kindmap = {
+        None:      sim_kind,
+        'sim':     sim_kind,
+        'default': sim_kind,
+        'msim':    scens_kind,
+        'scen':    scens_kind,
+        'scens':   scens_kind,
+    }
+    if kind not in kindmap.keys():
+        errormsg = f'Expecting "sim" or "scens", not "{kind}"'
+        raise ValueError(errormsg)
+    else:
+        is_sim = kindmap[kind] == sim_kind
+
+    # Default plots -- different for sims and scenarios
+    if which in ['none', 'default']:
+
+        if is_sim:
+            plots = sc.odict({
+                'Total counts': [
+                    'cum_infections',
+                    'n_infectious',
+                    'cum_diagnoses',
+                ],
+                'Daily counts': [
+                    'new_infections',
+                    'new_diagnoses',
+                ],
+                'Health outcomes': [
+                    'cum_severe',
+                    'cum_critical',
+                    'cum_deaths',
+                    'cum_known_deaths',
+                ],
+            })
+
+        else: # pragma: no cover
+            plots = sc.odict({
+                'Cumulative infections': [
+                    'cum_infections',
+                ],
+                'New infections per day': [
+                    'new_infections',
+                ],
+                'Cumulative deaths': [
+                    'cum_deaths',
+                ],
+            })
+
+    # Show an overview
+    elif which == 'overview': # pragma: no cover
+        plots = sc.dcp(overview_plots)
+
+    # Plot absolutely everything
+    elif which == 'all': # pragma: no cover
+        plots = sim.result_keys('all')
+
+    # Show an overview plus variants
+    elif 'overview' in which and 'variant' in which: # pragma: no cover
+        plots = sc.dcp(overview_plots) + sc.dcp(overview_variant_plots)
+
+    # Show default but with variants
+    elif which.startswith('variant'): # pragma: no cover
+        if is_sim:
+            plots = sc.odict({
+                'Cumulative infections by variant': [
+                    'cum_infections_by_variant',
+                ],
+                'New infections by variant': [
+                    'new_infections_by_variant',
+                ],
+                'Health outcomes': [
+                    'cum_severe',
+                    'cum_critical',
+                    'cum_deaths',
+                ],
+            })
+
+        else: # pragma: no cover
+            plots = sc.odict({
+                    'Cumulative infections by variant': [
+                        'cum_infections_by_variant',
+                    ],
+                    'New infections by variant': [
+                        'new_infections_by_variant',
+                    ],
+                    'New diagnoses': [
+                        'new_diagnoses',
+                    ],
+                    'Cumulative deaths': [
+                        'cum_deaths',
+                    ],
+            })
+
+    # Plot SEIR compartments
+    elif which == 'seir': # pragma: no cover
+        plots = [
+            'n_susceptible',
+            'n_preinfectious',
+            'n_infectious',
+            'n_removed',
+        ],
+
+    else: # pragma: no cover
+        errormsg = f'The choice which="{which}" is not supported: choices are "default", "overview", "all", "variant", "overview-variant", or "seir", along with any result key (see sim.results_keys(\'all\') for options)'
+        raise ValueError(errormsg)
+
+    return plots
 
 
 
@@ -94,6 +226,17 @@ def get_default_colors():
     c.infections_by_variant = '#FF00FF' # Magenta
     c.contaminated_by_variant = '#FF00FF' # Magenta
     return c
+
+
+default_pop_pars = {
+    'avg_barns_per_farm': 3.0,
+    'avg_humans_per_barn': 2.0,
+    'avg_flock_size': 1000.0,
+    'avg_water_per_farm': 1.0,
+}
+
+default_flock_breeds = ['breeder', 'layer', 'broiler'] # Breeds of flocks present
+default_flock_breed_freqs = [0.1, 0.2, 0.7] # frequency of the different breed types
 
 # Parameters that can vary by variant
 variant_pars = [
