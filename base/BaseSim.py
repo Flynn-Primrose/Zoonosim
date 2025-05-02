@@ -15,7 +15,7 @@ import pandas as pd
 import datetime as dt
 
 from . import FlexPretty
-from . import Result
+from . import Result as znres
 from .. import version as znv
 from .. import misc as znm
 from .. import utils as znu
@@ -305,9 +305,9 @@ class BaseSim(ParsObj):
         keys = []
         choices = ['main', 'variant', 'all']
         if which in ['main', 'all']:
-            keys += [key for key,res in self.results.items() if isinstance(res, Result)]
+            keys += [key for key,res in self.results.items() if isinstance(res, znres.Result)]
         if which in ['variant', 'all'] and 'variant' in self.results:
-            keys += [key for key,res in self.results['variant'].items() if isinstance(res, Result)]
+            keys += [key for key,res in self.results['variant'].items() if isinstance(res, znres.Result)]
         if which not in choices: # pragma: no cover
             errormsg = f'Choice "which" not available; choices are: {sc.strjoin(choices)}'
             raise ValueError(errormsg)
@@ -348,7 +348,7 @@ class BaseSim(ParsObj):
         if for_json:
             resdict['timeseries_keys'] = self.result_keys()
         for key,res in self.results.items():
-            if isinstance(res, Result):
+            if isinstance(res, znres.Result):
                 resdict[key] = res.values
                 if res.low is not None:
                     resdict[key+'_low'] = res.low

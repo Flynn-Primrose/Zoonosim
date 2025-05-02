@@ -887,8 +887,8 @@ class Sim(znb.BaseSim):
             errormsg = f'Simulation is currently at t={self.t}, requested to run until t={until} which has already been reached'
         if self.complete:
             errormsg = 'Simulation is already complete (call sim.initialize() to re-run)'
-        if self.people.t not in [self.t, self.t-1]: # Depending on how the sim stopped, either of these states are possible
-            errormsg = f'The simulation has been run independently from the people (t={self.t}, people.t={self.people.t}): if this is intentional, manually set sim.people.t = sim.t. Remember to save the people object before running the sim.'
+        if self.agents.t not in [self.t, self.t-1]: # Depending on how the sim stopped, either of these states are possible
+            errormsg = f'The simulation has been run independently from the agents (t={self.t}, agents.t={self.agents.t}): if this is intentional, manually set sim.agents.t = sim.t. Remember to save the agents object before running the sim.'
         if errormsg:
             raise AlreadyRunError(errormsg)
 
@@ -988,14 +988,14 @@ class Sim(znb.BaseSim):
         return
 
 
-    # def compute_results(self, verbose=None):
-    #     ''' Perform final calculations on the results '''
-    #     self.compute_states()
-    #     self.compute_yield()
-    #     self.compute_doubling()
-    #     self.compute_r_eff()
-    #     self.compute_summary()
-    #     return
+    def compute_results(self, verbose=None):
+         ''' Perform final calculations on the results '''
+        # self.compute_states()
+        # self.compute_yield()
+        # self.compute_doubling()
+        # self.compute_r_eff()
+        # self.compute_summary()
+         return
 
 
     # def compute_states(self):
@@ -1210,77 +1210,77 @@ class Sim(znb.BaseSim):
     #     return self.results['gen_time']
 
 
-    # def compute_summary(self, full=None, t=None, update=True, output=False, require_run=False):
-    #     '''
-    #     Compute the summary dict and string for the sim. Used internally; see
-    #     sim.summarize() for the user version.
+    def compute_summary(self, full=None, t=None, update=True, output=False, require_run=False):
+        '''
+        Compute the summary dict and string for the sim. Used internally; see
+        sim.summarize() for the user version.
 
-    #     Args:
-    #         full (bool): whether or not to print all results (by default, only cumulative)
-    #         t (int/str): day or date to compute summary for (by default, the last point)
-    #         update (bool): whether to update the stored sim.summary
-    #         output (bool): whether to return the summary
-    #         require_run (bool): whether to raise an exception if simulations have not been run yet
-    #     '''
-    #     if t is None:
-    #         t = self.day(self.t)
+        Args:
+            full (bool): whether or not to print all results (by default, only cumulative)
+            t (int/str): day or date to compute summary for (by default, the last point)
+            update (bool): whether to update the stored sim.summary
+            output (bool): whether to return the summary
+            require_run (bool): whether to raise an exception if simulations have not been run yet
+        '''
+        if t is None:
+            t = self.day(self.t)
 
-    #     # Compute the summary
-    #     if require_run and not self.results_ready:
-    #         errormsg = 'Simulation not yet run'
-    #         raise RuntimeError(errormsg)
+        # Compute the summary
+        if require_run and not self.results_ready:
+            errormsg = 'Simulation not yet run'
+            raise RuntimeError(errormsg)
 
-    #     summary = sc.objdict()
-    #     for key in self.result_keys():
-    #         summary[key] = self.results[key][t]
+        summary = sc.objdict()
+        for key in self.result_keys():
+            summary[key] = self.results[key][t]
 
-    #     # Update the stored state
-    #     if update:
-    #         self.summary = summary
+        # Update the stored state
+        if update:
+            self.summary = summary
 
-    #     # Optionally return
-    #     if output:
-    #         return summary
-    #     else:
-    #         return
+        # Optionally return
+        if output:
+            return summary
+        else:
+            return
 
 
-    # def summarize(self, full=False, t=None, sep=None, output=False):
-    #     '''
-    #     Print a medium-length summary of the simulation, drawing from the last time
-    #     point in the simulation by default. Called by default at the end of a sim run.
-    #     See also sim.disp() (detailed output) and sim.brief() (short output).
+    def summarize(self, full=False, t=None, sep=None, output=False):
+        '''
+        Print a medium-length summary of the simulation, drawing from the last time
+        point in the simulation by default. Called by default at the end of a sim run.
+        See also sim.disp() (detailed output) and sim.brief() (short output).
 
-    #     Args:
-    #         full   (bool):    whether or not to print all results (by default, only cumulative)
-    #         t      (int/str): day or date to compute summary for (by default, the last point)
-    #         sep    (str):     thousands separator (default ',')
-    #         output (bool):    whether to return the summary instead of printing it
+        Args:
+            full   (bool):    whether or not to print all results (by default, only cumulative)
+            t      (int/str): day or date to compute summary for (by default, the last point)
+            sep    (str):     thousands separator (default ',')
+            output (bool):    whether to return the summary instead of printing it
 
-    #     **Examples**::
+        **Examples**::
 
-    #         sim = cv.Sim(label='Example sim', verbose=0) # Set to run silently
-    #         sim.run() # Run the sim
-    #         sim.summarize() # Print medium-length summary of the sim
-    #         sim.summarize(t=24, full=True) # Print a "slice" of all sim results on day 24
-    #     '''
-    #     # Compute the summary
-    #     summary = self.compute_summary(full=full, t=t, update=False, output=True)
+            sim = zn.Sim(label='Example sim', verbose=0) # Set to run silently
+            sim.run() # Run the sim
+            sim.summarize() # Print medium-length summary of the sim
+            sim.summarize(t=24, full=True) # Print a "slice" of all sim results on day 24
+        '''
+        # Compute the summary
+        summary = self.compute_summary(full=full, t=t, update=False, output=True)
 
-    #     # Construct the output string
-    #     if sep is None: sep = cvo.sep # Default separator
-    #     labelstr = f' "{self.label}"' if self.label else ''
-    #     string = f'Simulation{labelstr} summary:\n'
-    #     for key in self.result_keys():
-    #         if full or key.startswith('cum_'):
-    #             val = np.round(summary[key])
-    #             string += f'   {val:10,.0f} {self.results[key].name.lower()}\n'.replace(',', sep) # Use replace since it's more flexible
+        # Construct the output string
+        if sep is None: sep = znd.sep # Default separator
+        labelstr = f' "{self.label}"' if self.label else ''
+        string = f'Simulation{labelstr} summary:\n'
+        for key in self.result_keys():
+            if full or key.startswith('cum_'):
+                val = np.round(summary[key])
+                string += f'   {val:10,.0f} {self.results[key].name.lower()}\n'.replace(',', sep) # Use replace since it's more flexible
 
-    #     # Print or return string
-    #     if not output:
-    #         print(string)
-    #     else:
-    #         return string
+        # Print or return string
+        if not output:
+            print(string)
+        else:
+            return string
 
 
     def disp(self, output=False):
@@ -1293,7 +1293,7 @@ class Sim(znb.BaseSim):
 
         **Example**::
 
-            sim = cv.Sim(label='Example sim', verbose=0) # Set to run silently
+            sim = zn.Sim(label='Example sim', verbose=0) # Set to run silently
             sim.run() # Run the sim
             sim.disp() # Displays detailed output
         '''
@@ -1315,7 +1315,7 @@ class Sim(znb.BaseSim):
 
         **Example**::
 
-            sim = cv.Sim(label='Example sim', verbose=0) # Set to run silently
+            sim = zn.Sim(label='Example sim', verbose=0) # Set to run silently
             sim.run() # Run the sim
             sim.brief() # Prints one-line output
         '''
