@@ -305,7 +305,7 @@ class Sim(znb.BaseSim):
             self.results[f'new_barn_{key}'] = init_res(f'Number of new {label}', color=dcols[key])
 
         for key,label in znd.water_flows.items():
-            self.results[f'cum_barn_{key}'] = init_res(f'Cumulative {label}', color=dcols[key])
+            self.results[f'cum_water_{key}'] = init_res(f'Cumulative {label}', color=dcols[key])
 
         for key,label in znd.water_flows.items():
             self.results[f'new_water_{key}'] = init_res(f'Number of new {label}', color=dcols[key])
@@ -719,11 +719,20 @@ class Sim(znb.BaseSim):
 
             # Deal with variant parameters
             rel_beta = self['rel_beta']
-            asymp_factor = self['asymp_factor']
+            asymp_factor = np.repeat([znd.default_float(self['asymp_factor']['human']),
+                                  znd.default_float(self['asymp_factor']['flock']), 
+                                  znd.default_float(self['asymp_factor']['barn']), 
+                                  znd.default_float(self['asymp_factor']['water'])], 
+                                  [len(agents.human), len(agents.flock), len(agents.barn), len(agents.water)])
             if variant:
                 variant_label = self.pars['variant_map'][variant]
                 rel_beta *= self['variant_pars'][variant_label]['rel_beta']
-            beta = znd.default_float(self['beta'] * rel_beta)
+            beta = np.repeat([znd.default_float(self['beta']['human']*rel_beta),
+                              znd.default_float(self['beta']['flock']*rel_beta), 
+                              znd.default_float(self['beta']['barn']*rel_beta), 
+                              znd.default_float(self['beta']['water']*rel_beta)], 
+                              [len(agents.human), len(agents.flock), len(agents.barn), len(agents.water)])
+            #beta = znd.default_float(self['beta'] * rel_beta)
 
             for lkey, layer in contacts.items():
                 p1 = layer['p1']
@@ -786,12 +795,42 @@ class Sim(znb.BaseSim):
             for variant in range(nv):
                 self.results['variant'][f'n_water_{key}'][variant, t] = agents.water.count_by_variant(key, variant)
         
-        # # Update counts for this time step: flows
-        # for key,count in people.flows.items():
-        #     self.results[key][t] += count
-        # for key,count in people.flows_variant.items():
-        #     for variant in range(nv):
-        #         self.results['variant'][key][variant][t] += count[variant]
+        # Update counts for this time step: Human flows
+        for key in znd.human_flows:
+            self.results[f'new_human_{key}'][t] = agents.human.flows[f'new_{key}']
+
+        # Update counts for this time step: Flock flows
+        for key in znd.flock_flows:
+            self.results[f'new_flock_{key}'][t] = agents.flock.flows[f'new_{key}']
+
+        # Update counts for this time step: Barn flows
+        for key in znd.barn_flows:
+            self.results[f'new_barn_{key}'][t] = agents.barn.flows[f'new_{key}']
+
+        # Update counts for this time step: Water flows
+        for key in znd.water_flows:
+            self.results[f'new_water_{key}'][t] = agents.water.flows[f'new_{key}']
+
+        # Update counts for this time step: Human flows by variant
+        for key in znd.human_flows_by_variant:
+            for variant in range(nv):
+                self.results['variant'][f'new_human_{key}'][variant, t] = agents.human.flows_variant[f'new_{key}'][variant]
+        
+        # Update counts for this time step: Flock flows by variant
+        for key in znd.flock_flows_by_variant:
+            for variant in range(nv):
+                self.results['variant'][f'new_flock_{key}'][variant, t] = agents.flock.flows_variant[f'new_{key}'][variant]
+
+        
+        # Update counts for this time step: Barn flows by variant
+        for key in znd.barn_flows_by_variant:
+            for variant in range(nv):
+                self.results['variant'][f'new_barn_{key}'][variant, t] = agents.barn.flows_variant[f'new_{key}'][variant]
+
+        # Update counts for this time step: Water flows by variant
+        for key in znd.water_flows_by_variant:
+            for variant in range(nv):
+                self.results['variant'][f'new_water_{key}'][variant, t] = agents.water.flows_variant[f'new_{key}'][variant]
 
         # # Update nab and immunity for this time step
         # if self['use_waning']:
@@ -940,23 +979,34 @@ class Sim(znb.BaseSim):
             # otherwise the scale factor will be applied multiple times
             raise AlreadyRunError('Simulation has already been finalized')
 
-        # Scale the results
-        # for reskey in self.result_keys():
-        #     if self.results[reskey].scale: # Scale the result dynamically
-        #         self.results[reskey].values *= self.rescale_vec
-        # for reskey in self.result_keys('variant'):
-        #     if self.results['variant'][reskey].scale: # Scale the result dynamically
-        #         self.results['variant'][reskey].values = np.einsum('ij,j->ij', self.results['variant'][reskey].values, self.rescale_vec)
+        # Calculate cumulative results: Human
+        for key in znd.human_flows:
+            self.results[f'cum_human_{key}'][:] = np.cumsum(self.results[f'new_human_{key}'][:], axis=0)
+        for key in znd.human_flows_by_variant:
+            for variant in range(self['n_variants']):
+                self.results['variant'][f'cum_human_{key}'][variant, :] = np.cumsum(self.results['variant'][f'new_human_{key}'][variant, :], axis=0)
+        
+        # Calculate cumulative results: Flock
+        for key in znd.flock_flows:
+            self.results[f'cum_flock_{key}'][:] = np.cumsum(self.results[f'new_flock_{key}'][:], axis=0)
+        for key in znd.flock_flows_by_variant:
+            for variant in range(self['n_variants']):
+                self.results['variant'][f'cum_flock_{key}'][variant, :] = np.cumsum(self.results['variant'][f'new_flock_{key}'][variant, :], axis=0)
+        
+        # Calculate cumulative results: Barn
+        for key in znd.barn_flows:
+            self.results[f'cum_barn_{key}'][:] = np.cumsum(self.results[f'new_barn_{key}'][:], axis=0)
+        for key in znd.barn_flows_by_variant:
+            for variant in range(self['n_variants']):
+                self.results['variant'][f'cum_barn_{key}'][variant, :] = np.cumsum(self.results['variant'][f'new_barn_{key}'][variant, :], axis=0)
+        
+        # Calculate cumulative results: Water
+        for key in znd.water_flows:
+            self.results[f'cum_water_{key}'][:] = np.cumsum(self.results[f'new_water_{key}'][:], axis=0)
+        for key in znd.water_flows_by_variant:
+            for variant in range(self['n_variants']):
+                self.results['variant'][f'cum_water_{key}'][variant, :] = np.cumsum(self.results['variant'][f'new_water_{key}'][variant, :], axis=0)
 
-
-        # Calculate cumulative results
-        # for key in znd.result_flows.keys():
-        #     self.results[f'cum_{key}'][:] = np.cumsum(self.results[f'new_{key}'][:], axis=0)
-        # for key in znd.result_flows_by_variant.keys():
-        #     for variant in range(self['n_variants']):
-        #         self.results['variant'][f'cum_{key}'][variant, :] = np.cumsum(self.results['variant'][f'new_{key}'][variant, :], axis=0)
-        # for res in [self.results['cum_infections'], self.results['variant']['cum_infections_by_variant']]: # Include initially infected people
-        #     res.values += self['pop_infected']*self.rescale_vec[0]
 
         # Finalize interventions and analyzers
         self.finalize_interventions()

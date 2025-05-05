@@ -101,7 +101,7 @@ def compute_infection_level(t,       x_p1,       y_p1,       x_p2,       y_p2,  
     return il, il_rescaled
 
 # jit means you let Numba's combiler optimize this function. 
-@nb.njit(            (nbfloat[:], nbfloat[:], nbbool[:], nbbool[:], nbfloat,    nbfloat[:], nbbool[:], nbbool[:], nbfloat,  nbfloat,     nbfloat[:]), cache=cache, parallel=safe_parallel)
+@nb.njit(            (nbfloat[:], nbfloat[:], nbbool[:], nbbool[:], nbfloat,    nbfloat[:], nbbool[:], nbbool[:], nbfloat[:],  nbfloat,     nbfloat[:]), cache=cache, parallel=safe_parallel)
 def compute_trans_sus(rel_trans,  rel_sus,    inf,       sus,       beta_layer, viral_load, symp,      quar,      asymp_factor,  quar_factor, immunity_factors): # pragma: no cover
     ''' Calculate relative transmissibility and susceptibility '''
     f_asymp   =  symp + ~symp * asymp_factor # Asymptomatic factor, changes e.g. [0,1] with a factor of 0.8 to [0.8,1.0]
@@ -111,7 +111,7 @@ def compute_trans_sus(rel_trans,  rel_sus,    inf,       sus,       beta_layer, 
     return rel_trans, rel_sus
 
 
-@nb.njit(             (nbfloat,  nbint[:],  nbint[:], nbfloat[:],   nbfloat[:], nbfloat[:]), cache=cache, parallel=rand_parallel)
+@nb.njit(             (nbfloat[:],  nbint[:],  nbint[:], nbfloat[:],   nbfloat[:], nbfloat[:]), cache=cache, parallel=rand_parallel)
 def compute_infections(beta,     p1,        p2,       layer_betas,  rel_trans,  rel_sus): # pragma: no cover
     '''
     Compute who infects whom
@@ -135,7 +135,7 @@ def compute_infections(beta,     p1,        p2,       layer_betas,  rel_trans,  
         source_trans     = rel_trans[sources] # Pull out the transmissibility of the sources (0 for non-infectious people). Cx1 array. 
         inf_inds         = source_trans.nonzero()[0] # Infectious indices -- remove noninfectious people. Smaller array of the non-zero inds.
         # betas: I x 1 array, I is # contacts where P1 is infectious. 
-        betas            = beta * layer_betas[inf_inds] * source_trans[inf_inds] * rel_sus[targets[inf_inds]] # Calculate the raw transmission probabilities
+        betas            = beta[inf_inds] * layer_betas[inf_inds] * source_trans[inf_inds] * rel_sus[targets[inf_inds]] # Calculate the raw transmission probabilities
         # There will be zeros intoduced, for example if someone isn't susciptible due to an intervention. 
         nonzero_inds     = betas.nonzero()[0] # Find nonzero entries
         nonzero_inf_inds = inf_inds[nonzero_inds] # Map onto original indices
