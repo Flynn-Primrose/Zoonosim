@@ -224,15 +224,18 @@ class Barns(Subroster):
         return inds
 
 
-    def check_contaminated(self):
-        ''' Check which barns get contaminated this timestep '''
-        # TODO: create this function
-        return
     
     def check_uncontaminated(self):
         ''' Check which barns get uncontaminated this timestep '''
-        # TODO: create this function
-        return
+        inds = self.check_inds(self.contaminated, self.date_uncontaminated)
+        if len(inds) > 0:
+            self.contaminated[inds] = False
+            self.contaminated_variant[inds] = np.nan
+            self.flows['new_uncontaminated'] += len(inds) # NOTE: This might be better done elsewhere
+            for i in inds:
+                self.date_contaminated[i] = np.nan
+                self.date_uncontaminated[i] = np.nan
+        return len(inds)
     
     def check_composting(self):
         ''' Check which barns start the composting process this timestep '''
@@ -310,7 +313,7 @@ class Barns(Subroster):
         # Calculate how long before this person can infect other people
         self.dur_contamination[inds] = znu.sample(**durpars['contamination'], size=n_infections)
         self.date_contaminated[inds] = self.t
-        self.date_clean[inds] = self.dur_contamination[inds] + self.t
+        self.date_uncontaminated[inds] = self.dur_contamination[inds] + self.t
 
 
         return n_infections # For incrementing counters
