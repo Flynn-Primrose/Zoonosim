@@ -23,8 +23,19 @@ class BarnMeta(sc.prettyobj):
         ]
 
         self.states = [
-            'clean',
-            'contaminated'
+            'uncontaminated', # bool; whether the barn is contaminated or not
+            'contaminated', # bool; whether the barn is contaminated or not
+            'composting', # bool; whether the barn is currently composting or not
+            'dry_cleaning', # bool; whether the barn is currently being dry cleaned or not
+            'wet_cleaning', # bool; whether the barn is currently being wet cleaned or not
+            'disinfecting', # bool; whether the barn is currently being disinfected or not
+            'down_time', # bool; whether the barn is currently in downtime or not
+        ]
+
+        self.biosec_states = [
+            'green', # bool; standard biosecurity measures in place
+            'yellow', # bool; increased biosecurity measures in place (typically due to an outbreak at a different site within 10km)
+            'orange', # bool; emergency biosecurity measures in place (typically due to an outbreak at this site)
         ]
 
         self.variant_states = [
@@ -36,14 +47,20 @@ class BarnMeta(sc.prettyobj):
         ]
 
         # Set the dates various events took place: these are floats per agent
-        self.dates = [f'date_{state}' for state in self.states] # Convert each state into a date
+        self.state_dates = [f'date_{state}' for state in self.states] # Convert each state into a date
+            
 
         # Duration of different states: these are floats per Barn.
         self.durs = [
             'dur_contamination', # Duration of contamination
+            'dur_composting', # Duration of composting
+            'dur_dry_cleaning', # Duration of dry cleaning
+            'dur_wet_cleaning', # Duration of wet cleaning
+            'dur_disinfecting', # Duration of disinfecting
+            'dur_down_time', # Duration of downtime
         ]
 
-        self.all_states = self.agent + self.states + self.variant_states + self.by_variant_states + self.dates + self.durs
+        self.all_states = self.agent + self.states + self.biosec_states + self.variant_states + self.by_variant_states + self.dates + self.durs
 
         # Validate
         self.state_types = ['agent', 'states', 'variant_states', 'by_variant_states']
@@ -105,9 +122,14 @@ class Barns(Subroster):
             else:
                 self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
 
-        # Set health states -- only susceptible is true by default -- booleans except exposed by variant which should return the variant that ind is exposed to
+        # Set states
         for key in self.meta.states:
-            val = (key in ['susceptible']) # Default value is True for susceptible and naive, False otherwise
+            val = (key in ['uncontaminated']) # Default value is True for susceptible and naive, False otherwise
+            self[key] = np.full(pop_size, val, dtype=bool)
+
+        # Set biosec states
+        for key in self.meta.biosec_states:
+            val = (key in ['green']) # Default value is True for susceptible and naive, False otherwise
             self[key] = np.full(pop_size, val, dtype=bool)
 
         # Set variant states, which store info about which variant a person is exposed to
@@ -157,27 +179,9 @@ class Barns(Subroster):
         ''' Perform initializations '''
         self.validate(sim_pars=sim_pars) # First, check that essential-to-match parameters match
         self.set_pars(sim_pars) # Replace the saved parameters with this simulation's
-        self.set_prognoses()
         self.initialized = True
         return
 
-
-    def set_prognoses(self):
-        '''
-        Set the prognoses for each person based on age during initialization. Need
-        to reset the seed because viral loads are drawn stochastically.
-        '''
-
-        pars = self.pars # Shorten
-        if 'prognoses' not in pars or 'rand_seed' not in pars:
-            errormsg = 'This Barns object does not have the required parameters ("prognoses" and "rand_seed").'
-            raise sc.KeyNotFoundError(errormsg)
-
-
-        znu.set_seed(pars['rand_seed'])
-
-
-        return
 
 
 
@@ -187,11 +191,9 @@ class Barns(Subroster):
 
         # Initialize
         self.t = t
-        self.is_exp = self.true('exposed') # For storing the interim values since used in every subsequent calculation
 
         # Perform updates
         self.init_flows()
-        self.flows['new_infectious']    += self.check_infectious() # For Barns that are exposed and not infectious, check if they begin being infectious
         return
 
 
@@ -202,33 +204,6 @@ class Barns(Subroster):
         del self.is_exp  # Tidy up
 
         return
-
-
-
-    def update_contacts(self):
-        ''' Refresh dynamic contacts, e.g. community '''
-        # Figure out if anything needs to be done -- e.g. {'h':False, 'c':True}
-        for lkey, is_dynam in self.pars['dynam_layer'].items():
-            if is_dynam:
-                self.contacts[lkey].update(self)
-
-        return self.contacts
-
-
-    def schedule_behaviour(self, behaviour_pars):
-        ''' Schedules events on the basis of results received today '''
-
-
-        return
-
-    
-    def get_key_to_use(self, policy_dict):
-        ''' Helper function used to determine what policy to use when scheduling behaviour '''
-
-        keys = np.array(list(policy_dict.keys()))
-        key_to_use = keys[znu.true(keys <= self.t)[-1]]
-
-        return key_to_use
 
 
     #%% Methods for updating state
@@ -249,24 +224,43 @@ class Barns(Subroster):
         return inds
 
 
-    def check_infectious(self):
-        ''' Check if they become infectious '''
-        inds = self.check_inds(self.infectious, self.date_infectious, filter_inds=self.is_exp)
-        self.infectious[inds] = True
-        self.infectious_variant[inds] = self.exposed_variant[inds]
-
-
-        for variant in range(self.pars['n_variants']):
-            this_variant_inds = znu.itrue(self.infectious_variant[inds] == variant, inds)
-            n_this_variant_inds = len(this_variant_inds)
-            self.flows_variant['new_infectious_by_variant'][variant] += n_this_variant_inds
-            self.infectious_by_variant[variant, this_variant_inds] = True
-        return len(inds)
-
-
-
-    def check_cleaned(self):
-        ''' Check which barns get cleaned this timestep '''
+    def check_contaminated(self):
+        ''' Check which barns get contaminated this timestep '''
+        # TODO: create this function
+        return
+    
+    def check_uncontaminated(self):
+        ''' Check which barns get uncontaminated this timestep '''
+        # TODO: create this function
+        return
+    
+    def check_composting(self):
+        ''' Check which barns start the composting process this timestep '''
+        # TODO: create this function
+        return
+    
+    def check_dry_cleaning(self):
+        ''' Check which barns start the dry cleaning process this timestep '''
+        # TODO: create this function
+        return
+    
+    def check_wet_cleaning(self):
+        ''' Check which barns start the wet cleaning process this timestep '''
+        # TODO: create this function
+        return
+    
+    def check_disinfecting(self):
+        ''' Check which barns start the disinfecting process this timestep '''
+        # TODO: create this function
+        return
+    
+    def check_down_time(self):
+        ''' Check which barns start the downtime process this timestep '''
+        # TODO: create this function
+        return
+    
+    def check_repopulate(self):
+        ''' Check which barns need to be repopulated this timestep '''
         # TODO: create this function
         return
 
@@ -334,23 +328,8 @@ class Barns(Subroster):
             test_delay (int): number of days before test results are ready
         '''
 
-        inds = np.unique(inds)
-        self.tested[inds] = True
-        self.date_tested[inds] = self.t # Only keep the last time they tested
 
-        is_infectious = znu.itruei(self.infectious, inds)
-        pos_test      = znu.n_binomial(test_sensitivity, len(is_infectious))
-        is_inf_pos    = is_infectious[pos_test]
-
-        not_diagnosed = is_inf_pos[np.isnan(self.date_diagnosed[is_inf_pos])]
-        not_lost      = znu.n_binomial(1.0-loss_prob, len(not_diagnosed))
-        final_inds    = not_diagnosed[not_lost]
-
-        # Store the date the person will be diagnosed, as well as the date they took the test which will come back positive
-        self.date_diagnosed[final_inds] = self.t + test_delay
-        self.date_pos_test[final_inds] = self.t
-
-        return final_inds
+        return
 
 
 

@@ -155,9 +155,16 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
         'exp2inf': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration from exposed to infectious. NOTE: This data is just a guess, and should be replaced with real data
         'inf2peak': dict(dist='lognormal_int', par1=1.1, par2=0.9), # Duration from first infection to peak infection. NOTE: This data is just a guess, and should be replaced with real data
         'peak2eq': dict(dist='lognormal_int', par1=1.1, par2=0.9), # Duration from peak infection to equilibrium infection. NOTE: This data is just a guess, and should be replaced with real data
+        'susp2insp': dict(dist='lognormal_int', par1=1.1, par2=0.9), # Duration from suspicion to inspection. NOTE: This data is just a guess, and should be replaced with real data
+        'insp2quar': dict(dist='lognormal_int', par1=1.1, par2=0.9), # Duration from inspection to quarantine. NOTE: This data is just a guess, and should be replaced with real data
     }
     pars['dur']['barn'] = {
         'contamination': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration of contamination. NOTE: This data is just a guess, and should be replaced with real data
+        'composting': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration of composting. NOTE: This data is just a guess, and should be replaced with real data
+        'dry_cleaning': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration of dry cleaning process. NOTE: This data is just a guess, and should be replaced with real data
+        'wet_cleaning': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration of wet cleaning process. NOTE: This data is just a guess, and should be replaced with real data
+        'disinfecting': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration of disinfecting process. NOTE: This data is just a guess, and should be replaced with real data
+        'down_time': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration of down time. NOTE: This data is just a guess, and should be replaced with real data
     }
     pars['dur']['water'] = {
         'contamination': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration of contamination. NOTE: This data is just a guess, and should be replaced with real data

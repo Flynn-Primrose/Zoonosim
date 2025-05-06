@@ -20,18 +20,29 @@ class FlocksMeta(sc.prettyobj):
             'breed', # e.g. breeder, layer, broiler
             'barn', # uid of the barn where the flock is located
             'headcount', # Number of birds in the flock
-            'infected_headcount', 
-            'symptomatic_headcount',
-            'dead_headcount'
+            'infected_headcount',
+            'symptomatic_headcount', 
+            'dead_headcount',
+            'mortality_rate',
+            'water_rate', # Water consumption rate (L/bird/day)
+            'reincarnations', # Number of times the flock has been reincarnated 
         ]
 
         self.states = [
             'susceptible',
             'exposed',
             'infectious',
-            'symptomatic',
-            'quarantined'
+            'suspected', # Producer suspects flock is infected
+            'quarantined', # Quarantined by CFIA agent
+            'confirmed_positive', # confirmed positive by lab test
         ]
+
+        # NOTE: I'm not sure if we need to record the cfia risk level assessment directly or if it is implied by the other states
+        # self.risk_level = [
+        #     'negligible', # CFIA agent assesses flock as negligible risk
+        #     'tbc_negative', # CFIA agent assesses flock as negative but to be confirmed
+        #     'tbc_positive',# CFIA agent assesses flock as positive but to be confirmed
+        # ]
 
         self.variant_states = [
             'exposed_variant',
@@ -46,19 +57,33 @@ class FlocksMeta(sc.prettyobj):
         ]
 
         # Set the dates various events took place: these are floats per agent
-        self.dates = [f'date_{state}' for state in self.states] # Convert each state into a date
+        self.state_dates = [f'date_{state}' for state in self.states] # Convert each state into a date
+
+        # Dates for the cfia protocols: these are floats per flock
+        self.protocol_dates = [
+            'date_assessment', # Date of CFIA agent's assessment of flock
+            'date_result', # Date of lab test result
+        ]
+
+        self.production_dates = [
+            'date_marketed', # date flock is marketed
+            'date_reincarnated', # date flock is reincarnated
+        ]
+
+        self.dates = self.state_dates + self.protocol_dates + self.production_dates
 
         # Duration of different states: these are floats per flock.
         self.durs = [
-            'dur_exp2inf',
-            'dur_inf2peak',
-            'dur_peak2eq',
+            'dur_exp2inf', # Mean time from exposed to infectious
+            'dur_inf2symp', # Mean time from infectious to symptomatic
+            'dur_inf2peak', # Mean time from infectious to peak infection
+            'dur_peak2eq', # Mean time from peak infection to equilibrium infection
+            'dur_susp2insp', # Mean time from suspected to inspected
+            'dur_insp2conf', # Mean time from inspected to confirmation of status 
         ]
 
         # Control points for infection progression
         self.ctrl_points = [
-            'x_p_inf',
-            'y_p_inf',
             'x_p1',
             'y_p1',
             'x_p2',
@@ -220,12 +245,9 @@ class Flocks(Subroster):
 
         # Perform updates
         self.init_flows()
-        self.flows['new_infectious']    += self.check_infectious() # For people who are exposed and not infectious, check if they begin being infectious
+        self.flows['new_infectious']    += self.check_infectious() # For flocks that are exposed and not infectious, check if they begin being infectious
         self.flows['new_symptomatic']   += self.check_symptomatic()
-        self.flows['new_recoveries']    += self.check_recovery()
-        new_deaths, new_known_deaths     = self.check_death()
-        self.flows['new_deaths']        += new_deaths
-        self.flows['new_known_deaths']  += new_known_deaths
+
         return
 
 
@@ -238,32 +260,6 @@ class Flocks(Subroster):
 
         return
 
-
-
-    def update_contacts(self):
-        ''' Refresh dynamic contacts, e.g. community '''
-        # Figure out if anything needs to be done -- e.g. {'h':False, 'c':True}
-        for lkey, is_dynam in self.pars['dynam_layer'].items():
-            if is_dynam:
-                self.contacts[lkey].update(self)
-
-        return self.contacts
-
-
-    def schedule_behaviour(self, behaviour_pars):
-        ''' Schedules events on the basis of results received today '''
-
-
-        return
-
-    
-    def get_key_to_use(self, policy_dict):
-        ''' Helper function used to determine what policy to use when scheduling behaviour '''
-
-        keys = np.array(list(policy_dict.keys()))
-        key_to_use = keys[znu.true(keys <= self.t)[-1]]
-
-        return key_to_use
 
 
     #%% Methods for updating state
@@ -304,71 +300,31 @@ class Flocks(Subroster):
         inds = self.check_inds(self.symptomatic, self.date_symptomatic, filter_inds=self.is_exp)
         self.symptomatic[inds] = True
         return len(inds)
+    
+    def check_suspected(self):
+        ''' Check for new progressions to suspected '''
+        # TODO: Implement this method
+        return
 
-
-
-    def check_recovery(self, inds=None, filter_inds='is_exp'):
-        '''
-        Check for recovery.
-
-        More complex than other functions to allow for recovery to be manually imposed
-        for a specified set of indices.
-        '''
-
-        # Handle more flexible options for setting indices
-        if filter_inds == 'is_exp':
-            filter_inds = self.is_exp
-        if inds is None:
-            inds = self.check_inds(self.recovered, self.date_recovered, filter_inds=filter_inds)
-
-        # Now reset all disease states
-        self.exposed[inds]          = False
-        self.infectious[inds]       = False
-        self.symptomatic[inds]      = False
-        self.recovered[inds]        = True
-        self.recovered_variant[inds] = self.exposed_variant[inds]
-        self.infectious_variant[inds] = np.nan
-        self.exposed_variant[inds]    = np.nan
-        self.exposed_by_variant[:, inds] = False
-        self.infectious_by_variant[:, inds] = False
-
-        # Handle immunity aspects
-        if self.pars['use_waning']:
-
-            # Reset additional states
-            self.susceptible[inds] = True
-            self.diagnosed[inds]   = False # Reset their diagnosis state because they might be reinfected
-
-        # # Handle instances of false positive diagnoses; if someone is not exposed, is diagnosed, and has passed the required time in isolation, un-diagnose them
-        # fp_diagnoses = znu.true((~self.exposed) & (self.diagnosed) & (self.t - self.date_diagnosed >= 14))
-        # self.diagnosed[fp_diagnoses] = False
-
-        return len(inds)
-
-
-    def check_death(self):
-        ''' Check whether or not this agent died on this timestep  '''
-        inds = self.check_inds(self.dead, self.date_dead, filter_inds=self.is_exp) 
-        
-        self.dead[inds]             = True
-        diag_inds = inds[self.diagnosed[inds]] # Check whether the person was diagnosed before dying
-        # self.known_dead[diag_inds]  = True
-        # self.susceptible[inds]      = False
-        # self.exposed[inds]          = False
-        # self.infectious[inds]       = False
-        # self.symptomatic[inds]      = False
-        # self.severe[inds]           = False
-        # self.critical[inds]         = False
-        # self.known_contact[inds]    = False
-        # self.quarantined[inds]      = False
-        # self.recovered[inds]        = False
-        # self.infectious_variant[inds] = np.nan
-        # self.exposed_variant[inds]    = np.nan
-        # self.recovered_variant[inds]  = np.nan
-
-        return len(inds), len(diag_inds)
-
-
+    def check_quarantined(self):
+        ''' Check for new progressions to quarantined '''
+        # TODO: Implement this method
+        return
+    
+    def check_confirmed_positive(self):
+        ''' Check for new progressions to confirmed positive '''
+        #TODO: Implement this method
+        return
+    
+    def check_marketed(self):
+        ''' Check for new progressions to marketed '''
+        #TODO: Implement this method
+        return
+    
+    def check_reincarnated(self):
+        ''' Check for new progressions to reincarnated '''
+        #TODO: Implement this method
+        return
 
     #%% Methods to make events occur (infection and diagnosis)
 
@@ -473,24 +429,8 @@ class Flocks(Subroster):
             loss_prob (float): probability of loss to follow-up
             test_delay (int): number of days before test results are ready
         '''
-
-        inds = np.unique(inds)
-        self.tested[inds] = True
-        self.date_tested[inds] = self.t # Only keep the last time they tested
-
-        is_infectious = znu.itruei(self.infectious, inds)
-        pos_test      = znu.n_binomial(test_sensitivity, len(is_infectious))
-        is_inf_pos    = is_infectious[pos_test]
-
-        not_diagnosed = is_inf_pos[np.isnan(self.date_diagnosed[is_inf_pos])]
-        not_lost      = znu.n_binomial(1.0-loss_prob, len(not_diagnosed))
-        final_inds    = not_diagnosed[not_lost]
-
-        # Store the date the flock will be diagnosed, as well as the date they took the test which will come back positive
-        self.date_diagnosed[final_inds] = self.t + test_delay
-        self.date_pos_test[final_inds] = self.t
-
-        return final_inds
+        # TODO: Implement this method
+        return 
 
 
 

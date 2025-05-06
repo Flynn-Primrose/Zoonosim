@@ -21,7 +21,7 @@ class WaterMeta(sc.prettyobj):
         ]
 
         self.states = [
-            'clean',
+            'uncontaminated',
             'contaminated'
         ]
 
@@ -87,7 +87,7 @@ class Water(Subroster):
 
         # Set health states -- only susceptible is true by default -- booleans except exposed by variant which should return the variant that ind is exposed to
         for key in self.meta.states:
-            val = (key in ['susceptible']) # Default value is True for susceptible and naive, False otherwise
+            val = (key in ['uncontaminated']) # Default value is True for susceptible and naive, False otherwise
             self[key] = np.full(pop_size, val, dtype=bool)
 
         # Set variant states, which store info about which variant a person is exposed to
@@ -138,35 +138,8 @@ class Water(Subroster):
         ''' Perform initializations '''
         self.validate(sim_pars=sim_pars) # First, check that essential-to-match parameters match
         self.set_pars(sim_pars) # Replace the saved parameters with this simulation's
-        self.set_prognoses()
         self.initialized = True
         return
-
-
-    def set_prognoses(self):
-        '''
-        Set the prognoses for each person based on age during initialization. Need
-        to reset the seed because viral loads are drawn stochastically.
-        '''
-
-        pars = self.pars # Shorten
-        if 'prognoses' not in pars or 'rand_seed' not in pars:
-            errormsg = 'This roster object does not have the required parameters ("prognoses" and "rand_seed"). Create a sim (or parameters), then do e.g. people.set_pars(sim.pars).'
-            raise sc.KeyNotFoundError(errormsg)
-
-        def find_cutoff(age_cutoffs, age):
-            '''
-            Find which age bin each person belongs to -- e.g. with standard
-            age bins 0, 10, 20, etc., ages [5, 12, 4, 58] would be mapped to
-            indices [0, 1, 0, 5]. Age bins are not guaranteed to be uniform
-            width, which is why this can't be done as an array operation.
-            '''
-            return np.nonzero(age_cutoffs <= age)[0][-1]  # Index of the age bin to use
-
-        znu.set_seed(pars['rand_seed'])
-
-        return
-
 
 
 
@@ -179,8 +152,7 @@ class Water(Subroster):
 
         # Perform updates
         self.init_flows()
-        self.flows['new_infectious']    += self.check_infectious() # For people who are exposed and not infectious, check if they begin being infectious
-   
+        self.check_uncontaminated()
         return
 
 
@@ -192,32 +164,6 @@ class Water(Subroster):
 
         return
 
-
-
-    def update_contacts(self):
-        ''' Refresh dynamic contacts, e.g. community '''
-        # Figure out if anything needs to be done -- e.g. {'h':False, 'c':True}
-        for lkey, is_dynam in self.pars['dynam_layer'].items():
-            if is_dynam:
-                self.contacts[lkey].update(self)
-
-        return self.contacts
-
-
-    def schedule_behaviour(self, behaviour_pars):
-        ''' Schedules quarantines on the basis of results or notifications received today '''
-
-
-        return
-
-    
-    def get_key_to_use(self, policy_dict):
-        ''' Helper function used to determine what policy to use when scheduling behaviour '''
-
-        keys = np.array(list(policy_dict.keys()))
-        key_to_use = keys[znu.true(keys <= self.t)[-1]]
-
-        return key_to_use
 
 
     #%% Methods for updating state
@@ -238,23 +184,11 @@ class Water(Subroster):
         return inds
 
 
-    def check_infectious(self):
-        ''' Check if they become infectious '''
-        inds = self.check_inds(self.infectious, self.date_infectious, filter_inds=self.is_exp)
-        self.infectious[inds] = True
-        self.infectious_variant[inds] = self.exposed_variant[inds]
+    def check_uncontaminated(self):
+        ''' Check if waterbodies are contaminated and update their states accordingly '''
+        # TODO: implement this method
 
-        for variant in range(self.pars['n_variants']):
-            this_variant_inds = znu.itrue(self.infectious_variant[inds] == variant, inds)
-            n_this_variant_inds = len(this_variant_inds)
-            self.flows_variant['new_infectious_by_variant'][variant] += n_this_variant_inds
-            self.infectious_by_variant[variant, this_variant_inds] = True
-        return len(inds)
-
-    def check_cleaned(self):
-        ''' Check if they are cleaned '''
-
-        return
+        return 
 
 
 
@@ -273,12 +207,6 @@ class Water(Subroster):
         inds, unique = np.unique(inds, return_index=True)
         if source is not None:
             source = source[unique]
-
-        # Keep only susceptibles
-        #keep = self.susceptible[inds] # Unique indices in inds and source that are also susceptible
-        #inds = inds[keep]
-        #if source is not None:
-        #    source = source[keep]
 
         # Deal with variant parameters
         variant_label = self.pars['variant_map'][variant]
