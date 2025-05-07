@@ -23,13 +23,10 @@ class BarnMeta(sc.prettyobj):
         ]
 
         self.states = [
-            'uncontaminated', # bool; whether the barn is contaminated or not
-            'contaminated', # bool; whether the barn is contaminated or not
-            'composting', # bool; whether the barn is currently composting or not
-            'dry_cleaning', # bool; whether the barn is currently being dry cleaned or not
-            'wet_cleaning', # bool; whether the barn is currently being wet cleaned or not
-            'disinfecting', # bool; whether the barn is currently being disinfected or not
-            'down_time', # bool; whether the barn is currently in downtime or not
+            'uncontaminated', # bool; whether the barn is contaminated
+            'contaminated', # bool; whether the barn is contaminated
+            'composting', # bool; whether the barn is currently composting
+            'cleaning', # bool; whether the barn is currently cleaning
         ]
 
         self.biosec_states = [
@@ -47,17 +44,14 @@ class BarnMeta(sc.prettyobj):
         ]
 
         # Set the dates various events took place: these are floats per agent
-        self.state_dates = [f'date_{state}' for state in self.states] # Convert each state into a date
+        self.dates = [f'date_{state}' for state in self.states] # Convert each state into a date
             
 
         # Duration of different states: these are floats per Barn.
         self.durs = [
             'dur_contamination', # Duration of contamination
-            'dur_composting', # Duration of composting
-            'dur_dry_cleaning', # Duration of dry cleaning
-            'dur_wet_cleaning', # Duration of wet cleaning
-            'dur_disinfecting', # Duration of disinfecting
-            'dur_down_time', # Duration of downtime
+            'dur_composting', # Duration of composting process
+            'dur_cleaning', # Duration of the cleaning process
         ]
 
         self.all_states = self.agent + self.states + self.biosec_states + self.variant_states + self.by_variant_states + self.dates + self.durs
@@ -242,25 +236,11 @@ class Barns(Subroster):
         # TODO: create this function
         return
     
-    def check_dry_cleaning(self):
+    def check_cleaning(self):
         ''' Check which barns start the dry cleaning process this timestep '''
         # TODO: create this function
         return
-    
-    def check_wet_cleaning(self):
-        ''' Check which barns start the wet cleaning process this timestep '''
-        # TODO: create this function
-        return
-    
-    def check_disinfecting(self):
-        ''' Check which barns start the disinfecting process this timestep '''
-        # TODO: create this function
-        return
-    
-    def check_down_time(self):
-        ''' Check which barns start the downtime process this timestep '''
-        # TODO: create this function
-        return
+
     
     def check_repopulate(self):
         ''' Check which barns need to be repopulated this timestep '''

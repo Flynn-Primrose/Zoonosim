@@ -21,7 +21,8 @@ class FlocksMeta(sc.prettyobj):
             'barn', # uid of the barn where the flock is located
             'headcount', # Number of birds in the flock
             'infected_headcount',
-            'symptomatic_headcount', 
+            'symptomatic_headcount',
+            'symptomatic_rate',
             'dead_headcount',
             'mortality_rate',
             'water_rate', # Water consumption rate (L/bird/day)
@@ -32,6 +33,7 @@ class FlocksMeta(sc.prettyobj):
             'susceptible',
             'exposed',
             'infectious',
+            'symptomatic',
             'suspected', # Producer suspects flock is infected
             'quarantined', # Quarantined by CFIA agent
             'confirmed_positive', # confirmed positive by lab test
@@ -213,8 +215,7 @@ class Flocks(Subroster):
 
     def set_prognoses(self):
         '''
-        Set the prognoses for each flock based on breed. Need
-        to reset the seed because viral loads are drawn stochastically.
+        Set the prognoses for each flock based on breed. 
         '''
         pars = self.pars # Shorten
         if 'prognoses' not in pars or 'rand_seed' not in pars:
@@ -246,7 +247,6 @@ class Flocks(Subroster):
         # Perform updates
         self.init_flows()
         self.flows['new_infectious']    += self.check_infectious() # For flocks that are exposed and not infectious, check if they begin being infectious
-        self.flows['new_symptomatic']   += self.check_symptomatic()
 
         return
 
@@ -292,13 +292,6 @@ class Flocks(Subroster):
             n_this_variant_inds = len(this_variant_inds)
             self.flows_variant['new_infectious_by_variant'][variant] += n_this_variant_inds
             self.infectious_by_variant[variant, this_variant_inds] = True
-        return len(inds)
-
-
-    def check_symptomatic(self):
-        ''' Check for new progressions to symptomatic '''
-        inds = self.check_inds(self.symptomatic, self.date_symptomatic, filter_inds=self.is_exp)
-        self.symptomatic[inds] = True
         return len(inds)
     
     def check_suspected(self):

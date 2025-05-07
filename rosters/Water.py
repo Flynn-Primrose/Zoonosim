@@ -235,7 +235,7 @@ class Water(Subroster):
         # Calculate how long before this person can infect other people
         self.dur_contamination[inds] = znu.sample(**durpars['contamination'], size=n_infections)
         self.date_contaminated[inds] = self.t
-        self.date_clean[inds] = self.dur_contamination[inds] + self.t
+        self.date_uncontaminated[inds] = self.dur_contamination[inds] + self.t
 
         # Reset all other dates
 
