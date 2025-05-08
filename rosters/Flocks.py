@@ -386,16 +386,14 @@ class Flocks(Subroster):
             entry = dict(source=source[i] if source is not None else None, target=target, date=self.t, layer=layer, variant=variant_label)
             self.infection_log.append(entry)
 
-        # Calculate how long before this person can infect other people
+        # Calculate how long before this flock can infect other flocks
         self.dur_exp2inf[inds] = np.maximum(znu.sample(**durpars['exp2inf'], size=n_infections), 0) # Ensure that this is not negative
         self.dur_inf2peak[inds] = np.maximum(znu.sample(**durpars['inf2peak'], size=n_infections), 0) # Ensure that this is not negative
         self.dur_peak2eq[inds] = np.maximum(znu.sample(**durpars['peak2eq'], size=n_infections), 0) # Ensure that this is not negative
         self.date_exposed[inds] = self.t
         self.date_infectious[inds] = self.dur_exp2inf[inds] + self.t
 
-        # Reset all other dates
-        #for key in ['date_symptomatic']:
-        #    self[key][inds] = np.nan
+        # TODO: Update water rate, symptomatic rate, and mortality rate.
 
         # HANDLE INFECTION LEVEL CONTROL POINTS
 
