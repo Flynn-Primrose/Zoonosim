@@ -674,24 +674,15 @@ class Sim(znb.BaseSim):
 
 
         # Compute viral loads in humans
+        human_viral_load = self.agents.update_human_viral_loads(t=t)
 
-        x_p1, y_p1 = agents.human.x_p1, agents.human.y_p1
-        x_p2, y_p2 = agents.human.x_p2, agents.human.y_p2
-        x_p3, y_p3 = agents.human.x_p3, agents.human.y_p3
-        min_vl = znd.default_float(self['transmission_pars']['human']['viral_levels']['min_vl'])
-        max_vl = znd.default_float(self['transmission_pars']['human']['viral_levels']['max_vl'])
-
-        agents.human.viral_load, human_viral_load = znu.compute_viral_load(t, x_p1, y_p1, x_p2, y_p2, x_p3, y_p3, min_vl, max_vl)
 
         # Compute infection levels in flocks
-        x_p1, y_p1 = agents.flock.x_p1, agents.flock.y_p1
-        x_p2, y_p2 = agents.flock.x_p2, agents.flock.y_p2
-        x_p3, y_p3 = agents.flock.x_p3, agents.flock.y_p3
-        headcount = agents.flock.headcount
-        agents.flock.infected_headcount, flock_infection_level = znu.compute_infection_level(t, x_p1, y_p1, x_p2, y_p2, x_p3, y_p3, headcount)
+        flock_infection_levels = self.agents.update_flock_infection_levels()
 
         # Set modifiers for all agent types
-        misc_modifiers = np.concatenate((human_viral_load, flock_infection_level, np.repeat(0.5, len(agents.barn)), np.repeat(0.5, len(agents.water)))) # NOTE: Currently barn and water have no modifiers, I'm setting them to 0.5 for now.
+        # NOTE: Currently barn and water have no modifiers, I'm setting them to 0.5 for now.
+        misc_modifiers = np.concatenate((human_viral_load, flock_infection_levels, np.repeat(0.5, len(agents.barn)), np.repeat(0.5, len(agents.water)))) 
 
         # Apply interventions
         for i,intervention in enumerate(self['interventions']):
@@ -705,17 +696,18 @@ class Sim(znb.BaseSim):
         nv = self['n_variants'] # Shorten number of variants
         sus = agents.susceptible
         symp = agents.symptomatic
-        #diag = agents.diagnosed
         quar = agents.quarantined
         prel_trans = agents.rel_trans
         prel_sus   = agents.rel_sus
+
+
 
         # Iterate through n_variants to calculate infections. The meat of the simulation. 
         for variant in range(nv):
 
             # Check immunity
             
-            znimm.check_immunity(agents.human, variant)# NOTE: needs to be fixed
+            znimm.check_immunity(agents.human, variant) # NOTE: Only affects human agents
 
             # Deal with variant parameters
             rel_beta = self['rel_beta']

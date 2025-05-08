@@ -501,7 +501,7 @@ class Humans(Subroster):
         if len(breakthrough_inds):
             no_prior_breakthrough = (self.n_breakthroughs[breakthrough_inds] == 0) # We only adjust transmissibility for the first breakthrough
             new_breakthrough_inds = breakthrough_inds[no_prior_breakthrough]
-            self.rel_trans[new_breakthrough_inds] *= self.pars['trans_redux']
+            self.rel_trans[new_breakthrough_inds] *= self.pars['immunity_pars']['human']['trans_redux']
 
         # Update states, variant info, and flows
         self.susceptible[inds]    = False

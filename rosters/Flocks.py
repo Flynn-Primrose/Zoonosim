@@ -20,6 +20,8 @@ class FlocksMeta(sc.prettyobj):
             'breed', # e.g. breeder, layer, broiler
             'barn', # uid of the barn where the flock is located
             'headcount', # Number of birds in the flock
+            'rel_sus', # Relative susceptibility
+            'rel_trans', # Relative Transmissibility
             'infected_headcount',
             'symptomatic_headcount',
             'symptomatic_rate',
@@ -228,7 +230,9 @@ class Flocks(Subroster):
         progs = pars['prognoses']['flock']
         breed_to_index = {breed: index for index, breed in enumerate(progs['breeds'])}
         inds = np.fromiter((breed_to_index[this_breed] for this_breed in self.breed))
-        self.symp_prob[:] = progs['symp_prob'][inds]
+        self.symptomatic_rate[:] = progs['symptomatic_rate'][inds]
+        self.mortality_rate[:] = progs['mortality_rate'][inds]
+        self.water_rate[:] = progs['water_rate'][inds]
         self.rel_sus[:] = progs['sus_ORs'][inds]
         self.rel_trans[:] = progs['trans_ORs'][inds]
 

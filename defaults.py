@@ -262,8 +262,9 @@ default_flock_prognoses = dict(
     breeds = np.array(['breeder', 'broiler', 'layer']),
     sus_ORs = np.array([1.00, 1.00, 1.00]),
     trans_ORs = np.array([1.00, 1.00, 1.00]),
-    symp_rates = np.array([0.01, 0.01, 0.01]),
-    mortality_rates = np.array([0.007, 0.005, 0.002]),
+    symptomatic_rate = np.array([0.01, 0.01, 0.01]),
+    mortality_rate = np.array([0.007, 0.005, 0.002]),
+    water_rate = np.array([1.00, 1.00, 1.00])
 )
 
 default_barn_prognoses = dict(

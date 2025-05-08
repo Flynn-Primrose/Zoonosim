@@ -170,6 +170,7 @@ class Agents(Roster):
 
         return
 
+    #%% Methods for updating state
 
     def init_flows(self):
         ''' Initialize flows to be zero '''
@@ -213,6 +214,30 @@ class Agents(Roster):
 
         return self.contacts
     
+    def update_human_viral_loads(self, t):
+        '''
+        update the viral levels of human agents
+
+        Args:
+            t (float): Current time in simulation
+        '''
+        x_p1, y_p1 = self.human.x_p1, self.human.y_p1
+        x_p2, y_p2 = self.human.x_p2, self.human.y_p2
+        x_p3, y_p3 = self.human.x_p3, self.human.y_p3
+        min_vl = znd.default_float(self['transmission_pars']['human']['viral_levels']['min_vl'])
+        max_vl = znd.default_float(self['transmission_pars']['human']['viral_levels']['max_vl'])
+
+        self.human.viral_load, human_viral_load = znu.compute_viral_load(t, x_p1, y_p1, x_p2, y_p2, x_p3, y_p3, min_vl, max_vl)
+        return human_viral_load
+    
+    def update_flock_infection_levels(self, t):
+        x_p1, y_p1 = self.flock.x_p1, self.flock.y_p1
+        x_p2, y_p2 = self.flock.x_p2, self.flock.y_p2
+        x_p3, y_p3 = self.flock.x_p3, self.flock.y_p3
+        headcount = self.flock.headcount
+        self.flock.infected_headcount, flock_infection_levels = znu.compute_infection_level(t, x_p1, y_p1, x_p2, y_p2, x_p3, y_p3, headcount)
+        return flock_infection_levels
+
     def update_states_from_subrosters(self):
         susceptible_human_uids = np.array(self.human['uid'][znu.true(self.human['susceptible'])])
         exposed_human_uids = np.array(self.human['uid'][znu.true(self.human['exposed'])])
@@ -247,8 +272,21 @@ class Agents(Roster):
         self.quarantined = np.isin(self['uid'], quarantined_uids)
 
         return
+    
+    def update_rel_sus_from_subrosters(self):
+        '''
+        Update self.rel_sus based on information in the subrosters
+        '''
 
-    #%% Methods for updating state
+        return
+
+
+    def update_rel_trans_from_subrosters(self):
+        '''
+        Update self.rel_trans based on information in the subrosters
+        '''
+
+        return
 
     def check_inds(self, current, date, filter_inds=None):
         ''' Return indices for which the current state is false and which are assigned a date on or before the current date
@@ -281,7 +319,41 @@ class Agents(Roster):
         return len(inds)
 
 
+    #%% Methods for calculating values from subrosters
 
+    def get_human_rel_sus(self):
+        uids = self.human.uid
+        rel_sus = self.human.rel_sus
+        return uids, rel_sus
+    
+    def get_flock_rel_sus(self):
+        
+        return
+    
+    def get_barn_rel_sus(self):
+
+        return
+    
+    def get_water_rel_sus(self):
+
+        return
+    
+    def get_human_rel_trans(self):
+        uids = self.human.uid
+        rel_trans = self.human.rel_trans
+        return uids, rel_trans
+    
+    def get_flock_rel_trans(self):
+
+        return
+    
+    def get_barn_rel_trans(self):
+
+        return
+    
+    def get_water_rel_trans(self):
+
+        return
 
     #%% Methods to make events occur (infection and diagnosis)
 
