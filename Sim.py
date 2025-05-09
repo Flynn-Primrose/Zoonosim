@@ -680,9 +680,19 @@ class Sim(znb.BaseSim):
         # Compute infection levels in flocks
         flock_infection_levels = self.agents.update_flock_infection_levels()
 
+        # Compute modifiers for barns
+        # In principle the relative transmission and susceptibility of barns should vary based on temperature and humidity
+        # For now, I'm just setting them to 0.5
+        barn_modifiers = np.repeat(0.5, len(agents.barn)) # TODO: Implement barn modifiers based on temperature and humidity
+
+        # Compute modifiers for water
+        # In principle the relative transmission and susceptibility of water should vary based on temperature. 
+        # For now, I'm just setting them to 0.5
+        water_modifiers = np.repeat(0.5, len(agents.water)) # TODO: Implement water modifiers based on temperature
+
         # Set modifiers for all agent types
         # NOTE: Currently barn and water have no modifiers, I'm setting them to 0.5 for now.
-        misc_modifiers = np.concatenate((human_viral_load, flock_infection_levels, np.repeat(0.5, len(agents.barn)), np.repeat(0.5, len(agents.water)))) 
+        misc_modifiers = np.concatenate((human_viral_load, flock_infection_levels, barn_modifiers, water_modifiers)) 
 
         # Apply interventions
         for i,intervention in enumerate(self['interventions']):
@@ -711,6 +721,7 @@ class Sim(znb.BaseSim):
 
             # Deal with variant parameters
             rel_beta = self['rel_beta']
+            # TODO: This should be variable by variant
             asymp_factor = np.repeat([znd.default_float(self['asymp_factor']['human']),
                                   znd.default_float(self['asymp_factor']['flock']), 
                                   znd.default_float(self['asymp_factor']['barn']), 
@@ -953,12 +964,6 @@ class Sim(znb.BaseSim):
             self.finalize(verbose=verbose, restore_pars=restore_pars)
             sc.printv(f'Run finished after {elapsed:0.2f} s.\n', 1, verbose)
         
-        # print("DEBUG: SMARTWATCH ALERT PROBS 4")
-        # final_probs = []
-        # for day in np.arange(-21, 22, 1):
-        #     final_probs.append(self.people.sum_alert_on_day[day]/(self.people.sum_people_on_day[day] + 1e-6))
-        # print(final_probs)
-        #### END DEBUG
 
         return self
 

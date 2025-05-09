@@ -288,35 +288,7 @@ class Agents(Roster):
 
         return
 
-    def check_inds(self, current, date, filter_inds=None):
-        ''' Return indices for which the current state is false and which are assigned a date on or before the current date
 
-        Args:
-            current (array): list of boolean values that represent a current state
-            date (array): list that contains either a date or a Nan
-        '''
-        if filter_inds is None:
-            not_current = znu.false(current)
-        else:
-            not_current = znu.ifalsei(current, filter_inds)
-        has_date = znu.idefinedi(date, not_current)
-        inds     = znu.itrue(self.t >= date[has_date], has_date)
-        return inds
-
-
-    def check_infectious(self):
-        ''' Check if they become infectious '''
-        inds = self.check_inds(self.infectious, self.date_infectious, filter_inds=self.is_exp)
-        self.infectious[inds] = True
-        self.infectious_variant[inds] = self.exposed_variant[inds]
-
-
-        for variant in range(self.pars['n_variants']):
-            this_variant_inds = znu.itrue(self.infectious_variant[inds] == variant, inds)
-            n_this_variant_inds = len(this_variant_inds)
-            self.flows_variant['new_infectious_by_variant'][variant] += n_this_variant_inds
-            self.infectious_by_variant[variant, this_variant_inds] = True
-        return len(inds)
 
 
     #%% Methods for calculating values from subrosters

@@ -19,7 +19,7 @@ class FlocksMeta(sc.prettyobj):
             'uid', # int
             'breed', # e.g. breeder, layer, broiler
             'barn', # uid of the barn where the flock is located
-            'headcount', # Number of birds in the flock
+            'headcount', # Number of live birds in the flock
             'rel_sus', # Relative susceptibility
             'rel_trans', # Relative Transmissibility
             'infected_headcount',
@@ -221,7 +221,7 @@ class Flocks(Subroster):
         '''
         pars = self.pars # Shorten
         if 'prognoses' not in pars or 'rand_seed' not in pars:
-            errormsg = 'This flock object does not have the required parameters ("prognoses" and "rand_seed"). Create a sim (or parameters), then do e.g. people.set_pars(sim.pars).'
+            errormsg = 'This flock object does not have the required parameters ("prognoses" and "rand_seed").'
             raise sc.KeyNotFoundError(errormsg)
 
 
@@ -230,9 +230,9 @@ class Flocks(Subroster):
         progs = pars['prognoses']['flock']
         breed_to_index = {breed: index for index, breed in enumerate(progs['breeds'])}
         inds = np.fromiter((breed_to_index[this_breed] for this_breed in self.breed))
-        self.symptomatic_rate[:] = progs['symptomatic_rate'][inds]
-        self.mortality_rate[:] = progs['mortality_rate'][inds]
-        self.water_rate[:] = progs['water_rate'][inds]
+        self.symptomatic_rate[:] = progs['baseline_symptomatic_rate'][inds]
+        self.mortality_rate[:] = progs['baseline_mortality_rate'][inds]
+        self.water_rate[:] = progs['baseline_water_rate'][inds]
         self.rel_sus[:] = progs['sus_ORs'][inds]
         self.rel_trans[:] = progs['trans_ORs'][inds]
 
@@ -322,6 +322,11 @@ class Flocks(Subroster):
         ''' Check for new progressions to reincarnated '''
         #TODO: Implement this method
         return
+    
+    def update_headcounts(self):
+        ''' Update the headcounts of the flocks '''
+        #TODO: Implement this method
+        return
 
     #%% Methods to make events occur (infection and diagnosis)
 
@@ -393,7 +398,23 @@ class Flocks(Subroster):
         self.date_exposed[inds] = self.t
         self.date_infectious[inds] = self.dur_exp2inf[inds] + self.t
 
-        # TODO: Update water rate, symptomatic rate, and mortality rate.
+        #Update water rate, symptomatic rate, and mortality rate.
+        pars = self.pars # Shorten
+        if 'prognoses' not in pars or 'rand_seed' not in pars:
+            errormsg = 'This flock object does not have the required parameters ("prognoses" and "rand_seed").'
+            raise sc.KeyNotFoundError(errormsg)
+        progs = pars['prognoses']['flock']
+        breed_to_index = {breed: index for index, breed in enumerate(progs['breeds'])}
+        breed_inds = np.fromiter((breed_to_index[this_breed] for this_breed in self.breed[inds]))
+        breed, frequency = np.unique(breed_inds, return_counts=True)
+        breed_freq = zip(breed, frequency)
+        for breed, frequency in breed_freq:
+            # NOTE: I'm just guessing at the distribution of these parameters.
+            self.symptomatic_rate[breed_inds[inds] == breed] = self.symptomatic_rate[breed_inds[inds] == breed] + np.maximum(znu.sample('lognormal', progs['mean_symptomatic_rate_increase'][breed], 1.0, size=frequency), 0)*infect_pars['rel_symp_prob']
+            self.mortality_rate[breed_inds[inds] == breed] = self.mortality_rate[breed_inds[inds] == breed] + np.maximum(znu.sample('lognormal', progs['mean_mortality_rate_increase'][breed], 1.0, size=frequency), 0)*infect_pars['rel_death_prob']
+            self.water_rate[breed_inds[inds] == breed] = self.water_rate[breed_inds[inds] == breed] + np.maximum(znu.sample('lognormal', progs['mean_water_rate_increase'][breed], 1.0, size=frequency), 0)
+
+
 
         # HANDLE INFECTION LEVEL CONTROL POINTS
 

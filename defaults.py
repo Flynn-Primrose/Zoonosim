@@ -262,9 +262,12 @@ default_flock_prognoses = dict(
     breeds = np.array(['breeder', 'broiler', 'layer']),
     sus_ORs = np.array([1.00, 1.00, 1.00]),
     trans_ORs = np.array([1.00, 1.00, 1.00]),
-    symptomatic_rate = np.array([0.01, 0.01, 0.01]),
-    mortality_rate = np.array([0.007, 0.005, 0.002]),
-    water_rate = np.array([1.00, 1.00, 1.00])
+    baseline_symptomatic_rate = np.array([0.001, 0.001, 0.001]),
+    mean_symptomatic_rate_increase = np.array([0.001, 0.001, 0.001]),
+    baseline_mortality_rate = np.array([0.001, 0.001, 0.001]),
+    mean_mortality_rate_increase = np.array([0.001, 0.001, 0.001]),
+    baseline_water_rate = np.array([1.00, 1.00, 1.00]),
+    mean_water_rate_increase = np.array([1.00, 1.00, 1.00]),
 )
 
 default_barn_prognoses = dict(
