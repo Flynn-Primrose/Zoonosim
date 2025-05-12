@@ -24,10 +24,14 @@ class FlocksMeta(sc.prettyobj):
             'rel_trans', # Relative Transmissibility
             'infected_headcount',
             'symptomatic_headcount',
-            'symptomatic_rate',
+            'baseline_symptomatic_rate', 
+            'infected_symptomatic_rate', 
             'dead_headcount',
-            'mortality_rate',
-            'water_rate', # Water consumption rate (L/bird/day)
+            'baseline_mortality_rate',
+            'infected_mortality_rate', 
+            'water_consumption', # Water consumption (L/day)
+            'baseline_water_rate', # Water consumption rate (L/bird/day)
+            'infected_water_rate', # Water consumption rate (L/bird/day)
             'reincarnations', # Number of times the flock has been reincarnated 
         ]
 
@@ -229,10 +233,11 @@ class Flocks(Subroster):
 
         progs = pars['prognoses']['flock']
         breed_to_index = {breed: index for index, breed in enumerate(progs['breeds'])}
-        inds = np.fromiter((breed_to_index[this_breed] for this_breed in self.breed))
-        self.symptomatic_rate[:] = progs['baseline_symptomatic_rate'][inds]
-        self.mortality_rate[:] = progs['baseline_mortality_rate'][inds]
-        self.water_rate[:] = progs['baseline_water_rate'][inds]
+        #inds = np.fromiter((breed_to_index[this_breed] for this_breed in self.breed), dtype=znd.default_str)
+        inds = np.array([breed_to_index[this_breed] for this_breed in self.breed])
+        self.baseline_symptomatic_rate[:] = progs['baseline_symptomatic_rate'][inds]
+        self.baseline_mortality_rate[:] = progs['baseline_mortality_rate'][inds]
+        self.baseline_water_rate[:] = progs['baseline_water_rate'][inds]
         self.rel_sus[:] = progs['sus_ORs'][inds]
         self.rel_trans[:] = progs['trans_ORs'][inds]
 
@@ -324,7 +329,7 @@ class Flocks(Subroster):
         return
     
     def update_headcounts(self):
-        ''' Update the headcounts of the flocks '''
+        ''' Update the headcounts and water consumption of the flocks '''
         #TODO: Implement this method
         return
 
@@ -405,14 +410,15 @@ class Flocks(Subroster):
             raise sc.KeyNotFoundError(errormsg)
         progs = pars['prognoses']['flock']
         breed_to_index = {breed: index for index, breed in enumerate(progs['breeds'])}
-        breed_inds = np.fromiter((breed_to_index[this_breed] for this_breed in self.breed[inds]))
+        #breed_inds = np.fromiter((breed_to_index[this_breed] for this_breed in self.breed[inds]), dtype=znd.default_str)
+        breed_inds = np.array([breed_to_index[this_breed] for this_breed in self.breed[inds]])
         breed, frequency = np.unique(breed_inds, return_counts=True)
         breed_freq = zip(breed, frequency)
         for breed, frequency in breed_freq:
             # NOTE: I'm just guessing at the distribution of these parameters.
-            self.symptomatic_rate[breed_inds[inds] == breed] = self.symptomatic_rate[breed_inds[inds] == breed] + np.maximum(znu.sample('lognormal', progs['mean_symptomatic_rate_increase'][breed], 1.0, size=frequency), 0)*infect_pars['rel_symp_prob']
-            self.mortality_rate[breed_inds[inds] == breed] = self.mortality_rate[breed_inds[inds] == breed] + np.maximum(znu.sample('lognormal', progs['mean_mortality_rate_increase'][breed], 1.0, size=frequency), 0)*infect_pars['rel_death_prob']
-            self.water_rate[breed_inds[inds] == breed] = self.water_rate[breed_inds[inds] == breed] + np.maximum(znu.sample('lognormal', progs['mean_water_rate_increase'][breed], 1.0, size=frequency), 0)
+            self.infected_symptomatic_rate[inds[breed_inds == breed]] = self.symptomatic_rate[inds[breed_inds == breed]] + np.maximum(znu.sample('lognormal', progs['mean_symptomatic_rate_increase'][breed], 1.0, size=frequency), 0)*infect_pars['rel_symp_prob']
+            self.infected_mortality_rate[inds[breed_inds == breed]] = self.mortality_rate[inds[breed_inds == breed]] + np.maximum(znu.sample('lognormal', progs['mean_mortality_rate_increase'][breed], 1.0, size=frequency), 0)*infect_pars['rel_death_prob']
+            self.infected_water_rate[inds[breed_inds == breed]] = self.water_rate[inds[breed_inds == breed]] + np.maximum(znu.sample('lognormal', progs['mean_water_rate_increase'][breed], 1.0, size=frequency), 0)
 
 
 

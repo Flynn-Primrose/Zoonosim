@@ -31,8 +31,8 @@ class AgentsMeta(sc.prettyobj):
         self.agent = [
             'uid', #Int
             'agent_type', #string? the type of agent, must be one of pars['agent_types']
-            'rel_trans', # float - relative transmissibility of the agent
-            'rel_sus', # float - relative susceptibility of the agent
+            #'rel_trans', # float - relative transmissibility of the agent
+            #'rel_sus', # float - relative susceptibility of the agent
         ]
 
         self.states = [ # all boolean
@@ -54,17 +54,18 @@ class AgentsMeta(sc.prettyobj):
             'infectious_by_variant',
         ]
 
-        self.imm_states = [
-            'sus_imm',  # Float, by variant
-            'symp_imm', # Float, by variant
-            'sev_imm',  # Float, by variant
-        ]
+        # self.imm_states = [
+        #     'sus_imm',  # Float, by variant
+        #     'symp_imm', # Float, by variant
+        #     'sev_imm',  # Float, by variant
+        # ]
 
 
-        self.all_states = self.agent + self.states +self.variant_states + self.by_variant_states + self.imm_states
+        self.all_states = self.agent + self.states +self.variant_states + self.by_variant_states #+ self.imm_states
 
         # Validate
-        self.state_types = ['agent', 'states', 'variant_states', 'by_variant_states', 'imm_states', 'all_states']
+        #self.state_types = ['agent', 'states', 'variant_states', 'by_variant_states', 'imm_states', 'all_states']
+        self.state_types = ['agent', 'states', 'variant_states', 'by_variant_states', 'all_states']
         for state_type in self.state_types:
             states = getattr(self, state_type)
             n_states        = len(states)
@@ -139,8 +140,8 @@ class Agents(Roster):
             self[key] = np.full((self.pars['n_variants'], self.pars['pop_size']), False, dtype=bool)
 
         # Set immunity and antibody states
-        for key in self.meta.imm_states:  # Everyone starts out with no immunity
-            self[key] = np.zeros((self.pars['n_variants'], self.pars['pop_size']), dtype=znd.default_float)
+        # for key in self.meta.imm_states:  # Everyone starts out with no immunity
+        #     self[key] = np.zeros((self.pars['n_variants'], self.pars['pop_size']), dtype=znd.default_float)
 
         # Store the dtypes used in a flat dict
         self._dtypes = {key:self[key].dtype for key in self.keys()} # Assign all to float by default
@@ -224,8 +225,8 @@ class Agents(Roster):
         x_p1, y_p1 = self.human.x_p1, self.human.y_p1
         x_p2, y_p2 = self.human.x_p2, self.human.y_p2
         x_p3, y_p3 = self.human.x_p3, self.human.y_p3
-        min_vl = znd.default_float(self['transmission_pars']['human']['viral_levels']['min_vl'])
-        max_vl = znd.default_float(self['transmission_pars']['human']['viral_levels']['max_vl'])
+        min_vl = znd.default_float(self.pars['transmission_pars']['human']['viral_levels']['min_vl'])
+        max_vl = znd.default_float(self.pars['transmission_pars']['human']['viral_levels']['max_vl'])
 
         self.human.viral_load, human_viral_load = znu.compute_viral_load(t, x_p1, y_p1, x_p2, y_p2, x_p3, y_p3, min_vl, max_vl)
         return human_viral_load

@@ -259,7 +259,7 @@ default_human_prognoses = dict(
         )
 
 default_flock_prognoses = dict(
-    breeds = np.array(['breeder', 'broiler', 'layer']),
+    breeds = np.array(['breeder', 'broiler', 'layer'], dtype=default_str),
     sus_ORs = np.array([1.00, 1.00, 1.00]),
     trans_ORs = np.array([1.00, 1.00, 1.00]),
     baseline_symptomatic_rate = np.array([0.001, 0.001, 0.001]),

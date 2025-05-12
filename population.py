@@ -219,7 +219,7 @@ def make_humans(sim_pars, uid):
 
 def make_flocks(sim_pars, uid, flock2barn):
     breed_index = znu.n_multinomial(znd.default_flock_breed_freqs, len(uid))
-    breed = np.empty(len(uid), dtype = str)
+    breed = np.empty(len(uid), dtype = object)
     barn = np.empty(len(uid), dtype=znd.default_int)
     for index in range(len(uid)):
         breed[index] = znd.default_flock_breeds[breed_index[index]] # Get the breed for this flock
