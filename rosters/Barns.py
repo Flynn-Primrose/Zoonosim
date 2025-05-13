@@ -230,16 +230,7 @@ class Barns(Subroster):
                 self.date_contaminated[i] = np.nan
                 self.date_uncontaminated[i] = np.nan
         return len(inds)
-    
-    def check_composting(self):
-        ''' Check which barns start the composting process this timestep '''
-        # TODO: create this function
-        return
-    
-    def check_cleaning(self):
-        ''' Check which barns start the dry cleaning process this timestep '''
-        # TODO: create this function
-        return
+
 
     
     def check_repopulate(self):
@@ -297,22 +288,6 @@ class Barns(Subroster):
 
 
         return n_infections # For incrementing counters
-
-
-    def test(self, inds, test_sensitivity=1.0, loss_prob=0.0, test_delay=0):
-        '''
-        Method to test agents. Typically not to be called by the user directly;
-        see the test_num() and test_prob() interventions.
-
-        Args:
-            inds: indices of who to test
-            test_sensitivity (float): probability of a true positive
-            loss_prob (float): probability of loss to follow-up
-            test_delay (int): number of days before test results are ready
-        '''
-
-
-        return
 
 
 
