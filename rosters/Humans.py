@@ -296,8 +296,8 @@ class Humans(Subroster):
         ''' Perform post-timestep updates '''
 
 
-        self.flows['new_diagnoses'] += self.check_diagnosed()
-        self.flows['new_quarantined'] += self.check_quar()
+        #self.flows['new_diagnoses'] += self.check_diagnosed()
+        #self.flows['new_quarantined'] += self.check_quar()
 
         del self.is_exp  # Tidy up
 
@@ -410,7 +410,7 @@ class Humans(Subroster):
         self.infectious_by_variant[:, inds] = False
 
         # Handle immunity aspects
-        if self.pars['use_waning']:
+        if self.pars['immunity_pars']['human']['use_waning']:
 
             # Reset additional states
             self.susceptible[inds] = True
@@ -431,7 +431,7 @@ class Humans(Subroster):
         self.infectious[inds]       = False
         self.symptomatic[inds]      = False
         self.severe[inds]           = False
-        self.known_contact[inds]    = False
+        #self.known_contact[inds]    = False
         self.quarantined[inds]      = False
         self.recovered[inds]        = False
         self.infectious_variant[inds] = np.nan

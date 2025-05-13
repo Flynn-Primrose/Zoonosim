@@ -195,6 +195,10 @@ class Agents(Roster):
         # Initialize
         self.t = t
         self.is_exp = self.true('exposed') # For storing the interim values since used in every subsequent calculation
+        self.human.update_states_pre(t)
+        self.flock.update_states_pre(t)
+        self.barn.update_states_pre(t)
+        self.water.update_states_pre(t)
 
         return
 
@@ -202,6 +206,13 @@ class Agents(Roster):
     def update_states_post(self):
         ''' Perform post-timestep updates '''
 
+        # Update the states of the subrosters
+        self.human.update_states_post()
+        self.flock.update_states_post()
+        self.barn.update_states_post()
+        self.water.update_states_post()
+        # Update the states of the main roster
+        self.update_states_from_subrosters()
         del self.is_exp  # Tidy up
 
         return

@@ -256,7 +256,7 @@ class Flocks(Subroster):
         # Perform updates
         self.init_flows()
         self.flows['new_infectious']    += self.check_infectious() # For flocks that are exposed and not infectious, check if they begin being infectious
-
+        self.update_headcounts() # Update the headcounts and water consumption of the flocks
         return
 
 
@@ -330,7 +330,14 @@ class Flocks(Subroster):
     
     def update_headcounts(self):
         ''' Update the headcounts and water consumption of the flocks '''
-        #TODO: Implement this method
+        uninfected_headcount = self.headcount - self.infected_headcount
+        dead_infected = self.infected_headcount * self.infected_symptomatic_rate
+        dead_uninfected = uninfected_headcount * self.baseline_symptomatic_rate
+        self.dead_headcount += dead_infected + dead_uninfected
+        self.infected_headcount = self.infected_headcount - dead_infected
+        self.headcount -= dead_infected - dead_uninfected
+        self.symptomatic_headcount = self.infected_headcount * self.infected_symptomatic_rate + uninfected_headcount * self.baseline_symptomatic_rate
+        self.water_consumption = self.infected_headcount * self.infected_water_rate + uninfected_headcount * self.baseline_water_rate
         return
 
     #%% Methods to make events occur (infection and diagnosis)

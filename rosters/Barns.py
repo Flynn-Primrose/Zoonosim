@@ -195,8 +195,6 @@ class Barns(Subroster):
         ''' Perform post-timestep updates '''
 
 
-        del self.is_exp  # Tidy up
-
         return
 
 
