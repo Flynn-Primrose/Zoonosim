@@ -707,8 +707,8 @@ class Sim(znb.BaseSim):
         sus = agents.susceptible
         symp = agents.symptomatic
         quar = agents.quarantined
-        prel_trans = agents.rel_trans
-        prel_sus   = agents.rel_sus
+        prel_trans = agents.get_rel_trans()
+        prel_sus   = agents.get_rel_sus()
 
 
 
@@ -735,7 +735,7 @@ class Sim(znb.BaseSim):
                               znd.default_float(self['beta']['barn']*rel_beta), 
                               znd.default_float(self['beta']['water']*rel_beta)], 
                               [len(agents.human), len(agents.flock), len(agents.barn), len(agents.water)])
-            #beta = znd.default_float(self['beta'] * rel_beta)
+            
 
             for lkey, layer in contacts.items():
                 p1 = layer['p1']
@@ -750,9 +750,6 @@ class Sim(znb.BaseSim):
 
                 rel_trans, rel_sus = znu.compute_trans_sus(prel_trans, prel_sus, inf_variant, sus, beta_layer, misc_modifiers, symp, quar, asymp_factor, quar_factor, sus_imm)
 
-                # NOTE: Temporary work around for dev purposes only
-                #rel_trans = self.agents['rel_trans'] # NOTE: for development only
-                #rel_sus = self.agents['rel_sus'] # NOTE: for development only
 
                 # Calculate actual transmission
                 pairs = [[p1,p2]] 

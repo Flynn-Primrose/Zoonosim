@@ -416,9 +416,9 @@ class Flocks(Subroster):
         breed_freq = zip(breed, frequency)
         for breed, frequency in breed_freq:
             # NOTE: I'm just guessing at the distribution of these parameters.
-            self.infected_symptomatic_rate[inds[breed_inds == breed]] = self.symptomatic_rate[inds[breed_inds == breed]] + np.maximum(znu.sample('lognormal', progs['mean_symptomatic_rate_increase'][breed], 1.0, size=frequency), 0)*infect_pars['rel_symp_prob']
-            self.infected_mortality_rate[inds[breed_inds == breed]] = self.mortality_rate[inds[breed_inds == breed]] + np.maximum(znu.sample('lognormal', progs['mean_mortality_rate_increase'][breed], 1.0, size=frequency), 0)*infect_pars['rel_death_prob']
-            self.infected_water_rate[inds[breed_inds == breed]] = self.water_rate[inds[breed_inds == breed]] + np.maximum(znu.sample('lognormal', progs['mean_water_rate_increase'][breed], 1.0, size=frequency), 0)
+            self.infected_symptomatic_rate[inds[breed_inds == breed]] = self.baseline_symptomatic_rate[inds[breed_inds == breed]] + np.maximum(znu.sample('lognormal', progs['mean_symptomatic_rate_increase'][breed], 1.0, size=frequency), 0)*infect_pars['rel_symp_prob']
+            self.infected_mortality_rate[inds[breed_inds == breed]] = self.baseline_mortality_rate[inds[breed_inds == breed]] + np.maximum(znu.sample('lognormal', progs['mean_mortality_rate_increase'][breed], 1.0, size=frequency), 0)*infect_pars['rel_death_prob']
+            self.infected_water_rate[inds[breed_inds == breed]] = self.baseline_water_rate[inds[breed_inds == breed]] + np.maximum(znu.sample('lognormal', progs['mean_water_rate_increase'][breed], 1.0, size=frequency), 0)
 
 
 

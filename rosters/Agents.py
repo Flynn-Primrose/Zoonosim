@@ -54,11 +54,11 @@ class AgentsMeta(sc.prettyobj):
             'infectious_by_variant',
         ]
 
-        # self.imm_states = [
-        #     'sus_imm',  # Float, by variant
-        #     'symp_imm', # Float, by variant
-        #     'sev_imm',  # Float, by variant
-        # ]
+        self.imm_states = [
+            'sus_imm',  # Float, by variant
+            'symp_imm', # Float, by variant
+            'sev_imm',  # Float, by variant
+        ]
 
 
         self.all_states = self.agent + self.states +self.variant_states + self.by_variant_states #+ self.imm_states
@@ -140,8 +140,8 @@ class Agents(Roster):
             self[key] = np.full((self.pars['n_variants'], self.pars['pop_size']), False, dtype=bool)
 
         # Set immunity and antibody states
-        # for key in self.meta.imm_states:  # Everyone starts out with no immunity
-        #     self[key] = np.zeros((self.pars['n_variants'], self.pars['pop_size']), dtype=znd.default_float)
+        for key in self.meta.imm_states:  # Everyone starts out with no immunity
+            self[key] = np.zeros((self.pars['n_variants'], self.pars['pop_size']), dtype=znd.default_float)
 
         # Store the dtypes used in a flat dict
         self._dtypes = {key:self[key].dtype for key in self.keys()} # Assign all to float by default
@@ -273,21 +273,6 @@ class Agents(Roster):
         self.quarantined = np.isin(self['uid'], quarantined_uids)
 
         return
-    
-    def update_rel_sus_from_subrosters(self):
-        '''
-        Update self.rel_sus based on information in the subrosters
-        '''
-
-        return
-
-
-    def update_rel_trans_from_subrosters(self):
-        '''
-        Update self.rel_trans based on information in the subrosters
-        '''
-
-        return
 
 
 
@@ -295,38 +280,47 @@ class Agents(Roster):
     #%% Methods for calculating values from subrosters
 
     def get_human_rel_sus(self):
-        uids = self.human.uid
-        rel_sus = self.human.rel_sus
-        return uids, rel_sus
+        return self.human.rel_sus
     
     def get_flock_rel_sus(self):
-        
-        return
+        return self.flock.rel_sus
     
     def get_barn_rel_sus(self):
-
-        return
+        #TODO: This should depend on the temperature and humidity of the barn
+        return np.repeat([0.5], len(self.barn))
     
     def get_water_rel_sus(self):
-
-        return
+        #TODO: This should depend on the temperature of the water
+        return np.repeat([0.5], len(self.water))
+    
+    def get_rel_sus(self):
+        human_rel_sus = self.get_human_rel_sus()
+        flock_rel_sus = self.get_flock_rel_sus()
+        barn_rel_sus = self.get_barn_rel_sus()
+        water_rel_sus = self.get_water_rel_sus()
+        return np.concatenate((human_rel_sus, flock_rel_sus, barn_rel_sus, water_rel_sus))
     
     def get_human_rel_trans(self):
-        uids = self.human.uid
-        rel_trans = self.human.rel_trans
-        return uids, rel_trans
+        return self.human.rel_trans
     
     def get_flock_rel_trans(self):
-
-        return
+        return self.flock.rel_trans
     
     def get_barn_rel_trans(self):
-
-        return
+        #TODO: This should depend on the temperature and humidity of the barn
+        return np.repeat([0.5], len(self.barn))
     
     def get_water_rel_trans(self):
+        #TODO: This should depend on the temperature of the water
+        return np.repeat([0.5], len(self.water))
+    
+    def get_rel_trans(self):
+        human_rel_trans = self.get_human_rel_trans()
+        flock_rel_trans = self.get_flock_rel_trans()
+        barn_rel_trans = self.get_barn_rel_trans()
+        water_rel_trans = self.get_water_rel_trans()
+        return np.concatenate((human_rel_trans, flock_rel_trans, barn_rel_trans, water_rel_trans))
 
-        return
 
     #%% Methods to make events occur (infection and diagnosis)
 
