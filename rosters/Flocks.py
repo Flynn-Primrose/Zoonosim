@@ -252,8 +252,9 @@ class Flocks(Subroster):
 
         # Perform updates
         self.init_flows()
-        self.flows['new_infectious']    += self.check_infectious() # For flocks that are exposed and not infectious, check if they begin being infectious
+        self.flows['new_infectious'] = self.check_infectious() # For flocks that are exposed and not infectious, check if they begin being infectious
         self.update_headcounts() # Update the headcounts and water consumption of the flocks
+        self.flows['new_suspected'] = self.check_suspected()
         return
 
 
@@ -302,8 +303,16 @@ class Flocks(Subroster):
     
     def check_suspected(self):
         ''' Check for new progressions to suspected '''
-        # TODO: Implement this method
-        return
+        actual_symptomatic_rate = self.symptomatic_headcount / self.headcount
+        actual_mortality_rate = self.dead_headcount / self.headcount
+        actual_water_rate = self.water_consumption / self.headcount
+
+        suspicious_symptomatic_inds = np.where(actual_symptomatic_rate > znd.default_suspicious_symptomatic_rate)[0]
+        suspicious_mortality_inds = np.where(actual_mortality_rate > znd.default_suspicious_mortality_rate)[0]
+        suspicious_water_inds = np.where(actual_water_rate > znd.default_suspicious_consumption_rate)[0]
+        suspicious_inds = np.unique(np.concatenate((suspicious_symptomatic_inds, suspicious_mortality_inds, suspicious_water_inds)))
+        self.suspected[suspicious_inds] = True
+        return len(suspicious_inds)
 
     def check_quarantined(self):
         ''' Check for new progressions to quarantined '''
