@@ -1,8 +1,5 @@
 import numpy as np
-import scipy.stats as stats
 import sciris as sc
-import scipy.stats as stats
-from collections import defaultdict
 from .. import version as znv
 from .. import utils as znu
 from .. import defaults as znd
@@ -194,8 +191,6 @@ class Barns(Subroster):
     def update_states_post(self):
         ''' Perform post-timestep updates '''
 
-
-        del self.is_exp  # Tidy up
 
         return
 

@@ -1,8 +1,5 @@
 import numpy as np
-import scipy.stats as stats
 import sciris as sc
-import scipy.stats as stats
-from collections import defaultdict
 from .. import version as znv
 from .. import utils as znu
 from .. import defaults as znd
@@ -148,7 +145,6 @@ class Water(Subroster):
 
         # Initialize
         self.t = t
-        self.is_exp = self.true('exposed') # For storing the interim values since used in every subsequent calculation
 
         # Perform updates
         self.init_flows()
@@ -158,9 +154,6 @@ class Water(Subroster):
 
     def update_states_post(self):
         ''' Perform post-timestep updates '''
-
-
-        del self.is_exp  # Tidy up
 
         return
 

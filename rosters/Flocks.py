@@ -1,8 +1,5 @@
 import numpy as np
-import scipy.stats as stats
 import sciris as sc
-import scipy.stats as stats
-from collections import defaultdict
 from .. import version as znv
 from .. import utils as znu
 from .. import defaults as znd
@@ -69,7 +66,7 @@ class FlocksMeta(sc.prettyobj):
 
         # Dates for the cfia protocols: these are floats per flock
         self.protocol_dates = [
-            'date_assessment', # Date of CFIA agent's assessment of flock
+            'date_inspection', # Date of CFIA agent's assessment of flock
             'date_result', # Date of lab test result
         ]
 
@@ -87,7 +84,7 @@ class FlocksMeta(sc.prettyobj):
             'dur_inf2peak', # Mean time from infectious to peak infection
             'dur_peak2eq', # Mean time from peak infection to equilibrium infection
             'dur_susp2insp', # Mean time from suspected to inspected
-            'dur_insp2conf', # Mean time from inspected to confirmation of status 
+            'dur_insp2res', # Mean time from inspected to confirmation of status 
         ]
 
         # Control points for infection progression
@@ -251,12 +248,13 @@ class Flocks(Subroster):
 
         # Initialize
         self.t = t
-        self.is_exp = self.true('exposed') # For storing the interim values since used in every subsequent calculation
+
 
         # Perform updates
         self.init_flows()
-        self.flows['new_infectious']    += self.check_infectious() # For flocks that are exposed and not infectious, check if they begin being infectious
-
+        self.flows['new_infectious'] = self.check_infectious() # For flocks that are exposed and not infectious, check if they begin being infectious
+        self.update_headcounts() # Update the headcounts and water consumption of the flocks
+        self.flows['new_suspected'] = self.check_suspected()
         return
 
 
@@ -264,8 +262,6 @@ class Flocks(Subroster):
         ''' Perform post-timestep updates '''
 
         # Update the status of flocks
-
-        del self.is_exp  # Tidy up
 
         return
 
@@ -305,8 +301,21 @@ class Flocks(Subroster):
     
     def check_suspected(self):
         ''' Check for new progressions to suspected '''
-        # TODO: Implement this method
-        return
+        actual_symptomatic_rate = self.symptomatic_headcount / self.headcount
+        actual_mortality_rate = self.dead_headcount / self.headcount
+        actual_water_rate = self.water_consumption / self.headcount
+
+        suspicious_symptomatic_inds = np.where(actual_symptomatic_rate > znd.default_suspicious_symptomatic_rate)[0]
+        suspicious_mortality_inds = np.where(actual_mortality_rate > znd.default_suspicious_mortality_rate)[0]
+        suspicious_water_inds = np.where(actual_water_rate > znd.default_suspicious_consumption_rate)[0]
+        suspicious_inds = np.unique(np.concatenate((suspicious_symptomatic_inds, suspicious_mortality_inds, suspicious_water_inds)))
+        self.suspected[suspicious_inds] = True
+        self.date_suspected[suspicious_inds] = self.t
+        self.dur_susp2insp[suspicious_inds] = znu.sample(**self.pars['dur']['flock']['susp2insp'], size=len(suspicious_inds))
+        self.date_inspection[suspicious_inds] = self.date_suspected[suspicious_inds] + self.dur_susp2insp[suspicious_inds]
+        self.dur_insp2res[suspicious_inds] = znu.sample(**self.pars['dur']['flock']['insp2res'], size=len(suspicious_inds))
+        self.date_result[suspicious_inds] = self.date_inspection[suspicious_inds] + self.dur_insp2res[suspicious_inds]
+        return len(suspicious_inds)
 
     def check_quarantined(self):
         ''' Check for new progressions to quarantined '''
@@ -330,7 +339,14 @@ class Flocks(Subroster):
     
     def update_headcounts(self):
         ''' Update the headcounts and water consumption of the flocks '''
-        #TODO: Implement this method
+        uninfected_headcount = self.headcount - self.infected_headcount
+        dead_infected = self.infected_headcount * self.infected_symptomatic_rate
+        dead_uninfected = uninfected_headcount * self.baseline_symptomatic_rate
+        self.dead_headcount += dead_infected + dead_uninfected
+        self.infected_headcount = self.infected_headcount - dead_infected
+        self.headcount -= dead_infected - dead_uninfected
+        self.symptomatic_headcount = self.infected_headcount * self.infected_symptomatic_rate + uninfected_headcount * self.baseline_symptomatic_rate
+        self.water_consumption = self.infected_headcount * self.infected_water_rate + uninfected_headcount * self.baseline_water_rate
         return
 
     #%% Methods to make events occur (infection and diagnosis)

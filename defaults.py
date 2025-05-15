@@ -237,8 +237,9 @@ default_pop_pars = {
 
 default_flock_breeds = ['breeder', 'layer', 'broiler'] # Breeds of flocks present
 default_flock_breed_freqs = [0.1, 0.2, 0.7] # frequency of the different breed types
-default_breed_mortality_rates = [0.001, 0.001, 0.001] # Mortality rates for the different breeds
-default_breed_symp_rates = [0.001, 0.001, 0.001] # Symptomatic rates for the different breeds
+default_suspicious_mortality_rate = 0.02 # mortality rate that triggers a flock to be considered suspicious
+default_suspicious_symptomatic_rate = 0.05 # symptomatic rate that triggers a flock to be considered suspicious
+default_suspicious_consumption_rate = 2 # water rate that triggers a flock to be considered suspicious (L/bird/day)
 
 # Parameters that can vary by variant
 variant_pars = [
