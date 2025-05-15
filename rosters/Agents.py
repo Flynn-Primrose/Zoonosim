@@ -361,8 +361,18 @@ class Agents(Roster):
         self.update_states_from_subrosters()
         return
 
-
-
+    #%% Methods that require access to multiple subrosters
+    def check_reincarnation(self):
+        '''
+        Check for farms that are scheduled to be repopulated and reincarnate the resident flock with proper initial conditions.
+        '''
+        return
+    
+    def check_inspection(self):
+        '''
+        Check for flocks that are scheduled to be inspected. 
+        '''
+        return
     #%% Analysis methods
 
     # def plot(self, *args, **kwargs):
