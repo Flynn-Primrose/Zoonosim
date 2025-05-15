@@ -373,15 +373,42 @@ class Agents(Roster):
         return
 
     #%% Methods that require access to multiple subrosters
-    def check_reincarnation(self):
+    def check_repopulation(self, t):
         '''
         Check for farms that are scheduled to be repopulated and reincarnate the resident flock with proper initial conditions.
         '''
-        return
+        prod_pars = self.pars['production_cycle'] 
+        progs = self.pars['prognoses']
+        barn_inds = np.where(self.barns.date_repopulate == t)
+        self.barns.repopulations[barn_inds]+= 1
+        flock_inds = np.isin(self.flocks.uid, self.barns.flock[barn_inds])
+        breed_to_index = {breed: index for index, breed in enumerate(prod_pars['breeds'])}
+        breed_inds = np.array([breed_to_index[this_breed] for this_breed in self.flock.breed[flock_inds]])
+        breed, freq = np.unique(breed_inds, return_counts=True)
+        breed_dict = dict(zip(breed, freq))
+        for breed, freq in breed_dict:
+            self.barns.date_market[barn_inds[breed_inds == breed]] = znu.sample(**prod_pars['cycle_dur'][breed], size = freq)
+            self.flocks.headcount[flock_inds[breed_dict == breed]] = znu.sample(**prod_pars['flock_size'][breed], size = freq)
+        
+
+        
+        self.flocks.baseline_symptomatic_rate[flock_inds] = progs['baseline_symptomatic_rate'][breed_inds]
+        self.flocks.baseline_mortality_rate[flock_inds] = progs['baseline_mortality_rate'][breed_inds]
+        self.flocks.baseline_water_rate[flock_inds] = progs['baseline_water_rate'][breed_inds]
+        self.flocks.rel_sus[flock_inds] = progs['sus_ORs'][breed_inds]
+        self.flocks.rel_trans[flock_inds] = progs['trans_ORs'][breed_inds]
+
+        return len(barn_inds)
     
     def check_inspection(self):
         '''
         Check for flocks that are scheduled to be inspected. 
+        '''
+        return
+    
+    def check_marketed(self):
+        '''
+        Check for flocks that are due for market today
         '''
         return
     #%% Analysis methods

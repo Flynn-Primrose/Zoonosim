@@ -281,6 +281,16 @@ default_water_prognoses = dict(
     trans_ORs = 1.00
 )
 
+default_production_cycle = dict(
+    breeds = np.array(['breeder', 'broiler', 'layer'], dtype=default_str),
+    cycle_dur = [dict(dist = 'normal_pos', par1 = 600, par2 = 50),
+                 dict(dist = 'normal_pos', par1 = 45, par2 = 5),
+                 dict(dist = 'normal_pos', par1 = 150, par2=25)],
+    flock_size = [dict(dist = 'normal_pos', par1 = 1000, par2 = 100),
+                dict(dist = 'normal_pos', par1 = 20000, par2 = 1000),
+                dict(dist = 'normal_pos', par1 = 10000, par2 = 500)]
+)
+
 
 # tracked stocks and flows -- used in sim.py; value is the label suffix
 

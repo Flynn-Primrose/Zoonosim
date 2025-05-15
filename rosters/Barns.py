@@ -16,7 +16,8 @@ class BarnMeta(sc.prettyobj):
             'uid', # int
             'temperature',
             'humidity',
-            'flock' # uid of the flock residing here
+            'flock', # uid of the flock residing here
+            'repopuations' # Number of times this barn has been repopulated
         ]
 
         self.states = [
@@ -41,8 +42,12 @@ class BarnMeta(sc.prettyobj):
         ]
 
         # Set the dates various events took place: these are floats per agent
-        self.dates = [f'date_{state}' for state in self.states] # Convert each state into a date
+        self.state_dates = [f'date_{state}' for state in self.states] # Convert each state into a date
             
+        self.production_dates = [
+            'date_market',
+            'date_repopulate'
+        ]
 
         # Duration of different states: these are floats per Barn.
         self.durs = [
@@ -225,14 +230,6 @@ class Barns(Subroster):
                 self.date_contaminated[i] = np.nan
                 self.date_uncontaminated[i] = np.nan
         return len(inds)
-
-
-    
-    def check_repopulate(self):
-        ''' Check which barns need to be repopulated this timestep '''
-        # TODO: create this function
-        return
-
 
 
     #%% Methods to make events occur (infection and diagnosis)

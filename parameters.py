@@ -161,7 +161,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['dur']['barn'] = {
         'contamination': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration of contamination. NOTE: This data is just a guess, and should be replaced with real data
         'composting': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration of composting. NOTE: This data is just a guess, and should be replaced with real data
-        'cleaning': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration of dry cleaning process. NOTE: This data is just a guess, and should be replaced with real data
+        'cleaning': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration of cleaning process. NOTE: This data is just a guess, and should be replaced with real data
     }
     pars['dur']['water'] = {
         'contamination': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration of contamination. NOTE: This data is just a guess, and should be replaced with real data
@@ -180,6 +180,8 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['prognoses']['barn'] = relative_barn_prognoses(znd.default_barn_prognoses)
     pars['prognoses']['water'] = relative_water_prognoses(znd.default_water_prognoses)
 
+    pars['production_cycle'] = znd.default_production_cycle
+    
 
 
     # Efficacy of non-pharmaceutical interventions (NPIs)

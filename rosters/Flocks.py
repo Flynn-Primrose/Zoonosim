@@ -29,7 +29,6 @@ class FlocksMeta(sc.prettyobj):
             'water_consumption', # Water consumption (L/day)
             'baseline_water_rate', # Water consumption rate (L/bird/day)
             'infected_water_rate', # Water consumption rate (L/bird/day)
-            'reincarnations', # Number of times the flock has been reincarnated 
         ]
 
         self.states = [
@@ -39,7 +38,6 @@ class FlocksMeta(sc.prettyobj):
             'symptomatic',
             'suspected', # Producer suspects flock is infected
             'quarantined', # Quarantined by CFIA agent
-            'confirmed_positive', # confirmed positive by lab test
         ]
 
         # NOTE: I'm not sure if we need to record the cfia risk level assessment directly or if it is implied by the other states
@@ -68,11 +66,6 @@ class FlocksMeta(sc.prettyobj):
         self.protocol_dates = [
             'date_inspection', # Date of CFIA agent's assessment of flock
             'date_result', # Date of lab test result
-        ]
-
-        self.production_dates = [
-            'date_marketed', # date flock is marketed
-            'date_reincarnated', # date flock is reincarnated
         ]
 
         self.dates = self.state_dates + self.protocol_dates + self.production_dates
@@ -319,23 +312,10 @@ class Flocks(Subroster):
 
     def check_quarantined(self):
         ''' Check for new progressions to quarantined '''
-        # TODO: Implement this method
-        return
+        inds = self.check_inds(self.quarantined, self.date_quarantined)
+        self.quarantined[inds] = True
+        return len(inds)
     
-    def check_confirmed_positive(self):
-        ''' Check for new progressions to confirmed positive '''
-        #TODO: Implement this method
-        return
-    
-    def check_marketed(self):
-        ''' Check for new progressions to marketed '''
-        #TODO: Implement this method
-        return
-    
-    def check_reincarnated(self):
-        ''' Check for new progressions to reincarnated '''
-        #TODO: Implement this method
-        return
     
     def update_headcounts(self):
         ''' Update the headcounts and water consumption of the flocks '''
