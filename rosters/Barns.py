@@ -238,9 +238,27 @@ class Barns(Subroster):
         inds = self.check_inds(self.cleaning, self.date_cleaning)
         if len(inds) > 0:
             self.cleaning[inds] = False
+            self.uncontaminated[inds] = True
+            self.contaminated[inds] = False
+            self.contaminated_variant[inds] = np.nan
+            self.contaminated_by_variant[:, inds] = False
             self.date_repopulate[inds] = self.date_cleaning[inds] + 1
             self.flows['new_cleaned'] += len(inds)
             self.date_cleaning[inds] = np.nan
+        return len(inds)
+    
+    def check_composted(self):
+        ''' Check which barns get composted this timestep '''
+        inds = self.check_inds(self.composting, self.date_composting)
+        if len(inds) > 0:
+            self.composting[inds] = False
+            self.flows['new_composted'] += len(inds)
+
+            self.cleaning[inds] = True
+            self.date_cleaning[inds] = self.date_composting[inds] + znu.sample(**self.pars['dur']['barn']['cleaning'], size=len(inds))
+
+
+            self.date_composting[inds] = np.nan
         return len(inds)
 
 

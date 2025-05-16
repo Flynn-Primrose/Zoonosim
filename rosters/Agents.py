@@ -418,14 +418,36 @@ class Agents(Roster):
         '''
         Check for flocks that are scheduled to be composted. 
         '''
-        return
+
+        barn_inds = np.where(self.barn.date_composting == t)[0]
+        flock_inds = np.isin(self.flock.uid, self.barn.flock[barn_inds])
+
+        self.barn.date_cycle_end[barn_inds] = np.nan
+        self.barn.composting[barn_inds] = True
+        self.barn.date_composting[barn_inds] = t + znu.sample(**self.pars['dur']['barn']['composting'], size = len(barn_inds))
+
+        self.flock.headcount[flock_inds] = 0
+        self.flock.infected_headcount[flock_inds] = 0
+        self.flock.symptomatic_headcount[flock_inds] = 0
+        self.flock.dead_headcount[flock_inds] = 0
+        self.flock.water_consumption[flock_inds] = 0
+
+        self.flock.susceptible[flock_inds] = False
+        self.flock.exposed[flock_inds] = False
+        self.flock.infectious[flock_inds] = False
+        self.flock.quarantined[flock_inds] = False
+        self.flock.date_infectious[flock_inds] = np.nan
+        self.flock.date_exposed[flock_inds] = np.nan
+        self.flock.date_suspected[flock_inds] = np.nan
+
+        return len(barn_inds)
     
     def check_cycle_end(self, t):
         '''
         Check for flocks that are at the end of their production cycle.
         '''
 
-        barn_inds = np.where(self.barn.date_cycle_end == t)
+        barn_inds = np.where(self.barn.date_cycle_end == t)[0]
         flock_inds = np.isin(self.flock.uid, self.barn.flock[barn_inds])
 
         self.barn.date_cycle_end[barn_inds] = np.nan
