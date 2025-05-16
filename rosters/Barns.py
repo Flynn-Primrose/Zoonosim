@@ -17,7 +17,7 @@ class BarnMeta(sc.prettyobj):
             'temperature',
             'humidity',
             'flock', # uid of the flock residing here
-            'repopuations' # Number of times this barn has been repopulated
+            'repopulations' # Number of times this barn has been repopulated
         ]
 
         self.states = [
@@ -45,9 +45,11 @@ class BarnMeta(sc.prettyobj):
         self.state_dates = [f'date_{state}' for state in self.states] # Convert each state into a date
             
         self.production_dates = [
-            'date_market',
+            'date_cycle_end', # Date of the end of the production cycle
             'date_repopulate'
         ]
+
+        self.dates = self.state_dates + self.production_dates
 
         # Duration of different states: these are floats per Barn.
         self.durs = [
@@ -229,6 +231,16 @@ class Barns(Subroster):
             for i in inds:
                 self.date_contaminated[i] = np.nan
                 self.date_uncontaminated[i] = np.nan
+        return len(inds)
+    
+    def check_cleaned(self):
+        ''' Check which barns get cleaned this timestep '''
+        inds = self.check_inds(self.cleaning, self.date_cleaning)
+        if len(inds) > 0:
+            self.cleaning[inds] = False
+            self.date_repopulate[inds] = self.date_cleaning[inds] + 1
+            self.flows['new_cleaned'] += len(inds)
+            self.date_cleaning[inds] = np.nan
         return len(inds)
 
 

@@ -35,7 +35,6 @@ class FlocksMeta(sc.prettyobj):
             'susceptible',
             'exposed',
             'infectious',
-            'symptomatic',
             'suspected', # Producer suspects flock is infected
             'quarantined', # Quarantined by CFIA agent
         ]
@@ -68,7 +67,7 @@ class FlocksMeta(sc.prettyobj):
             'date_result', # Date of lab test result
         ]
 
-        self.dates = self.state_dates + self.protocol_dates + self.production_dates
+        self.dates = self.state_dates + self.protocol_dates
 
         # Duration of different states: these are floats per flock.
         self.durs = [
@@ -280,7 +279,7 @@ class Flocks(Subroster):
 
     def check_infectious(self):
         ''' Check if they become infectious '''
-        inds = self.check_inds(self.infectious, self.date_infectious, filter_inds=self.is_exp)
+        inds = self.check_inds(self.infectious, self.date_infectious)
         self.infectious[inds] = True
         self.infectious_variant[inds] = self.exposed_variant[inds]
 

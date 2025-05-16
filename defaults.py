@@ -308,7 +308,6 @@ flock_stocks = {
     'susceptible': 'Number of susceptible flocks',
     'exposed':     'Number of exposed flocks',
     'infectious':  'Number of infectious flocks',
-    'symptomatic': 'Number of symptomatic flocks',
 }
 
 barn_stocks = {

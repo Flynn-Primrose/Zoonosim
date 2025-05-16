@@ -200,6 +200,13 @@ class Agents(Roster):
         self.barn.update_states_pre(t)
         self.water.update_states_pre(t)
 
+        self.check_inspection(t)
+        self.check_cycle_end(t)
+        self.check_composting(t)
+        self.check_repopulation(t)
+
+        self.update_states_from_subrosters() # Update the states of the main roster
+
         return
 
 
@@ -260,7 +267,7 @@ class Agents(Roster):
         susceptible_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['susceptible'])])
         exposed_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['exposed'])])
         infectious_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['infectious'])])
-        symptomatic_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['symptomatic'])])
+        #symptomatic_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['symptomatic'])])
         quarantined_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['quarantined'])])
 
         susceptible_barn_uids = np.array(self.barn['uid'][znu.false(self.barn['contaminated'])])
@@ -274,7 +281,8 @@ class Agents(Roster):
         susceptible_uids = np.concatenate((susceptible_human_uids, susceptible_flock_uids, susceptible_barn_uids, susceptible_water_uids))
         exposed_uids = np.concatenate((exposed_human_uids, exposed_flock_uids, exposed_barn_uids, exposed_water_uids))
         infectious_uids = np.concatenate((infectious_human_uids, infectious_flock_uids, infectious_barn_uids, infectious_water_uids))
-        symptomatic_uids = np.concatenate((symptomatic_human_uids, symptomatic_flock_uids))
+        #symptomatic_uids = np.concatenate((symptomatic_human_uids, symptomatic_flock_uids))
+        symptomatic_uids = symptomatic_human_uids
         quarantined_uids = np.concatenate((quarantined_human_uids, quarantined_flock_uids))
 
         self.susceptible = np.isin(self['uid'], susceptible_uids)
@@ -378,39 +386,68 @@ class Agents(Roster):
         Check for farms that are scheduled to be repopulated and reincarnate the resident flock with proper initial conditions.
         '''
         prod_pars = self.pars['production_cycle'] 
-        progs = self.pars['prognoses']
-        barn_inds = np.where(self.barns.date_repopulate == t)
-        self.barns.repopulations[barn_inds]+= 1
-        flock_inds = np.isin(self.flocks.uid, self.barns.flock[barn_inds])
-        breed_to_index = {breed: index for index, breed in enumerate(prod_pars['breeds'])}
-        breed_inds = np.array([breed_to_index[this_breed] for this_breed in self.flock.breed[flock_inds]])
-        breed, freq = np.unique(breed_inds, return_counts=True)
-        breed_dict = dict(zip(breed, freq))
-        for breed, freq in breed_dict:
-            self.barns.date_market[barn_inds[breed_inds == breed]] = znu.sample(**prod_pars['cycle_dur'][breed], size = freq)
-            self.flocks.headcount[flock_inds[breed_dict == breed]] = znu.sample(**prod_pars['flock_size'][breed], size = freq)
-        
+        progs = self.pars['prognoses']['flock']
+        barn_inds = np.where(self.barn.date_repopulate == t)[0]
+        if len(barn_inds) > 0:
+            self.barn.repopulations[barn_inds]+= 1
+            flock_inds = np.isin(self.flock.uid, self.barn.flock[barn_inds])
+            breed_to_index = {breed: index for index, breed in enumerate(prod_pars['breeds'])}
+            breed_inds = np.array([breed_to_index[this_breed] for this_breed in self.flock.breed[flock_inds]])
 
-        
-        self.flocks.baseline_symptomatic_rate[flock_inds] = progs['baseline_symptomatic_rate'][breed_inds]
-        self.flocks.baseline_mortality_rate[flock_inds] = progs['baseline_mortality_rate'][breed_inds]
-        self.flocks.baseline_water_rate[flock_inds] = progs['baseline_water_rate'][breed_inds]
-        self.flocks.rel_sus[flock_inds] = progs['sus_ORs'][breed_inds]
-        self.flocks.rel_trans[flock_inds] = progs['trans_ORs'][breed_inds]
+            breed, freq = np.unique(breed_inds, return_counts=True)
+            breed_dict = dict(zip(breed, freq))
+            for breed, freq in breed_dict:
+                self.barn.date_cycle_end[barn_inds[breed_inds == breed]] = znu.sample(**prod_pars['cycle_dur'][breed], size = freq)
+                self.flock.headcount[flock_inds[breed_dict == breed]] = znu.sample(**prod_pars['flock_size'][breed], size = freq)
+
+            self.flock.baseline_symptomatic_rate[flock_inds] = progs['baseline_symptomatic_rate'][breed_inds]
+            self.flock.baseline_mortality_rate[flock_inds] = progs['baseline_mortality_rate'][breed_inds]
+            self.flock.baseline_water_rate[flock_inds] = progs['baseline_water_rate'][breed_inds]
+            self.flock.rel_sus[flock_inds] = progs['sus_ORs'][breed_inds]
+            self.flock.rel_trans[flock_inds] = progs['trans_ORs'][breed_inds]
 
         return len(barn_inds)
     
-    def check_inspection(self):
+    def check_inspection(self, t):
         '''
         Check for flocks that are scheduled to be inspected. 
         '''
         return
     
-    def check_marketed(self):
+    def check_composting(self, t):
         '''
-        Check for flocks that are due for market today
+        Check for flocks that are scheduled to be composted. 
         '''
         return
+    
+    def check_cycle_end(self, t):
+        '''
+        Check for flocks that are at the end of their production cycle.
+        '''
+
+        barn_inds = np.where(self.barn.date_cycle_end == t)
+        flock_inds = np.isin(self.flock.uid, self.barn.flock[barn_inds])
+
+        self.barn.date_cycle_end[barn_inds] = np.nan
+        self.barn.cleaning[barn_inds] = True
+        self.barn.date_cleaning[barn_inds] = t + znu.sample(**self.pars['dur']['barn']['cleaning'], size = len(barn_inds))
+
+        self.flock.headcount[flock_inds] = 0
+        self.flock.infected_headcount[flock_inds] = 0
+        self.flock.symptomatic_headcount[flock_inds] = 0
+        self.flock.dead_headcount[flock_inds] = 0
+        self.flock.water_consumption[flock_inds] = 0
+
+        self.flock.susceptible[flock_inds] = False
+        self.flock.exposed[flock_inds] = False
+        self.flock.infectious[flock_inds] = False
+        self.flock.quarantined[flock_inds] = False
+        self.flock.date_infectious[flock_inds] = np.nan
+        self.flock.date_exposed[flock_inds] = np.nan
+        self.flock.date_suspected[flock_inds] = np.nan
+        
+
+        return len(barn_inds)
     #%% Analysis methods
 
     # def plot(self, *args, **kwargs):
