@@ -63,7 +63,6 @@ class FlocksMeta(sc.prettyobj):
 
         # Dates for the cfia protocols: these are floats per flock
         self.protocol_dates = [
-            'date_inspection', # Date of CFIA agent's assessment of flock
             'date_result', # Date of lab test result
         ]
 
@@ -291,23 +290,7 @@ class Flocks(Subroster):
             self.infectious_by_variant[variant, this_variant_inds] = True
         return len(inds)
     
-    def check_suspected(self):
-        ''' Check for new progressions to suspected '''
-        actual_symptomatic_rate = self.symptomatic_headcount / self.headcount
-        actual_mortality_rate = self.dead_headcount / self.headcount
-        actual_water_rate = self.water_consumption / self.headcount
 
-        suspicious_symptomatic_inds = np.where(actual_symptomatic_rate > znd.default_suspicious_symptomatic_rate)[0]
-        suspicious_mortality_inds = np.where(actual_mortality_rate > znd.default_suspicious_mortality_rate)[0]
-        suspicious_water_inds = np.where(actual_water_rate > znd.default_suspicious_consumption_rate)[0]
-        suspicious_inds = np.unique(np.concatenate((suspicious_symptomatic_inds, suspicious_mortality_inds, suspicious_water_inds)))
-        self.suspected[suspicious_inds] = True
-        self.date_suspected[suspicious_inds] = self.t
-        self.dur_susp2insp[suspicious_inds] = znu.sample(**self.pars['dur']['flock']['susp2insp'], size=len(suspicious_inds))
-        self.date_inspection[suspicious_inds] = self.date_suspected[suspicious_inds] + self.dur_susp2insp[suspicious_inds]
-        self.dur_insp2res[suspicious_inds] = znu.sample(**self.pars['dur']['flock']['insp2res'], size=len(suspicious_inds))
-        self.date_result[suspicious_inds] = self.date_inspection[suspicious_inds] + self.dur_insp2res[suspicious_inds]
-        return len(suspicious_inds)
 
     def check_quarantined(self):
         ''' Check for new progressions to quarantined '''

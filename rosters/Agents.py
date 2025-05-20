@@ -408,37 +408,65 @@ class Agents(Roster):
 
         return len(barn_inds)
     
-    def check_inspection(self, t):
-        '''
-        Check for flocks that are scheduled to be inspected. 
-        '''
-        return
+    def check_suspected(self, t):
+        ''' Check for new progressions to suspected '''
+        actual_symptomatic_rate = self.flock.symptomatic_headcount / self.flock.headcount
+        actual_mortality_rate = self.flock.dead_headcount / self.flock.headcount
+        actual_water_rate = self.flock.water_consumption / self.flock.headcount
+
+        suspicious_symptomatic_inds = np.where(actual_symptomatic_rate > znd.default_suspicious_symptomatic_rate)[0]
+        suspicious_mortality_inds = np.where(actual_mortality_rate > znd.default_suspicious_mortality_rate)[0]
+        suspicious_water_inds = np.where(actual_water_rate > znd.default_suspicious_consumption_rate)[0]
+        suspicious_inds = np.unique(np.concatenate((suspicious_symptomatic_inds, suspicious_mortality_inds, suspicious_water_inds)))
+        self.flock.suspected[suspicious_inds] = True
+        self.flock.date_suspected[suspicious_inds] = t
+        self.flock.dur_susp2res[suspicious_inds] = znu.sample(**self.pars['dur']['flock']['susp2res'], size=len(suspicious_inds))
+        self.flock.date_result[suspicious_inds] = self.date_suspected[suspicious_inds] + self.dur_insp2res[suspicious_inds]
+        self.flock.quarantined[suspicious_inds] = True
+        self.flock.date_quarantined[suspicious_inds] = t
+
+        barn_inds = np.where(self.barn.flock == self.flock.uid[suspicious_inds])[0]
+        self.barn.quarantined[barn_inds] = True
+        self.barn.date_quarantined[barn_inds] = t
+
+        return len(suspicious_inds)
     
-    def check_composting(self, t):
+    def check_result(self, t):
         '''
-        Check for flocks that are scheduled to be composted. 
+        Check for flocks that have recieved their test results and update the states accordingly.
         '''
 
-        barn_inds = np.where(self.barn.date_composting == t)[0]
+        barn_inds = np.where(self.barn.date_result == t)[0]
         flock_inds = np.isin(self.flock.uid, self.barn.flock[barn_inds])
 
-        self.barn.date_cycle_end[barn_inds] = np.nan
-        self.barn.composting[barn_inds] = True
-        self.barn.date_composting[barn_inds] = t + znu.sample(**self.pars['dur']['barn']['composting'], size = len(barn_inds))
+        pos_flock_inds = np.where(self.flock.infected[flock_inds] == True)[0]
+        pos_barn_inds = np.isin(self.barn.flock, self.flock.uid[pos_flock_inds])
 
-        self.flock.headcount[flock_inds] = 0
-        self.flock.infected_headcount[flock_inds] = 0
-        self.flock.symptomatic_headcount[flock_inds] = 0
-        self.flock.dead_headcount[flock_inds] = 0
-        self.flock.water_consumption[flock_inds] = 0
+        neg_flock_inds = np.where(self.flock.infected[flock_inds] == False)[0]
+        #neg_barn_inds = np.isin(self.barn.flock, self.flock.uid[neg_flock_inds])
 
-        self.flock.susceptible[flock_inds] = False
-        self.flock.exposed[flock_inds] = False
-        self.flock.infectious[flock_inds] = False
-        self.flock.quarantined[flock_inds] = False
-        self.flock.date_infectious[flock_inds] = np.nan
-        self.flock.date_exposed[flock_inds] = np.nan
-        self.flock.date_suspected[flock_inds] = np.nan
+        self.barn.date_cycle_end[pos_barn_inds] = np.nan
+        self.barn.composting[pos_barn_inds] = True
+        self.barn.date_composting[pos_barn_inds] = t + znu.sample(**self.pars['dur']['barn']['composting'], size = len(barn_inds))
+
+        self.flock.headcount[pos_flock_inds] = 0
+        self.flock.infected_headcount[pos_flock_inds] = 0
+        self.flock.symptomatic_headcount[pos_flock_inds] = 0
+        self.flock.dead_headcount[pos_flock_inds] = 0
+        self.flock.water_consumption[pos_flock_inds] = 0
+
+        self.flock.susceptible[pos_flock_inds] = False
+        self.flock.exposed[pos_flock_inds] = False
+        self.flock.infectious[pos_flock_inds] = False
+        self.flock.quarantined[pos_flock_inds] = False
+        self.flock.suspected[pos_flock_inds] = False
+        self.flock.date_infectious[pos_flock_inds] = np.nan
+        self.flock.date_exposed[pos_flock_inds] = np.nan
+        self.flock.date_suspected[pos_flock_inds] = np.nan
+
+        self.flock.suspected[pos_flock_inds] = False
+        self.flock.date_suspected[pos_flock_inds] = np.nan
+        self.flock.date_result[pos_flock_inds] = np.nan
 
         return len(barn_inds)
     
