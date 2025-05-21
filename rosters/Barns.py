@@ -187,11 +187,14 @@ class Barns(Subroster):
     def update_states_pre(self, t):
         ''' Perform all state updates at the current timestep '''
 
-        # Initialize
-        self.t = t
+
 
         # Perform updates
         self.init_flows()
+
+        self.check_cleaned()
+        self.check_uncontaminated()
+        self.check_composted()
         return
 
 
@@ -248,7 +251,7 @@ class Barns(Subroster):
         return len(inds)
     
     def check_composted(self):
-        ''' Check which barns get composted this timestep '''
+        ''' Check which barns finish composting this timestep '''
         inds = self.check_inds(self.composting, self.date_composting)
         if len(inds) > 0:
             self.composting[inds] = False

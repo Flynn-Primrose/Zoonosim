@@ -74,8 +74,7 @@ class FlocksMeta(sc.prettyobj):
             'dur_inf2symp', # Mean time from infectious to symptomatic
             'dur_inf2peak', # Mean time from infectious to peak infection
             'dur_peak2eq', # Mean time from peak infection to equilibrium infection
-            'dur_susp2insp', # Mean time from suspected to inspected
-            'dur_insp2res', # Mean time from inspected to confirmation of status 
+            'dur_susp2res', # Mean time from inspected to confirmation of status 
         ]
 
         # Control points for infection progression
@@ -245,7 +244,6 @@ class Flocks(Subroster):
         self.init_flows()
         self.flows['new_infectious'] = self.check_infectious() # For flocks that are exposed and not infectious, check if they begin being infectious
         self.update_headcounts() # Update the headcounts and water consumption of the flocks
-        self.flows['new_suspected'] = self.check_suspected()
         return
 
 
