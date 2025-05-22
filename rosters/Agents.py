@@ -359,7 +359,7 @@ class Agents(Roster):
     
     def infect(self, inds, hosp_max, source, layer, variant):
 
-        #NOTE: do we need a section here that ensures all agents referred to in inds are susceptible
+        #TODO: Refactor sources so they actually work
 
         human_inds = np.where(np.isin(self.human.uid, self.uid[inds]))
         #human_inds = np.array([i for i, uid in enumerate(self.human.uid) if uid in set(self.uid[inds])]) # Supposedly faster if self.uid[inds] is large

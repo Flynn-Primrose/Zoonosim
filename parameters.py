@@ -30,7 +30,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
 
     # Population pars
     pars['agent_types'] = ['human', 'flock', 'barn', 'water'] # Every type of agent in the model
-    pars['n_farms'] = 10 # Number of farms in the simulation. This is used to generate the rest of the population
+    pars['n_farms'] = 25 # Number of farms in the simulation. This is used to generate the rest of the population
     pars['pop_size'] = None # The total number of agents in the simulation. This should be equal to the sum of the population sizes of all agent types.
     pars['pop_size_by_type'] = {}
 
@@ -39,15 +39,15 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
 
     pars['initial_conditions'] = {
         'human': 0, # Number of initial humans exposed
-        'flock': 3, # Number of initial flocks exposed
+        'flock': 0, # Number of initial flocks exposed
         'barn': 0, # Number of initial contaminated barns
-        'water': 0 # Number of initial contaminated water
+        'water': 3 # Number of initial contaminated water
     }
 
     # Simulation parameters
-    pars['start_day']  = '2020-03-01' # Start day of the simulation
+    pars['start_day']  = '2025-01-01' # Start day of the simulation
     pars['end_day']    = None         # End day of the simulation
-    pars['n_days']     = 60           # Number of days to run, if end_day isn't specified
+    pars['n_days']     = 150           # Number of days to run, if end_day isn't specified
     pars['rand_seed']  = 1            # Random seed, if None, don't reset
     pars['verbose']    = znd.verbose  # Whether or not to display information during the run -- options are 0 (silent), 0.1 (some; default), 1 (default), 2 (everything)
 
@@ -72,8 +72,8 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['asymp_factor']['barn'] = 1.0 # Multiply beta by this factor for asymptomatic cases.
     pars['asymp_factor']['water'] = 1.0 # Multiply beta by this factor for asymptomatic cases.
     pars['beta'] = {} # The transmissibility of the disease for each agent type.
-    pars['beta']['human'] = 0.01 # The transmissibility of the disease for humans. This is a dummy variable!
-    pars['beta']['flock'] = 0.01 # The transmissibility of the disease for flocks. This is a dummy variable!
+    pars['beta']['human'] = 0.05 # The transmissibility of the disease for humans. This is a dummy variable!
+    pars['beta']['flock'] = 0.1 # The transmissibility of the disease for flocks. This is a dummy variable!
     pars['beta']['barn'] = 0.01 # The transmissibility of the disease for barns. This is a dummy variable!
     pars['beta']['water'] = 0.01 # The transmissibility of the disease for water. This is a dummy variable!
 
@@ -81,16 +81,14 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['transmission_pars'] = {}
 
     pars['transmission_pars']['human'] = {
-        'beta_dist': dict(dist='neg_binomial', par1=1.0, par2=0.45, step=0.01), # Distribution to draw individual level transmissibility; dispersion from https://www.researchsquare.com/article/rs-29548/v1
-        'viral_dist':dict(frac_time=0.3, load_ratio=2, high_cap=4), # The time varying viral load (transmissibility); estimated from Lescure 2020, Lancet, https://doi.org/10.1016/S1473-3099(20)30200-0
-        #'asymp_factor': 1.0,  # Multiply beta by this factor for asymptomatic cases; no statistically significant difference in transmissibility: https://www.sciencedirect.com/science/article/pii/S1201971220302502
-        'enable_vl':True, # Specifies whether we should use the updated viral load calculation; False = use native calculation NOTE: Im note sure how to set this yet
+        'beta_dist': dict(dist='neg_binomial', par1=1.0, par2=0.45, step=0.01), # Distribution to draw individual level transmissibility
+        'viral_dist':dict(frac_time=0.3, load_ratio=2, high_cap=4), # The time varying viral load (transmissibility)
+        'enable_vl':True, # Specifies whether we should use the updated viral load calculation; False = use native calculation
         'viral_levels':dict(min_vl=0.75, max_vl=2) # Specifies the range within which viral load should be scaled so it can contribute to relative transmissibility
     }
 
     pars['transmission_pars']['flock'] = {
         'beta_dist': dict(dist='neg_binomial', par1=1.0, par2=0.45, step=0.01), # NOTE: Dummy variables
-        #'asymp_factor': 1.0
     }
 
     pars['transmission_pars']['barn'] = {
@@ -101,12 +99,16 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
         'beta_dist': dict(dist='neg_binomial', par1=1.0, par2=0.45, step=0.01), # NOTE: Dummy variables
     }
 
-    # Parameters that control settings and defaults for multi-variant runs
+    # Number of imported cases per day for each agent type
     pars['n_imports']  = {
         'human': 0,
         'flock': 1,
-        'water': 1
+        'barn' : 0,
+        'water': 1,
     } 
+
+    # Parameters that control settings and defaults for multi-variant runs
+
 
     pars['n_variants'] = 1 # The number of variants circulating in the population
 
@@ -140,30 +142,30 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['dur']['human'] = {
 
         # Duration: disease progression
-        'exp2inf': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration from exposed to infectious; see Lauer et al., https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7081172/, appendix table S2, subtracting inf2sym duration
-        'inf2sym': dict(dist='lognormal_int', par1=1.1, par2=0.9), # Duration from infectious to symptomatic; see Linton et al., https://doi.org/10.3390/jcm9020538, from Table 2, 5.6 day incubation period - 4.5 day exp2inf from Lauer et al.
-        'sym2sev': dict(dist='lognormal_int', par1=6.6, par2=4.9), # Duration from symptomatic to severe symptoms; see Linton et al., https://doi.org/10.3390/jcm9020538, from Table 2, 6.6 day onset to hospital admission (deceased); see also Wang et al., https://jamanetwork.com/journals/jama/fullarticle/2761044, 7 days (Table 1)
+        'exp2inf': dict(dist='lognormal_int', par1=3.0, par2=1.5), # Duration from exposed to infectious
+        'inf2sym': dict(dist='lognormal_int', par1=1.1, par2=0.9), # Duration from infectious to symptomatic
+        'sym2sev': dict(dist='lognormal_int', par1=5.0, par2=2.0), # Duration from symptomatic to severe symptoms
 
         # Duration: Recovery
-        'asym2rec': dict(dist='lognormal_int', par1=8.0,  par2=2.0), # Duration for asymptomatic people to recover; see Wölfel et al., https://www.nature.com/articles/s41586-020-2196-x
-        'mild2rec': dict(dist='lognormal_int', par1=8.0,  par2=2.0), # Duration for people with mild symptoms to recover; see Wölfel et al., https://www.nature.com/articles/s41586-020-2196-x
-        'sev2rec': dict(dist='lognormal_int', par1=18.1, par2=6.3), # Duration for people with severe symptoms to recover, 24.7 days total; see Verity et al., https://www.thelancet.com/journals/laninf/article/PIIS1473-3099(20)30243-7/fulltext; 18.1 days = 24.7 onset-to-recovery - 6.6 sym2sev; 6.3 = 0.35 coefficient of variation * 18.1; see also https://doi.org/10.1017/S0950268820001259 (22 days) and https://doi.org/10.3390/ijerph17207560 (3-10 days)
-        'sev2die': dict(dist='lognormal_int', par1=10.7, par2=4.8), # Duration from critical symptoms to death, 18.8 days total; see Verity et al., https://www.thelancet.com/journals/laninf/article/PIIS1473-3099(20)30243-7/fulltext; 10.7 = 18.8 onset-to-death - 6.6 sym2sev - 1.5 sev2crit; 4.8 = 0.45 coefficient of variation * 10.7
+        'asym2rec': dict(dist='lognormal_int', par1=8.0,  par2=2.0), # Duration for asymptomatic people to recover
+        'mild2rec': dict(dist='lognormal_int', par1=8.0,  par2=2.0), # Duration for people with mild symptoms to recover
+        'sev2rec': dict(dist='lognormal_int', par1=14.0, par2=6.0), # Duration for people with severe symptoms to recover
+        'sev2die': dict(dist='lognormal_int', par1=10.0, par2=5.0), # Duration from critical symptoms to death, 18.8 days total
     }
 
     pars['dur']['flock'] = {
-        'exp2inf': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration from exposed to infectious. NOTE: This data is just a guess, and should be replaced with real data
-        'inf2peak': dict(dist='lognormal_int', par1=1.1, par2=0.9), # Duration from first infection to peak infection. NOTE: This data is just a guess, and should be replaced with real data
-        'peak2eq': dict(dist='lognormal_int', par1=1.1, par2=0.9), # Duration from peak infection to equilibrium infection. NOTE: This data is just a guess, and should be replaced with real data
-        'susp2res': dict(dist='lognormal_int', par1=1.1, par2=0.9), # Duration from suspicion to a definitive test result. NOTE: This data is just a guess, and should be replaced with real data
+        'exp2inf': dict(dist='lognormal_int', par1=0.5, par2=0.25), # Duration from exposed to infectious. NOTE: This data is just a guess, and should be replaced with real data
+        'inf2peak': dict(dist='lognormal_int', par1=1.0, par2=0.5), # Duration from first infection to peak infection. NOTE: This data is just a guess, and should be replaced with real data
+        'peak2eq': dict(dist='lognormal_int', par1=1.0, par2=0.5), # Duration from peak infection to equilibrium infection. NOTE: This data is just a guess, and should be replaced with real data
+        'susp2res': dict(dist='lognormal_int', par1=1.0, par2=0.5), # Duration from suspicion to a definitive test result. NOTE: This data is just a guess, and should be replaced with real data
     }
     pars['dur']['barn'] = {
-        'contamination': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration of contamination. NOTE: This data is just a guess, and should be replaced with real data
-        'composting': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration of composting. NOTE: This data is just a guess, and should be replaced with real data
-        'cleaning': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration of cleaning process. NOTE: This data is just a guess, and should be replaced with real data
+        'contamination': dict(dist='lognormal_int', par1=14, par2=5.0), # Duration of contamination. NOTE: This data is just a guess, and should be replaced with real data
+        'composting': dict(dist='lognormal_int', par1=7.0, par2=1.5), # Duration of composting. NOTE: This data is just a guess, and should be replaced with real data
+        'cleaning': dict(dist='lognormal_int', par1=7.0, par2=1.5), # Duration of cleaning process. NOTE: This data is just a guess, and should be replaced with real data
     }
     pars['dur']['water'] = {
-        'contamination': dict(dist='lognormal_int', par1=4.5, par2=1.5), # Duration of contamination. NOTE: This data is just a guess, and should be replaced with real data
+        'contamination': dict(dist='lognormal_int', par1=14, par2=5.0), # Duration of contamination. NOTE: This data is just a guess, and should be replaced with real data
     }
 
     # Severity pars
@@ -219,14 +221,6 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     #if set_prognoses: # If not set here, gets set when the population is initialized
         # pars['prognoses'] = get_prognoses(pars['prog_by_age'], version=version) # Default to age-specific prognoses NOTE: this will have to change to accommodate multiple agent types
 
-    #     # If version is specified, load old parameters
-    # if version is not None:
-    #     version_pars = znm.get_version_pars(version, verbose=pars['verbose']) 
-    #     if sc.compareversions(version, '<3.0.0'): # Waning was introduced in 3.0, so is always false before
-    #         version_pars['use_waning'] = False
-    #     for key in pars.keys(): # Only loop over keys that have been populated
-    #         if key in version_pars: # Only replace keys that exist in the old version
-    #             pars[key] = version_pars[key]
     return pars
 
 # Define which parameters need to be specified as a dictionary by layer -- define here so it's available at the module level for sim.py
@@ -282,22 +276,6 @@ def reset_layer_pars(pars, layer_keys=None, force=False):
         for lkey in par_layer_keys: # Loop over layers
             par[lkey] = par_dict.get(lkey, default_val) # Get the value for this layer if available, else use the default for random
         pars[pkey] = par # Save this parameter to the dictionary
-
-
-    # # If version is specified, load old parameters
-    # if by_age and version is not None:
-    #     version_prognoses = znm.get_version_pars(version, verbose=False)['prognoses']
-    #     for key in version_prognoses.keys(): # Only loop over keys that have been populated
-    #         if key in version_prognoses: # Only replace keys that exist in the old version
-    #             prognoses[key] = np.array(version_prognoses[key])
-
-    # Check that lengths match
-    # expected_len = len(prognoses['age_cutoffs'])
-    # for key,val in prognoses.items():
-    #     this_len = len(prognoses[key])
-    #     if this_len != expected_len: # pragma: no cover
-    #         errormsg = f'Lengths mismatch in prognoses: {expected_len} age bins specified, but key "{key}" has {this_len} entries'
-    #         raise ValueError(errormsg)
 
     return 
 

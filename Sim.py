@@ -608,29 +608,6 @@ class Sim(znb.BaseSim):
 
         return
 
-    # NOTE: I don't think this will be usable for us given that we have multiple interacting populations of different sizes
-    # def rescale(self):
-    #     ''' Dynamically rescale the population -- used during step() '''
-    #     if self['rescale']:
-    #         pop_scale = self['pop_scale']
-    #         current_scale = self.rescale_vec[self.t]
-    #         if current_scale < pop_scale: # We have room to rescale
-    #             not_naive_inds = self.people.false('naive') # Find everyone not naive
-    #             n_not_naive = len(not_naive_inds) # Number of people who are not naive
-    #             n_people = self['pop_size'] # Number of people overall
-    #             current_ratio = n_not_naive/n_people # Current proportion not naive
-    #             threshold = self['rescale_threshold'] # Threshold to trigger rescaling
-    #             if current_ratio > threshold: # Check if we've reached point when we want to rescale
-    #                 max_ratio = pop_scale/current_scale # We don't want to exceed the total population size
-    #                 proposed_ratio = max(current_ratio/threshold, self['rescale_factor']) # The proposed ratio to rescale: the rescale factor, unless we've exceeded it
-    #                 scaling_ratio = min(proposed_ratio, max_ratio) # We don't want to scale by more than the maximum ratio
-    #                 self.rescale_vec[self.t:] *= scaling_ratio # Update the rescaling factor from here on
-    #                 n = int(round(n_not_naive*(1.0-1.0/scaling_ratio))) # For example, rescaling by 2 gives n = 0.5*not_naive_inds
-    #                 choices = cvu.choose(max_n=n_not_naive, n=n) # Choose who to make naive again
-    #                 new_naive_inds = not_naive_inds[choices] # Convert these back into indices for people
-    #                 self.people.make_naive(new_naive_inds) # Make people naive again
-    #     return
-
 
     def step(self):
         '''
@@ -659,13 +636,28 @@ class Sim(znb.BaseSim):
         # Randomly infect some people (imported infections)
         if self['n_imports']['human']>0:
             n_human_imports = znu.poisson(self['n_imports']['human']) # imported human cases
-            self.results['n_human_imports'][t] += n_human_imports
+            if n_human_imports>0:
+                human_inds = znu.choose(max_n=len(self.agents.human), n=n_human_imports)
+                self.agents.infect_type('human', human_inds)
+                self.results['n_human_imports'][t] += n_human_imports
         if self['n_imports']['flock']>0:
             n_flock_imports = znu.poisson(self['n_imports']['flock']) # imported flock cases
-            self.results['n_flock_imports'][t] += n_flock_imports
+            if n_flock_imports>0:
+                flock_inds = znu.choose(max_n=len(self.agents.flock), n=n_flock_imports)
+                self.agents.infect_type('flock', flock_inds)
+                self.results['n_flock_imports'][t] += n_flock_imports
+        if self['n_imports']['barn']>0:
+            n_barn_imports = znu.poisson(self['n_imports']['barn']) # imported water contaminations
+            if n_barn_imports>0:
+                barn_inds = znu.choose(max_n=len(self.agents.barn), n=n_barn_imports)
+                self.agents.infect_type('barn', barn_inds)
+                self.results['n_barn_imports'][t] += n_barn_imports
         if self['n_imports']['water']>0:
             n_water_imports = znu.poisson(self['n_imports']['water']) # imported water contaminations
-            self.results['n_water_imports'][t] += n_water_imports
+            if n_water_imports>0:
+                water_inds = znu.choose(max_n = len(self.agents.water), n=n_water_imports)
+                self.agents.infect_type('water', water_inds)
+                self.results['n_water_imports'][t] += n_water_imports
 
         # Add variants
         for variant in self['variants']:

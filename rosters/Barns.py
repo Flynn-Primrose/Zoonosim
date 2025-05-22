@@ -280,11 +280,11 @@ class Barns(Subroster):
         if source is not None:
             source = source[unique]
 
-        # Keep only susceptibles
-        #keep = self.susceptible[inds] # Unique indices in inds and source that are also susceptible
-        #inds = inds[keep]
-        #if source is not None:
-        #    source = source[keep]
+        # Keep only uncontaminated
+        keep = self.uncontaminated[inds] # Unique indices in inds and source that are also susceptible
+        inds = inds[keep]
+        if source is not None:
+            source = source[keep]
 
         # Deal with variant parameters
         variant_label = self.pars['variant_map'][variant]

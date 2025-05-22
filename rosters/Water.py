@@ -183,8 +183,8 @@ class Water(Subroster):
         if len(inds) > 0:
             self.uncontaminated[inds] = True
             self.contaminated[inds]    = False
-            self.flows['new_uncontaminated'] += len(inds)
-            self.flows_variant['new_uncontaminated_by_variant'][:, inds] += 1
+            #self.flows['new_uncontaminated'] += len(inds)
+            #self.flows_variant['new_uncontaminated_by_variant'][:, inds] += 1
 
         return len(inds)
 
@@ -205,6 +205,14 @@ class Water(Subroster):
         inds, unique = np.unique(inds, return_index=True)
         if source is not None:
             source = source[unique]
+
+        # Keep only uncontaminated
+        keep = self.uncontaminated[inds]
+        inds = inds[keep]
+        if source is not None:
+            source = source[keep]
+
+
 
         # Deal with variant parameters
         variant_label = self.pars['variant_map'][variant]
