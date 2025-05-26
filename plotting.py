@@ -11,11 +11,11 @@ import pylab as pl
 import sciris as sc
 from . import misc as znm
 from . import defaults as znd
-from . import Options as zno
+from .Options import options as zno
 
 
 
-__all__ = ['plot_sim', 'plot_scens', 'plot_result', 'plot_compare', 'plot_people', 'plotly_sim', 'plotly_people', 'plotly_animate']
+__all__ = ['plot_sim', 'plot_scens', 'plot_result', 'plot_compare', 'plot_people']
 
 
 #%% Plotting helper functions

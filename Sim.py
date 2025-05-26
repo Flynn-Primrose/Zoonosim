@@ -17,6 +17,7 @@ from . import analysis as zna
 from . import parameters as znpar
 from . import population as znpop
 from . import immunity as znimm
+from . import plotting as znplt
 
 __all__ = ['Sim']
 
@@ -1103,148 +1104,95 @@ class Sim(znb.BaseSim):
     #     self.results['doubling_time'][window:][use] = np.minimum(doubling_time, max_doubling_time)
     #     return self.results['doubling_time'].values
 
+    def plot(self, *args, **kwargs):
+        '''
+        Plot the results of a single simulation.
 
-    # def compute_r_eff(self, method='daily', smoothing=2, window=7):
-    #     '''
-    #     Effective reproduction number based on number of people each person infected.
+        Args:
+            to_plot      (dict): Dict of results to plot; see get_default_plots() for structure
+            do_save      (bool): Whether or not to save the figure
+            fig_path     (str):  Path to save the figure
+            fig_args     (dict): Dictionary of kwargs to be passed to ``pl.figure()``
+            plot_args    (dict): Dictionary of kwargs to be passed to ``pl.plot()``
+            scatter_args (dict): Dictionary of kwargs to be passed to ``pl.scatter()``
+            axis_args    (dict): Dictionary of kwargs to be passed to ``pl.subplots_adjust()``
+            legend_args  (dict): Dictionary of kwargs to be passed to ``pl.legend()``; if show_legend=False, do not show
+            date_args    (dict): Control how the x-axis (dates) are shown (see below for explanation)
+            show_args    (dict): Control which "extras" get shown: uncertainty bounds, data, interventions, ticks, the legend; additionally, "outer" will show the axes only on the outer plots
+            style_args   (dict): Dictionary of kwargs to be passed to Matplotlib; options are dpi, font, fontsize, plus any valid key in ``pl.rcParams``
+            n_cols       (int):  Number of columns of subpanels to use for subplot
+            font_size    (int):  Size of the font
+            font_family  (str):  Font face
+            grid         (bool): Whether or not to plot gridlines
+            commaticks   (bool): Plot y-axis with commas rather than scientific notation
+            setylim      (bool): Reset the y limit to start at 0
+            log_scale    (bool): Whether or not to plot the y-axis with a log scale; if a list, panels to show as log
+            do_show      (bool): Whether or not to show the figure
+            colors       (dict): Custom color for each result, must be a dictionary with one entry per result key in to_plot
+            sep_figs     (bool): Whether to show separate figures for different results instead of subplots
+            fig          (fig):  Handle of existing figure to plot into
+            ax           (axes): Axes instance to plot into
+            kwargs       (dict): Parsed among figure, plot, scatter, date, and other settings (will raise an error if not recognized)
 
-    #     Args:
-    #         method (str): 'daily' uses daily infections, 'infectious' counts from the date infectious, 'outcome' counts from the date recovered/dead
-    #         smoothing (int): the number of steps to smooth over for the 'daily' method
-    #         window (int): the size of the window used for 'infectious' and 'outcome' calculations (larger values are more accurate but less precise)
+        The optional dictionary "date_args" allows several settings for controlling
+        how the x-axis of plots are shown, if this axis is dates. These options are:
 
-    #     Returns:
-    #         r_eff (array): the r_eff results array
-    #     '''
+            - ``as_dates``:   whether to format them as dates (else, format them as days since the start)
+            - ``dateformat``: string format for the date (if not provided, choose based on timeframe)
+            - ``rotation``:   whether to rotate labels
+            - ``start``:      the first day to plot
+            - ``end``:        the last day to plot
+            - ``outer``:      only show the date labels on the outer (bottom) plots
 
-    #     # Initialize arrays to hold sources and targets infected each day
-    #     sources = np.zeros(self.npts)
-    #     targets = np.zeros(self.npts)
-    #     window = int(window)
+        The ``show_args`` dictionary allows several other formatting options, such as:
 
-    #     # Default method -- calculate the daily infections
-    #     if method == 'daily':
+            - ``tight``:    use tight layout for the figure (default false)
+            - ``maximize``: try to make the figure full screen (default false)
+            - ``outer``:    only show outermost (bottom) date labels (default false)
 
-    #         # Find the dates that everyone became infectious and recovered, and hence calculate infectious duration
-    #         recov_inds   = self.people.defined('date_recovered')
-    #         dead_inds    = self.people.defined('date_dead')
-    #         date_recov   = self.people.date_recovered[recov_inds]
-    #         date_dead    = self.people.date_dead[dead_inds]
-    #         date_outcome = np.concatenate((date_recov, date_dead))
-    #         inds         = np.concatenate((recov_inds, dead_inds))
-    #         date_inf     = self.people.date_infectious[inds]
-    #         if len(date_outcome):
-    #             mean_inf     = date_outcome.mean() - date_inf.mean()
-    #         else:
-    #             warnmsg ='There were no infections during the simulation'
-    #             cvm.warn(warnmsg)
-    #             mean_inf = 0 # Doesn't matter since r_eff is 0
+        Date, show, and other arguments can also be passed directly, e.g. ``sim.plot(tight=True)``.
 
-    #         # Calculate R_eff as the mean infectious duration times the number of new infectious divided by the number of infectious people on a given day
-    #         new_infections = self.results['new_infections'].values - self.results['n_imports'].values
-    #         n_infectious = self.results['n_infectious'].values
-    #         raw_values = mean_inf*np.divide(new_infections, n_infectious, out=np.zeros(self.npts), where=n_infectious>0)
+        For additional style options, see ``cv.options.with_style()``, which is the
+        final refuge of arguments that are not picked up by any of the other parsers,
+        e.g. ``sim.plot(**{'ytick.direction':'in'})``.
 
-    #         # Handle smoothing, including with too-short arrays
-    #         len_raw = len(raw_values) # Calculate the number of raw values
-    #         dur_pars = self['dur'][0] if isinstance(self['dur'], list) else self['dur'] # Note: does not take variants into account
-    #         if len_raw >= 3: # Can't smooth arrays shorter than this since the default smoothing kernel has length 3
-    #             initial_period = dur_pars['exp2inf']['par1'] + dur_pars['asym2rec']['par1'] # Approximate the duration of the seed infections for averaging
-    #             initial_period = int(min(len_raw, initial_period)) # Ensure we don't have too many points
-    #             for ind in range(initial_period): # Loop over each of the initial inds
-    #                 raw_values[ind] = raw_values[ind:initial_period].mean() # Replace these values with their average
-    #             values = sc.smooth(raw_values, smoothing)
-    #             values[:smoothing] = raw_values[:smoothing] # To avoid numerical effects, replace the beginning and end with the original
-    #             values[-smoothing:] = raw_values[-smoothing:]
-    #         else:
-    #             values = raw_values
+        Returns:
+            fig: Figure handle
 
-    #     # Alternate (traditional) method -- count from the date of infection or outcome
-    #     elif method in ['infectious', 'outcome']:
+        **Examples**::
 
-    #         # Store a mapping from each source to their date
-    #         source_dates = {}
+            sim = cv.Sim().run()
+            sim.plot() # Default plotting
+            sim.plot('overview') # Show overview
+            sim.plot('overview', maximize=True, outer=True, rotation=15) # Make some modifications to make plots easier to see
+            sim.plot(style='seaborn-whitegrid') # Use a built-in Matplotlib style
+            sim.plot(style='simple', font='Rosario', dpi=200) # Use the other house style with several customizations
 
-    #         for t in self.tvec:
-
-    #             # Sources are easy -- count up the arrays for all the people who became infections on that day
-    #             if method == 'infectious':
-    #                 inds = cvu.true(t == self.people.date_infectious) # Find people who became infectious on this timestep
-    #             elif method == 'outcome':
-    #                 recov_inds = cvu.true(t == self.people.date_recovered) # Find people who recovered on this timestep
-    #                 dead_inds  = cvu.true(t == self.people.date_dead)  # Find people who died on this timestep
-    #                 inds       = np.concatenate((recov_inds, dead_inds))
-    #             sources[t] = len(inds)
-
-    #             # Create the mapping from sources to dates
-    #             for ind in inds:
-    #                 source_dates[ind] = t
-
-    #         # Targets are hard -- loop over the transmission tree
-    #         for transdict in self.people.infection_log:
-    #             source = transdict['source']
-    #             if source is not None and source in source_dates: # Skip seed infections and people with e.g. recovery after the end of the sim
-    #                 source_date = source_dates[source]
-    #                 targets[source_date] += 1
-
-    #             # for ind in inds:
-    #             #     targets[t] += len(self.people.transtree.targets[ind])
-
-    #         # Populate the array -- to avoid divide-by-zero, skip indices that are 0
-    #         r_eff = np.divide(targets, sources, out=np.full(self.npts, np.nan), where=sources > 0)
-
-    #         # Use stored weights calculate the moving average over the window of timesteps, n
-    #         num = np.nancumsum(r_eff * sources)
-    #         num[window:] = num[window:] - num[:-window]
-    #         den = np.cumsum(sources)
-    #         den[window:] = den[window:] - den[:-window]
-    #         values = np.divide(num, den, out=np.full(self.npts, np.nan), where=den > 0)
-
-    #     # Method not recognized
-    #     else: # pragma: no cover
-    #         errormsg = f'Method must be "daily", "infectious", or "outcome", not "{method}"'
-    #         raise ValueError(errormsg)
-
-    #     # Set the values and return
-    #     self.results['r_eff'].values[:] = values
-
-    #     return self.results['r_eff'].values
+        | New in version 2.1.0: argument passing, date_args, and mpl_args
+        | New in version 3.1.2: updated date arguments; mpl_args renamed style_args
+        '''
+        fig = znplt.plot_sim(sim=self, *args, **kwargs)
+        return fig
 
 
-    # def compute_gen_time(self):
-    #     '''
-    #     Calculate the generation time (or serial interval). There are two
-    #     ways to do this calculation. The 'true' interval (exposure time to
-    #     exposure time) or 'clinical' (symptom onset to symptom onset).
+    def plot_result(self, key, *args, **kwargs):
+        '''
+        Simple method to plot a single result. Useful for results that aren't
+        standard outputs. See sim.plot() for explanation of other arguments.
 
-    #     Returns:
-    #         gen_time (dict): the generation time results
-    #     '''
+        Args:
+            key (str): the key of the result to plot
 
-    #     intervals1 = np.zeros(len(self.people))
-    #     intervals2 = np.zeros(len(self.people))
-    #     pos1 = 0
-    #     pos2 = 0
-    #     date_exposed = self.people.date_exposed
-    #     date_symptomatic = self.people.date_symptomatic
+        Returns:
+            fig: Figure handle
 
-    #     for infection in self.people.infection_log:
-    #         if infection['source'] is not None:
-    #             source_ind = infection['source']
-    #             target_ind = infection['target']
-    #             intervals1[pos1] = date_exposed[target_ind] - date_exposed[source_ind]
-    #             pos1 += 1
-    #             if np.isfinite(date_symptomatic[source_ind]) and np.isfinite(date_symptomatic[target_ind]):
-    #                 intervals2[pos2] = date_symptomatic[target_ind] - date_symptomatic[source_ind]
-    #                 pos2 += 1
+        **Example**::
 
-    #     self.results['gen_time'] = {
-    #             'true':         np.mean(intervals1[:pos1]),
-    #             'true_std':     np.std(intervals1[:pos1]),
-    #             'clinical':     np.mean(intervals2[:pos2]),
-    #             'clinical_std': np.std(intervals2[:pos2])}
-    #     return self.results['gen_time']
-
+            sim = cv.Sim().run()
+            sim.plot_result('r_eff')
+        '''
+        fig = znplt.plot_result(sim=self, key=key, *args, **kwargs)
+        return fig
 
     def compute_summary(self, full=None, t=None, update=True, output=False, require_run=False):
         '''

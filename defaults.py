@@ -47,11 +47,17 @@ precision = 32 # Default arithmetic precision for Numba -- 32-bit by default for
 
 # Define the 'overview plots', i.e. the most useful set of plots to explore different aspects of a simulation
 overview_plots = [
-
+    'new_human_infections',
+    'new_flock_infections',
+    'new_barn_contaminated',
+    'new_water_contaminated',
 ]
 
 overview_variant_plots = [
-
+    'new_human_infections_by_variant',
+    'new_flock_infections_by_variant',
+    'new_barn_contaminated_by_variant',
+    'new_water_contaminated_by_variant',
 ]
 
 def get_default_plots(which='default', kind='sim', sim=None):
@@ -86,32 +92,45 @@ def get_default_plots(which='default', kind='sim', sim=None):
         if is_sim:
             plots = sc.odict({
                 'Total counts': [
-                    'cum_infections',
-                    'n_infectious',
-                    'cum_diagnoses',
+                    'cum_human_infections',
+                    'n_human_infectious',
+                    'cum_flock_infections',
+                    'n_flock_infectious',
+                    'cum_barn_contaminated',
+                    'n_barn_contaminated',
+                    'cum_water_contaminated',
+                    'n_water_contaminated',
                 ],
                 'Daily counts': [
-                    'new_infections',
-                    'new_diagnoses',
+                    'new_human_infections',
+                    'new_flock_infections',
+                    'new_barn_contaminated',
+                    'new_water_contaminated',
                 ],
                 'Health outcomes': [
-                    'cum_severe',
-                    'cum_critical',
-                    'cum_deaths',
-                    'cum_known_deaths',
+                    'cum_human_infectious',
+                    'cum_human_symptomatic',
+                    'cum_human_severe',
+                    'cum_human_deaths',
                 ],
             })
 
         else: # pragma: no cover
             plots = sc.odict({
                 'Cumulative infections': [
-                    'cum_infections',
+                    'cum_human_infections',
+                    'cum_flock_infections',
+                    'cum_barn_contaminated',
+                    'cum_water_contaminated',
                 ],
                 'New infections per day': [
-                    'new_infections',
+                    'new_human_infections',
+                    'new_flock_infections',
+                    'new_barn_contaminated',
+                    'new_water_contaminated',
                 ],
                 'Cumulative deaths': [
-                    'cum_deaths',
+                    'cum_human_deaths',
                 ],
             })
 
@@ -132,41 +151,56 @@ def get_default_plots(which='default', kind='sim', sim=None):
         if is_sim:
             plots = sc.odict({
                 'Cumulative infections by variant': [
-                    'cum_infections_by_variant',
+                    'cum_human_infections_by_variant',
+                    'cum_flock_infections_by_variant',
+                    'cum_barn_contaminated_by_variant',
+                    'cum_water_contaminated_by_variant',
                 ],
                 'New infections by variant': [
-                    'new_infections_by_variant',
+                    'new_human_infections_by_variant',
+                    'new_flock_infections_by_variant',
+                    'new_barn_contaminated_by_variant',
+                    'new_water_contaminated_by_variant',
                 ],
                 'Health outcomes': [
-                    'cum_severe',
-                    'cum_critical',
-                    'cum_deaths',
+                    'cum_human_infections',
+                    'cum_human_severe',
+                    'cum_human_deaths',
                 ],
             })
 
         else: # pragma: no cover
             plots = sc.odict({
                     'Cumulative infections by variant': [
-                        'cum_infections_by_variant',
+                        'cum_human_infections_by_variant',
+                        'cum_flock_infections_by_variant',
+                        'cum_barn_contaminated_by_variant',
+                        'cum_water_contaminated_by_variant',
                     ],
                     'New infections by variant': [
-                        'new_infections_by_variant',
+                        'new_human_infections_by_variant',
+                        'new_flock_infectious_by_variant',
+                        'new_barn_contaminated_by_variant',
+                        'new_water_contaminated_by_variant',
                     ],
                     'New diagnoses': [
-                        'new_diagnoses',
+                        'new_human_diagnoses',
                     ],
                     'Cumulative deaths': [
-                        'cum_deaths',
+                        'cum_human_deaths',
                     ],
             })
 
-    # Plot SEIR compartments
-    elif which == 'seir': # pragma: no cover
+    # Plot agent type specific plots
+    elif which == 'human': # pragma: no cover
         plots = [
-            'n_susceptible',
-            'n_preinfectious',
-            'n_infectious',
-            'n_removed',
+            'n_human_susceptible',
+            'n_human_exposed',
+            'n_human_infectious',
+            'n_human_symptomatic',
+            'n_human_severe',
+            'n_human_recovered',
+            'n_human_dead',
         ],
 
     else: # pragma: no cover
