@@ -283,47 +283,50 @@ class Sim(znb.BaseSim):
             output = znb.Result(*args, **kwargs, npts=self.npts)
             return output
 
-        dcols = znd.get_default_colors() # Get default colors
+        human_dcols = znd.get_default_colors('human') # Get default human colors
+        flock_dcols = znd.get_default_colors('flock') # Get default flock colors
+        barn_dcols  = znd.get_default_colors('barn')  # Get default barn colors
+        water_dcols = znd.get_default_colors('water') # Get default water colors
 
         # Flows and cumulative flows
 
         for key,label in znd.human_flows.items():
-            self.results[f'cum_human_{key}'] = init_res(f'Cumulative {label}', color=dcols[key])  # Cumulative variables -- e.g. "Cumulative infections"
+            self.results[f'cum_human_{key}'] = init_res(f'Cumulative {label}', color=human_dcols[key])  # Cumulative variables -- e.g. "Cumulative infections"
 
         for key,label in znd.human_flows.items():
-            self.results[f'new_human_{key}'] = init_res(f'Number of new {label}', color=dcols[key]) # Flow variables -- e.g. "Number of new infections"
+            self.results[f'new_human_{key}'] = init_res(f'Number of new {label}', color=human_dcols[key]) # Flow variables -- e.g. "Number of new infections"
 
         for key,label in znd.flock_flows.items():
-            self.results[f'cum_flock_{key}'] = init_res(f'Cumulative {label}', color=dcols[key])
+            self.results[f'cum_flock_{key}'] = init_res(f'Cumulative {label}', color=flock_dcols[key])
 
         for key,label in znd.flock_flows.items():
-            self.results[f'new_flock_{key}'] = init_res(f'Number of new {label}', color=dcols[key])
+            self.results[f'new_flock_{key}'] = init_res(f'Number of new {label}', color=flock_dcols[key])
 
         for key,label in znd.barn_flows.items():
-            self.results[f'cum_barn_{key}'] = init_res(f'Cumulative {label}', color=dcols[key])
+            self.results[f'cum_barn_{key}'] = init_res(f'Cumulative {label}', color=barn_dcols[key])
 
         for key,label in znd.barn_flows.items():
-            self.results[f'new_barn_{key}'] = init_res(f'Number of new {label}', color=dcols[key])
+            self.results[f'new_barn_{key}'] = init_res(f'Number of new {label}', color=barn_dcols[key])
 
         for key,label in znd.water_flows.items():
-            self.results[f'cum_water_{key}'] = init_res(f'Cumulative {label}', color=dcols[key])
+            self.results[f'cum_water_{key}'] = init_res(f'Cumulative {label}', color=water_dcols[key])
 
         for key,label in znd.water_flows.items():
-            self.results[f'new_water_{key}'] = init_res(f'Number of new {label}', color=dcols[key])
+            self.results[f'new_water_{key}'] = init_res(f'Number of new {label}', color=water_dcols[key])
 
         # Stock variables
 
         for key,label in znd.human_stocks.items():
-            self.results[f'n_human_{key}'] = init_res(label, color=dcols[key])
+            self.results[f'n_human_{key}'] = init_res(label, color=human_dcols[key])
 
         for key,label in znd.flock_stocks.items():
-            self.results[f'n_flock_{key}'] = init_res(label, color=dcols[key])
+            self.results[f'n_flock_{key}'] = init_res(label, color=flock_dcols[key])
 
         for key,label in znd.barn_stocks.items():
-            self.results[f'n_barn_{key}'] = init_res(label, color=dcols[key])
+            self.results[f'n_barn_{key}'] = init_res(label, color=barn_dcols[key])
 
         for key,label in znd.water_stocks.items():
-            self.results[f'n_water_{key}'] = init_res(label, color=dcols[key])
+            self.results[f'n_water_{key}'] = init_res(label, color=water_dcols[key])
 
 
         # Other variables
@@ -340,43 +343,43 @@ class Sim(znb.BaseSim):
         #self.results['variant']['prevalence_by_variant'] = init_res('Prevalence by variant', scale=False, n_variants=nv)
         #self.results['variant']['incidence_by_variant']  = init_res('Incidence by variant', scale=False, n_variants=nv)
         for key,label in znd.human_flows_by_variant.items():
-            self.results['variant'][f'cum_human_{key}'] = init_res(f'Cumulative {label}', color=dcols[key], n_variants=nv)  # Cumulative variables -- e.g. "Cumulative infections"
+            self.results['variant'][f'cum_human_{key}'] = init_res(f'Cumulative {label}', color=human_dcols[key], n_variants=nv)  # Cumulative variables -- e.g. "Cumulative infections"
 
         for key,label in znd.flock_flows_by_variant.items():
-            self.results['variant'][f'cum_flock_{key}'] = init_res(f'Cumulative {label}', color=dcols[key], n_variants=nv )
+            self.results['variant'][f'cum_flock_{key}'] = init_res(f'Cumulative {label}', color=flock_dcols[key], n_variants=nv )
 
         for key,label in znd.barn_flows_by_variant.items():
-            self.results['variant'][f'cum_barn_{key}'] = init_res(f'Cumulative {label}', color=dcols[key], n_variants=nv )
+            self.results['variant'][f'cum_barn_{key}'] = init_res(f'Cumulative {label}', color=barn_dcols[key], n_variants=nv )
 
         for key,label in znd.water_flows_by_variant.items():
-            self.results['variant'][f'cum_water_{key}'] = init_res(f'Cumulative {label}', color=dcols[key], n_variants=nv )
+            self.results['variant'][f'cum_water_{key}'] = init_res(f'Cumulative {label}', color=water_dcols[key], n_variants=nv )
 
 
 
         for key,label in znd.human_flows_by_variant.items():
-            self.results['variant'][f'new_human_{key}'] = init_res(f'Number of new {label}', color=dcols[key], n_variants=nv) # Flow variables -- e.g. "Number of new infections"
+            self.results['variant'][f'new_human_{key}'] = init_res(f'Number of new {label}', color=human_dcols[key], n_variants=nv) # Flow variables -- e.g. "Number of new infections"
 
         for key,label in znd.flock_flows_by_variant.items():
-            self.results['variant'][f'new_flock_{key}'] = init_res(f'Number of new {label}', color=dcols[key], n_variants=nv)
+            self.results['variant'][f'new_flock_{key}'] = init_res(f'Number of new {label}', color=flock_dcols[key], n_variants=nv)
 
         for key,label in znd.barn_flows_by_variant.items():
-            self.results['variant'][f'new_barn_{key}'] = init_res(f'Number of new {label}', color=dcols[key], n_variants=nv)
+            self.results['variant'][f'new_barn_{key}'] = init_res(f'Number of new {label}', color=barn_dcols[key], n_variants=nv)
 
         for key,label in znd.water_flows_by_variant.items():
-            self.results['variant'][f'new_water_{key}'] = init_res(f'Number of new {label}', color=dcols[key], n_variants=nv)
+            self.results['variant'][f'new_water_{key}'] = init_res(f'Number of new {label}', color=water_dcols[key], n_variants=nv)
 
 
         for key,label in znd.human_stocks_by_variant.items():
-            self.results['variant'][f'n_human_{key}'] = init_res(label, color=dcols[key], n_variants=nv)
+            self.results['variant'][f'n_human_{key}'] = init_res(label, color=human_dcols[key], n_variants=nv)
 
         for key,label in znd.flock_stocks_by_variant.items():
-            self.results['variant'][f'n_flock_{key}'] = init_res(label, color=dcols[key], n_variants=nv)
+            self.results['variant'][f'n_flock_{key}'] = init_res(label, color=flock_dcols[key], n_variants=nv)
 
         for key,label in znd.barn_stocks_by_variant.items():
-            self.results['variant'][f'n_barn_{key}'] = init_res(label, color=dcols[key], n_variants=nv)
+            self.results['variant'][f'n_barn_{key}'] = init_res(label, color=barn_dcols[key], n_variants=nv)
 
         for key,label in znd.water_stocks_by_variant.items():
-            self.results['variant'][f'n_water_{key}'] = init_res(label, color=dcols[key], n_variants=nv)
+            self.results['variant'][f'n_water_{key}'] = init_res(label, color=water_dcols[key], n_variants=nv)
 
         # Populate the rest of the results
 

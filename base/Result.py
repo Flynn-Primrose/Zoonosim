@@ -28,7 +28,7 @@ class Result(object):
         self.name =  name  # Name of this result
         self.scale = scale # Whether or not to scale the result by the scale factor
         if color is None:
-            color = znd.get_default_colors()['default']
+            color = znd.get_default_colors('default')['default']
         self.color = color # Default color
         if npts is None:
             npts = 0

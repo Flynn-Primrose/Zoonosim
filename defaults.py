@@ -94,7 +94,7 @@ def get_default_plots(which='default', kind='sim', sim=None):
                 'Total counts': [
                     'cum_human_infections',
                     'n_human_infectious',
-                    'cum_flock_infections',
+                    'cum_flock_infectious',
                     'n_flock_infectious',
                     'cum_barn_contaminated',
                     'n_barn_contaminated',
@@ -103,7 +103,7 @@ def get_default_plots(which='default', kind='sim', sim=None):
                 ],
                 'Daily counts': [
                     'new_human_infections',
-                    'new_flock_infections',
+                    'new_flock_infectious',
                     'new_barn_contaminated',
                     'new_water_contaminated',
                 ],
@@ -111,7 +111,7 @@ def get_default_plots(which='default', kind='sim', sim=None):
                     'cum_human_infectious',
                     'cum_human_symptomatic',
                     'cum_human_severe',
-                    'cum_human_deaths',
+                    'cum_human_dead',
                 ],
             })
 
@@ -119,18 +119,18 @@ def get_default_plots(which='default', kind='sim', sim=None):
             plots = sc.odict({
                 'Cumulative infections': [
                     'cum_human_infections',
-                    'cum_flock_infections',
+                    'cum_flock_infectious',
                     'cum_barn_contaminated',
                     'cum_water_contaminated',
                 ],
                 'New infections per day': [
                     'new_human_infections',
-                    'new_flock_infections',
+                    'new_flock_infectious',
                     'new_barn_contaminated',
                     'new_water_contaminated',
                 ],
                 'Cumulative deaths': [
-                    'cum_human_deaths',
+                    'cum_human_dead',
                 ],
             })
 
@@ -152,20 +152,20 @@ def get_default_plots(which='default', kind='sim', sim=None):
             plots = sc.odict({
                 'Cumulative infections by variant': [
                     'cum_human_infections_by_variant',
-                    'cum_flock_infections_by_variant',
+                    'cum_flock_infectious_by_variant',
                     'cum_barn_contaminated_by_variant',
                     'cum_water_contaminated_by_variant',
                 ],
                 'New infections by variant': [
                     'new_human_infections_by_variant',
-                    'new_flock_infections_by_variant',
+                    'new_flock_infectious_by_variant',
                     'new_barn_contaminated_by_variant',
                     'new_water_contaminated_by_variant',
                 ],
                 'Health outcomes': [
                     'cum_human_infections',
                     'cum_human_severe',
-                    'cum_human_deaths',
+                    'cum_human_dead',
                 ],
             })
 
@@ -173,7 +173,7 @@ def get_default_plots(which='default', kind='sim', sim=None):
             plots = sc.odict({
                     'Cumulative infections by variant': [
                         'cum_human_infections_by_variant',
-                        'cum_flock_infections_by_variant',
+                        'cum_flock_infectious_by_variant',
                         'cum_barn_contaminated_by_variant',
                         'cum_water_contaminated_by_variant',
                     ],
@@ -211,54 +211,60 @@ def get_default_plots(which='default', kind='sim', sim=None):
 
 
 
-def get_default_colors():
+def get_default_colors(agent_type):
     '''
     Specify plot colors -- used in sim.py.
 
-    NB, includes duplicates since stocks and flows are named differently.
+    Args:
+        agent_type (str): the type of agent to get colors for; one of 'human', 'flock', 'barn', or 'water'
 
     Colour palette: 
     '''
     c = sc.objdict()
-    # TODO: add colours as needed
-    c.default = '#000000' # Default colour (black)
-    # Stocks
-    c.susceptible = '#00FF00' # Green
-    c.exposed = '#FFFF00' # Yellow
-    c.infectious = '#FF0000' # Red
-    c.symptomatic = '#FF8000' # Orange
-    c.severe = '#800000' # Dark red
-    c.recovered = '#00FFFF' # Cyan
-    c.dead = '#0000FF' # Blue
-    c.contaminated = '#00FFFF' # Cyan
-
-    # Stocks by variant
-    c.exposed_by_variant = '#FFFF00' # Yellow
-    c.infectious_by_variant = '#FF0000' # Red
-    c.symptomatic_by_variant = '#FF8000' # Orange
-    c.severe_by_variant = '#800000' # Dark red
-    c.contaminated_by_variant_barns = '#00FFFF' # Cyan
-    # Flows
-    c.reinfections = '#FF00FF' # Magenta
-    c.infections = '#FF00FF' # Magenta
-    c.infectious = '#FF00FF' # Magenta
-    c.symptomatic = '#FF00FF' # Magenta
-    c.severe = '#FF00FF' # Magenta
-    c.recoveries = '#FF00FF' # Magenta
-    c.deaths = '#FF00FF' # Magenta
-    c.tests = '#FF00FF' # Magenta
-    c.diagnoses = '#FF00FF' # Magenta
-    c.known_deaths = '#FF00FF' # Magenta
-    c.quarantined = '#FF00FF' # Magenta
-    c.doses = '#FF00FF' # Magenta
-    c.vaccinated = '#FF00FF' # Magenta
-    # Flows by variant
-    c.infections_by_variant = '#FF00FF' # Magenta
-    c.symptomatic_by_variant = '#FF00FF' # Magenta
-    c.severe_by_variant = '#FF00FF' # Magenta
-    c.infectious_by_variant = '#FF00FF' # Magenta
-    c.infections_by_variant = '#FF00FF' # Magenta
-    c.contaminated_by_variant = '#FF00FF' # Magenta
+    match agent_type.lower():
+        case 'human':
+            c.susceptible = '#00FF00' # Green
+            c.exposed = '#FFFF00' # Yellow
+            c.symptomatic = '#FF8000' # Orange
+            c.infectious = '#FF0000' # Red
+            c.infections = '#FF0000' # Red
+            c.reinfections = '#FF0000' # Red
+            c.severe = '#800000' # Dark red
+            c.recovered = '#00FFFF' # Cyan
+            c.dead = '#000000' # Black
+            c.known_dead = '#000000' # black
+            c.diagnosed = '#FF00FF' # Magenta
+            c.tested = "#FF009D" # other magenta
+            c.quarantined = "#FF0077" # other Magenta
+            c.vaccinated = "#FF0015" # other Magenta
+            c.doses = "#FF0015" # other Magenta
+            c.exposed_by_variant = '#FFFF00' # Yellow
+            c.infectious_by_variant = '#FF0000' # Red
+            c.infections_by_variant = '#FF0011' # red with a hint of magenta
+            c.symptomatic_by_variant = '#FF8000' # Orange
+            c.severe_by_variant = '#800000' # Dark red
+        case 'flock':
+            c.susceptible = '#00FF00' # Green
+            c.exposed = '#FFFF00' # Yellow
+            c.infectious = '#FF0000' # Red
+            c.suspected = "#532D06" # dark Orange
+            c.quarantined = '#800000' # Dark red
+            c.exposed_by_variant = '#FFFF00' # Yellow
+            c.infectious_by_variant = '#FF0000' # Red
+            c.symptomatic_by_variant = '#FF8000' # Orange
+        case 'barn':
+            c.uncontaminated = '#00FF00' # Green
+            c.contaminated = '#FF0000' # Red
+            c.contaminated_by_variant = '#FF0000' # Red
+        case 'water':
+            c.uncontaminated = '#00FF00' # Green
+            c.contaminated = '#FF0000' # Red
+            c.contaminated_by_variant = '#FF0000' # Red
+        case 'default':
+            c.default = '#000000' # Black
+        case _:
+            errormsg = f'Unknown agent type "{agent_type}" for get_default_colors()'
+            raise ValueError(errormsg)
     return c
 
 
@@ -386,11 +392,11 @@ human_flows = {
     'infectious':   'infectious humans',
     'symptomatic':  'symptomatic human cases',
     'severe':       'severe human cases',
-    'recoveries':   'human recoveries',
-    'deaths':       'human deaths',
-    'tests':        'human tests',
-    'diagnoses':    'human diagnoses',
-    'known_deaths': 'known human deaths',
+    'recovered':   'human recoveries',
+    'dead':       'human deaths',
+    'tested':        'human tests',
+    'diagnosed':    'human diagnoses',
+    'known_dead': 'known human deaths',
     'quarantined':  'human quarantines started',
     'doses':        'human vaccine doses',
     'vaccinated':   'vaccinated humans'
@@ -399,9 +405,7 @@ new_human_flows = [f'new_{key}' for key in human_flows.keys()]
 cum_human_flows = [f'cum_{key}' for key in human_flows.keys()]
 
 flock_flows = {
-    'infections':   'flock infections',
     'infectious':   'infectious flocks',
-    'symptomatic':  'symptomatic flock cases',
 }
 new_flock_flows = [f'new_{key}' for key in flock_flows.keys()]
 cum_flock_flows = [f'cum_{key}' for key in flock_flows.keys()]
@@ -430,9 +434,7 @@ new_human_flows_by_variant = [f'new_{key}' for key in human_flows_by_variant.key
 cum_human_flows_by_variant = [f'cum_{key}' for key in human_flows_by_variant.keys()]
 
 flock_flows_by_variant = {
-    'infections_by_variant':  'flock infections by variant',
     'infectious_by_variant':  'infectious flocks by variant',
-    'symptomatic_by_variant': 'symptomatic flocks by variant',
 }
 new_flock_flows_by_variant = [f'new_{key}' for key in flock_flows_by_variant.keys()]
 cum_flock_flows_by_variant = [f'cum_{key}' for key in flock_flows_by_variant.keys()]

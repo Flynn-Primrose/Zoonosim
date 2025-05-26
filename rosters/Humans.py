@@ -283,10 +283,10 @@ class Humans(Subroster):
         self.flows['new_infectious']    += self.check_infectious() # For people who are exposed and not infectious, check if they begin being infectious
         self.flows['new_symptomatic']   += self.check_symptomatic()
         self.flows['new_severe']        += self.check_severe()
-        self.flows['new_recoveries']    += self.check_recovery()
-        new_deaths, new_known_deaths     = self.check_death()
-        self.flows['new_deaths']        += new_deaths
-        self.flows['new_known_deaths']  += new_known_deaths
+        self.flows['new_recovered']    += self.check_recovery()
+        new_dead, new_known_dead     = self.check_death()
+        self.flows['new_dead']        += new_dead
+        self.flows['new_known_dead']  += new_known_dead
         return
 
 

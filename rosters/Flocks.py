@@ -364,8 +364,8 @@ class Flocks(Subroster):
         self.exposed[inds]        = True
         self.exposed_variant[inds] = variant
         self.exposed_by_variant[variant, inds] = True
-        self.flows['new_infections']   += len(inds)
-        self.flows_variant['new_infections_by_variant'][variant] += len(inds)
+        self.flows['new_infectious']   += len(inds)
+        self.flows_variant['new_infectious_by_variant'][variant] += len(inds)
 
         # Record transmissions
         for i, target in enumerate(inds):
