@@ -51,13 +51,6 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['rand_seed']  = 1            # Random seed, if None, don't reset
     pars['verbose']    = znd.verbose  # Whether or not to display information during the run -- options are 0 (silent), 0.1 (some; default), 1 (default), 2 (everything)
 
-        # Rescaling parameters - I'm not sure if we're going to be using these or not.
-    # pars['pop_scale']         = 1    # Factor by which to scale the population -- e.g. pop_scale=10 with pop_size=100e3 means a population of 1 million
-    # pars['scaled_pop']        = None # The total scaled population, i.e. the number of agents times the scale factor
-    # pars['rescale']           = True # Enable dynamic rescaling of the population -- starts with pop_scale=1 and scales up dynamically as the epidemic grows
-    # pars['rescale_threshold'] = 0.05 # Fraction susceptible population that will trigger rescaling if rescaling
-    # pars['rescale_factor']    = 1.2  # Factor by which the population is rescaled on each step
-    # pars['frac_susceptible']  = 1.0  # What proportion of the population is susceptible to infection
 
     # Network parameters, generally initialized after the population has been constructed
     #pars['contacts']        = None  # The number of contacts per layer; set by reset_layer_pars() below
@@ -72,10 +65,10 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['asymp_factor']['barn'] = 1.0 # Multiply beta by this factor for asymptomatic cases.
     pars['asymp_factor']['water'] = 1.0 # Multiply beta by this factor for asymptomatic cases.
     pars['beta'] = {} # The transmissibility of the disease for each agent type.
-    pars['beta']['human'] = 0.05 # The transmissibility of the disease for humans. This is a dummy variable!
+    pars['beta']['human'] = 0.1 # The transmissibility of the disease for humans. This is a dummy variable!
     pars['beta']['flock'] = 0.1 # The transmissibility of the disease for flocks. This is a dummy variable!
-    pars['beta']['barn'] = 0.01 # The transmissibility of the disease for barns. This is a dummy variable!
-    pars['beta']['water'] = 0.01 # The transmissibility of the disease for water. This is a dummy variable!
+    pars['beta']['barn'] = 0.1 # The transmissibility of the disease for barns. This is a dummy variable!
+    pars['beta']['water'] = 0.1 # The transmissibility of the disease for water. This is a dummy variable!
 
     # Basic disease transmission parameters
     pars['transmission_pars'] = {}

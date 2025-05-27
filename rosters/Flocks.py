@@ -130,12 +130,11 @@ class Flocks(Subroster):
         self._lock = False # Prevent further modification of keys
         self.meta = FlocksMeta() # Store list of keys and dtypes
         self.contacts = None
-        # self.init_contacts() # Initialize the contacts
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
         
         pop_size = pars['pop_size_by_type']['flock']
 
-        # Set person properties -- all floats except for UID
+        # Set flock properties
         for key in self.meta.agent:
             if key == 'uid':
                 self[key] = np.zeros(pop_size, dtype=znd.default_int)# NOTE: values get passed as kwargs by make_flock
@@ -143,6 +142,8 @@ class Flocks(Subroster):
                 self[key] = np.zeros(pop_size, dtype=znd.default_int)# NOTE: values get passed as kwargs by make_flock
             elif key == 'breed':
                 self[key] = np.zeros(pop_size, dtype=znd.default_str) # NOTE: values get passed as kwargs by make_flock
+            elif key in ['headcount', 'infected_headcount', 'symptomatic_headcount', 'dead_headcount']:
+                self[key] = np.zeros(pop_size, dtype=znd.default_float)
             else:
                 self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
 
@@ -197,10 +198,10 @@ class Flocks(Subroster):
             self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=znd.default_float)
         return
 
-    def initialize(self, sim_pars=None):
+    def initialize(self, agents_pars=None):
         ''' Perform initializations '''
-        self.validate(sim_pars=sim_pars) # First, check that essential-to-match parameters match
-        self.set_pars(sim_pars) # Replace the saved parameters with this simulation's
+        self.validate(roster_pars=agents_pars) # First, check that essential-to-match parameters match
+        self.set_pars(agents_pars) # Replace the saved parameters with this simulation's
         self.set_prognoses()
         self.initialized = True
         return
@@ -221,7 +222,9 @@ class Flocks(Subroster):
         progs = pars['prognoses']['flock']
         breed_to_index = {breed: index for index, breed in enumerate(progs['breeds'])}
         #inds = np.fromiter((breed_to_index[this_breed] for this_breed in self.breed), dtype=znd.default_str)
+        
         inds = np.array([breed_to_index[this_breed] for this_breed in self.breed])
+
         self.baseline_symptomatic_rate[:] = progs['baseline_symptomatic_rate'][inds]
         self.baseline_mortality_rate[:] = progs['baseline_mortality_rate'][inds]
         self.baseline_water_rate[:] = progs['baseline_water_rate'][inds]

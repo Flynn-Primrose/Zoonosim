@@ -131,10 +131,10 @@ class Water(Subroster):
             self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=znd.default_float)
         return
 
-    def initialize(self, sim_pars=None):
+    def initialize(self, agents_pars=None):
         ''' Perform initializations '''
-        self.validate(sim_pars=sim_pars) # First, check that essential-to-match parameters match
-        self.set_pars(sim_pars) # Replace the saved parameters with this simulation's
+        self.validate(roster_pars=agents_pars) # First, check that essential-to-match parameters match
+        self.set_pars(agents_pars) # Replace the saved parameters with this simulation's
         self.initialized = True
         return
 

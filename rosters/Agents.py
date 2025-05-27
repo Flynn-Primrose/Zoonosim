@@ -185,6 +185,11 @@ class Agents(Roster):
         ''' Perform initializations '''
         self.validate(sim_pars=sim_pars) # First, check that essential-to-match parameters match
         self.set_pars(sim_pars) # Replace the saved parameters with this simulation's
+        self.human.initialize(self.pars) # Initialize the human subroster
+        self.flock.initialize(self.pars) # Initialize the flock subroster
+        self.barn.initialize(self.pars) # Initialize the barn subroster
+        self.water.initialize(self.pars) # Initialize the water subroster
+        self.update_states_from_subrosters() # Update the states of the main roster based on the subrosters
         self.initialized = True
         return
     
