@@ -35,15 +35,15 @@ numba_parallel = str(os.getenv('ZOONOSIM_NUMBA_PARALLEL', 'none'))
 numba_cache = bool(int(os.getenv('ZOONOSIM_NUMBA_CACHE', 1)))
 
 
-show = True # Show figures by default
-close = False # Close figures by default
-returnfig = True # Return figures by default
-dpi = pl.rcParams['figure.dpi'] # Default DPI for figures
-font = pl.rcParams['font.family'] # Default font family for figures
-fontsize = pl.rcParams['font.size'] # Default font size for figures
-backend = pl.get_backend() # Default backend for figures
-sep = ',' # Default thousands separator for text output
-precision = 32 # Default arithmetic precision for Numba -- 32-bit by default for efficiency
+# show = True # Show figures by default
+# close = False # Close figures by default
+# returnfig = True # Return figures by default
+# dpi = pl.rcParams['figure.dpi'] # Default DPI for figures
+# font = pl.rcParams['font.family'] # Default font family for figures
+# fontsize = pl.rcParams['font.size'] # Default font size for figures
+# backend = pl.get_backend() # Default backend for figures
+# sep = ',' # Default thousands separator for text output
+# precision = 32 # Default arithmetic precision for Numba -- 32-bit by default for efficiency
 
 # Define the 'overview plots', i.e. the most useful set of plots to explore different aspects of a simulation
 overview_plots = [
@@ -92,14 +92,16 @@ def get_default_plots(which='default', kind='sim', sim=None):
         if is_sim:
             plots = sc.odict({
                 'Total counts': [
-                    'cum_human_infections',
                     'n_human_infectious',
-                    'cum_flock_infectious',
                     'n_flock_infectious',
-                    'cum_barn_contaminated',
                     'n_barn_contaminated',
-                    'cum_water_contaminated',
                     'n_water_contaminated',
+                ],
+                'Cumulative counts': [
+                    'cum_human_infections',
+                    'cum_flock_infectious',
+                    'cum_barn_contaminated',
+                    'cum_water_contaminated',
                 ],
                 'Daily counts': [
                     'new_human_infections',
@@ -223,43 +225,43 @@ def get_default_colors(agent_type):
     c = sc.objdict()
     match agent_type.lower():
         case 'human':
-            c.susceptible = '#00FF00' # Green
-            c.exposed = '#FFFF00' # Yellow
-            c.symptomatic = '#FF8000' # Orange
-            c.infectious = '#FF0000' # Red
-            c.infections = '#FF0000' # Red
-            c.reinfections = '#FF0000' # Red
-            c.severe = '#800000' # Dark red
-            c.recovered = '#00FFFF' # Cyan
-            c.dead = '#000000' # Black
-            c.known_dead = '#000000' # black
-            c.diagnosed = '#FF00FF' # Magenta
-            c.tested = "#FF009D" # other magenta
-            c.quarantined = "#FF0077" # other Magenta
-            c.vaccinated = "#FF0015" # other Magenta
-            c.doses = "#FF0015" # other Magenta
-            c.exposed_by_variant = '#FFFF00' # Yellow
-            c.infectious_by_variant = '#FF0000' # Red
-            c.infections_by_variant = '#FF0011' # red with a hint of magenta
-            c.symptomatic_by_variant = '#FF8000' # Orange
-            c.severe_by_variant = '#800000' # Dark red
+            c.susceptible = "#00FF00" # Green
+            c.exposed = "#00FF00" # 
+            c.symptomatic = '#00FF00' # 
+            c.infectious = '#00FF00' # 
+            c.infections = '#00FF00' # 
+            c.reinfections = '#00FF00' # 
+            c.severe = '#00FF00' # 
+            c.recovered = '#00FF00' # 
+            c.dead = '#00FF00' # 
+            c.known_dead = '#00FF00' # 
+            c.diagnosed = '#00FF00' # 
+            c.tested = "#00FF00" # 
+            c.quarantined = "#00FF00" # 
+            c.vaccinated = "#00FF00" # 
+            c.doses = "#00FF00" # 
+            c.exposed_by_variant = '#00FF00' # 
+            c.infectious_by_variant = '#00FF00' # 
+            c.infections_by_variant = '#00FF00' # 
+            c.symptomatic_by_variant = '#00FF00' # 
+            c.severe_by_variant = '#00FF00' # 
         case 'flock':
-            c.susceptible = '#00FF00' # Green
+            c.susceptible = '#FFFF00' # 
             c.exposed = '#FFFF00' # Yellow
-            c.infectious = '#FF0000' # Red
-            c.suspected = "#532D06" # dark Orange
-            c.quarantined = '#800000' # Dark red
-            c.exposed_by_variant = '#FFFF00' # Yellow
-            c.infectious_by_variant = '#FF0000' # Red
-            c.symptomatic_by_variant = '#FF8000' # Orange
+            c.infectious = '#FFFF00' # 
+            c.suspected = '#FFFF00' # 
+            c.quarantined = '#FFFF00' # 
+            c.exposed_by_variant = '#FFFF00' # 
+            c.infectious_by_variant = '#FFFF00' # 
+            c.symptomatic_by_variant = '#FFFF00' # 
         case 'barn':
-            c.uncontaminated = '#00FF00' # Green
+            c.uncontaminated = '#FF0000' # 
             c.contaminated = '#FF0000' # Red
             c.contaminated_by_variant = '#FF0000' # Red
         case 'water':
-            c.uncontaminated = '#00FF00' # Green
-            c.contaminated = '#FF0000' # Red
-            c.contaminated_by_variant = '#FF0000' # Red
+            c.uncontaminated = "#0004FF" # 
+            c.contaminated = "#0004FF" # 
+            c.contaminated_by_variant = "#0004FF" # 
         case 'default':
             c.default = '#000000' # Black
         case _:

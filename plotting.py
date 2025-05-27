@@ -85,7 +85,7 @@ def handle_show(do_show):
     ''' Helper function to handle the slightly complex logic of show -- not for users '''
     backend = pl.get_backend()
     if do_show is None:  # If not supplied, reset to global value
-        do_show = znd.show
+        do_show = zno.show
     if backend == 'agg': # Cannot show plots for a non-interactive backend
         do_show = False
     if do_show: # Now check whether to show, and atually do it
@@ -100,12 +100,12 @@ def handle_show_return(do_show=None, fig=None, figs=None):
 
     # Show the figure, or close it
     do_show = handle_show(do_show)
-    if znd.close and not do_show:
+    if zno.close and not do_show:
         for f in figlist:
             pl.close(f)
 
     # Return the figure or figures unless we're in Jupyter
-    if not znd.returnfig:
+    if not zno.returnfig:
         return
     else:
         if figs is not None:

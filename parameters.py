@@ -41,7 +41,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
         'human': 0, # Number of initial humans exposed
         'flock': 0, # Number of initial flocks exposed
         'barn': 0, # Number of initial contaminated barns
-        'water': 3 # Number of initial contaminated water
+        'water': 0 # Number of initial contaminated water
     }
 
     # Simulation parameters
@@ -102,8 +102,8 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     # Number of imported cases per day for each agent type
     pars['n_imports']  = {
         'human': 0,
-        'flock': 1,
-        'barn' : 0,
+        'flock': 0,
+        'barn' : 1,
         'water': 1,
     } 
 
@@ -125,7 +125,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
         'nab_eff':dict(alpha_inf=1.08, alpha_inf_diff=1.812, beta_inf=0.967, alpha_symp_inf=-0.739, beta_symp_inf=0.038, alpha_sev_symp=-0.014, beta_sev_symp=0.079), # Parameters to map nabs to efficacy
         'rel_imm_symp':dict(asymp=0.85, mild=1, severe=1.5), # Relative immunity from natural infection varies by symptoms. Assumption.
         'immunity':None, # Matrix of immunity and cross-immunity factors, set by init_immunity() in immunity.py
-        'trans_redux':0.59 # Reduction in transmission for breakthrough infections, https://www.medrxiv.org/content/10.1101/2021.07.13.21260393v
+        'trans_redux':0.59 # Reduction in transmission for breakthrough infection
     }
     pars['immunity_pars']['flock'] = {'use_waning': False} # No waning immunity for flock agents
     pars['immunity_pars']['barn'] = {'use_waning': False} # No waning immunity for barn agents

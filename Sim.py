@@ -8,6 +8,8 @@ import numpy as np
 import pandas as pd
 import sciris as sc
 
+from .Options import options as zno
+
 from . import utils as znu
 from . import misc as znm
 from . import base as znb
@@ -332,6 +334,7 @@ class Sim(znb.BaseSim):
         # Other variables
         self.results['n_human_imports'] = init_res('Number of imported human infections', scale = True)
         self.results['n_flock_imports'] = init_res('Number of imported flock infections', scale = True)
+        self.results['n_barn_imports'] = init_res('Number of imported barn infections', scale = True)
         self.results['n_water_imports'] = init_res('Number of imported water infections', scale = True)
 
 
@@ -1255,7 +1258,7 @@ class Sim(znb.BaseSim):
         summary = self.compute_summary(full=full, t=t, update=False, output=True)
 
         # Construct the output string
-        if sep is None: sep = znd.sep # Default separator
+        if sep is None: sep = zno.sep # Default separator
         labelstr = f' "{self.label}"' if self.label else ''
         string = f'Simulation{labelstr} summary:\n'
         for key in self.result_keys():
