@@ -51,9 +51,10 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
     sim.pars.update(new_pars) # Update the simulation parameters with the new population size
     sim.popdict = popdict # Store the population dictionary in the simulation object
 
+
     human = make_humans(sim.pars, popdict['human_uids'])
-    flock = make_flocks(sim.pars, popdict['flock_uids'], popdict['flock2barn'])
-    barn = make_barns(sim.pars, popdict['barn_uids'], popdict['barn2flock'])
+    flock = make_flocks(sim.pars, popdict['flock_uids'], popdict['flock2barn'], popdict['breed_index'])
+    barn = make_barns(sim.pars, popdict['barn_uids'], popdict['barn2flock'], popdict['barn2breed'])
     water = make_water(sim.pars, popdict['water_uids'])
 
     contacts = make_contacts(popdict['contactdict'])
@@ -179,6 +180,8 @@ def make_popdict(sim, **kwargs):
     barn_index = 0
     flock_index = 0
     water_index = znu.choose_r(n_water, n_farms) # Randomly assign water sources to farms
+    breed_index = znu.n_multinomial(znd.default_flock_breed_freqs, len(popdict['flock_uids']))# Assign each flock a breed
+    flock2breed = dict(zip(popdict['flock_uids'], breed_index))
     flock2barn = {} # Dictionary to hold the mapping of flocks to barns
     barn2water = {} # Dictionary to hold the mapping of barns to water sources
 
@@ -204,9 +207,12 @@ def make_popdict(sim, **kwargs):
         barn2water.update(contactdict[farm]['barn2water']) # Map barns to water sources for all farms
     
     popdict['contactdict'] = contactdict # Add the contact dictionary to the population dictionary
+    popdict['breed_index'] = breed_index
     popdict['barn2water'] = barn2water # Add the barn to water mapping to the population dictionary
     popdict['flock2barn'] = flock2barn # Add the flock to barn mapping to the population dictionary
-    popdict['barn2flock'] = {v: k for k, v in flock2barn.items()}
+    barn2flock = {v: k for k, v in flock2barn.items()}
+    popdict['barn2flock'] = barn2flock
+    popdict['barn2breed'] = {k: flock2breed[v] for k, v in barn2flock.items()}
     return popdict
 
 def make_humans(sim_pars, uid):
@@ -217,25 +223,42 @@ def make_humans(sim_pars, uid):
 
     return humans
 
-def make_flocks(sim_pars, uid, flock2barn):
-    breed_index = znu.n_multinomial(znd.default_flock_breed_freqs, len(uid))
+def make_flocks(sim_pars, uid, flock2barn, breed_index):
+    prod_pars = sim_pars['production_cycle']
+
     breed = np.empty(len(uid), dtype = object)
+    headcount = np.empty(len(uid), dtype=znd.default_float)
     barn = np.empty(len(uid), dtype=znd.default_int)
     for index in range(len(uid)):
         breed[index] = znd.default_flock_breeds[breed_index[index]] # Get the breed for this flock
         barn[index] = flock2barn[uid[index]]
 
-    flocks = znr.Flocks(sim_pars, strict = False, uid=uid, breed = breed, barn = barn)
+    this_breed, freq = np.unique(breed_index, return_counts=True)
+    breed_dict = dict(zip(this_breed, freq))
+    for this_breed, freq in breed_dict.items():
+        headcount[breed_index == this_breed] = znu.sample(**prod_pars['flock_size'][this_breed], size = freq)
+    
+    flocks = znr.Flocks(sim_pars, strict = False, uid=uid, breed = breed, barn = barn, headcount=headcount)
     return flocks
 
-def make_barns(sim_pars, uid, barn2flock):
+def make_barns(sim_pars, uid, barn2flock, barn2breed):
     temperature = znu.n_poisson(22.5, len(uid)) # NOTE: Dummy values
     humidity = znu.n_poisson(45, len(uid)) # NOTE: Dummy values
     flock = np.empty(len(uid), dtype=znd.default_int)
-    for index in range(len(uid)): # NOTE: There is probably a better way of doing this
-        flock[index] = barn2flock.get(uid[index])
+    breed_index = np.empty(len(uid), dtype=znd.default_int)
+    date_cycle_end = np.empty(len(uid), dtype=znd.default_float)
+    for index in range(len(uid)):
+        flock[index] = barn2flock[uid[index]]
+        breed_index[index] = barn2breed[uid[index]]
+
+
+    prod_pars = sim_pars['production_cycle']
+    breed, freq = np.unique(list(barn2breed.values()), return_counts=True)
+    breed_dict = dict(zip(breed, freq))
+    for breed, freq in breed_dict.items():
+        date_cycle_end[breed_index == breed] = znu.sample(**prod_pars['cycle_dur'][breed], size = freq)
         
-    barns = znr.Barns(sim_pars, strict = False, uid=uid, temperature = temperature, humidity = humidity, flock = flock)
+    barns = znr.Barns(sim_pars, strict = False, uid=uid, temperature = temperature, humidity = humidity, flock = flock, date_cycle_end = date_cycle_end)
     return barns
 
 def make_water(sim_pars, uid):

@@ -404,7 +404,7 @@ class Agents(Roster):
             breed_dict = dict(zip(breed, freq))
             for breed, freq in breed_dict:
                 self.barn.date_cycle_end[barn_inds[breed_inds == breed]] = znu.sample(**prod_pars['cycle_dur'][breed], size = freq)
-                self.flock.headcount[flock_inds[breed_dict == breed]] = znu.sample(**prod_pars['flock_size'][breed], size = freq)
+                self.flock.headcount[flock_inds[breed_inds == breed]] = znu.sample(**prod_pars['flock_size'][breed], size = freq)
 
             self.flock.baseline_symptomatic_rate[flock_inds] = progs['baseline_symptomatic_rate'][breed_inds]
             self.flock.baseline_mortality_rate[flock_inds] = progs['baseline_mortality_rate'][breed_inds]

@@ -692,7 +692,6 @@ class Sim(znb.BaseSim):
         # NOTE: Currently barn and water have no modifiers, I'm setting them to 0.5 for now.
         misc_modifiers = np.concatenate((human_viral_load, flock_infection_levels, barn_modifiers, water_modifiers)) 
 
-        print(misc_modifiers)
 
         # Apply interventions
         for i,intervention in enumerate(self['interventions']):
