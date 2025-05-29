@@ -113,10 +113,11 @@ class Barns(Subroster):
 
         # Set person properties -- all floats except for UID
         for key in self.meta.agent:
-            if key == 'uid':
+            if key in ['uid', 'flock', 'repopulations']:
                 self[key] = np.zeros(pop_size, dtype=znd.default_int) # NOTE: The uid values are passed in kwargs by make_barn()
-            elif key == 'flock':
-                self[key] = np.zeros(pop_size, dtype=znd.default_int) # NOTE: The flock values are passed in kwargs by make_barn()
+            elif key in ['green', 'yellow', 'orange']:
+                val = key in ['green']
+                self[key] = np.full(pop_size, val, dtype=znd.default_bool) # NOTE: The flock values are passed in kwargs by make_barn()
             else:
                 self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
 

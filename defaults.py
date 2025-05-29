@@ -21,6 +21,7 @@ result_float = np.float64 # Always use float64 for results, for simplicity
 default_str = str # Use str for strings, for simplicity
 default_float = np.float64
 default_int   = np.int64
+default_bool  = np.bool_
 nbfloat       = nb.float64
 nbint         = nb.int64
 nbbool        = nb.bool_
