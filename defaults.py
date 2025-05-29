@@ -372,7 +372,6 @@ human_stocks_by_variant = {
 flock_stocks_by_variant = {
     'exposed_by_variant':     'Number exposed flocks by variant',
     'infectious_by_variant':  'Number infectious flocks by variant',
-    'symptomatic_by_variant': 'Number symptomatic flocks by variant',
 }
 
 

@@ -49,13 +49,11 @@ class FlocksMeta(sc.prettyobj):
         self.variant_states = [
             'exposed_variant',
             'infectious_variant',
-            'symptomatic_variant',
         ]
 
         self.by_variant_states = [
             'exposed_by_variant',
             'infectious_by_variant',
-            'symptomatic_by_variant',
         ]
 
         # Set the dates various events took place: these are floats per agent

@@ -296,7 +296,14 @@ class Agents(Roster):
         self.infectious = np.isin(self['uid'], infectious_uids)
         self.symptomatic = np.isin(self['uid'], symptomatic_uids)
         self.quarantined = np.isin(self['uid'], quarantined_uids)
-
+        self.infectious_variant = np.concatenate((self.human.infectious_variant,
+                                                  self.flock.infectious_variant,
+                                                  self.barn.contaminated_variant,
+                                                  self.water.contaminated_variant))
+        # self.infectious_by_variant = np.concatenate((self.human.infectious_by_variant,
+        #                                              self.flock.infectious_by_variant,
+        #                                              self.barn.contaminated_by_variant,
+        #                                              self.water.contaminated_by_variant))
         return
 
 
@@ -312,11 +319,11 @@ class Agents(Roster):
     
     def get_barn_rel_sus(self):
         #TODO: This should depend on the temperature and humidity of the barn
-        return np.repeat([0.5], len(self.barn))
+        return np.repeat([1.0], len(self.barn))
     
     def get_water_rel_sus(self):
         #TODO: This should depend on the temperature of the water
-        return np.repeat([0.5], len(self.water))
+        return np.repeat([1.0], len(self.water))
     
     def get_rel_sus(self):
         human_rel_sus = self.get_human_rel_sus()
@@ -333,11 +340,11 @@ class Agents(Roster):
     
     def get_barn_rel_trans(self):
         #TODO: This should depend on the temperature and humidity of the barn
-        return np.repeat([0.5], len(self.barn))
+        return np.repeat([1.0], len(self.barn))
     
     def get_water_rel_trans(self):
         #TODO: This should depend on the temperature of the water
-        return np.repeat([0.5], len(self.water))
+        return np.repeat([1.0], len(self.water))
     
     def get_rel_trans(self):
         human_rel_trans = self.get_human_rel_trans()

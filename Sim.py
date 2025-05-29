@@ -681,12 +681,12 @@ class Sim(znb.BaseSim):
         # Compute modifiers for barns
         # In principle the relative transmission and susceptibility of barns should vary based on temperature and humidity
         # For now, I'm just setting them to 0.5
-        barn_modifiers = np.repeat(0.5, len(agents.barn)) # TODO: Implement barn modifiers based on temperature and humidity
+        barn_modifiers = np.repeat(1.0, len(agents.barn)) # TODO: Implement barn modifiers based on temperature and humidity
 
         # Compute modifiers for water
         # In principle the relative transmission and susceptibility of water should vary based on temperature. 
         # For now, I'm just setting them to 0.5
-        water_modifiers = np.repeat(0.5, len(agents.water)) # TODO: Implement water modifiers based on temperature
+        water_modifiers = np.repeat(1.0, len(agents.water)) # TODO: Implement water modifiers based on temperature
 
         # Set modifiers for all agent types
         # NOTE: Currently barn and water have no modifiers, I'm setting them to 0.5 for now.
@@ -746,6 +746,8 @@ class Sim(znb.BaseSim):
                 sus_imm = agents.sus_imm[variant,:]
                 quar_factor = znd.default_float(self['quar_factor'][lkey]) # Ex: 0.2. Probably the effect on beta of quarantining. 
                 beta_layer  = znd.default_float(self['beta_layer'][lkey]) # A scalar; beta for the layer. Ex: 1.0. 
+                
+                print(inf_variant)
 
                 rel_trans, rel_sus = znu.compute_trans_sus(prel_trans, prel_sus, inf_variant, sus, beta_layer, misc_modifiers, symp, quar, asymp_factor, quar_factor, sus_imm)
                 
