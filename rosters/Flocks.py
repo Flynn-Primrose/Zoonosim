@@ -136,16 +136,12 @@ class Flocks(Subroster):
 
         # Set flock properties
         for key in self.meta.agent:
-            if key == 'uid':
-                self[key] = np.zeros(pop_size, dtype=znd.default_int)# NOTE: values get passed as kwargs by make_flock
-            elif key == 'barn':
+            if key in ['uid', 'barn']:
                 self[key] = np.zeros(pop_size, dtype=znd.default_int)# NOTE: values get passed as kwargs by make_flock
             elif key == 'breed':
                 self[key] = np.zeros(pop_size, dtype=znd.default_str) # NOTE: values get passed as kwargs by make_flock
-            elif key in ['headcount', 'infected_headcount', 'symptomatic_headcount', 'dead_headcount']:
-                self[key] = np.zeros(pop_size, dtype=znd.default_float)
             else:
-                self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
+                self[key] = np.zeros(pop_size,dtype=znd.default_float)
 
         # Set health states -- only susceptible is true by default -- booleans except exposed by variant which should return the variant that ind is exposed to
         for key in self.meta.states:
@@ -303,11 +299,11 @@ class Flocks(Subroster):
     def update_headcounts(self):
         ''' Update the headcounts and water consumption of the flocks '''
         uninfected_headcount = self.headcount - self.infected_headcount
-        dead_infected = self.infected_headcount * self.infected_symptomatic_rate
-        dead_uninfected = uninfected_headcount * self.baseline_symptomatic_rate
+        dead_infected = self.infected_headcount * self.infected_mortality_rate
+        dead_uninfected = uninfected_headcount * self.baseline_mortality_rate
         self.dead_headcount += dead_infected + dead_uninfected
         self.infected_headcount = self.infected_headcount - dead_infected
-        self.headcount -= dead_infected - dead_uninfected
+        self.headcount -= dead_infected + dead_uninfected
         self.symptomatic_headcount = self.infected_headcount * self.infected_symptomatic_rate + uninfected_headcount * self.baseline_symptomatic_rate
         self.water_consumption = self.infected_headcount * self.infected_water_rate + uninfected_headcount * self.baseline_water_rate
         return
