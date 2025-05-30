@@ -188,7 +188,7 @@ class Barns(Subroster):
     def update_states_pre(self, t):
         ''' Perform all state updates at the current timestep '''
 
-
+        self.t = t # Set the current time
 
         # Perform updates
         self.init_flows()
@@ -221,25 +221,25 @@ class Barns(Subroster):
             not_current = znu.ifalsei(current, filter_inds)
         has_date = znu.idefinedi(date, not_current)
         inds     = znu.itrue(self.t >= date[has_date], has_date)
+
         return inds
 
 
     
     def check_uncontaminated(self):
         ''' Check which barns get uncontaminated this timestep '''
-        inds = self.check_inds(self.contaminated, self.date_uncontaminated)
+        inds = self.check_inds(~self.contaminated, self.date_uncontaminated) # ~self.contaminated is the same as self.uncontaminated
         if len(inds) > 0:
+            self.uncontaminated[inds] = True
             self.contaminated[inds] = False
             self.contaminated_variant[inds] = np.nan
-            self.flows['new_uncontaminated'] += len(inds) # NOTE: This might be better done elsewhere
-            for i in inds:
-                self.date_contaminated[i] = np.nan
-                self.date_uncontaminated[i] = np.nan
+            self.date_contaminated[inds] = np.nan
+            self.date_uncontaminated[inds] = np.nan
         return len(inds)
     
     def check_cleaned(self):
         ''' Check which barns get cleaned this timestep '''
-        inds = self.check_inds(self.cleaning, self.date_cleaning)
+        inds = self.check_inds(~self.cleaning, self.date_cleaning)# ~self.cleaning because self.date_cleaning denotes the date when cleaning ends, not when it starts
         if len(inds) > 0:
             self.cleaning[inds] = False
             self.uncontaminated[inds] = True
@@ -247,16 +247,16 @@ class Barns(Subroster):
             self.contaminated_variant[inds] = np.nan
             self.contaminated_by_variant[:, inds] = False
             self.date_repopulate[inds] = self.date_cleaning[inds] + 1
-            self.flows['new_cleaned'] += len(inds)
+            #self.flows['new_cleaned'] += len(inds)
             self.date_cleaning[inds] = np.nan
         return len(inds)
     
     def check_composted(self):
         ''' Check which barns finish composting this timestep '''
-        inds = self.check_inds(self.composting, self.date_composting)
+        inds = self.check_inds(~self.composting, self.date_composting)# ~self.composting because self.date_composting denotes the date when composting ends, not when it starts
         if len(inds) > 0:
             self.composting[inds] = False
-            self.flows['new_composted'] += len(inds)
+            #self.flows['new_composted'] += len(inds)
 
             self.cleaning[inds] = True
             self.date_cleaning[inds] = self.date_composting[inds] + znu.sample(**self.pars['dur']['barn']['cleaning'], size=len(inds))
@@ -299,8 +299,8 @@ class Barns(Subroster):
         self.contaminated[inds]        = True
         self.contaminated_variant[inds] = variant
         self.contaminated_by_variant[variant, inds] = True
-        self.flows['new_contaminated'] += len(inds)
-        self.flows_variant['new_contaminated_by_variant'][variant] += len(inds)
+        #self.flows['new_contaminated'] += len(inds)
+        #self.flows_variant['new_contaminated_by_variant'][variant] += len(inds)
 
         # Record transmissions
         for i, target in enumerate(inds):

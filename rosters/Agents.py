@@ -404,16 +404,19 @@ class Agents(Roster):
         if len(barn_inds) > 0:
             self.barn.repopulations[barn_inds]+= 1
             self.barn.date_repopulate[barn_inds] = np.nan
-            flock_inds = np.isin(self.flock.uid, self.barn.flock[barn_inds])
+            flock_inds = np.where(np.isin(self.flock.uid, self.barn.flock[barn_inds]))[0]
             breed_to_index = {breed: index for index, breed in enumerate(prod_pars['breeds'])}
             breed_inds = np.array([breed_to_index[this_breed] for this_breed in self.flock.breed[flock_inds]])
 
             breed, freq = np.unique(breed_inds, return_counts=True)
             breed_dict = dict(zip(breed, freq))
-            for breed, freq in breed_dict:
-                self.barn.date_cycle_end[barn_inds[breed_inds == breed]] = znu.sample(**prod_pars['cycle_dur'][breed], size = freq)
-                self.flock.headcount[flock_inds[breed_inds == breed]] = znu.sample(**prod_pars['flock_size'][breed], size = freq)
-
+            for breed, freq in breed_dict.items():
+                current_breed_inds = np.where(breed_inds == breed)[0]
+                self.barn.date_cycle_end[barn_inds[current_breed_inds]] = znu.sample(**prod_pars['cycle_dur'][breed], size = freq)
+                self.flock.headcount[flock_inds[current_breed_inds]] = znu.sample(**prod_pars['flock_size'][breed], size = freq)
+            
+            self.flock.susceptible[flock_inds] = True
+            self.flock.suspected[flock_inds] = False
             self.flock.baseline_symptomatic_rate[flock_inds] = progs['baseline_symptomatic_rate'][breed_inds]
             self.flock.baseline_mortality_rate[flock_inds] = progs['baseline_mortality_rate'][breed_inds]
             self.flock.baseline_water_rate[flock_inds] = progs['baseline_water_rate'][breed_inds]
@@ -424,20 +427,27 @@ class Agents(Roster):
     
     def check_suspected(self, t):
         ''' Check for new progressions to suspected '''
-        actual_symptomatic_rate = self.flock.symptomatic_headcount / self.flock.headcount
-        actual_mortality_rate = self.flock.dead_headcount / self.flock.headcount
-        actual_water_rate = self.flock.water_consumption / self.flock.headcount
+
+        unsuspected_inds = np.where((self.flock.suspected == False) & (self.flock.headcount>0))[0]
+        if len(unsuspected_inds) == 0:
+            return 0
+        actual_symptomatic_rate = self.flock.symptomatic_headcount[unsuspected_inds] / self.flock.headcount[unsuspected_inds]
+        actual_mortality_rate = self.flock.dead_headcount[unsuspected_inds] / self.flock.headcount[unsuspected_inds]
+        actual_water_rate = self.flock.water_consumption[unsuspected_inds] / self.flock.headcount[unsuspected_inds]
 
         suspicious_symptomatic_inds = np.where(actual_symptomatic_rate > znd.default_suspicious_symptomatic_rate)[0]
         suspicious_mortality_inds = np.where(actual_mortality_rate > znd.default_suspicious_mortality_rate)[0]
         suspicious_water_inds = np.where(actual_water_rate > znd.default_suspicious_consumption_rate)[0]
         suspicious_inds = np.unique(np.concatenate((suspicious_symptomatic_inds, suspicious_mortality_inds, suspicious_water_inds)))
-        self.flock.suspected[suspicious_inds] = True
-        self.flock.date_suspected[suspicious_inds] = t
-        self.flock.dur_susp2res[suspicious_inds] = znu.sample(**self.pars['dur']['flock']['susp2res'], size=len(suspicious_inds))
-        self.flock.date_result[suspicious_inds] = self.flock.date_suspected[suspicious_inds] + self.flock.dur_susp2res[suspicious_inds]
-        self.flock.quarantined[suspicious_inds] = True
-        self.flock.date_quarantined[suspicious_inds] = t
+        if len(suspicious_inds) == 0:
+            return 0
+        new_suspicious_inds = unsuspected_inds[suspicious_inds]
+        self.flock.suspected[new_suspicious_inds] = True
+        self.flock.date_suspected[new_suspicious_inds] = t
+        self.flock.dur_susp2res[new_suspicious_inds] = znu.sample(**self.pars['dur']['flock']['susp2res'], size=len(new_suspicious_inds))
+        self.flock.date_result[new_suspicious_inds] = self.flock.date_suspected[new_suspicious_inds] + self.flock.dur_susp2res[new_suspicious_inds]
+        self.flock.quarantined[new_suspicious_inds] = True
+        self.flock.date_quarantined[new_suspicious_inds] = t
 
         #barn_inds = np.isin(self.barn.flock, self.flock.uid[suspicious_inds])
         #self.barn.quarantined[barn_inds] = True
@@ -475,7 +485,7 @@ class Agents(Roster):
         self.flock.exposed[pos_flock_inds] = False
         self.flock.infectious[pos_flock_inds] = False
         self.flock.quarantined[pos_flock_inds] = False
-        self.flock.suspected[pos_flock_inds] = False
+        #self.flock.suspected[pos_flock_inds] = False
         self.flock.date_infectious[pos_flock_inds] = np.nan
         self.flock.date_exposed[pos_flock_inds] = np.nan
         self.flock.date_suspected[pos_flock_inds] = np.nan
@@ -507,6 +517,7 @@ class Agents(Roster):
         self.flock.susceptible[flock_inds] = False
         self.flock.exposed[flock_inds] = False
         self.flock.infectious[flock_inds] = False
+        self.flock.suspected[flock_inds] = False
         self.flock.quarantined[flock_inds] = False
         self.flock.date_infectious[flock_inds] = np.nan
         self.flock.date_exposed[flock_inds] = np.nan
