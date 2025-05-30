@@ -400,9 +400,10 @@ class Agents(Roster):
         '''
         prod_pars = self.pars['production_cycle'] 
         progs = self.pars['prognoses']['flock']
-        barn_inds = np.where(self.barn.date_repopulate == t)[0]
+        barn_inds = np.where(self.barn.date_repopulate <= t)[0]
         if len(barn_inds) > 0:
             self.barn.repopulations[barn_inds]+= 1
+            self.barn.date_repopulate[barn_inds] = np.nan
             flock_inds = np.isin(self.flock.uid, self.barn.flock[barn_inds])
             breed_to_index = {breed: index for index, breed in enumerate(prod_pars['breeds'])}
             breed_inds = np.array([breed_to_index[this_breed] for this_breed in self.flock.breed[flock_inds]])
@@ -449,7 +450,7 @@ class Agents(Roster):
         Check for flocks that have recieved their test results and update the states accordingly.
         '''
 
-        flock_inds = np.where(self.flock.date_result == t)[0]
+        flock_inds = np.where(self.flock.date_result <= t)[0]
         barn_inds = np.where(np.isin(self.barn.flock, self.flock.uid[flock_inds]))[0]
 
 
@@ -479,9 +480,9 @@ class Agents(Roster):
         self.flock.date_exposed[pos_flock_inds] = np.nan
         self.flock.date_suspected[pos_flock_inds] = np.nan
 
-        self.flock.suspected[pos_flock_inds] = False
-        self.flock.date_suspected[pos_flock_inds] = np.nan
-        self.flock.date_result[pos_flock_inds] = np.nan
+        self.flock.suspected[neg_flock_inds] = False
+        self.flock.date_suspected[neg_flock_inds] = np.nan
+        self.flock.date_result[neg_flock_inds] = np.nan
 
         return len(barn_inds)
     
@@ -490,7 +491,7 @@ class Agents(Roster):
         Check for flocks that are at the end of their production cycle.
         '''
 
-        barn_inds = np.where(self.barn.date_cycle_end == t)[0]
+        barn_inds = np.where(self.barn.date_cycle_end <= t)[0]
         flock_inds = np.isin(self.flock.uid, self.barn.flock[barn_inds])
 
         self.barn.date_cycle_end[barn_inds] = np.nan
