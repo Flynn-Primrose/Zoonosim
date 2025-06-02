@@ -221,7 +221,7 @@ class Sim(znb.BaseSim):
         # Handle start day
         start_day = self['start_day'] # Shorten
         if start_day in [None, 0]: # Use default start day
-            start_day = '2020-03-01'
+            start_day = '2025-01-01'
         self['start_day'] = sc.date(start_day)
 
         # Handle end day and n_days
@@ -654,7 +654,7 @@ class Sim(znb.BaseSim):
                 self.agents.infect_type('flock', flock_inds)
                 self.results['n_flock_imports'][t] += n_flock_imports
         if self['n_imports']['barn']>0:
-            n_barn_imports = znu.poisson(self['n_imports']['barn']) # imported water contaminations
+            n_barn_imports = znu.poisson(self['n_imports']['barn']) # imported barn contaminations
             if n_barn_imports>0:
                 barn_inds = znu.choose(max_n=len(self.agents.barn), n=n_barn_imports)
                 self.agents.infect_type('barn', barn_inds)

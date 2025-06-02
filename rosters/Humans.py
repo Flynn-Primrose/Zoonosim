@@ -322,20 +322,7 @@ class Humans(Subroster):
 
     #%% Methods for updating state
 
-    def check_inds(self, current, date, filter_inds=None):
-        ''' Return indices for which the current state is false and which are assigned a date on or before the current date
 
-        Args:
-            current (array): list of boolean values that represent a current state
-            date (array): list that contains either a date or a Nan
-        '''
-        if filter_inds is None:
-            not_current = znu.false(current)
-        else:
-            not_current = znu.ifalsei(current, filter_inds)
-        has_date = znu.idefinedi(date, not_current)
-        inds     = znu.itrue(self.t >= date[has_date], has_date)
-        return inds
 
     def check_inds_diagnosed(self, current, date, filter_inds=None):
         '''

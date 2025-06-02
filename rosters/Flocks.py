@@ -240,6 +240,7 @@ class Flocks(Subroster):
         # Perform updates
         self.init_flows()
         self.flows['new_infectious'] = self.check_infectious() # For flocks that are exposed and not infectious, check if they begin being infectious
+        self.flows['new_suspected'] = self.check_suspected()
         self.update_headcounts() # Update the headcounts and water consumption of the flocks
         return
 
@@ -255,20 +256,31 @@ class Flocks(Subroster):
 
     #%% Methods for updating state
 
-    def check_inds(self, current, date, filter_inds=None):
-        ''' Return indices for which the current state is false and which are assigned a date on or before the current date
+    def check_suspected(self):
+        ''' Check for new progressions to suspected '''
 
-        Args:
-            current (array): list of boolean values that represent a current state
-            date (array): list that contains either a date or a Nan
-        '''
-        if filter_inds is None:
-            not_current = znu.false(current)
-        else:
-            not_current = znu.ifalsei(current, filter_inds)
-        has_date = znu.idefinedi(date, not_current)
-        inds     = znu.itrue(self.t >= date[has_date], has_date)
-        return inds
+        unsuspected_inds = np.where((self.suspected == False) & (self.headcount>0))[0]
+        if len(unsuspected_inds) == 0:
+            return 0
+        actual_symptomatic_rate = self.symptomatic_headcount[unsuspected_inds] / self.headcount[unsuspected_inds]
+        actual_mortality_rate = self.dead_headcount[unsuspected_inds] / self.headcount[unsuspected_inds]
+        actual_water_rate = self.water_consumption[unsuspected_inds] / self.headcount[unsuspected_inds]
+
+        suspicious_symptomatic_inds = np.where(actual_symptomatic_rate > znd.default_suspicious_symptomatic_rate)[0]
+        suspicious_mortality_inds = np.where(actual_mortality_rate > znd.default_suspicious_mortality_rate)[0]
+        suspicious_water_inds = np.where(actual_water_rate > znd.default_suspicious_consumption_rate)[0]
+        suspicious_inds = np.unique(np.concatenate((suspicious_symptomatic_inds, suspicious_mortality_inds, suspicious_water_inds)))
+        if len(suspicious_inds) == 0:
+            return 0
+        new_suspicious_inds = unsuspected_inds[suspicious_inds]
+        self.suspected[new_suspicious_inds] = True
+        self.date_suspected[new_suspicious_inds] = self.t
+        self.dur_susp2res[new_suspicious_inds] = znu.sample(**self.pars['dur']['flock']['susp2res'], size=len(new_suspicious_inds))
+        self.date_result[new_suspicious_inds] = self.date_suspected[new_suspicious_inds] + self.dur_susp2res[new_suspicious_inds]
+        self.quarantined[new_suspicious_inds] = True
+        self.date_quarantined[new_suspicious_inds] = self.t
+
+        return len(suspicious_inds)
 
 
     def check_infectious(self):

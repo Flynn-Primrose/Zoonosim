@@ -148,7 +148,7 @@ class Water(Subroster):
 
         # Perform updates
         self.init_flows()
-        self.check_uncontaminated()
+        self.flows['new_uncontaminated'] = self.check_uncontaminated()
         return
 
 
@@ -161,21 +161,6 @@ class Water(Subroster):
 
     #%% Methods for updating state
 
-    def check_inds(self, current, date, filter_inds=None):
-        ''' Return indices for which the current state is false and which are assigned a date on or before the current date
-
-        Args:
-            current (array): list of boolean values that represent a current state
-            date (array): list that contains either a date or a Nan
-        '''
-        if filter_inds is None:
-            not_current = znu.false(current)
-        else:
-            not_current = znu.ifalsei(current, filter_inds)
-        has_date = znu.idefinedi(date, not_current)
-        inds     = znu.itrue(self.t >= date[has_date], has_date)
-        return inds
-
 
     def check_uncontaminated(self):
         ''' Check if waterbodies are contaminated and update their states accordingly '''
@@ -183,8 +168,6 @@ class Water(Subroster):
         if len(inds) > 0:
             self.uncontaminated[inds] = True
             self.contaminated[inds]    = False
-            #self.flows['new_uncontaminated'] += len(inds)
-            #self.flows_variant['new_uncontaminated_by_variant'][:, inds] += 1
 
         return len(inds)
 

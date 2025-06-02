@@ -193,9 +193,9 @@ class Barns(Subroster):
         # Perform updates
         self.init_flows()
 
-        self.check_cleaned()
-        self.check_uncontaminated()
-        self.check_composted()
+        self.flows['new_cleaned'] = self.check_cleaned()
+        self.flows['new_uncontaminated'] = self.check_uncontaminated()
+        self.flows['new_composted'] = self.check_composted()
         return
 
 
@@ -207,23 +207,6 @@ class Barns(Subroster):
 
 
     #%% Methods for updating state
-
-    def check_inds(self, current, date, filter_inds=None):
-        ''' Return indices for which the current state is false and which are assigned a date on or before the current date
-
-        Args:
-            current (array): list of boolean values that represent a current state
-            date (array): list that contains either a date or a Nan
-        '''
-        if filter_inds is None:
-            not_current = znu.false(current)
-        else:
-            not_current = znu.ifalsei(current, filter_inds)
-        has_date = znu.idefinedi(date, not_current)
-        inds     = znu.itrue(self.t >= date[has_date], has_date)
-
-        return inds
-
 
     
     def check_uncontaminated(self):
@@ -247,7 +230,6 @@ class Barns(Subroster):
             self.contaminated_variant[inds] = np.nan
             self.contaminated_by_variant[:, inds] = False
             self.date_repopulate[inds] = self.date_cleaning[inds] + 1
-            #self.flows['new_cleaned'] += len(inds)
             self.date_cleaning[inds] = np.nan
         return len(inds)
     
@@ -256,12 +238,8 @@ class Barns(Subroster):
         inds = self.check_inds(~self.composting, self.date_composting)# ~self.composting because self.date_composting denotes the date when composting ends, not when it starts
         if len(inds) > 0:
             self.composting[inds] = False
-            #self.flows['new_composted'] += len(inds)
-
             self.cleaning[inds] = True
             self.date_cleaning[inds] = self.date_composting[inds] + znu.sample(**self.pars['dur']['barn']['cleaning'], size=len(inds))
-
-
             self.date_composting[inds] = np.nan
         return len(inds)
 
@@ -299,8 +277,8 @@ class Barns(Subroster):
         self.contaminated[inds]        = True
         self.contaminated_variant[inds] = variant
         self.contaminated_by_variant[variant, inds] = True
-        #self.flows['new_contaminated'] += len(inds)
-        #self.flows_variant['new_contaminated_by_variant'][variant] += len(inds)
+        self.flows['new_contaminated'] += len(inds)
+        self.flows_variant['new_contaminated_by_variant'][variant] += len(inds)
 
         # Record transmissions
         for i, target in enumerate(inds):

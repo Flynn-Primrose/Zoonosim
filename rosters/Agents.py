@@ -205,7 +205,6 @@ class Agents(Roster):
         self.barn.update_states_pre(t)
         self.water.update_states_pre(t)
 
-        self.check_suspected(t)
         self.check_result(t)
         self.check_cycle_end(t)
         
@@ -425,35 +424,7 @@ class Agents(Roster):
 
         return len(barn_inds)
     
-    def check_suspected(self, t):
-        ''' Check for new progressions to suspected '''
 
-        unsuspected_inds = np.where((self.flock.suspected == False) & (self.flock.headcount>0))[0]
-        if len(unsuspected_inds) == 0:
-            return 0
-        actual_symptomatic_rate = self.flock.symptomatic_headcount[unsuspected_inds] / self.flock.headcount[unsuspected_inds]
-        actual_mortality_rate = self.flock.dead_headcount[unsuspected_inds] / self.flock.headcount[unsuspected_inds]
-        actual_water_rate = self.flock.water_consumption[unsuspected_inds] / self.flock.headcount[unsuspected_inds]
-
-        suspicious_symptomatic_inds = np.where(actual_symptomatic_rate > znd.default_suspicious_symptomatic_rate)[0]
-        suspicious_mortality_inds = np.where(actual_mortality_rate > znd.default_suspicious_mortality_rate)[0]
-        suspicious_water_inds = np.where(actual_water_rate > znd.default_suspicious_consumption_rate)[0]
-        suspicious_inds = np.unique(np.concatenate((suspicious_symptomatic_inds, suspicious_mortality_inds, suspicious_water_inds)))
-        if len(suspicious_inds) == 0:
-            return 0
-        new_suspicious_inds = unsuspected_inds[suspicious_inds]
-        self.flock.suspected[new_suspicious_inds] = True
-        self.flock.date_suspected[new_suspicious_inds] = t
-        self.flock.dur_susp2res[new_suspicious_inds] = znu.sample(**self.pars['dur']['flock']['susp2res'], size=len(new_suspicious_inds))
-        self.flock.date_result[new_suspicious_inds] = self.flock.date_suspected[new_suspicious_inds] + self.flock.dur_susp2res[new_suspicious_inds]
-        self.flock.quarantined[new_suspicious_inds] = True
-        self.flock.date_quarantined[new_suspicious_inds] = t
-
-        #barn_inds = np.isin(self.barn.flock, self.flock.uid[suspicious_inds])
-        #self.barn.quarantined[barn_inds] = True
-        #self.barn.date_quarantined[barn_inds] = t
-
-        return len(suspicious_inds)
     
     def check_result(self, t):
         '''

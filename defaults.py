@@ -35,21 +35,10 @@ full_opts = [2, '2', 'full']
 numba_parallel = str(os.getenv('ZOONOSIM_NUMBA_PARALLEL', 'none'))
 numba_cache = bool(int(os.getenv('ZOONOSIM_NUMBA_CACHE', 1)))
 
-
-# show = True # Show figures by default
-# close = False # Close figures by default
-# returnfig = True # Return figures by default
-# dpi = pl.rcParams['figure.dpi'] # Default DPI for figures
-# font = pl.rcParams['font.family'] # Default font family for figures
-# fontsize = pl.rcParams['font.size'] # Default font size for figures
-# backend = pl.get_backend() # Default backend for figures
-# sep = ',' # Default thousands separator for text output
-# precision = 32 # Default arithmetic precision for Numba -- 32-bit by default for efficiency
-
 # Define the 'overview plots', i.e. the most useful set of plots to explore different aspects of a simulation
 overview_plots = [
     'new_human_infections',
-    'new_flock_infections',
+    'new_flock_infectious',
     'new_barn_contaminated',
     'new_water_contaminated',
 ]
@@ -60,6 +49,87 @@ overview_variant_plots = [
     'new_barn_contaminated_by_variant',
     'new_water_contaminated_by_variant',
 ]
+
+human_plots = sc.odict({
+    'Total counts': [
+        'n_human_infectious',
+        'n_human_exposed',
+        'n_human_symptomatic',
+        'n_human_severe',
+        'n_human_dead',
+    ],
+    'Cumulative counts': [
+        'cum_human_infections',
+        'cum_human_exposed',
+        'cum_human_symptomatic',
+        'cum_human_severe',
+        'cum_human_dead',
+    ],
+    'Daily counts': [
+        'new_human_infections',
+        'new_human_exposed',
+        'new_human_symptomatic',
+        'new_human_severe',
+        'new_human_dead',
+    ],
+})
+
+flock_plots = sc.odict({
+    'Total counts': [
+        'n_flock_infectious',
+        'n_flock_exposed',
+        'n_flock_suspected',
+        'n_flock_quarantined',
+    ],
+    'Cumulative counts': [
+        'cum_flock_infectious',
+        'cum_flock_exposed',
+        'cum_flock_suspected',
+        'cum_flock_quarantined',
+    ],
+    'Daily counts': [
+        'new_flock_infectious',
+        'new_flock_exposed',
+        'new_flock_suspected',
+        'new_flock_quarantined',
+    ],
+})
+
+barn_plots = sc.odict({
+    'Total counts': [
+        'n_barn_contaminated',
+        'n_barn_uncontaminated',
+        'n_barn_composting',
+        'n_barn_cleaning',
+    ],
+    'Cumulative counts': [
+        'cum_barn_contaminated',
+        'cum_barn_uncontaminated',
+        'cum_barn_composting',
+        'cum_barn_cleaning',
+    ],
+    'Daily counts': [
+        'new_barn_contaminated',
+        'new_barn_uncontaminated',
+        'new_barn_composting',
+        'new_barn_cleaning',
+    ],
+})
+
+water_plots = sc.odict({
+    'Total counts': [
+        'n_water_contaminated',
+        'n_water_uncontaminated',
+    ],
+    'Cumulative counts': [
+        'cum_water_contaminated',
+        'cum_water_uncontaminated',
+    ],
+    'Daily counts': [
+        'new_water_contaminated',
+        'new_water_uncontaminated',
+    ],
+})
 
 def get_default_plots(which='default', kind='sim', sim=None):
     '''
@@ -145,6 +215,18 @@ def get_default_plots(which='default', kind='sim', sim=None):
     elif which == 'all': # pragma: no cover
         plots = sim.result_keys('all')
 
+    elif which == 'human': # pragma: no cover
+        plots = sc.dcp(human_plots)
+
+    elif which == 'flock': # pragma: no cover
+        plots = sc.dcp(flock_plots)
+
+    elif which == 'barn': # pragma: no cover
+        plots = sc.dcp(barn_plots)
+
+    elif which == 'water': # pragma: no cover
+        plots = sc.dcp(water_plots)
+
     # Show an overview plus variants
     elif 'overview' in which and 'variant' in which: # pragma: no cover
         plots = sc.dcp(overview_plots) + sc.dcp(overview_variant_plots)
@@ -194,18 +276,6 @@ def get_default_plots(which='default', kind='sim', sim=None):
                     ],
             })
 
-    # Plot agent type specific plots
-    elif which == 'human': # pragma: no cover
-        plots = [
-            'n_human_susceptible',
-            'n_human_exposed',
-            'n_human_infectious',
-            'n_human_symptomatic',
-            'n_human_severe',
-            'n_human_recovered',
-            'n_human_dead',
-        ],
-
     else: # pragma: no cover
         errormsg = f'The choice which="{which}" is not supported: choices are "default", "overview", "all", "variant", "overview-variant", or "seir", along with any result key (see sim.results_keys(\'all\') for options)'
         raise ValueError(errormsg)
@@ -226,43 +296,44 @@ def get_default_colors(agent_type):
     c = sc.objdict()
     match agent_type.lower():
         case 'human':
-            c.susceptible = "#00FF00" # Green
-            c.exposed = "#00FF00" # 
-            c.symptomatic = '#00FF00' # 
-            c.infectious = '#00FF00' # 
-            c.infections = '#00FF00' # 
-            c.reinfections = '#00FF00' # 
-            c.severe = '#00FF00' # 
-            c.recovered = '#00FF00' # 
-            c.dead = '#00FF00' # 
-            c.known_dead = '#00FF00' # 
-            c.diagnosed = '#00FF00' # 
-            c.tested = "#00FF00" # 
-            c.quarantined = "#00FF00" # 
-            c.vaccinated = "#00FF00" # 
-            c.doses = "#00FF00" # 
-            c.exposed_by_variant = '#00FF00' # 
-            c.infectious_by_variant = '#00FF00' # 
-            c.infections_by_variant = '#00FF00' # 
-            c.symptomatic_by_variant = '#00FF00' # 
-            c.severe_by_variant = '#00FF00' # 
+            c.susceptible = "#00FF00FF" # Green
+            c.exposed = "#00FF00A6" # 
+            c.symptomatic = "#00FF0067" # 
+            c.infectious = "#00FF001F" # 
+            c.infections = '#00FF002F' # 
+            c.reinfections = '#00FF001F' # 
+            c.severe = "#00FF9D" # 
+            c.recovered = "#00CCFF" # 
+            c.dead = "#00FF0000" # 
+            c.known_dead = '#00FF0000' # 
+            c.diagnosed = '#00FF0000' # 
+            c.tested = "#00FF0000" # 
+            c.quarantined = "#00FF0000" # 
+            c.vaccinated = "#00FF0000" # 
+            c.doses = "#00FF0000" # 
+            c.exposed_by_variant = '#00FF00A6' # 
+            c.infectious_by_variant = '#00FF001F' # 
+            c.infections_by_variant = '#00FF002F' # 
+            c.symptomatic_by_variant = '#00FF0067' # 
+            c.severe_by_variant = '#00FF9D' # 
         case 'flock':
             c.susceptible = '#FFFF00' # 
-            c.exposed = '#FFFF00' # Yellow
-            c.infectious = '#FFFF00' # 
-            c.suspected = '#FFFF00' # 
-            c.quarantined = '#FFFF00' # 
-            c.exposed_by_variant = '#FFFF00' # 
-            c.infectious_by_variant = '#FFFF00' # 
-            c.symptomatic_by_variant = '#FFFF00' # 
+            c.exposed = "#FFFF00BC" # Yellow
+            c.infectious = "#FFFF0090" # 
+            c.suspected = "#FFD000" # 
+            c.quarantined = "#C8FF00" # 
+            c.exposed_by_variant = '#FFFF00BC' # 
+            c.infectious_by_variant = '#FFFF0090' # 
         case 'barn':
-            c.uncontaminated = '#FF0000' # 
-            c.contaminated = '#FF0000' # Red
-            c.contaminated_by_variant = '#FF0000' # Red
+            c.uncontaminated = "#33FF00" # 
+            c.contaminated = "#FF0000FF" # Red
+            c.composting = "#D18A07BA"
+            c.cleaning = "#1D20ACDA"
+            c.contaminated_by_variant = "#00FFFF3A" # Red
         case 'water':
             c.uncontaminated = "#0004FF" # 
-            c.contaminated = "#0004FF" # 
-            c.contaminated_by_variant = "#0004FF" # 
+            c.contaminated = "#0004FF84" # 
+            c.contaminated_by_variant = "#0004FF1F" # 
         case 'default':
             c.default = '#000000' # Black
         case _:
@@ -294,8 +365,8 @@ variant_pars = [
 
 default_human_prognoses = dict(
     age_cutoffs   = np.array([0,       10,      20,      30,      40,      50,      60,      70,      80,      90,]),     # Age cutoffs (lower limits)
-    sus_ORs       = np.array([0.34,    0.67,    1.00,    1.00,    1.00,    1.00,    1.24,    1.47,    1.47,    1.47]),    # Odds ratios for relative susceptibility 
-    trans_ORs     = np.array([1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00]),    # Odds ratios for relative transmissibility
+    sus_ORs       = np.array([0.25,    0.50,    0.75,    1.0,     1.25,    1.50,    1.75,    2.0,     2.25,    2.50]),    # Odds ratios for relative susceptibility 
+    trans_ORs     = np.array([0.10,    0.10,    0.10,    0.10,    0.10,    0.10,    0.10,    0.10,    0.10,    0.10]),    # Odds ratios for relative transmissibility
     comorbidities = np.array([1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00]),    # Comorbidities by age -- set to 1 by default since already included in disease progression rates
     symp_probs    = np.array([0.50,    0.55,    0.60,    0.65,    0.70,    0.75,    0.80,    0.85,    0.90,    0.90]),    # Overall probability of developing symptoms 
     severe_probs  = np.array([0.01,    0.01,    0.05,    0.05,    0.05,    0.07,    0.09,    0.1,     0.2,     0.2]), # Overall probability of developing severe symptoms
@@ -304,14 +375,14 @@ default_human_prognoses = dict(
 
 default_flock_prognoses = dict(
     breeds = np.array(['duck', 'broiler', 'layer'], dtype=default_str),
-    sus_ORs = np.array([1.00, 1.00, 1.00]),
+    sus_ORs = np.array([2.00, 1.00, 0.75]),
     trans_ORs = np.array([1.00, 1.00, 1.00]),
     baseline_symptomatic_rate = np.array([0.001, 0.001, 0.001]),
-    mean_symptomatic_rate_increase = np.array([0.005, 0.005, 0.005]),
+    mean_symptomatic_rate_increase = np.array([0.001, 0.0005, 0.0001]),
     baseline_mortality_rate = np.array([0.001, 0.001, 0.001]),
-    mean_mortality_rate_increase = np.array([0.002, 0.002, 0.002]),
+    mean_mortality_rate_increase = np.array([0.005, 0.002, 0.002]),
     baseline_water_rate = np.array([1.00, 1.00, 1.00]),
-    mean_water_rate_increase = np.array([1.00, 1.00, 1.00]),
+    mean_water_rate_increase = np.array([1.50, 1.00, 0.75]),
 )
 
 default_barn_prognoses = dict(
@@ -350,15 +421,21 @@ human_stocks = {
 flock_stocks = {
     'susceptible': 'Number of susceptible flocks',
     'exposed':     'Number of exposed flocks',
+    'suspected':   'Number of suspected flocks',
     'infectious':  'Number of infectious flocks',
+    'quarantined': 'Number of quarantined flocks',
 }
 
 barn_stocks = {
+    'composting': 'Number of barns that have finished composting',
+    'cleaning': 'Number of cleaned barns',
     'contaminated': 'Number of contaminated barns',
+    'uncontaminated': 'Number of uncontaminated barns',
 }
 
 water_stocks = {
     'contaminated': 'Number of contaminated waters',
+    'uncontaminated': 'Number of uncontaminated waters',
 }
 
 #all_stocks = {**human_stocks, **flock_stocks, **barn_stocks, **water_stocks}
@@ -389,6 +466,7 @@ water_stocks_by_variant = {
 
 # The types of result that are counted as flows -- used in sim.py; value is the label suffix
 human_flows = {
+    'exposed':    'human exposures',
     'reinfections': 'human reinfections',
     'infections':   'human infections',
     'infectious':   'infectious humans',
@@ -407,19 +485,26 @@ new_human_flows = [f'new_{key}' for key in human_flows.keys()]
 cum_human_flows = [f'cum_{key}' for key in human_flows.keys()]
 
 flock_flows = {
+    'exposed':     'exposed flocks',
     'infectious':   'infectious flocks',
+    'suspected' : 'flocks suspected of being infectious',
+    'quarantined': 'flocks quarantined',
 }
 new_flock_flows = [f'new_{key}' for key in flock_flows.keys()]
 cum_flock_flows = [f'cum_{key}' for key in flock_flows.keys()]
 
 barn_flows = {
     'contaminated': 'contaminated barns',
+    'uncontaminated': 'uncontaminated barns',
+    'composting' : 'barns finished composting',
+    'cleaning' : 'cleaned barns'
 }
 new_barn_flows = [f'new_{key}' for key in barn_flows.keys()]
 cum_barn_flows = [f'cum_{key}' for key in barn_flows.keys()]
 
 water_flows = {
     'contaminated': 'contaminated waterbodies',
+    'uncontaminated' : 'uncontaminated waterbodies'
 }
 new_water_flows = [f'new_{key}' for key in water_flows.keys()]
 cum_water_flows = [f'cum_{key}' for key in water_flows.keys()]
@@ -453,10 +538,3 @@ water_flows_by_variant = {
 new_water_flows_by_variant = [f'new_{key}' for key in water_flows_by_variant.keys()]
 cum_water_flows_by_variant = [f'cum_{key}' for key in water_flows_by_variant.keys()]
 
-#all_flows_by_variant = {**human_flows_by_variant, **flock_flows_by_variant, **barn_flows_by_variant, **water_flows_by_variant}
-
-# Define new and cumulative flows
-#new_result_flows = [f'new_{key}' for key in all_flows.keys()]
-#cum_result_flows = [f'cum_{key}' for key in all_flows.keys()]
-#new_result_flows_by_variant = [f'new_{key}' for key in all_flows_by_variant.keys()]
-#cum_result_flows_by_variant = [f'cum_{key}' for key in all_flows_by_variant.keys()]
