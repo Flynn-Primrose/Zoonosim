@@ -241,6 +241,7 @@ class Flocks(Subroster):
         self.init_flows()
         self.flows['new_infectious'] = self.check_infectious() # For flocks that are exposed and not infectious, check if they begin being infectious
         self.flows['new_suspected'] = self.check_suspected()
+        self.flows['new_quarantined'] = self.check_quarantined() # 
         self.update_headcounts() # Update the headcounts and water consumption of the flocks
         return
 
@@ -373,8 +374,8 @@ class Flocks(Subroster):
         self.exposed[inds]        = True
         self.exposed_variant[inds] = variant
         self.exposed_by_variant[variant, inds] = True
-        self.flows['new_infectious']   += len(inds)
-        self.flows_variant['new_infectious_by_variant'][variant] += len(inds)
+        self.flows['new_exposed']   += len(inds)
+        self.flows_variant['new_exposed_by_variant'][variant] += len(inds)
 
         # Record transmissions
         for i, target in enumerate(inds):

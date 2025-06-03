@@ -105,14 +105,14 @@ barn_plots = sc.odict({
     'Cumulative counts': [
         'cum_barn_contaminated',
         'cum_barn_uncontaminated',
-        'cum_barn_composting',
-        'cum_barn_cleaning',
+        'cum_barn_composted',
+        'cum_barn_cleaned',
     ],
     'Daily counts': [
         'new_barn_contaminated',
         'new_barn_uncontaminated',
-        'new_barn_composting',
-        'new_barn_cleaning',
+        'new_barn_composted',
+        'new_barn_cleaned',
     ],
 })
 
@@ -328,7 +328,9 @@ def get_default_colors(agent_type):
             c.uncontaminated = "#33FF00" # 
             c.contaminated = "#FF0000FF" # Red
             c.composting = "#D18A07BA"
+            c.composted = "#D18A07FF"
             c.cleaning = "#1D20ACDA"
+            c.cleaned = "#1D20ACFF"
             c.contaminated_by_variant = "#FF0D00FF" # Red
         case 'water':
             c.uncontaminated = "#00FBFF" # 
@@ -427,8 +429,8 @@ flock_stocks = {
 }
 
 barn_stocks = {
-    'composting': 'Number of barns that have finished composting',
-    'cleaning': 'Number of cleaned barns',
+    'composting': 'Number of barns that are being composted',
+    'cleaning': 'Number of barns that are being cleaned',
     'contaminated': 'Number of contaminated barns',
     'uncontaminated': 'Number of uncontaminated barns',
 }
@@ -496,8 +498,8 @@ cum_flock_flows = [f'cum_{key}' for key in flock_flows.keys()]
 barn_flows = {
     'contaminated': 'contaminated barns',
     'uncontaminated': 'uncontaminated barns',
-    'composting' : 'barns finished composting',
-    'cleaning' : 'cleaned barns'
+    'composted' : 'barns finished composting',
+    'cleaned' : 'cleaned barns'
 }
 new_barn_flows = [f'new_{key}' for key in barn_flows.keys()]
 cum_barn_flows = [f'cum_{key}' for key in barn_flows.keys()]
@@ -521,6 +523,7 @@ new_human_flows_by_variant = [f'new_{key}' for key in human_flows_by_variant.key
 cum_human_flows_by_variant = [f'cum_{key}' for key in human_flows_by_variant.keys()]
 
 flock_flows_by_variant = {
+    'exposed_by_variant':     'exposed flocks by variant',
     'infectious_by_variant':  'infectious flocks by variant',
 }
 new_flock_flows_by_variant = [f'new_{key}' for key in flock_flows_by_variant.keys()]
