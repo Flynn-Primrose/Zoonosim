@@ -273,7 +273,7 @@ class Barns(Subroster):
 
 
         # Update states, variant info, and flows
-        #self.susceptible[inds]    = False
+        self.uncontaminated[inds]    = False
         self.contaminated[inds]        = True
         self.contaminated_variant[inds] = variant
         self.contaminated_by_variant[variant, inds] = True

@@ -296,14 +296,14 @@ def get_default_colors(agent_type):
     c = sc.objdict()
     match agent_type.lower():
         case 'human':
-            c.susceptible = "#00FF00FF" # Green
-            c.exposed = "#00FF00A6" # 
+            c.susceptible = "#0004FFFF" # Green
+            c.exposed = "#FFF700FF" # 
             c.symptomatic = "#00FF0067" # 
-            c.infectious = "#00FF001F" # 
-            c.infections = '#00FF002F' # 
-            c.reinfections = '#00FF001F' # 
-            c.severe = "#00FF9D" # 
-            c.recovered = "#00CCFF" # 
+            c.infectious = "#00FF00" # 
+            c.infections = '#00FF00' # 
+            c.reinfections = "#00FF0033" # 
+            c.severe = "#FF0000" # 
+            c.recovered = "#00F2FF" # 
             c.dead = "#00FF0000" # 
             c.known_dead = '#00FF0000' # 
             c.diagnosed = '#00FF0000' # 
@@ -311,27 +311,27 @@ def get_default_colors(agent_type):
             c.quarantined = "#00FF0000" # 
             c.vaccinated = "#00FF0000" # 
             c.doses = "#00FF0000" # 
-            c.exposed_by_variant = '#00FF00A6' # 
+            c.exposed_by_variant = "#FFFB00FF" # 
             c.infectious_by_variant = '#00FF001F' # 
             c.infections_by_variant = '#00FF002F' # 
             c.symptomatic_by_variant = '#00FF0067' # 
-            c.severe_by_variant = '#00FF9D' # 
+            c.severe_by_variant = '#00FF0031' # 
         case 'flock':
-            c.susceptible = '#FFFF00' # 
-            c.exposed = "#FFFF00BC" # Yellow
-            c.infectious = "#FFFF0090" # 
-            c.suspected = "#FFD000" # 
-            c.quarantined = "#C8FF00" # 
-            c.exposed_by_variant = '#FFFF00BC' # 
-            c.infectious_by_variant = '#FFFF0090' # 
+            c.susceptible = "#FFFB00" # 
+            c.exposed = "#FF8000FF" # Yellow
+            c.infectious = "#FFEE00FF" # 
+            c.suspected = "#FF00BF" # 
+            c.quarantined = "#0011FF" # 
+            c.exposed_by_variant = "#FF8800FF" # 
+            c.infectious_by_variant = "#FFFF00FF" # 
         case 'barn':
             c.uncontaminated = "#33FF00" # 
             c.contaminated = "#FF0000FF" # Red
             c.composting = "#D18A07BA"
             c.cleaning = "#1D20ACDA"
-            c.contaminated_by_variant = "#00FFFF3A" # Red
+            c.contaminated_by_variant = "#FF0D00FF" # Red
         case 'water':
-            c.uncontaminated = "#0004FF" # 
+            c.uncontaminated = "#00FBFF" # 
             c.contaminated = "#0004FF84" # 
             c.contaminated_by_variant = "#0004FF1F" # 
         case 'default':
