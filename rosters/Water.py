@@ -164,7 +164,7 @@ class Water(Subroster):
 
     def check_uncontaminated(self):
         ''' Check if waterbodies are contaminated and update their states accordingly '''
-        inds = self.check_inds(self.contaminated, self.date_uncontaminated)
+        inds = self.check_inds(~self.contaminated, self.date_uncontaminated)
         if len(inds) > 0:
             self.uncontaminated[inds] = True
             self.contaminated[inds]    = False
