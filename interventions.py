@@ -190,7 +190,7 @@ def InterventionDict(which, pars):
 
     **Example**::
 
-        interv = cv.InterventionDict(which='change_beta', pars={'days': 30, 'changes': 0.5, 'layers': None})
+        interv = zn.InterventionDict(which='change_beta', pars={'days': 30, 'changes': 0.5, 'layers': None})
     '''
     mapping = dict(
         dynamic_pars    = dynamic_pars,
@@ -250,7 +250,7 @@ class Intervention:
                 which = json['which']
                 pars = json['pars']
                 parstr = ', '.join([f'{k}={v}' for k,v in pars.items()])
-                output = f"cv.{which}({parstr})"
+                output = f"zn.{which}({parstr})"
             except Exception as E:
                 output = f'{type(self)} (error: {str(E)})' # If that fails, print why
             return output
@@ -656,7 +656,7 @@ class clip_edges(Intervention):
                         to_move = i_layer.pop_inds(inds)
                         s_layer.append(to_move)
                 else: # pragma: no cover
-                    warnmsg = f'Warning: clip_edges() was applied to layer "{lkey}", but no edges were found; please check sim.people.contacts["{lkey}"]'
+                    warnmsg = f'Warning: clip_edges() was applied to layer "{lkey}", but no edges were found; please check sim.agents.contacts["{lkey}"]'
                     znm.warn(warnmsg)
         return
 

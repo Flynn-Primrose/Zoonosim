@@ -136,7 +136,7 @@ def validate_recorded_dates(sim, requested_dates, recorded_dates, die=True):
 
 class snapshot(Analyzer):
     '''
-    Analyzer that takes a "snapshot" of the sim.people array at specified points
+    Analyzer that takes a "snapshot" of the sim.agents array at specified points
     in time, and saves them to itself. To retrieve them, you can either access
     the dictionary directly, or use the get() method.
 
@@ -149,14 +149,14 @@ class snapshot(Analyzer):
 
     **Example**::
 
-        sim = cv.Sim(analyzers=cv.snapshot('2020-04-04', '2020-04-14'))
+        sim = zn.Sim(analyzers=cv.snapshot('2020-04-04', '2020-04-14'))
         sim.run()
         snapshot = sim['analyzers'][0]
-        people = snapshot.snapshots[0]            # Option 1
-        people = snapshot.snapshots['2020-04-04'] # Option 2
-        people = snapshot.get('2020-04-14')       # Option 3
-        people = snapshot.get(34)                 # Option 4
-        people = snapshot.get()                   # Option 5
+        agents = snapshot.snapshots[0]            # Option 1
+        agents = snapshot.snapshots['2020-04-04'] # Option 2
+        agents = snapshot.get('2020-04-14')       # Option 3
+        agents = snapshot.get(34)                 # Option 4
+        agents = snapshot.get()                   # Option 5
     '''
 
     def __init__(self, days, *args, die=True, **kwargs):
@@ -186,7 +186,7 @@ class snapshot(Analyzer):
     def apply(self, sim):
         for ind in zni.find_day(self.days, sim.t):
             date = self.dates[ind]
-            self.snapshots[date] = sc.dcp(sim.people) # Take snapshot!
+            self.snapshots[date] = sc.dcp(sim.agents) # Take snapshot!
 
 
     def finalize(self, sim):
