@@ -176,15 +176,17 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
 
     pars['production_cycle'] = znd.default_production_cycle
     
-
+    # Background ILI parameters
+    pars['bkg_ILI'] = znd.default_bkg_ILI # Weekly background ILI rates, used to infect human agents with ILI
+    pars['Avian_to_ILI'] = znd.default_Avian_to_ILI # should we allow humans infected with avian influenza to also be infected with ILI? This is a boolean value, default is False
 
     # Efficacy of non-pharmaceutical interventions (NPIs)
-    pars['NPIs'] = {}
+    # pars['NPIs'] = {}
 
-    pars['NPIs']['human'] = {
-        'quar_factor': None, # Quarantine multiplier on transmissibility and susceptibility; set by reset_layer_pars() below
-        'quar_period': 14 # Number of days to quarantine for; assumption based on standard policies
-    }
+    # pars['NPIs']['human'] = {
+    #     'quar_factor': None, # Quarantine multiplier on transmissibility and susceptibility; set by reset_layer_pars() below
+    #     'quar_period': 14 # Number of days to quarantine for; assumption based on standard policies
+    # }
 
         # Events and interventions
     pars['interventions'] = []   # The interventions present in this simulation; populated by the user

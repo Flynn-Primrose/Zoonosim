@@ -407,6 +407,10 @@ default_production_cycle = dict(
                 dict(dist = 'normal_pos', par1 = 10000, par2 = 500)]
 )
 
+# ILI default parameters
+default_bkg_ILI = 0.02 # percentage of the population that is infected with ILI at any given time
+default_Avian_to_ILI = False # whether to allow humans with avian influenza to be infected with ILI
+
 
 # tracked stocks and flows -- used in sim.py; value is the label suffix
 
