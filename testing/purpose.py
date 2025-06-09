@@ -2,7 +2,8 @@
 Defines classes related to the purpose of testing (i.e. Diagnostic, Screening, and Surveillance)
 '''
 
-
+from . import eligible as eg
+from . import seek as sk
 
 
 class Diagnostic:

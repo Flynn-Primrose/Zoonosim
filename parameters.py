@@ -52,6 +52,10 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['verbose']    = znd.verbose  # Whether or not to display information during the run -- options are 0 (silent), 0.1 (some; default), 1 (default), 2 (everything)
 
 
+    # Testing par dictionaries. Note: This is used to toggle symptoms and bkg ILI, since we only need symptoms and bkg ILI when we need testing. 
+    pars['enable_testobjs'] = True 
+    pars['testobjs'] = None  # This naming convention is possibly ambiguous - do NOT supply actually test objects (do that for pars['testing'])
+
     # Network parameters, generally initialized after the population has been constructed
     #pars['contacts']        = None  # The number of contacts per layer; set by reset_layer_pars() below
     pars['dynam_layer']     = None  # Which layers are dynamic; set by reset_layer_pars() below

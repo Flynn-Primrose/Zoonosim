@@ -20,6 +20,7 @@ from . import parameters as znpar
 from . import population as znpop
 from . import immunity as znimm
 from . import plotting as znplt
+from . import testing as znt
 
 __all__ = ['Sim']
 
@@ -337,7 +338,14 @@ class Sim(znb.BaseSim):
         self.results['n_barn_imports'] = init_res('Number of imported barn infections', scale = True)
         self.results['n_water_imports'] = init_res('Number of imported water infections', scale = True)
 
+        # Nab levels and population immunity
+        self.results['pop_nabs']            = init_res('nab levels in human population', scale=False, color=human_dcols.pop_nabs)
+        self.results['pop_protection']      = init_res('Population immunity protection', scale=False, color=human_dcols.pop_protection)
+        self.results['pop_symp_protection'] = init_res('Population symptomatic protection', scale=False, color=human_dcols.pop_symp_protection)
 
+        # Testing
+        self.results['new_diagnoses_custom']      = init_res('Number of new diagnoses with custom testing module')
+        self.results['cum_diagnoses_custom']      = init_res('Cumulative diagnoses with custom testing module')
 
         # Handle variants
 
@@ -497,19 +505,19 @@ class Sim(znb.BaseSim):
             if isinstance(intervention, zni.Intervention):
                 intervention.finalize(self)
 
-    # def init_testobjs(self):
-    #     if self._orig_pars and 'testing' in self._orig_pars: 
-    #         self['testing'] = self._orig_pars.pop('testing')
+    def init_testobjs(self):
+        if self._orig_pars and 'testing' in self._orig_pars: 
+            self['testing'] = self._orig_pars.pop('testing')
         
-    #     for testobj in self['testing']:
-    #         if isinstance(testobj, ct.TestObj):
-    #             testobj.init_common_trackers(self)
-    #             testobj.initialize(self)
+        for testobj in self['testing']:
+            if isinstance(testobj, znt.TestObj):
+                testobj.init_common_trackers(self)
+                testobj.initialize(self)
 
-    # def finalize_testobjs(self): 
-    #     for testobj in self['testing']: 
-    #         if isinstance(testobj, ct.TestObj):
-    #             testobj.finalize(self)
+    def finalize_testobjs(self): 
+        for testobj in self['testing']: 
+            if isinstance(testobj, znt.TestObj):
+                testobj.finalize(self)
 
 
     def init_analyzers(self):
@@ -693,6 +701,24 @@ class Sim(znb.BaseSim):
         misc_modifiers = np.concatenate((human_viral_load, flock_infection_levels, barn_modifiers, water_modifiers)) 
 
 
+                # Toggle testing. Background ILI and symptoms are only simulated for testing, so they are enclosed here too.
+        if self.pars['enable_testobjs']:
+
+            # Determine background ILI infections. It is justifiable to call this before testing, because ILI should exist even on the first day of testing.
+            znt.infect_ILI(self)
+
+            # Apply testing and record diagnoses.
+            for i, testobj in enumerate(self['testing']):
+
+                testobj(self)
+                
+                # Interface with Covasim quarantine behaviour.
+                self.agents.human.date_pos_test[testobj.date_pos_test == t] = t  # Update date_pos_test with people who received a test today that will return positive
+                self.agents.human.date_diagnosed[testobj.date_positive == t] = t  # Update date_diagnosed with people who received at least one positive test today
+                
+                self.results['new_diagnoses_custom'][t] += sum(testobj.date_positive == t)
+                self.results['cum_diagnoses_custom'][t] += sum(self.results['new_diagnoses_custom'][:t])
+
         # Apply interventions
         for i,intervention in enumerate(self['interventions']):
             intervention(self) # If it's a function, call it directly
@@ -832,15 +858,15 @@ class Sim(znb.BaseSim):
                 self.results['variant'][f'new_water_{key}'][variant, t] = agents.water.flows_variant[f'new_{key}'][variant]
 
         # # Update nab and immunity for this time step
-        # if self['use_waning']:
-        #     has_nabs = cvu.true(people.peak_nab)
-        #     if len(has_nabs):
-        #         cvimm.update_nab(people, inds=has_nabs)
+        
+        has_nabs = znu.true(agents.human.peak_nab)
+        if len(has_nabs):
+            znimm.update_nab(agents.human, inds=has_nabs)
 
-        # inds_alive = cvu.false(people.dead)
-        # self.results['pop_nabs'][t]            = np.sum(people.nab[inds_alive[cvu.true(people.nab[inds_alive])]])/len(inds_alive)
-        # self.results['pop_protection'][t]      = np.nanmean(people.sus_imm)
-        # self.results['pop_symp_protection'][t] = np.nanmean(people.symp_imm)
+        inds_alive = znu.false(agents.human.dead)
+        self.results['pop_nabs'][t]            = np.sum(agents.human.nab[inds_alive[znu.true(agents.human.nab[inds_alive])]])/len(inds_alive)
+        self.results['pop_protection'][t]      = np.nanmean(agents.human.sus_imm)
+        self.results['pop_symp_protection'][t] = np.nanmean(agents.human.symp_imm)
 
         ##### DONE CALCULATING STATISTICS #####
 
@@ -856,35 +882,35 @@ class Sim(znb.BaseSim):
 
 
     
-    # def process_testobj_pars(self):  # NOTE: I'm not sure if we will be using this module or not.
-    #     '''
-    #     Build test objects using supplied test object parameter dictionary. The dictionary must adhere to documented format. 
-    #     Then, assign the test objects to self.pars['testing'].
-    #     Alternatively, test objects can be built outside and externally supplied to sim.pars['testing'] parameter. 
-    #     '''
-    #     test_params = self.pars['testobjs']
-    #     options = ['PCR_disc', 'RAT_disc', 'RAT_surv', 'PCR_sw_disc', 'RAT_sw_disc'] # TESTING
-    #     testobjs = []
-    #     if not(test_params is None):
-    #         for testname, pars in test_params.items(): 
-    #             if not(testname in options): 
-    #                 raise RuntimeError(f'Test parameter dictionary specifies a non-existent test object. Options are {options}')
+    def process_testobj_pars(self):
+        '''
+        Build test objects using supplied test object parameter dictionary. The dictionary must adhere to documented format. 
+        Then, assign the test objects to self.pars['testing'].
+        Alternatively, test objects can be built outside and externally supplied to sim.pars['testing'] parameter. 
+        '''
+        test_params = self.pars['testobjs']
+        options = ['PCR_disc', 'RAT_disc', 'RAT_surv', 'PCR_sw_disc', 'RAT_sw_disc'] # TESTING
+        testobjs = []
+        if not(test_params is None):
+            for testname, pars in test_params.items(): 
+                if not(testname in options): 
+                    raise RuntimeError(f'Test parameter dictionary specifies a non-existent test object. Options are {options}')
                 
-    #             # These are the only possible test objects
-    #             if testname == 'RAT_disc': 
-    #                 testobjs.append(ct.RAT_disc(**pars))  # Unpack dictionary parameters as keyword arguments. Keys need to match argument name. 
-    #             elif testname == 'PCR_disc': 
-    #                 testobjs.append(ct.PCR_disc(**pars))
-    #             elif testname == 'RAT_surv':
-    #                 testobjs.append(ct.RAT_surv(**pars))
-    #             elif testname == 'PCR_sw_disc':
-    #                 testobjs.append(ct.PCR_disc(**pars)) # TESTING. SEPARATE OBJECT WITH CAPACITIES JUST FOR SMARTWATCH. 
-    #             elif testname == 'RAT_sw_disc':
-    #                 testobjs.append(ct.RAT_disc(**pars))
-    #         self.pars['testing'] = testobjs
-    #     else: 
-    #         if len(self.pars['testing']) == 0: 
-    #             print("Warning: Test objects enabled but no test object parameters, or already-built test objects, were supplied")
+                # These are the only possible test objects
+                if testname == 'RAT_disc': 
+                    testobjs.append(znt.RAT_disc(**pars))  # Unpack dictionary parameters as keyword arguments. Keys need to match argument name. 
+                elif testname == 'PCR_disc': 
+                    testobjs.append(znt.PCR_disc(**pars))
+                elif testname == 'RAT_surv':
+                    testobjs.append(znt.RAT_surv(**pars))
+                elif testname == 'PCR_sw_disc':
+                    testobjs.append(znt.PCR_disc(**pars)) # TESTING. SEPARATE OBJECT WITH CAPACITIES JUST FOR SMARTWATCH. 
+                elif testname == 'RAT_sw_disc':
+                    testobjs.append(znt.RAT_disc(**pars))
+            self.pars['testing'] = testobjs
+        else: 
+            if len(self.pars['testing']) == 0: 
+                print("Warning: Test objects enabled but no test object parameters, or already-built test objects, were supplied")
 
     def run(self, do_plot=False, until=None, restore_pars=True, reset_seed=True, verbose=None):
         '''

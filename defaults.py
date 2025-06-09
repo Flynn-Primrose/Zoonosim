@@ -306,6 +306,9 @@ def get_default_colors(agent_type):
             c.recovered = "#00F2FF" # 
             c.dead = "#00FF0000" # 
             c.known_dead = '#00FF0000' # 
+            c.pop_nabs = "#CC00FFFF" #
+            c.pop_protection = "#CC00FF55" #
+            c.pop_symp_protection = "#CC00FFAA" #
             c.diagnosed = '#00FF0000' # 
             c.tested = "#00FF0000" # 
             c.quarantined = "#00FF0000" # 

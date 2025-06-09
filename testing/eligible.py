@@ -1,5 +1,5 @@
 import numpy as np
-from . import utils as znu
+from .. import utils as znu
 
 '''
 This file implements functions for checking test-eligibility.

@@ -50,7 +50,7 @@ def ILI_float(sim):
         if Avian_to_ILI:
             infect_inds = np.random.choice(sim.agents.human['uid'], n_infected, replace=False).astype(int)
         else:
-            no_avian = znu.true(sim.agents.people.exposed == False)
+            no_avian = znu.true(sim.agents.human.exposed == False)
             if len(no_avian) >= n_infected:
                 infect_inds = np.random.choice(no_avian, n_infected, replace=False).astype(int)
             elif len(no_avian) == 0:
