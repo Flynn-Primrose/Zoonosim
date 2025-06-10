@@ -5,8 +5,8 @@ import Zoonosim as zn
 
 
 
-rat = zn.RAT_disc(sc_criteria = ['work'], sc_seekprobs = {'work': 0.5},)
-pcr = zn.PCR_disc(sc_criteria = ['work'], sc_seekprobs = {'work': 0.5}, RAT_ind = 0)
+rat = zn.RAT_disc(di_criteria = ['sx'], di_seekprobs = {'sx':0.1}, sc_criteria = ['work'], sc_seekprobs = {'work': 0.5},)
+pcr = zn.PCR_disc(di_criteria = ['sx'], di_seekprobs = {'sx':0.1}, sc_criteria = ['work'], sc_seekprobs = {'work': 0.5}, RAT_ind = 0)
 
 testobj = [rat, pcr]
 

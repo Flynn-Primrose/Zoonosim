@@ -166,7 +166,7 @@ def work(sim, base_testobj, p=0.10):
     '''
     if sim.t == 0:
         # Identify which workplaces are chosen to do mandatory testing, and save the workers
-        test_fid = np.random.choice(len(base_testobj.fid), int(base_testobj.n_fids * p), replace=False)
+        test_fid = np.random.choice(len(base_testobj.fid2uid), int(base_testobj.n_fids * p), replace=False)
 
         worker_uids = np.array([], dtype=int)
         for fid in test_fid:

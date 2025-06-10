@@ -6,7 +6,7 @@ from . import purpose as tp
 from . import allocate as ac
 from . import mechanism as tm
 
-__all__ = ['PCR_disc', 'RAT_disc']
+__all__ = ['TestObj', 'PCR_disc', 'RAT_disc']
 
 class TestObj: 
     def __init__(self): 
@@ -366,10 +366,10 @@ class RAT_disc(TestObj):
 
         # Initialize base test objects
         self.diagnostic.initialize()
-        self.screening.initialize(sim.pars['pop_type'], sim.people, sim.sp_people)
+        self.screening.initialize(sim.agents)
 
         # Initialize trackers specific to RATs
-        self.cons_days_neg_rat = np.zeros(sim.pars['pop_size'])  # Track the number of consecutive days individual has received negative RAT
+        self.cons_days_neg_rat = np.zeros(sim.pars['pop_size_by_type']['human'])  # Track the number of consecutive days individual has received negative RAT
 
         self.initialized = True
 

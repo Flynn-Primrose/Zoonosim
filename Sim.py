@@ -130,7 +130,8 @@ class Sim(znb.BaseSim):
         self.init_agents(reset=reset, init_infections=init_infections, **kwargs)
 
         self.init_interventions()  # Initialize the interventions...
-        #self.init_analyzers() # ...and the analyzers...
+        self.init_testobjs() # ...and the testing objects...
+        self.init_analyzers() # ...and the analyzers...
         self.validate_layer_pars() # Once the population is initialized, validate the layer parameters again
         self.set_seed() # Reset the random seed again so the random number stream is consistent
 
@@ -717,7 +718,7 @@ class Sim(znb.BaseSim):
 
                 testobj(self)
                 
-                # Interface with Covasim quarantine behaviour.
+                # Interface with quarantine behaviour. TODO?
                 self.agents.human.date_pos_test[testobj.date_pos_test == t] = t  # Update date_pos_test with people who received a test today that will return positive
                 self.agents.human.date_diagnosed[testobj.date_positive == t] = t  # Update date_diagnosed with people who received at least one positive test today
                 
