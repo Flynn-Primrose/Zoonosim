@@ -6,6 +6,8 @@ from . import purpose as tp
 from . import allocate as ac
 from . import mechanism as tm
 
+__all__ = ['PCR_disc', 'RAT_disc']
+
 class TestObj: 
     def __init__(self): 
         self.system = self.__class__.__name__

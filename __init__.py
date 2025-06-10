@@ -24,4 +24,5 @@ from .interventions import *
 from .analysis import *
 from .immunity import *
 from .population import *
+from .testing import *
 from .Sim import *
