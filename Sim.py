@@ -83,6 +83,11 @@ class Sim(znb.BaseSim):
         self.update_pars(pars, **kwargs) # Update the parameters, if provided
         self.load_data(datafile) # Load the data, if provided
 
+                # Process test object pars
+        if self.pars['enable_testobjs']: 
+            self.process_testobj_pars()
+            print("Testing is enabled!")
+
 
         return
 
@@ -889,7 +894,7 @@ class Sim(znb.BaseSim):
         Alternatively, test objects can be built outside and externally supplied to sim.pars['testing'] parameter. 
         '''
         test_params = self.pars['testobjs']
-        options = ['PCR_disc', 'RAT_disc', 'RAT_surv', 'PCR_sw_disc', 'RAT_sw_disc'] # TESTING
+        options = ['PCR_disc', 'RAT_disc'] # TESTING
         testobjs = []
         if not(test_params is None):
             for testname, pars in test_params.items(): 
@@ -901,12 +906,6 @@ class Sim(znb.BaseSim):
                     testobjs.append(znt.RAT_disc(**pars))  # Unpack dictionary parameters as keyword arguments. Keys need to match argument name. 
                 elif testname == 'PCR_disc': 
                     testobjs.append(znt.PCR_disc(**pars))
-                elif testname == 'RAT_surv':
-                    testobjs.append(znt.RAT_surv(**pars))
-                elif testname == 'PCR_sw_disc':
-                    testobjs.append(znt.PCR_disc(**pars)) # TESTING. SEPARATE OBJECT WITH CAPACITIES JUST FOR SMARTWATCH. 
-                elif testname == 'RAT_sw_disc':
-                    testobjs.append(znt.RAT_disc(**pars))
             self.pars['testing'] = testobjs
         else: 
             if len(self.pars['testing']) == 0: 
