@@ -60,7 +60,8 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
     contacts = make_contacts(popdict['contactdict'])
 
     agents = znr.Agents(sim.pars, 
-                        uid = popdict['uid'], 
+                        uid = popdict['uid'],
+                        fid = popdict['fid'], 
                         agent_type = popdict['agent_type'], 
                         human = human,
                         flock = flock,
@@ -88,6 +89,7 @@ def validate_popdict(popdict, pars, verbose=True):
 
     # Check keys and lengths
     required_keys = ['uid',
+                     'fid',
                      'agent_type',
                      'human_uids',
                      'barn_uids',
@@ -142,8 +144,7 @@ def make_popdict(sim, **kwargs):
 
     # Farms
     n_farms = sim.pars['n_farms']
-
-
+    farm_ids = np.arange(n_farms, dtype=znd.default_int) # Create a list of unique IDs for each farm
 
     # Create water sources
     n_water = round(n_farms * pop_pars['avg_water_per_farm']) # Number of water sources
@@ -151,7 +152,7 @@ def make_popdict(sim, **kwargs):
     # Create barns
     n_barns_by_farm = np.maximum(np.array(znu.n_poisson(pop_pars['avg_barns_per_farm'], n_farms), dtype=znd.default_int), np.repeat(1, n_farms)) # Number of barns per farm
     n_barns = sum(n_barns_by_farm)
-    #n_occupied_barns_by_farm = np.zeros(n_farms) # Number of occupied barns per farm
+    
 
     # Create workers
     n_humans_by_farm = np.zeros(n_farms, dtype=znd.default_int) # Number of workers per farm
@@ -170,6 +171,7 @@ def make_popdict(sim, **kwargs):
     n_agents = n_humans + n_barns + n_flocks + n_water
 
     popdict['uid'] = np.arange(n_agents, dtype=znd.default_int) # Create a list of unique IDs for each agent
+    popdict['fid'] = np.empty(n_agents, dtype=znd.default_int) # Create a list of farm IDs for each agent
     popdict['agent_type'] = np.repeat(['human', 'barn', 'flock', 'water'], [n_humans, n_barns, n_flocks, n_water]) # Create a list of agent types
     popdict['human_uids'] = popdict['uid'][popdict['agent_type'] == 'human']
     popdict['barn_uids'] = popdict['uid'][popdict['agent_type'] == 'barn']
@@ -193,6 +195,8 @@ def make_popdict(sim, **kwargs):
             'flocks':popdict['flock_uids'][flock_index:(flock_index + n_flocks_by_farm[farm])],
             'water':popdict['water_uids'][water_index[farm]],
         }
+        present_uids = np.concatenate((contactdict[farm]['humans'], contactdict[farm]['barns'], contactdict[farm]['flocks'], [contactdict[farm]['water']])) # Combine all uids for this farm
+        popdict['fid'][present_uids] = farm_ids[farm] # Assign the farm ID to the agents in this farm
         human_index += n_humans_by_farm[farm]
         barn_index += n_barns_by_farm[farm]
         flock_index += n_flocks_by_farm[farm]

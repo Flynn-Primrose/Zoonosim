@@ -192,7 +192,7 @@ class PCR_disc(TestObj):
 
         # Initialize base test objects
         self.diagnostic.initialize()
-        self.screening.initialize(sim.pars['pop_type'], sim.people, sim.sp_people)
+        self.screening.initialize(sim.agents)
 
         # Initialize two-way interface with another testing system - assumed to be RAT currently, can it be PCR? 
         if not(self.RAT_ind is None): 

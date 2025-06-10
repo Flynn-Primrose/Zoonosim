@@ -5,6 +5,7 @@ Defines classes related to the purpose of testing (i.e. Diagnostic, Screening, a
 from . import eligible as eg
 from . import seek as sk
 
+import numpy as np
 
 class Diagnostic:
     # Used to conduct diagnostic testing
@@ -42,10 +43,14 @@ class Screening:
         self.criteria = criteria
         self.seekprobs = seekprobs
 
-    def initialize(self, pop_type, people): 
-        if not(people is None) and (pop_type == 'behaviour_module'):
-            self.workplaces = people.workplaces
-            self.n_workplaces = people.n_workplaces
+    def initialize(self, agents): 
+        if not(agents is None):
+            fids = np.unique(agents.fid)
+            fid2uid = dict()
+            for fid in fids: 
+                fid2uid[fid] = np.where((agents.fid == fid) & (agents.type == 'human'))[0]
+            self.fid2uid = fid2uid
+            self.n_fids = len(self.fid2uid.keys())
         return
 
     def apply(self, testobj, sim): 
