@@ -300,7 +300,7 @@ class PCR_disc(TestObj):
         self.cons_days_sk[~sk_ind] = 0  # reset everyone else
         self.cons_days_sk[test_uids] = 0  # we want every period of test-seeking to only be associated with receipt of one test
 
-        sim.results['new_tests'][sim.t] += len(test_uids)
+        sim.results['new_tests_custom'][sim.t] += len(test_uids)
 
         return
 

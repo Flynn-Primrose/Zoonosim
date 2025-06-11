@@ -350,7 +350,7 @@ class Sim(znb.BaseSim):
         self.results['pop_symp_protection'] = init_res('Population symptomatic protection', scale=False, color=human_dcols.pop_symp_protection)
 
         # Testing
-        self.results['new_tests']                 = init_res('Number of new tests administered')
+        self.results['new_tests_custom']                 = init_res('Number of new tests administered')
         self.results['new_diagnoses_custom']      = init_res('Number of new diagnoses with custom testing module')
         self.results['cum_diagnoses_custom']      = init_res('Cumulative diagnoses with custom testing module')
 

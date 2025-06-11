@@ -296,7 +296,7 @@ class Humans(Subroster):
         ''' Perform post-timestep updates '''
 
 
-        #self.flows['new_diagnoses'] += self.check_diagnosed()
+        self.flows['new_diagnosed'] += self.check_diagnosed()
         #self.flows['new_quarantined'] += self.check_quar()
 
         del self.is_exp  # Tidy up
@@ -306,7 +306,7 @@ class Humans(Subroster):
 
 
     
-    def schedule_behaviour(self, behaviour_pars):
+    def schedule_behaviour(self):
         ''' Schedules events on the basis of results received today '''
 
 
@@ -338,6 +338,60 @@ class Humans(Subroster):
         has_date = znu.idefinedi(date, not_current)
         inds     = znu.itrue(self.t == date[has_date], has_date)
         return inds
+    
+    def check_diagnosed(self):
+        '''
+        Check for new diagnoses. Since most data are reported with diagnoses on
+        the date of the test, this function reports counts not for the number of
+        people who received a positive test result on a day, but rather, the number
+        of people who were tested on that day who are schedule to be diagnosed in
+        the future.
+        '''
+
+        # Handle people who tested today who will be diagnosed in future (i.e., configure them to have have finished being tested)
+        test_pos_inds = self.check_inds(self.diagnosed, self.date_pos_test, filter_inds=None) # Find people who are not diagnosed and have a date of a positive test that is today or earlier
+        self.date_pos_test[test_pos_inds] = np.nan # Clear date of having will-be-positive test
+
+
+        # Handle people who were actually diagnosed today (i.e., set them as diagnosed and remove any of them that were quarantining from quarantine)
+        # diag_inds  = self.check_inds(self.diagnosed, self.date_diagnosed, filter_inds=None) # Find who are not diagnosed and have a date of diagnosis that is today or earlier
+        diag_inds  = self.check_inds_diagnosed(self.diagnosed, self.date_diagnosed, filter_inds=None) # Find who are not diagnosed and have a date of diagnosis that is today or earlier
+
+        self.diagnosed[diag_inds]   = True # Set these people to be diagnosed
+
+        quarantined = znu.itruei(self.quarantined, diag_inds) # Find individuals who were just diagnosed who are in quarantine
+        self.date_end_quarantine[quarantined] = self.t # Set end quarantine date to match when the person left quarantine (and entered isolation)
+        self.quarantined[diag_inds] = False # If you are diagnosed, you are isolated, not in quarantine
+
+        # Remove diagnosed individuals if they were diagnosed more than 14 days ago
+        diag_expired_inds = znu.true(self.t - self.date_diagnosed > 14)
+        self.diag_expired_inds = diag_expired_inds
+        self.diagnosed[diag_expired_inds] = False
+
+        return len(test_pos_inds)
+
+    def check_quar(self):
+        ''' Update quarantine state '''
+
+        n_quarantined = 0 # Number of people entering quarantine
+        for ind,end_day in self._pending_quarantine[self.t]:
+            if self.quarantined[ind]: # Update when quarantine should be finished (in case schedule_quarantine is called on someone already in quarantine)
+                self.date_end_quarantine[ind] = max(self.date_end_quarantine[ind], end_day) # Extend quarantine if required
+            elif not (self.dead[ind] or self.recovered[ind] or self.diagnosed[ind]): # Unclear whether recovered should be included here # elif not (self.dead[ind] or self.diagnosed[ind]):
+                self.quarantined[ind] = True
+                self.date_quarantined[ind] = self.t
+                self.date_end_quarantine[ind] = end_day
+                n_quarantined += 1
+
+        # If someone on quarantine has reached the end of their quarantine, release them
+        end_inds = self.check_inds(~self.quarantined, self.date_end_quarantine, filter_inds=None) # Note the double-negative here (~)
+        self.quarantined[end_inds] = False # Release from quarantine
+
+        # Update the counter for consecutive days in quarantine
+        self.cons_days_in_quar[self.quarantined] += 1
+        self.cons_days_in_quar[~self.quarantined] = 0
+
+        return n_quarantined
 
 
     def check_infectious(self):
@@ -345,10 +399,13 @@ class Humans(Subroster):
         inds = self.check_inds(self.infectious, self.date_infectious, filter_inds=self.is_exp)
         self.infectious[inds] = True
         self.infectious_variant[inds] = self.exposed_variant[inds]
+        self.flows['new_infections'] += len(inds) # Record new infections
+        self.flows['new_reinfections'] += len(znu.defined(self.date_recovered[inds])) # Record reinfections
 
         for variant in range(self.pars['n_variants']):
             this_variant_inds = znu.itrue(self.infectious_variant[inds] == variant, inds)
             n_this_variant_inds = len(this_variant_inds)
+
             self.flows_variant['new_infectious_by_variant'][variant] += n_this_variant_inds
             self.infectious_by_variant[variant, this_variant_inds] = True
         return len(inds)
@@ -499,9 +556,9 @@ class Humans(Subroster):
         self.n_breakthroughs[breakthrough_inds] += 1
         self.exposed_variant[inds] = variant
         self.exposed_by_variant[variant, inds] = True
-        self.flows['new_infections']   += len(inds)
-        self.flows['new_reinfections'] += len(znu.defined(self.date_recovered[inds])) # Record reinfections
-        self.flows_variant['new_infections_by_variant'][variant] += len(inds)
+        self.flows['new_exposed']   += len(inds)
+        #self.flows['new_reinfections'] += len(znu.defined(self.date_recovered[inds])) # Record reinfections
+        #self.flows_variant['new_infections_by_variant'][variant] += len(inds)
 
         # Record transmissions
         for i, target in enumerate(inds):
