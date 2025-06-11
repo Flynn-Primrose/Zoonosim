@@ -85,18 +85,18 @@ class TestObj:
         self.dist_skcons_nI_nC       = np.zeros(sim.pars['n_days'] + 1)
 
         # Initialize date trackers -- important for integrating with Covasim quarantine behaviour
-        self.date_positive           = np.full(sim.pars['pop_size'], -1)
-        self.date_negative           = np.full(sim.pars['pop_size'], -1)
-        self.date_pos_test           = np.full(sim.pars['pop_size'], -1)
+        self.date_positive           = np.full(sim.pars['pop_size_by_type']['human'], -1)
+        self.date_negative           = np.full(sim.pars['pop_size_by_type']['human'], -1)
+        self.date_pos_test           = np.full(sim.pars['pop_size_by_type']['human'], -1)
 
         # Initialize overflow trackers
         self.pos_overflow            = 0
         self.neg_overflow            = 0
 
         # Initialize other trackers
-        self.retest_tracker        = np.zeros(sim.pars['pop_size'])     # Track whether an individual is allowed to retest
-        self.cons_days_eg          = np.zeros(sim.pars['pop_size'])     # Track the number of consecutive days individual is eligible for a test
-        self.cons_days_sk          = np.zeros(sim.pars['pop_size'])     # Track the number of consecutive days individual is seeking a test
+        self.retest_tracker        = np.zeros(sim.pars['pop_size_by_type']['human'])     # Track whether an individual is allowed to retest
+        self.cons_days_eg          = np.zeros(sim.pars['pop_size_by_type']['human'])     # Track the number of consecutive days individual is eligible for a test
+        self.cons_days_sk          = np.zeros(sim.pars['pop_size_by_type']['human'])     # Track the number of consecutive days individual is seeking a test
         self.eventual_test         = np.zeros(sim.pars['n_days'] + 1)   # Track the number of individuals infected on a given day who eventually receive a test DURING the associated infection
 
     def update_pars(self, pars_dict): 
@@ -269,7 +269,7 @@ class PCR_disc(TestObj):
         # Deal with consecutive days eligible
         # -----------------------------------
         eg = list(set().union(*all_eg.values()))
-        eg_ind = np.zeros(sim.pars['pop_size'], dtype=bool)
+        eg_ind = np.zeros(sim.pars['pop_size_by_type']['human'], dtype=bool)
         eg_ind[eg] = True  # corresponds to which agents are eligible
 
         # Track distribution of days test-eligible before end of eligibility
@@ -281,7 +281,7 @@ class PCR_disc(TestObj):
         # Deal with consecutive days seeking
         # ----------------------------------
         sk = list(set().union(*all_sk.values()))
-        sk_ind = np.zeros(sim.pars['pop_size'], dtype=bool)
+        sk_ind = np.zeros(sim.pars['pop_size_by_type']['human'], dtype=bool)
         sk_ind[sk] = True  # corresponds to which agents are seeking
 
         # Track distribution of days test-seeking before end of eligibility
@@ -433,7 +433,7 @@ class RAT_disc(TestObj):
         # Track consecutive days negative
         # -------------------------------
         # Assume agents instantly know test result
-        tested_negative = np.zeros(sim.pars['pop_size'], dtype=bool) 
+        tested_negative = np.zeros(sim.pars['pop_size_by_type']['human'], dtype=bool) 
         tested_negative[test_uids[~test_results]] = True
         self.cons_days_neg_rat[tested_negative] += 1
         self.cons_days_neg_rat[~tested_negative] = 0  # reset everyone else
@@ -442,7 +442,7 @@ class RAT_disc(TestObj):
         # Deal with consecutive days eligible
         # -----------------------------------
         eg = list(set().union(*all_eg.values()))
-        eg_ind = np.zeros(sim.pars['pop_size'], dtype=bool)
+        eg_ind = np.zeros(sim.pars['pop_size_by_type']['human'], dtype=bool)
         eg_ind[eg] = True  # corresponds to which agents are eligible
 
         # Track distribution of days test-eligible before end of eligibility
@@ -454,7 +454,7 @@ class RAT_disc(TestObj):
         # Deal with consecutive days seeking
         # ----------------------------------
         sk = list(set().union(*all_sk.values()))
-        sk_ind = np.zeros(sim.pars['pop_size'], dtype=bool)
+        sk_ind = np.zeros(sim.pars['pop_size_by_type']['human'], dtype=bool)
         sk_ind[sk] = True  # corresponds to which agents are seeking
 
         # Track distribution of days test-seeking before end of eligibility
@@ -506,7 +506,7 @@ def time_since_exposure(sim, testobj, end, uids, attr):
     Given agents who test (uids), retrieve the time elapsed between exposure and some end condition (e.g., administration of test).
     Update the associated "rel_date" distribution.
     '''
-    rel_date = end - sim.people.date_exposed[uids]
+    rel_date = end - sim.agents.human.date_exposed[uids]
     update_dist(testobj, rel_date, attr)
 
 def time_waiting(testobj, cons_days, uids, attr):
@@ -532,10 +532,10 @@ def record_test_results(testobj, sim, test_uids, test_results):
     testobj.date_pos_test[test_uids[test_results]] = cur
 
     # Stratify population into ILI and COVID, ILI only, COVID only, healthy
-    I_C_uids   = test_uids[np.logical_and(sim.people.symptomatic_ILI[test_uids], sim.people.exposed[test_uids])]
-    I_nC_uids  = test_uids[np.logical_and(sim.people.symptomatic_ILI[test_uids], ~sim.people.exposed[test_uids])]
-    nI_C_uids  = test_uids[np.logical_and(~sim.people.symptomatic_ILI[test_uids], sim.people.exposed[test_uids])]
-    nI_nC_uids = test_uids[np.logical_and(~sim.people.symptomatic_ILI[test_uids], ~sim.people.exposed[test_uids])]
+    I_C_uids   = test_uids[np.logical_and( sim.agents.human.symptomatic_ILI[test_uids],  sim.agents.human.exposed[test_uids])]
+    I_nC_uids  = test_uids[np.logical_and( sim.agents.human.symptomatic_ILI[test_uids], ~sim.agents.human.exposed[test_uids])]
+    nI_C_uids  = test_uids[np.logical_and(~sim.agents.human.symptomatic_ILI[test_uids],  sim.agents.human.exposed[test_uids])]
+    nI_nC_uids = test_uids[np.logical_and(~sim.agents.human.symptomatic_ILI[test_uids], ~sim.agents.human.exposed[test_uids])]
 
     # Track stratification of test count by those having COVID/ILI at time of administration
     testobj.test_count_split['I_C'][cur]   += len(I_C_uids)
@@ -544,7 +544,7 @@ def record_test_results(testobj, sim, test_uids, test_results):
     testobj.test_count_split['nI_nC'][cur] += len(nI_nC_uids)
 
     # Record number of people infected on a given day who eventually got tested
-    exposure_dates = sim.people.date_exposed[test_uids[sim.people.exposed[test_uids]]]  # get exposure dates for those those that tested and are exposed
+    exposure_dates = sim.agents.human.date_exposed[test_uids[sim.agents.human.exposed[test_uids]]]  # get exposure dates for those those that tested and are exposed
     exposure_dates = exposure_dates[~np.isnan(exposure_dates)]  # remove NaNs (TODO: why are there NaNs? If they are exposed, they should have an exposure date)
     update_dist(testobj, exposure_dates, 'eventual_test')
     
@@ -578,20 +578,20 @@ def record_test_results(testobj, sim, test_uids, test_results):
             testobj.date_negative[test_uids[np.logical_and(~test_results, test_latencies == l)]] = cur + l  # Pick people who returned negative result and was assigned latency l
 
             # Track boolean states
-            TP_uids       = test_uids[np.logical_and.reduce((test_results,  test_latencies==l, sim.people.viral_load[test_uids]>=testobj.LOD))]
-            FP_uids       = test_uids[np.logical_and.reduce((test_results,  test_latencies==l, sim.people.viral_load[test_uids]<testobj.LOD))]
-            TN_uids       = test_uids[np.logical_and.reduce((~test_results, test_latencies==l, sim.people.viral_load[test_uids]<testobj.LOD))]
-            FN_uids       = test_uids[np.logical_and.reduce((~test_results, test_latencies==l, sim.people.viral_load[test_uids]>=testobj.LOD))]
+            TP_uids       = test_uids[np.logical_and.reduce((test_results,  test_latencies==l, sim.agents.human.viral_load[test_uids]>=testobj.LOD))]
+            FP_uids       = test_uids[np.logical_and.reduce((test_results,  test_latencies==l, sim.agents.human.viral_load[test_uids]<testobj.LOD))]
+            TN_uids       = test_uids[np.logical_and.reduce((~test_results, test_latencies==l, sim.agents.human.viral_load[test_uids]<testobj.LOD))]
+            FN_uids       = test_uids[np.logical_and.reduce((~test_results, test_latencies==l, sim.agents.human.viral_load[test_uids]>=testobj.LOD))]
 
-            TP_uids_I_C   = TP_uids[np.logical_and(sim.people.symptomatic_ILI[TP_uids], sim.people.exposed[TP_uids])]  # has ILI and has COVID
-            TP_uids_I_nC  = TP_uids[np.logical_and(sim.people.symptomatic_ILI[TP_uids], ~sim.people.exposed[TP_uids])]  # has ILI and no COVID
-            TP_uids_nI_C  = TP_uids[np.logical_and(~sim.people.symptomatic_ILI[TP_uids], sim.people.exposed[TP_uids])]  # no ILI and has COVID
-            TP_uids_nI_nC = TP_uids[np.logical_and(~sim.people.symptomatic_ILI[TP_uids], ~sim.people.exposed[TP_uids])]  # no ILI and no COVID
+            TP_uids_I_C   = TP_uids[np.logical_and( sim.agents.human.symptomatic_ILI[TP_uids],  sim.agents.human.exposed[TP_uids])]  # has ILI and has COVID
+            TP_uids_I_nC  = TP_uids[np.logical_and( sim.agents.human.symptomatic_ILI[TP_uids], ~sim.agents.human.exposed[TP_uids])]  # has ILI and no COVID
+            TP_uids_nI_C  = TP_uids[np.logical_and(~sim.agents.human.symptomatic_ILI[TP_uids],  sim.agents.human.exposed[TP_uids])]  # no ILI and has COVID
+            TP_uids_nI_nC = TP_uids[np.logical_and(~sim.agents.human.symptomatic_ILI[TP_uids], ~sim.agents.human.exposed[TP_uids])]  # no ILI and no COVID
 
-            FN_uids_I_C   = FN_uids[np.logical_and(sim.people.symptomatic_ILI[FN_uids], sim.people.exposed[FN_uids])]  
-            FN_uids_I_nC  = FN_uids[np.logical_and(sim.people.symptomatic_ILI[FN_uids], ~sim.people.exposed[FN_uids])]  
-            FN_uids_nI_C  = FN_uids[np.logical_and(~sim.people.symptomatic_ILI[FN_uids], sim.people.exposed[FN_uids])]  
-            FN_uids_nI_nC = FN_uids[np.logical_and(~sim.people.symptomatic_ILI[FN_uids], ~sim.people.exposed[FN_uids])] 
+            FN_uids_I_C   = FN_uids[np.logical_and( sim.agents.human.symptomatic_ILI[FN_uids],  sim.agents.human.exposed[FN_uids])]  
+            FN_uids_I_nC  = FN_uids[np.logical_and( sim.agents.human.symptomatic_ILI[FN_uids], ~sim.agents.human.exposed[FN_uids])]  
+            FN_uids_nI_C  = FN_uids[np.logical_and(~sim.agents.human.symptomatic_ILI[FN_uids],  sim.agents.human.exposed[FN_uids])]  
+            FN_uids_nI_nC = FN_uids[np.logical_and(~sim.agents.human.symptomatic_ILI[FN_uids], ~sim.agents.human.exposed[FN_uids])] 
 
             testobj.true_pos[cur + l]  += len(TP_uids)
             testobj.false_pos[cur + l] += len(FP_uids)
@@ -653,13 +653,13 @@ def record_eligible_groups(testobj, sim, criteria, all_eligible):
     
     # Record daily test-eligible agents stratified by disease status
     eg_uids           = list(set().union(*all_eligible.values()))
-    eligible          = np.zeros(sim.pars['pop_size'], dtype=bool)
+    eligible          = np.zeros(sim.pars['pop_size_by_type']['human'], dtype=bool)
     eligible[eg_uids] = True
 
-    testobj.crit_disease_groups['I_C'].append(np.sum(np.logical_and.reduce((eligible, sim.people.symptomatic_ILI, sim.people.exposed))))
-    testobj.crit_disease_groups['I_nC'].append(np.sum(np.logical_and.reduce((eligible, sim.people.symptomatic_ILI, ~sim.people.exposed))))
-    testobj.crit_disease_groups['nI_C'].append(np.sum(np.logical_and.reduce((eligible, ~sim.people.symptomatic_ILI, sim.people.exposed))))
-    testobj.crit_disease_groups['nI_nC'].append(np.sum(np.logical_and.reduce((eligible, ~sim.people.symptomatic_ILI, ~sim.people.exposed))))
+    testobj.crit_disease_groups['I_C'].append(np.sum(np.logical_and.reduce((eligible,    sim.agents.human.symptomatic_ILI,  sim.agents.human.exposed))))
+    testobj.crit_disease_groups['I_nC'].append(np.sum(np.logical_and.reduce((eligible,   sim.agents.human.symptomatic_ILI, ~sim.agents.human.exposed))))
+    testobj.crit_disease_groups['nI_C'].append(np.sum(np.logical_and.reduce((eligible,  ~sim.agents.human.symptomatic_ILI,  sim.agents.human.exposed))))
+    testobj.crit_disease_groups['nI_nC'].append(np.sum(np.logical_and.reduce((eligible, ~sim.agents.human.symptomatic_ILI, ~sim.agents.human.exposed))))
 
 def record_seek_groups(testobj, sim, criteria, all_seekers): 
     '''
@@ -682,13 +682,13 @@ def record_seek_groups(testobj, sim, criteria, all_seekers):
 
     # Record daily test-seeking agents stratified by disease status
     sk_uids          = list(set().union(*[all_seekers[criterion] for criterion in criteria]))
-    seekers          = np.zeros(sim.pars['pop_size'], dtype=bool)
+    seekers          = np.zeros(sim.pars['pop_size_by_type']['human'], dtype=bool)
     seekers[sk_uids] = True
 
-    testobj.seek_disease_groups['I_C'].append(np.sum(np.logical_and.reduce((seekers, sim.people.symptomatic_ILI, sim.people.exposed))))
-    testobj.seek_disease_groups['I_nC'].append(np.sum(np.logical_and.reduce((seekers, sim.people.symptomatic_ILI, ~sim.people.exposed))))
-    testobj.seek_disease_groups['nI_C'].append(np.sum(np.logical_and.reduce((seekers, ~sim.people.symptomatic_ILI, sim.people.exposed))))
-    testobj.seek_disease_groups['nI_nC'].append(np.sum(np.logical_and.reduce((seekers, ~sim.people.symptomatic_ILI, ~sim.people.exposed))))
+    testobj.seek_disease_groups['I_C'].append(np.sum(np.logical_and.reduce((seekers,    sim.agents.human.symptomatic_ILI,  sim.agents.human.exposed))))
+    testobj.seek_disease_groups['I_nC'].append(np.sum(np.logical_and.reduce((seekers,   sim.agents.human.symptomatic_ILI, ~sim.agents.human.exposed))))
+    testobj.seek_disease_groups['nI_C'].append(np.sum(np.logical_and.reduce((seekers,  ~sim.agents.human.symptomatic_ILI,  sim.agents.human.exposed))))
+    testobj.seek_disease_groups['nI_nC'].append(np.sum(np.logical_and.reduce((seekers, ~sim.agents.human.symptomatic_ILI, ~sim.agents.human.exposed))))
 
 def record_allocate_groups(testobj, sim, criteria, all_eligible, testers): 
     '''
@@ -718,10 +718,10 @@ def record_cons_days_eg_dist(testobj, sim, uids):
     Stratifies the distribution by disease status.
     '''
     # Stratify identified agents by disease status
-    I_C_uids   = uids[np.logical_and(sim.people.symptomatic_ILI[uids], sim.people.exposed[uids])]
-    I_nC_uids  = uids[np.logical_and(sim.people.symptomatic_ILI[uids], ~sim.people.exposed[uids])]
-    nI_C_uids  = uids[np.logical_and(~sim.people.symptomatic_ILI[uids], sim.people.exposed[uids])]
-    nI_nC_uids = uids[np.logical_and(~sim.people.symptomatic_ILI[uids], ~sim.people.exposed[uids])]
+    I_C_uids   = uids[np.logical_and( sim.agents.human.symptomatic_ILI[uids],  sim.agents.human.exposed[uids])]
+    I_nC_uids  = uids[np.logical_and( sim.agents.human.symptomatic_ILI[uids], ~sim.agents.human.exposed[uids])]
+    nI_C_uids  = uids[np.logical_and(~sim.agents.human.symptomatic_ILI[uids],  sim.agents.human.exposed[uids])]
+    nI_nC_uids = uids[np.logical_and(~sim.agents.human.symptomatic_ILI[uids], ~sim.agents.human.exposed[uids])]
 
     # if len(nI_C_uids) > 0:
     #     sample_uid = nI_C_uids[0]
@@ -755,10 +755,10 @@ def record_cons_days_sk_dist(testobj, sim, uids):
     Stratifies the distribution by disease status.
     '''
     # Stratify identified agents by disease status
-    I_C_uids   = uids[np.logical_and(sim.people.symptomatic_ILI[uids], sim.people.exposed[uids])]
-    I_nC_uids  = uids[np.logical_and(sim.people.symptomatic_ILI[uids], ~sim.people.exposed[uids])]
-    nI_C_uids  = uids[np.logical_and(~sim.people.symptomatic_ILI[uids], sim.people.exposed[uids])]
-    nI_nC_uids = uids[np.logical_and(~sim.people.symptomatic_ILI[uids], ~sim.people.exposed[uids])]
+    I_C_uids   = uids[np.logical_and( sim.agents.human.symptomatic_ILI[uids],  sim.agents.human.exposed[uids])]
+    I_nC_uids  = uids[np.logical_and( sim.agents.human.symptomatic_ILI[uids], ~sim.agents.human.exposed[uids])]
+    nI_C_uids  = uids[np.logical_and(~sim.agents.human.symptomatic_ILI[uids],  sim.agents.human.exposed[uids])]
+    nI_nC_uids = uids[np.logical_and(~sim.agents.human.symptomatic_ILI[uids], ~sim.agents.human.exposed[uids])]
 
     # Retrieve how many days they have been eligible
     cons_days       = testobj.cons_days_sk[uids]

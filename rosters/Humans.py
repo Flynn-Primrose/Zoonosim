@@ -29,6 +29,8 @@ class HumanMeta(sc.prettyobj):
             'rescaled_vl',      # Float
             'n_infections',     # Int
             'n_breakthroughs',  # Int
+            'cons_days_in_quar',    # Int
+            'cons_days_neg_rat',    # Int
         ]
 
         # Set the states that a person can be in: these are all booleans per person -- used in people.py
@@ -85,7 +87,7 @@ class HumanMeta(sc.prettyobj):
 
         # Set the dates various events took place: these are floats per agent
         self.dates = [f'date_{state}' for state in self.states] # Convert each state into a date
-        #self.dates.append('date_pos_test') # Store the date when a person tested which will come back positive
+        self.dates.append('date_pos_test') # Store the date when a person tested which will come back positive
         self.dates.append('date_end_quarantine') # Store the date when a person comes out of quarantine
         # Duration of different states: these are floats per human.
         self.durs = [
