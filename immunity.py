@@ -23,22 +23,22 @@ class variant(sc.prettyobj):
         variant (str/dict): name of variant, or dictionary of parameters specifying information about the variant
         days   (int/list): day(s) on which new variant is introduced
         label       (str): if variant is supplied as a dict, the name of the variant
-        n_imports   (int): the number of imports of the variant to be added
-        rescale    (bool): whether the number of imports should be rescaled with the population
+        n_imports   (int/list): the number of imports of the variant to be added
+        import_type (str/list): What type of agents should the imports affect?
 
     **Example**::
 
-        alpha    = cv.variant('alpha', days=10) # Make the alpha variant B117 active from day 10
-        p1      = cv.variant('p1', days=15) # Make variant P1 active from day 15
-        my_var  = cv.variant(variant={'rel_beta': 2.5}, label='My variant', days=20)
-        sim     = cv.Sim(variants=[alpha, p1, my_var]).run() # Add them all to the sim
-        sim2    = cv.Sim(variants=cv.variant('alpha', days=0, n_imports=20), pop_infected=0).run() # Replace default variant with alpha
+        alpha    = zn.variant('alpha', days=10) # Make the alpha variant B117 active from day 10
+        p1      = zn.variant('p1', days=15) # Make variant P1 active from day 15
+        my_var  = zn.variant(variant={'rel_beta': 2.5}, label='My variant', days=20)
+        sim     = zn.Sim(variants=[alpha, p1, my_var]).run() # Add them all to the sim
+        sim2    = zn.Sim(variants=cv.variant('alpha', days=0, n_imports=20), pop_infected=0).run() # Replace default variant with alpha
     '''
 
-    def __init__(self, variant, days, label=None, n_imports=1, rescale=True):
+    def __init__(self, variant, days, label=None, n_imports=1, import_types = 'human'):
         self.days = days # Handle inputs
         self.n_imports = int(n_imports)
-        self.rescale   = rescale
+        self.import_types = import_types
         self.index     = None # Index of the variant in the sim; set later
         self.label     = None # Variant label (used as a dict key)
         self.p         = None # This is where the parameters will be stored
@@ -46,6 +46,9 @@ class variant(sc.prettyobj):
         self.initialized = False
         return
 
+    def validate(self):
+
+        return
 
     def parse(self, variant=None, label=None):
         ''' Unpack variant information, which may be given as either a string or a dict '''
@@ -116,16 +119,15 @@ class variant(sc.prettyobj):
 
     def apply(self, sim):
         ''' Introduce new infections with this variant '''
+        #TODO: Modify for multiple import types.
         for ind in zni.find_day(self.days, sim.t, interv=self, sim=sim): # Time to introduce variant
-            susceptible_inds = znu.true(sim.people.susceptible)
-            rescale_factor = sim.rescale_vec[sim.t] if self.rescale else 1.0
-            scaled_imports = self.n_imports/rescale_factor
+            susceptible_inds = znu.true(sim.agents.human.susceptible)
+
+            scaled_imports = self.n_imports #/rescale_factor
             n_imports = sc.randround(scaled_imports) # Round stochastically to the nearest number of imports
-            if self.n_imports > 0 and n_imports == 0 and sim['verbose']:
-                msg = f'Warning: {self.n_imports:n} imported infections of {self.label} were specified on day {sim.t}, but given the rescale factor of {rescale_factor:n}, no agents were infected. Increase the number of imports or use more agents.'
-                print(msg)
+
             importation_inds = np.random.choice(susceptible_inds, n_imports, replace=False) # Can't use znu.choice() since sampling from indices
-            sim.people.infect(inds=importation_inds, layer='importation', variant=self.index)
+            sim.agents.human.infect(inds=importation_inds, layer='importation', variant=self.index)
             sim.results['n_imports'][sim.t] += n_imports
         return
 
