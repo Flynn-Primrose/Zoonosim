@@ -197,14 +197,14 @@ class Options(sc.objdict):
 
         # NOTE: Numba options are not set here, since they are set in the defaults.py file.
         # This may change in the future, but for now, they are set in the defaults.py file.
-        # optdesc.precision = 'Set arithmetic precision for Numba -- 32-bit by default for efficiency'
-        # options.precision = int(os.getenv('ZOONOSIM_PRECISION', 32))
+        optdesc.precision = 'Set arithmetic precision for Numba -- 32-bit by default for efficiency'
+        options.precision = int(os.getenv('ZOONOSIM_PRECISION', 32))
 
-        # optdesc.numba_parallel = 'Set Numba multithreading -- none, safe, full; full multithreading is ~20% faster, but results become nondeterministic'
-        # options.numba_parallel = str(os.getenv('ZOONOSIM_NUMBA_PARALLEL', 'none'))
+        optdesc.numba_parallel = 'Set Numba multithreading -- none, safe, full; full multithreading is ~20% faster, but results become nondeterministic'
+        options.numba_parallel = str(os.getenv('ZOONOSIM_NUMBA_PARALLEL', 'none'))
 
-        # optdesc.numba_cache = 'Set Numba caching -- saves on compilation time; disabling is not recommended'
-        # options.numba_cache = bool(int(os.getenv('ZOONOSIM_NUMBA_CACHE', 1)))
+        optdesc.numba_cache = 'Set Numba caching -- saves on compilation time; disabling is not recommended'
+        options.numba_cache = bool(int(os.getenv('ZOONOSIM_NUMBA_CACHE', 1)))
 
         return optdesc, options
 
@@ -285,14 +285,14 @@ class Options(sc.objdict):
                 if value in [None, 'default']:
                     value = self.orig_options[key]
                 self[key] = value
-                #numba_keys = ['precision', 'numba_parallel', 'numba_cache'] # Specify which keys require a reload
-                #if key in numba_keys:
-                #    reload_required = True
+                numba_keys = ['precision', 'numba_parallel', 'numba_cache'] # Specify which keys require a reload
+                if key in numba_keys:
+                    reload_required = True
                 if key in 'backend':
                     pl.switch_backend(value)
 
-        #if reload_required:
-        #    reload_numba()
+        if reload_required:
+            reload_numba()
 
         return
 
@@ -550,27 +550,27 @@ class Options(sc.objdict):
         return self.with_style(use=True, **kwargs)
 
 
-# def reload_numba():
-#     '''
-#     Apply changes to Numba functions -- reloading modules is necessary for
-#     changes to propagate. Not necessary to call directly if cv.options.set() is used.
+def reload_numba():
+    '''
+    Apply changes to Numba functions -- reloading modules is necessary for
+    changes to propagate. Not necessary to call directly if zn.options.set() is used.
 
-#     **Example**::
+    **Example**::
 
-#         import Zoonosim as cv
-#         zn.options.set(precision=64)
-#         sim = zn.Sim()
-#         sim.run()
-#         assert sim.agents.rel_trans.dtype == np.float64
-#     '''
-#     print('Reloading Covasim so changes take effect...')
-#     import importlib
-#     import Zoonosim as zn
-#     importlib.reload(zn.defaults)
-#     importlib.reload(zn.utils)
-#     importlib.reload(zn)
-#     print("Reload complete. Note: for some options to take effect, you may also need to delete Zoonosim's __pycache__ folder.")
-#     return
+        import Zoonosim as cv
+        zn.options.set(precision=64)
+        sim = zn.Sim()
+        sim.run()
+        assert sim.agents.rel_trans.dtype == np.float64
+    '''
+    print('Reloading Zoonosim so changes take effect...')
+    import importlib
+    import Zoonosim as zn
+    importlib.reload(zn.defaults)
+    importlib.reload(zn.utils)
+    importlib.reload(zn)
+    print("Reload complete. Note: for some options to take effect, you may also need to delete Zoonosim's __pycache__ folder.")
+    return
 
 
 def load_fonts(folder=None, rebuild=False, verbose=False, **kwargs):

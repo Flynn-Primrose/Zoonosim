@@ -4,7 +4,6 @@ Defines default values for Zoonosim.
 import sciris as sc
 import numpy as np
 import numba as nb
-import pylab as pl
 import os
 
 # Specify all externally visible functions this file defines -- other things are available as e.g. zn.defaults.default_int
@@ -26,14 +25,14 @@ nbfloat       = nb.float64
 nbint         = nb.int64
 nbbool        = nb.bool_
 
-verbose = 0.1
-warnings = 'warn' # must be one of 'warn', 'print', or 'error'
+#verbose = 0.1
+#warnings = 'warn' # must be one of 'warn', 'print', or 'error'
 
 safe_opts = [1, '1', 'safe'] 
 full_opts = [2, '2', 'full'] 
 
-numba_parallel = str(os.getenv('ZOONOSIM_NUMBA_PARALLEL', 'none'))
-numba_cache = bool(int(os.getenv('ZOONOSIM_NUMBA_CACHE', 1)))
+#numba_parallel = str(os.getenv('ZOONOSIM_NUMBA_PARALLEL', 'none'))
+#numba_cache = bool(int(os.getenv('ZOONOSIM_NUMBA_CACHE', 1)))
 
 # Define the 'overview plots', i.e. the most useful set of plots to explore different aspects of a simulation
 overview_plots = [
@@ -133,11 +132,11 @@ water_plots = sc.odict({
 
 testing_plots = sc.odict({
     'new counts': [
-        'new_tests_costum',
-        'new_diagnoses_costum',
+        'new_tests_custom',
+        'new_diagnoses_custom',
     ],
     'cumulative counts': [
-        'cum_diagnoses_costum',
+        'cum_diagnoses_custom',
     ],
 })
 
