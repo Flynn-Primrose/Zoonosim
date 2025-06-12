@@ -7,10 +7,10 @@ classes directly, e.g. zn.Sim() rather than zn.sim.Sim()
 
 # Check that requirements are met and set options
 from . import requirements
-from . import defaults as znd
+from .Options import options as zno
 
 from .version import __version__, __versiondate__, __license__
-if znd.verbose:
+if zno.verbose:
     print(__license__)
 
 

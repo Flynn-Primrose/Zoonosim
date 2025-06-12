@@ -7,7 +7,7 @@ import numba as nb
 import os
 
 # Specify all externally visible functions this file defines -- other things are available as e.g. zn.defaults.default_int
-__all__ = ['default_float', 'default_int', 'nbfloat', 'nbint', 'verbose', 'get_default_colors']
+__all__ = ['default_float', 'default_int', 'nbfloat', 'nbint', 'get_default_colors']
 
 result_float = np.float64 # Always use float64 for results, for simplicity
 
