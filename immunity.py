@@ -23,7 +23,7 @@ class variant(sc.prettyobj):
         variant (str/dict): name of variant, or dictionary of parameters specifying information about the variant
         days   (int/list): day(s) on which new variant is introduced
         label       (str): if variant is supplied as a dict, the name of the variant
-        n_imports   (int/list): the number of imports of the variant to be added
+        n_imports   (int): the number of imports of the variant to be added.
         import_type (str/list): What type of agents should the imports affect?
 
     **Example**::
@@ -35,10 +35,10 @@ class variant(sc.prettyobj):
         sim2    = zn.Sim(variants=cv.variant('alpha', days=0, n_imports=20), pop_infected=0).run() # Replace default variant with alpha
     '''
 
-    def __init__(self, variant, days, label=None, n_imports=1, import_types = 'human'):
+    def __init__(self, variant, days, label=None, n_imports=1, import_type = 'water'):
         self.days = days # Handle inputs
         self.n_imports = int(n_imports)
-        self.import_types = import_types
+        self.import_type = import_type
         self.index     = None # Index of the variant in the sim; set later
         self.label     = None # Variant label (used as a dict key)
         self.p         = None # This is where the parameters will be stored
@@ -46,9 +46,6 @@ class variant(sc.prettyobj):
         self.initialized = False
         return
 
-    def validate(self):
-
-        return
 
     def parse(self, variant=None, label=None):
         ''' Unpack variant information, which may be given as either a string or a dict '''
@@ -119,16 +116,20 @@ class variant(sc.prettyobj):
 
     def apply(self, sim):
         ''' Introduce new infections with this variant '''
-        #TODO: Modify for multiple import types.
+
         for ind in zni.find_day(self.days, sim.t, interv=self, sim=sim): # Time to introduce variant
-            susceptible_inds = znu.true(sim.agents.human.susceptible)
+            for agent_type in self.import_type if isinstance(self.import_type, (list, tuple)) else [self.import_type]: # Handle multiple import types
+                if agent_type in ['human', 'flock']:
+                    susceptible_inds = znu.true(sim.agents[agent_type].susceptible) 
+                elif agent_type in ['water', 'barn']:
+                    susceptible_inds = znu.true(sim.agents[agent_type].uncontaminated)
+                else:
+                    errormsg = f'Unknown agent type "{agent_type}" for variant importation; choices are: "human", "flock", "water", "barn"'
+                    raise ValueError(errormsg)
 
-            scaled_imports = self.n_imports #/rescale_factor
-            n_imports = sc.randround(scaled_imports) # Round stochastically to the nearest number of imports
-
-            importation_inds = np.random.choice(susceptible_inds, n_imports, replace=False) # Can't use znu.choice() since sampling from indices
-            sim.agents.human.infect(inds=importation_inds, layer='importation', variant=self.index)
-            sim.results['n_imports'][sim.t] += n_imports
+                importation_inds = np.random.choice(susceptible_inds, self.n_imports, replace=False) # Can't use znu.choice() since sampling from indices
+                sim.agents[agent_type].infect(inds=importation_inds, layer='importation', variant=self.index)
+                sim.results[f'n_{agent_type}_imports'][sim.t] += self.n_imports
         return
 
 
