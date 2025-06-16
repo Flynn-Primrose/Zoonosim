@@ -350,7 +350,10 @@ class Sim(znb.BaseSim):
         self.results['pop_symp_protection'] = init_res('Population symptomatic protection', scale=False, color=human_dcols.pop_symp_protection)
 
         # Testing
-        self.results['new_tests_custom']                 = init_res('Number of new tests administered')
+        self.results['new_PCR_tests']                 = init_res('Number of new PCR tests administered')
+        self.results['cum_PCR_tests']                 = init_res('Cumulative PCR tests administered')
+        self.results['new_RAT_tests']                 = init_res('Number of new RAT tests administered')
+        self.results['cum_RAT_tests']                 = init_res('Cumulative RAT tests administered')
         self.results['new_diagnoses_custom']      = init_res('Number of new diagnoses with custom testing module')
         self.results['cum_diagnoses_custom']      = init_res('Cumulative diagnoses with custom testing module')
 
@@ -695,12 +698,12 @@ class Sim(znb.BaseSim):
         flock_infection_levels = self.agents.update_flock_infection_levels(t=t)
         # Compute modifiers for barns
         # In principle the relative transmission and susceptibility of barns should vary based on temperature and humidity
-        # For now, I'm just setting them to 0.5
+        # For now, I'm just setting them to 1
         barn_modifiers = np.repeat(1.0, len(agents.barn)) # TODO: Implement barn modifiers based on temperature and humidity
 
         # Compute modifiers for water
         # In principle the relative transmission and susceptibility of water should vary based on temperature. 
-        # For now, I'm just setting them to 0.5
+        # For now, I'm just setting them to 1
         water_modifiers = np.repeat(1.0, len(agents.water)) # TODO: Implement water modifiers based on temperature
 
         # Set modifiers for all agent types

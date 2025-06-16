@@ -48,7 +48,8 @@ class Screening:
             fids = np.unique(agents.fid)
             fid2uid = dict()
             for fid in fids: 
-                fid2uid[fid] = np.where((agents.fid == fid) & (agents.agent_type == 'human'))[0]
+                fid2uid[fid] = agents.uid[np.where((agents.fid == fid) & (agents.agent_type == 'human'))[0]]
+
             self.fid2uid = fid2uid
             self.n_fids = len(self.fid2uid.keys())
         return

@@ -300,7 +300,8 @@ class PCR_disc(TestObj):
         self.cons_days_sk[~sk_ind] = 0  # reset everyone else
         self.cons_days_sk[test_uids] = 0  # we want every period of test-seeking to only be associated with receipt of one test
 
-        sim.results['new_tests_custom'][sim.t] += len(test_uids)
+        sim.results['new_PCR_tests'][sim.t] += len(test_uids)
+        sim.results['cum_PCR_tests'][sim.t] += sum(sim.results['new_PCR_tests'][:sim.t])
 
         return
 
@@ -473,6 +474,9 @@ class RAT_disc(TestObj):
         self.cons_days_sk[sk_ind] += 1
         self.cons_days_sk[~sk_ind] = 0  # reset everyone else
         self.cons_days_sk[test_uids] = 0  # we want every period of test-seeking to only be associated with receipt of one test
+
+        sim.results['new_RAT_tests'][sim.t] += len(test_uids)
+        sim.results['cum_RAT_tests'][sim.t] += sum(sim.results['new_RAT_tests'][:sim.t])
 
     def finalize(self, sim):
         '''

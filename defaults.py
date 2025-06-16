@@ -17,7 +17,7 @@ result_float = np.float64 # Always use float64 for results, for simplicity
 #nbfloat       = nb.float32
 #nbint         = nb.int32
 
-default_str = str # Use str for strings, for simplicity
+default_str = object # 
 default_float = np.float64
 default_int   = np.int64
 default_bool  = np.bool_
@@ -132,10 +132,13 @@ water_plots = sc.odict({
 
 testing_plots = sc.odict({
     'new counts': [
-        'new_tests_custom',
+        'new_RAT_tests',
+        'new_PCR_tests',
         'new_diagnoses_custom',
     ],
     'cumulative counts': [
+        'cum_RAT_tests',
+        'cum_PCR_tests',
         'cum_diagnoses_custom',
     ],
 })

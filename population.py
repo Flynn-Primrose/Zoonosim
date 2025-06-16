@@ -196,7 +196,8 @@ def make_popdict(sim, **kwargs):
             'water':popdict['water_uids'][water_index[farm]],
         }
         present_uids = np.concatenate((contactdict[farm]['humans'], contactdict[farm]['barns'], contactdict[farm]['flocks'], [contactdict[farm]['water']])) # Combine all uids for this farm
-        popdict['fid'][present_uids] = farm_ids[farm] # Assign the farm ID to the agents in this farm
+        present_inds = np.isin(popdict['uid'], present_uids) # Get the indices of the agents in this farm
+        popdict['fid'][present_inds] =  farm_ids[farm] # Assign the farm ID to the agents in this farm
         human_index += n_humans_by_farm[farm]
         barn_index += n_barns_by_farm[farm]
         flock_index += n_flocks_by_farm[farm]

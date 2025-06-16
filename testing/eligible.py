@@ -166,12 +166,18 @@ def work(sim, base_testobj, p=0.10):
     '''
     if sim.t == 0:
         # Identify which workplaces are chosen to do mandatory testing, and save the workers
-        test_fid = np.random.choice(len(base_testobj.fid2uid.keys()), int(base_testobj.n_fids * p), replace=False)
-        #print(base_testobj.fid2uid.keys())
+        test_fid = np.random.choice(list(base_testobj.fid2uid.keys()), int(base_testobj.n_fids * p), replace=False)
+        #print(base_testobj.fid2uid)
         #print(f'Workplaces selected for mandatory testing: {test_fid}')
         worker_uids = np.array([], dtype=int)
         for fid in test_fid:
-            worker_uids = np.union1d(worker_uids, base_testobj.fid2uid[fid]).astype(int)
+            #worker_uids = np.union1d(worker_uids, base_testobj.fid2uid[fid]).astype(int) 
+            try: # For debugging purposes, in case fid2uid does not contain the fid
+                worker_uids = np.union1d(worker_uids, base_testobj.fid2uid[fid]).astype(int)
+                print(f'fid {fid} has {len(base_testobj.fid2uid[fid])} workers.')
+            except KeyError:
+                print(f'fid {fid} not found in fid2uid mapping. Skipping this workplace.')
+                print(f'fid2uid keys: {base_testobj.fid2uid.keys()}')
         
         worker_test_dates = np.random.choice(7, len(worker_uids))
 
@@ -181,6 +187,7 @@ def work(sim, base_testobj, p=0.10):
     # Remove anyone who died
     base_testobj.wuid_td = base_testobj.wuid_td[~sim.agents.human.dead[base_testobj.wuid]]  # Order matters
     base_testobj.wuid = base_testobj.wuid[~sim.agents.human.dead[base_testobj.wuid]]
+    #print(f'workers selected for mandatory testing: {base_testobj.wuid}') # For debugging purposes
 
     # Same workplaces, and thus workers, test each time
     return set(base_testobj.wuid[base_testobj.wuid_td == sim.t % 7].tolist())
