@@ -171,13 +171,13 @@ def work(sim, base_testobj, p=0.10):
         #print(f'Workplaces selected for mandatory testing: {test_fid}')
         worker_uids = np.array([], dtype=int)
         for fid in test_fid:
-            #worker_uids = np.union1d(worker_uids, base_testobj.fid2uid[fid]).astype(int) 
-            try: # For debugging purposes, in case fid2uid does not contain the fid
-                worker_uids = np.union1d(worker_uids, base_testobj.fid2uid[fid]).astype(int)
-                print(f'fid {fid} has {len(base_testobj.fid2uid[fid])} workers.')
-            except KeyError:
-                print(f'fid {fid} not found in fid2uid mapping. Skipping this workplace.')
-                print(f'fid2uid keys: {base_testobj.fid2uid.keys()}')
+            worker_uids = np.union1d(worker_uids, base_testobj.fid2uid[fid]).astype(int) 
+            # try: # For debugging purposes, in case fid2uid does not contain the fid
+            #     worker_uids = np.union1d(worker_uids, base_testobj.fid2uid[fid]).astype(int)
+            #     print(f'fid {fid} has {len(base_testobj.fid2uid[fid])} workers.')
+            # except KeyError:
+            #     print(f'fid {fid} not found in fid2uid mapping. Skipping this workplace.')
+            #     print(f'fid2uid keys: {base_testobj.fid2uid.keys()}')
         
         worker_test_dates = np.random.choice(7, len(worker_uids))
 

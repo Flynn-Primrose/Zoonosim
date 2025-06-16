@@ -491,7 +491,7 @@ class RAT_disc(TestObj):
 # ---------
 def find_seed_infections(sim):
     seed_infections = set()
-    for entry in sim.people.infection_log:
+    for entry in sim.agents.infection_log:
         if entry['layer'] == 'seed_infection':
             seed_infections.add(entry['target'])
     return np.array(list(seed_infections))
