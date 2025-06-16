@@ -166,13 +166,13 @@ def make_popdict(sim, **kwargs):
     n_flocks = sum(n_flocks_by_farm)
 
 
-    
 
     n_agents = n_humans + n_barns + n_flocks + n_water
 
     popdict['uid'] = np.arange(n_agents, dtype=znd.default_int) # Create a list of unique IDs for each agent
-    popdict['fid'] = np.empty(n_agents, dtype=znd.default_int) # Create a list of farm IDs for each agent
+    popdict['fid'] = np.zeros(n_agents, dtype=znd.default_int) # Create a list of farm IDs for each agent
     popdict['agent_type'] = np.repeat(['human', 'barn', 'flock', 'water'], [n_humans, n_barns, n_flocks, n_water]) # Create a list of agent types
+    
     popdict['human_uids'] = popdict['uid'][popdict['agent_type'] == 'human']
     popdict['barn_uids'] = popdict['uid'][popdict['agent_type'] == 'barn']
     popdict['flock_uids'] = popdict['uid'][popdict['agent_type'] == 'flock']
@@ -187,7 +187,7 @@ def make_popdict(sim, **kwargs):
     flock2barn = {} # Dictionary to hold the mapping of flocks to barns
     barn2water = {} # Dictionary to hold the mapping of barns to water sources
 
-
+ 
     for farm in range(n_farms):
         contactdict[farm] = {
             'humans':popdict['human_uids'][human_index:(human_index + n_humans_by_farm[farm])],
@@ -195,7 +195,7 @@ def make_popdict(sim, **kwargs):
             'flocks':popdict['flock_uids'][flock_index:(flock_index + n_flocks_by_farm[farm])],
             'water':popdict['water_uids'][water_index[farm]],
         }
-        present_uids = np.concatenate((contactdict[farm]['humans'], contactdict[farm]['barns'], contactdict[farm]['flocks'], [contactdict[farm]['water']])) # Combine all uids for this farm
+        present_uids = np.concatenate((contactdict[farm]['humans'], contactdict[farm]['barns'], contactdict[farm]['flocks'])) # Combine all uids for this farm excluding water sources as they are shared among multiple farms
         present_inds = np.isin(popdict['uid'], present_uids) # Get the indices of the agents in this farm
         popdict['fid'][present_inds] =  farm_ids[farm] # Assign the farm ID to the agents in this farm
         human_index += n_humans_by_farm[farm]

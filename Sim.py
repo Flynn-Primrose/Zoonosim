@@ -121,18 +121,29 @@ class Sim(znb.BaseSim):
             kwargs (dict): passed to init_agents
         '''
         self.t = 0  # The current time index
+
         self.validate_pars() # Ensure parameters have valid values
+
         self.set_seed() # Reset the random seed before the population is created
+
         self.init_variants() # Initialize the variants
+ 
         self.init_immunity() # initialize information about immunity (if use_waning=True)
+
         self.init_results() # After initializing the variant, create the results structure
+
 
         self.init_agents(reset=reset, init_infections=init_infections, **kwargs)
 
+
         self.init_interventions()  # Initialize the interventions...
+
         self.init_testobjs() # ...and the testing objects...
+
         self.init_analyzers() # ...and the analyzers...
+
         self.validate_layer_pars() # Once the population is initialized, validate the layer parameters again
+
         self.set_seed() # Reset the random seed again so the random number stream is consistent
 
         self.initialized   = True
@@ -468,12 +479,11 @@ class Sim(znb.BaseSim):
             print(f'Initializing sim{resetstr} with {self["n_farms"]:0n} farms for {self["n_days"]} days')
         if self.popfile and self.popdict is None: # If there's a popdict, we initialize it via cvpop.make_people()
             self.load_population(init_agents=False)
-
+        
         # Actually make the people
         self.agents = znpop.make_agents(self, reset=reset, verbose=verbose, **kwargs)
         self.agents.initialize(sim_pars=self.pars) # Fully initialize the people
         self.reset_layer_pars(force=False) # Ensure that layer keys match the loaded population
-
         if init_infections:
             self.init_infections(verbose=verbose)
 

@@ -45,7 +45,7 @@ class Screening:
 
     def initialize(self, agents): 
         if not(agents is None):
-            fids = np.unique(agents.fid)
+            fids = np.unique(agents.fid[~np.isnan(agents.fid)]) # get the unique farm IDs from the agents
             fid2uid = dict()
             for fid in fids: 
                 fid2uid[fid] = agents.uid[np.where((agents.fid == fid) & (agents.agent_type == 'human'))[0]]
