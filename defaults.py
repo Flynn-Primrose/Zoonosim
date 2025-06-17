@@ -345,8 +345,7 @@ def get_default_colors(agent_type):
             c.quarantined = '#a6d854' # 
             c.exposed_by_variant = '#ffd92f' # 
             c.infectious_by_variant = '#e5c494' # 
-        case 'barn':
-            
+        case 'barn': 
             c.uncontaminated = '#1b9e77' # 
             c.contaminated = '#d95f02' # 
             c.composting = '#7570b3'
@@ -358,8 +357,14 @@ def get_default_colors(agent_type):
             c.uncontaminated = '#fbb4ae' # 
             c.contaminated = '#b3cde3' # 
             c.contaminated_by_variant = '#ccebc5' # 
+        case 'misc':
+            c.misc1 = '#e41a1c'
+            c.misc2 = '#377eb8'
+            c.misc3 = '#4daf4a'
+            c.misc4 = '#984ea3'
+            c.misc5 = '#ff7f00'
+            c.misc6 = '#ffff33'
         case 'default':
-            # Spare colours '#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#ffff33'
             c.default = '#000000' # Black
         case _:
             errormsg = f'Unknown agent type "{agent_type}" for get_default_colors()'

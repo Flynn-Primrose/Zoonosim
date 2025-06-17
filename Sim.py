@@ -307,6 +307,7 @@ class Sim(znb.BaseSim):
         flock_dcols = znd.get_default_colors('flock') # Get default flock colors
         barn_dcols  = znd.get_default_colors('barn')  # Get default barn colors
         water_dcols = znd.get_default_colors('water') # Get default water colors
+        misc_dcols = znd.get_default_colors('misc') # Get default misc colors
 
         # Flows and cumulative flows
 
@@ -361,12 +362,12 @@ class Sim(znb.BaseSim):
         self.results['pop_symp_protection'] = init_res('Population symptomatic protection', scale=False, color=human_dcols.pop_symp_protection)
 
         # Testing
-        self.results['new_PCR_tests']                 = init_res('Number of new PCR tests administered')
-        self.results['cum_PCR_tests']                 = init_res('Cumulative PCR tests administered')
-        self.results['new_RAT_tests']                 = init_res('Number of new RAT tests administered')
-        self.results['cum_RAT_tests']                 = init_res('Cumulative RAT tests administered')
-        self.results['new_diagnoses_custom']      = init_res('Number of new diagnoses with custom testing module')
-        self.results['cum_diagnoses_custom']      = init_res('Cumulative diagnoses with custom testing module')
+        self.results['new_PCR_tests']                 = init_res('Number of new PCR tests administered', color=misc_dcols.misc1)
+        self.results['cum_PCR_tests']                 = init_res('Cumulative PCR tests administered', color=misc_dcols.misc2)
+        self.results['new_RAT_tests']                 = init_res('Number of new RAT tests administered', color=misc_dcols.misc3)
+        self.results['cum_RAT_tests']                 = init_res('Cumulative RAT tests administered', color=misc_dcols.misc4)
+        self.results['new_diagnoses_custom']      = init_res('Number of new diagnoses with custom testing module', color=misc_dcols.misc5)
+        self.results['cum_diagnoses_custom']      = init_res('Cumulative diagnoses with custom testing module', color=misc_dcols.misc6)
 
         # Handle variants
 
