@@ -308,53 +308,58 @@ def get_default_colors(agent_type):
 
     Colour palette: 
     '''
+
+
     c = sc.objdict()
     match agent_type.lower():
         case 'human':
-            c.susceptible = "#0004FFFF" # Green
-            c.exposed = "#FFF700FF" # 
-            c.symptomatic = "#00FF0067" # 
-            c.infectious = "#00FF00" # 
-            c.infections = '#00FF00' # 
-            c.reinfections = "#00FF0033" # 
-            c.severe = "#FF0000" # 
-            c.recovered = "#00F2FF" # 
-            c.dead = "#00FF0000" # 
-            c.known_dead = '#00FF0000' # 
-            c.pop_nabs = "#CC00FFFF" #
-            c.pop_protection = "#CC00FF55" #
-            c.pop_symp_protection = "#CC00FFAA" #
-            c.diagnosed = '#00FF0000' # 
-            c.tested = "#00FF0000" # 
-            c.quarantined = "#00FF0000" # 
-            c.vaccinated = "#00FF0000" # 
-            c.doses = "#00FF0000" # 
-            c.exposed_by_variant = "#FFFB00FF" # 
-            c.infectious_by_variant = '#00FF001F' # 
-            c.infections_by_variant = '#00FF002F' # 
-            c.symptomatic_by_variant = '#00FF0067' # 
-            c.severe_by_variant = '#00FF0031' # 
+            # Spare colors are '#fb8072', '#80b1d3'
+            c.susceptible = '#1f77b4' # Green
+            c.exposed = '#aec7e8' # 
+            c.symptomatic = '#ff7f0e' # 
+            c.infectious = '#ffbb78' # 
+            c.infections = '#2ca02c' # 
+            c.reinfections = '#98df8a' # 
+            c.severe = '#d62728' # 
+            c.recovered = '#ff9896' # 
+            c.dead = '#9467bd' # 
+            c.known_dead = '#c5b0d5' # 
+            c.pop_nabs = '#8c564b' #
+            c.pop_protection = '#c49c94' #
+            c.pop_symp_protection = '#e377c2' #
+            c.diagnosed = '#f7b6d2' # 
+            c.tested = '#7f7f7f' # 
+            c.quarantined = '#c7c7c7' # 
+            c.vaccinated = '#bcbd22' # 
+            c.doses = '#dbdb8d' # 
+            c.exposed_by_variant = '#17becf' # 
+            c.infectious_by_variant = '#9edae5' # 
+            c.infections_by_variant = '#8dd3c7' # 
+            c.symptomatic_by_variant = '#ffffb3' # 
+            c.severe_by_variant = '#bebada' # 
         case 'flock':
-            c.susceptible = "#FFFB00" # 
-            c.exposed = "#FF8000FF" # Yellow
-            c.infectious = "#FFEE00FF" # 
-            c.suspected = "#FF00BF" # 
-            c.quarantined = "#0011FF" # 
-            c.exposed_by_variant = "#FF8800FF" # 
-            c.infectious_by_variant = "#FFFF00FF" # 
+            c.susceptible = '#66c2a5' # 
+            c.exposed = '#fc8d62' # Yellow
+            c.infectious = '#8da0cb' # 
+            c.suspected = '#e78ac3' # 
+            c.quarantined = '#a6d854' # 
+            c.exposed_by_variant = '#ffd92f' # 
+            c.infectious_by_variant = '#e5c494' # 
         case 'barn':
-            c.uncontaminated = "#33FF00" # 
-            c.contaminated = "#FF0000FF" # Red
-            c.composting = "#D18A07BA"
-            c.composted = "#D18A07FF"
-            c.cleaning = "#1D20ACDA"
-            c.cleaned = "#1D20ACFF"
-            c.contaminated_by_variant = "#FF0D00FF" # Red
+            
+            c.uncontaminated = '#1b9e77' # 
+            c.contaminated = '#d95f02' # 
+            c.composting = '#7570b3'
+            c.composted = '#e7298a'
+            c.cleaning = '#66a61e'
+            c.cleaned = '#e6ab02'
+            c.contaminated_by_variant = '#a6761d' # 
         case 'water':
-            c.uncontaminated = "#00FBFF" # 
-            c.contaminated = "#0004FF84" # 
-            c.contaminated_by_variant = "#0004FF1F" # 
+            c.uncontaminated = '#fbb4ae' # 
+            c.contaminated = '#b3cde3' # 
+            c.contaminated_by_variant = '#ccebc5' # 
         case 'default':
+            # Spare colours '#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#ffff33'
             c.default = '#000000' # Black
         case _:
             errormsg = f'Unknown agent type "{agent_type}" for get_default_colors()'
