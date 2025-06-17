@@ -399,8 +399,7 @@ class Humans(Subroster):
         inds = self.check_inds(self.infectious, self.date_infectious, filter_inds=self.is_exp)
         self.infectious[inds] = True
         self.infectious_variant[inds] = self.exposed_variant[inds]
-        self.flows['new_infections'] += len(inds) # Record new infections
-        self.flows['new_reinfections'] += len(znu.defined(self.date_recovered[inds])) # Record reinfections
+        
 
         for variant in range(self.pars['n_variants']):
             this_variant_inds = znu.itrue(self.infectious_variant[inds] == variant, inds)
@@ -557,8 +556,9 @@ class Humans(Subroster):
         self.exposed_variant[inds] = variant
         self.exposed_by_variant[variant, inds] = True
         self.flows['new_exposed']   += len(inds)
-        #self.flows['new_reinfections'] += len(znu.defined(self.date_recovered[inds])) # Record reinfections
-        #self.flows_variant['new_infections_by_variant'][variant] += len(inds)
+        self.flows['new_infections'] += len(inds) # Record new infections
+        self.flows['new_reinfections'] += len(znu.defined(self.date_recovered[inds])) # Record reinfections
+        self.flows_variant['new_infections_by_variant'][variant] += len(inds)
 
         # Record transmissions
         for i, target in enumerate(inds):
