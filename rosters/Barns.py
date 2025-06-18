@@ -267,11 +267,11 @@ class Barns(Subroster):
 
         # Deal with variant parameters
         variant_keys = ['rel_dur_contamination']
-        contamination_pars = {k:self.pars[k] for k in variant_keys}
+        contamination_pars = {k:self.pars[k]['barn'] for k in variant_keys}
         variant_label = self.pars['variant_map'][variant]
         if variant:
             for k in variant_keys:
-                contamination_pars[k] *= self.pars['variant_pars']['barn'][variant_label][k]
+                contamination_pars[k] *= self.pars['variant_pars'][variant_label]['barn'][k]
 
         n_infections = len(inds)
         durpars      = self.pars['dur']['barn']

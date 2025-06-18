@@ -36,18 +36,18 @@ full_opts = [2, '2', 'full']
 
 # Define the 'overview plots', i.e. the most useful set of plots to explore different aspects of a simulation
 overview_plots = [
-    'new_human_infections',
-    'new_flock_infectious',
-    'new_barn_contaminated',
-    'new_water_contaminated',
+    'cum_human_infections',
+    'cum_flock_infectious',
+    'cum_barn_contaminated',
+    'cum_water_contaminated',
 ]
 
-overview_variant_plots = [
-    'new_human_infections_by_variant',
-    'new_flock_infections_by_variant',
-    'new_barn_contaminated_by_variant',
-    'new_water_contaminated_by_variant',
-]
+overview_variant_plots = sc.odict({
+    'Human Infections by Variant' : ['new_human_infections_by_variant'],
+    'Flock Infections by Variant' : ['new_flock_infections_by_variant'],
+    'Contaminated Barns by Variant': ['new_barn_contaminated_by_variant'],
+    'Contaminated Water by Variant' : ['new_water_contaminated_by_variant'],
+})
 
 human_plots = sc.odict({
     'Total counts': [

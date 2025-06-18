@@ -132,7 +132,26 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
 
 
     # Variant-specific disease transmission parameters. By default, these are set up for a single variant, but can all be modified for multiple variants
-    pars['rel_beta']        = 1.0 # Relative transmissibility varies by variant
+    pars['rel_beta']        = dict(
+        human = 1.0, # Relative transmissibility for humans
+        flock = 1.0, # Relative transmissibility for flocks
+        barn  = 1.0, # Relative transmissibility for barns
+        water = 1.0, # Relative transmissibility for water
+    ) # Relative transmissibility varies by variant
+    # Variant-specific disease severity parameters. By default, these are set up for a single variant, but can all be modified for multiple variants
+    pars['rel_symp_prob'] = dict(
+        human = 1.0, # Relative probability of symptomatic infection for humans
+        flock = 1.0, # Relative probability of symptomatic infection for flocks
+        )
+    pars['rel_severe_prob'] = dict(human = 1.0)
+    pars['rel_death_prob'] = dict(
+        human = 1.0,# Relative probability of death for humans
+        flock = 1.0,
+        ) 
+    pars['rel_dur_contamination'] = dict(
+        barn = 1.0, # Relative duration of contamination for barns
+        water = 1.0, # Relative duration of contamination for water
+        ) 
 
     # Duration Parameters
 
@@ -167,10 +186,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
         'contamination': dict(dist='lognormal_int', par1=14, par2=5.0), # Duration of contamination. NOTE: This data is just a guess, and should be replaced with real data
     }
 
-    # Severity pars
-    pars['rel_symp_prob'] = 1.00
-    pars['rel_severe_prob'] = 1.00
-    pars['rel_death_prob'] = 1.00
+
 
 
     # Prognoses
@@ -382,56 +398,47 @@ def get_variant_pars(default=False, variant=None):
     Define the default parameters for the different variants
     '''
     pars = dict(
-        human = dict(
+        
 
-            HPAI = dict(
+        HPAI = dict(
+            human = dict(
                 rel_beta        = 1.0, # Default values
                 rel_symp_prob   = 1.0, # Default values
                 rel_severe_prob = 1.0, # Default values
                 rel_death_prob  = 1.0, # Default values
             ),
+            flock = dict(
+                rel_beta        = 1.0, # Default values
+                rel_symp_prob   = 1.0, # Default values
+                rel_death_prob  = 1.0, # Default values
+            ),
+            barn = dict(
+                rel_beta        = 1.0, # Default values
+                rel_dur_contamination = 1.0, # Default values
+            ),
+            water = dict(
+                rel_beta        = 1.0, # Default values
+                rel_dur_contamination = 1.0, # Default values
+            ),
+        ),
 
-            LPAI = dict(
+        LPAI = dict(
+            human = dict(
                 rel_beta        = 1.0, # guessed values
                 rel_symp_prob   = 0.1, # guess but LPAI is less severe than HPAI
                 rel_severe_prob = 0.25, # guess but LPAI is less severe than HPAI
                 rel_death_prob  = 0.25, # guess but LPAI is less severe than HPAI
             ),
-        ),
-        flock = dict(
-
-            HPAI = dict(
-                rel_beta        = 1.0, # Default values
-                rel_symp_prob   = 1.0, # Default values
-                rel_death_prob  = 1.0, # Default values
-            ),
-
-            LPAI = dict(
+            flock = dict(
                 rel_beta        = 1.0, # guessed values
                 rel_symp_prob   = 0.25, # guess but LPAI is less severe than HPAI
                 rel_death_prob  = 0.05, # guess but LPAI is less severe than HPAI
             ),
-        ),
-        barn = dict(
-
-            HPAI = dict(
-                rel_beta        = 1.0, # Default values
-                rel_dur_contamination = 1.0, # Default values
-            ),
-
-            LPAI = dict(
+            barn = dict(
                 rel_beta        = 1.0, # guessed values
                 rel_dur_contamination = 0.5, # guess but LPAI is less severe than HPAI
             ),
-        ),
-        water = dict(
-
-            HPAI = dict(
-                rel_beta        = 1.0, # Default values
-                rel_dur_contamination = 1.0, # Default values
-            ),
-
-            LPAI = dict(
+            water = dict(
                 rel_beta        = 1.0, # guessed values
                 rel_dur_contamination = 0.5, # guess but LPAI is less severe than HPAI
             ),

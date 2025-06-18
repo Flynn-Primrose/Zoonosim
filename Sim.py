@@ -766,7 +766,10 @@ class Sim(znb.BaseSim):
             znimm.check_immunity(agents.human, variant) # NOTE: Only affects human agents
 
             # Deal with variant parameters
-            rel_beta = self['rel_beta']
+            human_rel_beta = self['rel_beta']['human']
+            flock_rel_beta = self['rel_beta']['flock']
+            barn_rel_beta  = self['rel_beta']['barn']
+            water_rel_beta = self['rel_beta']['water']
             # TODO: This should be variable by variant
             asymp_factor = np.repeat([znd.default_float(self['asymp_factor']['human']),
                                   znd.default_float(self['asymp_factor']['flock']), 
@@ -775,10 +778,11 @@ class Sim(znb.BaseSim):
                                   [len(agents.human), len(agents.flock), len(agents.barn), len(agents.water)])
             if variant:
                 variant_label = self.pars['variant_map'][variant]
-                human_rel_beta = rel_beta * self['variant_pars']['human'][variant_label]['rel_beta']
-                flock_rel_beta = rel_beta * self['variant_pars']['flock'][variant_label]['rel_beta']
-                barn_rel_beta = rel_beta * self['variant_pars']['barn'][variant_label]['rel_beta']
-                water_rel_beta = rel_beta * self['variant_pars']['water'][variant_label]['rel_beta']
+                human_rel_beta = human_rel_beta * self['variant_pars'][variant_label]['human']['rel_beta']
+
+                flock_rel_beta = flock_rel_beta * self['variant_pars'][variant_label]['flock']['rel_beta']
+                barn_rel_beta = barn_rel_beta * self['variant_pars'][variant_label]['barn']['rel_beta']
+                water_rel_beta = water_rel_beta * self['variant_pars'][variant_label]['water']['rel_beta']
             beta = np.repeat([znd.default_float(self['beta']['human']*human_rel_beta),
                               znd.default_float(self['beta']['flock']*flock_rel_beta), 
                               znd.default_float(self['beta']['barn']*barn_rel_beta), 

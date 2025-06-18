@@ -2,8 +2,8 @@
 
 import Zoonosim as zn
 
-hpai = zn.variant(variant = 'HPAI', days = 0, n_imports = 2 , import_type = ['water', 'barn'])
-lpai = zn.variant(variant = 'LPAI', days = 0, n_imports = 10, import_type = ['water', 'barn'])
+hpai = zn.variant(variant = 'HPAI', days = 0, n_imports = 1 , import_type = ['water', 'barn'])
+lpai = zn.variant(variant = 'LPAI', days = 0, n_imports = 5, import_type = ['water', 'barn'])
 
 new_pars = {}
 

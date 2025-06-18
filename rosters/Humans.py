@@ -530,11 +530,11 @@ class Humans(Subroster):
 
         # Deal with variant parameters
         variant_keys = ['rel_symp_prob', 'rel_severe_prob', 'rel_death_prob']
-        infect_pars = {k:self.pars[k] for k in variant_keys}
+        infect_pars = {k:self.pars[k]['human'] for k in variant_keys}
         variant_label = self.pars['variant_map'][variant]
         if variant:
             for k in variant_keys:
-                infect_pars[k] *= self.pars['variant_pars']['human'][variant_label][k]
+                infect_pars[k] *= self.pars['variant_pars'][variant_label]['human'][k]
 
         n_infections = len(inds)
         durpars      = self.pars['dur']['human']
