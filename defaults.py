@@ -314,7 +314,7 @@ def get_default_colors(agent_type):
     match agent_type.lower():
         case 'human':
             # Spare colors are '#fb8072', '#80b1d3'
-            c.susceptible = '#1f77b4' # Green
+            c.susceptible = '#1f77b4' # 
             c.exposed = '#aec7e8' # 
             c.symptomatic = '#ff7f0e' # 
             c.infectious = '#ffbb78' # 
@@ -339,7 +339,7 @@ def get_default_colors(agent_type):
             c.severe_by_variant = '#bebada' # 
         case 'flock':
             c.susceptible = '#66c2a5' # 
-            c.exposed = '#fc8d62' # Yellow
+            c.exposed = '#fc8d62' # 
             c.infectious = '#8da0cb' # 
             c.suspected = '#e78ac3' # 
             c.quarantined = '#a6d854' # 

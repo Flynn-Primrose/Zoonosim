@@ -266,7 +266,12 @@ class Barns(Subroster):
             source = source[keep]
 
         # Deal with variant parameters
+        variant_keys = ['rel_dur_contamination']
+        contamination_pars = {k:self.pars[k] for k in variant_keys}
         variant_label = self.pars['variant_map'][variant]
+        if variant:
+            for k in variant_keys:
+                contamination_pars[k] *= self.pars['variant_pars']['barn'][variant_label][k]
 
         n_infections = len(inds)
         durpars      = self.pars['dur']['barn']
@@ -286,7 +291,7 @@ class Barns(Subroster):
             self.infection_log.append(entry)
 
         # Calculate how long before this person can infect other people
-        self.dur_contamination[inds] = znu.sample(**durpars['contamination'], size=n_infections)
+        self.dur_contamination[inds] = znu.sample(**durpars['contamination'], size=n_infections)*contamination_pars['rel_dur_contamination']
         self.date_contaminated[inds] = self.t
         self.date_uncontaminated[inds] = self.dur_contamination[inds] + self.t
 

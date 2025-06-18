@@ -718,7 +718,7 @@ class Sim(znb.BaseSim):
         water_modifiers = np.repeat(1.0, len(agents.water)) # TODO: Implement water modifiers based on temperature
 
         # Set modifiers for all agent types
-        # NOTE: Currently barn and water have no modifiers, I'm setting them to 0.5 for now.
+        # NOTE: Currently barn and water have no modifiers, I'm setting them to 1.0 for now.
         misc_modifiers = np.concatenate((human_viral_load, flock_infection_levels, barn_modifiers, water_modifiers)) 
 
 
@@ -775,11 +775,14 @@ class Sim(znb.BaseSim):
                                   [len(agents.human), len(agents.flock), len(agents.barn), len(agents.water)])
             if variant:
                 variant_label = self.pars['variant_map'][variant]
-                rel_beta *= self['variant_pars'][variant_label]['rel_beta']
-            beta = np.repeat([znd.default_float(self['beta']['human']*rel_beta),
-                              znd.default_float(self['beta']['flock']*rel_beta), 
-                              znd.default_float(self['beta']['barn']*rel_beta), 
-                              znd.default_float(self['beta']['water']*rel_beta)], 
+                human_rel_beta = rel_beta * self['variant_pars']['human'][variant_label]['rel_beta']
+                flock_rel_beta = rel_beta * self['variant_pars']['flock'][variant_label]['rel_beta']
+                barn_rel_beta = rel_beta * self['variant_pars']['barn'][variant_label]['rel_beta']
+                water_rel_beta = rel_beta * self['variant_pars']['water'][variant_label]['rel_beta']
+            beta = np.repeat([znd.default_float(self['beta']['human']*human_rel_beta),
+                              znd.default_float(self['beta']['flock']*flock_rel_beta), 
+                              znd.default_float(self['beta']['barn']*barn_rel_beta), 
+                              znd.default_float(self['beta']['water']*water_rel_beta)], 
                               [len(agents.human), len(agents.flock), len(agents.barn), len(agents.water)])
             
 

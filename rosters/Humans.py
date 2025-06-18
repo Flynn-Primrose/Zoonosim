@@ -534,7 +534,7 @@ class Humans(Subroster):
         variant_label = self.pars['variant_map'][variant]
         if variant:
             for k in variant_keys:
-                infect_pars[k] *= self.pars['variant_pars'][variant_label][k]
+                infect_pars[k] *= self.pars['variant_pars']['human'][variant_label][k]
 
         n_infections = len(inds)
         durpars      = self.pars['dur']['human']
