@@ -248,7 +248,7 @@ class biography(Analyzer):
             errormsg = f'At least one of agent_type or uid arguments must be supplied.'
             raise ValueError(errormsg)
         elif self.uid is None:
-            self.uid = np.random.choose(sim.agents[self.agent_type]['uid'])
+            self.uid = np.random.choice(sim.agents[self.agent_type]['uid'])
         elif self.agent_type is None:
             self.agent_type = sim.agents.agent_type[sim.agents.uid == self.uid]
         else:
@@ -263,8 +263,10 @@ class biography(Analyzer):
         for ind in zni.find_day(self.days, sim.t):
             date = self.dates[ind]
             bio_record = {}
-            for state in sim.agents[self.agent_type]['meta']['all_states']:
-                bio_record['state'] = sim.agents[self.agent_type][state][sim.agents[self.agent_type]['uid'] == self.uid]
+            print(sim.agents[self.agent_type]['uid'] == self.uid) # For dubugging
+            agent_ind = np.where(sim.agents[self.agent_type]['uid'] == self.uid)[0]
+            for state in sim.agents[self.agent_type]['meta'].all_states:
+                bio_record['state'] = sim.agents[self.agent_type][state][agent_ind]
             self.bio[date] = bio_record 
         return
     
