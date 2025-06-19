@@ -4,10 +4,11 @@ but which are useful for particular investigations.
 '''
 
 import sciris as sc
+import numpy as np
 from . import interventions as zni
 
 
-__all__ = ['Analyzer', 'snapshot']
+__all__ = ['Analyzer', 'snapshot', 'biography']
 
 
 class Analyzer(sc.prettyobj):
@@ -208,3 +209,85 @@ class snapshot(Analyzer):
             errormsg = f'Could not find snapshot date {date} (day {day}): choices are {dates}'
             raise sc.KeyNotFoundError(errormsg)
         return snapshot
+    
+class biography(Analyzer):
+    '''
+    Analyzer that records the state of a given agent at given points of time. To retrieve them, you can either access
+    the dictionary directly, or use the get() method.
+
+    Args:
+        uid    (Int): the uid of the agent to be tracked
+        days   (list): list of ints/strings/date objects, the days on which to take the snapshot
+        args   (list): additional day(s)
+        die    (bool): whether or not to raise an exception if a date is not found (default true)
+        kwargs (dict): passed to Analyzer()
+    '''
+    def __init__(self, uid, agent_type, days, *args, die=True, **kwargs):
+        super().__init__(**kwargs) # Initialize the Analyzer object
+        days = sc.promotetolist(days) # Combine multiple days
+        days.extend(args) # Include additional arguments, if present
+        self.uid       = uid
+        self.agent_type= agent_type
+        self.days      = days # Converted to integer representations
+        self.die       = die  # Whether or not to raise an exception
+        self.dates     = None # String representations
+        self.start_day = None # Store the start date of the simulation
+        self.bio = sc.odict() # Store the actual snapshots
+        return
+    
+    def initialize(self, sim):
+        self.start_day = sim['start_day'] # Store the simulation start day
+        self.days, self.dates = zni.process_days(sim, self.days, return_dates=True) # Ensure days are in the right format
+        max_bio_day = self.days[-1]
+        max_sim_day = sim.day(sim['end_day'])
+        if max_bio_day > max_sim_day: # pragma: no cover
+            errormsg = f'Cannot create biography for {self.dates[-1]} (day {max_bio_day}) because the simulation ends on {self.end_day} (day {max_sim_day})'
+            raise ValueError(errormsg)
+        
+        if self.agent_type is None and self.uid is None:
+            errormsg = f'At least one of agent_type or uid arguments must be supplied.'
+            raise ValueError(errormsg)
+        elif self.uid is None:
+            self.uid = np.random.choose(sim.agents[self.agent_type]['uid'])
+        elif self.agent_type is None:
+            self.agent_type = sim.agents.agent_type[sim.agents.uid == self.uid]
+        else:
+            if self.agent_type != sim.agents.agent_type[sim.agents.uid == self.uid]:
+                errormsg = f'The specified agent type is inconsistent with the specified uid.'
+                raise ValueError(errormsg)
+            
+        self.initialized = True
+        return
+    
+    def apply(self, sim):
+        for ind in zni.find_day(self.days, sim.t):
+            date = self.dates[ind]
+            bio_record = {}
+            for state in sim.agents[self.agent_type]['meta']['all_states']:
+                bio_record['state'] = sim.agents[self.agent_type][state][sim.agents[self.agent_type]['uid'] == self.uid]
+            self.bio[date] = bio_record 
+        return
+    
+    def finalize(self, sim):
+        super().finalize()
+        validate_recorded_dates(sim, requested_dates=self.dates, recorded_dates=self.bio.keys(), die=self.die)
+        return
+    
+    def get(self, key=None):
+        ''' Retrieve a bio record from the given key (int, str, or date) '''
+        if key is None:
+            key = self.days[0]
+        day  = sc.day(key, start_date=self.start_day)
+        date = sc.date(day, start_date=self.start_day, as_date=False)
+        if date in self.bio:
+            bio_record = self.bio[date]
+        else: # pragma: no cover
+            dates = ', '.join(list(self.bio.keys()))
+            errormsg = f'Could not find bio record date {date} (day {day}): choices are {dates}'
+            raise sc.KeyNotFoundError(errormsg)
+        return bio_record
+    
+
+    
+
+    
