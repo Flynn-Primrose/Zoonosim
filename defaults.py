@@ -250,23 +250,22 @@ def get_default_plots(which='default', kind='sim', sim=None):
     elif which.startswith('variant'): # pragma: no cover
         if is_sim:
             plots = sc.odict({
-                'Cumulative infections by variant': [
-                    'cum_human_infections_by_variant',
-                    'cum_flock_infectious_by_variant',
-                    'cum_barn_contaminated_by_variant',
-                    'cum_water_contaminated_by_variant',
+                'Human infections by variant': [
+                    #'cum_human_infections_by_variant',
+                    'new_human_infections_by_variant',  
                 ],
-                'New infections by variant': [
-                    'new_human_infections_by_variant',
-                    'new_flock_infectious_by_variant',
+                'Flock infections by variant': [
+                    #'cum_flock_infectious_by_variant',
+                    'new_flock_infectious_by_variant',  
+                ],
+                'Barn contaminations by variant': [
+                    #'cum_barn_contaminated_by_variant',
                     'new_barn_contaminated_by_variant',
+                ],
+                'Water contaminations by variant' : [
+                    #'cum_water_contaminated_by_variant',
                     'new_water_contaminated_by_variant',
-                ],
-                'Health outcomes': [
-                    'cum_human_infections',
-                    'cum_human_severe',
-                    'cum_human_dead',
-                ],
+                ]
             })
 
         else: # pragma: no cover
