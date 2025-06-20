@@ -7,3 +7,4 @@ sim.initialize()
 sim.run()
 
 biography = sim['analyzers'][0]
+print(biography.bio)

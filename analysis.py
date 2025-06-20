@@ -265,7 +265,7 @@ class biography(Analyzer):
             bio_record = {}
             agent_ind = np.where(sim.agents[self.agent_type]['uid'] == self.uid)[0]
             for state in sim.agents[self.agent_type]['meta'].all_recordable_states:
-                bio_record['state'] = sim.agents[self.agent_type][state][agent_ind]
+                bio_record[state] = sim.agents[self.agent_type][state][agent_ind][0] # Get the state for the agent
             self.bio[date] = bio_record 
         return
     
