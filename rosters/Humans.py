@@ -43,6 +43,7 @@ class HumanMeta(sc.prettyobj):
             'tested',
             'diagnosed',
             'recovered',
+            'known_contact',
             'known_dead',
             'dead',
             'quarantined',
@@ -486,6 +487,61 @@ class Humans(Subroster):
 
 
     #%% Methods to make events occur (infection and diagnosis)
+
+    def make_naive(self, inds, reset_vx=False):
+        '''
+        Make a set of people naive. This is used during dynamic resampling.
+
+        Args:
+            inds (array): list of people to make naive
+            reset_vx (bool): whether to reset vaccine-derived immunity
+        '''
+        for key in self.meta.states:
+            if key in ['susceptible', 'naive']:
+                self[key][inds] = True
+            else:
+                if (key != 'vaccinated') or reset_vx: # Don't necessarily reset vaccination
+                    self[key][inds] = False
+
+        # Reset variant states
+        for key in self.meta.variant_states:
+            self[key][inds] = np.nan
+        for key in self.meta.by_variant_states:
+            self[key][:, inds] = False
+
+        # Reset immunity and antibody states
+        non_vx_inds = inds if reset_vx else inds[~self['vaccinated'][inds]]
+        for key in self.meta.imm_states:
+            self[key][:, non_vx_inds] = 0
+        for key in self.meta.nab_states + self.meta.vacc_states:
+            self[key][non_vx_inds] = 0
+
+        # Reset dates
+        for key in self.meta.dates + self.meta.durs:
+            if (key != 'date_vaccinated') or reset_vx: # Don't necessarily reset vaccination
+                self[key][inds] = np.nan
+
+        return
+
+
+    def make_nonnaive(self, inds, set_recovered=False, date_recovered=0):
+        '''
+        Make a set of people non-naive.
+
+        This can be done either by setting only susceptible and naive states,
+        or else by setting them as if they have been infected and recovered.
+        '''
+        self.make_naive(inds) # First make them naive and reset all other states
+
+        # Make them non-naive
+        for key in ['susceptible', 'naive']:
+            self[key][inds] = False
+
+        if set_recovered:
+            self.date_recovered[inds] = date_recovered # Reset date recovered
+            self.check_recovered(inds=inds, filter_inds=None) # Set recovered
+
+        return
 
 
 

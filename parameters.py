@@ -34,9 +34,13 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['n_farms'] = 25 # Number of farms in the simulation. This is used to generate the rest of the population
     pars['pop_size'] = None # The total number of agents in the simulation. This should be equal to the sum of the population sizes of all agent types.
     pars['pop_size_by_type'] = {}
+    
 
     for type in pars['agent_types']:
         pars['pop_size_by_type'][type] = None # This will be set after the population has been created
+
+    pars['pop_scale'] = 1.0 # Scale factor for the population size. We don't use this functionality so this will always be 1.0. It is included for compatibility with modules inherited from Covasim/Pathosim.
+    pars['rescale'] = False # We will never use rescaling, so this is always False. It is included for compatibility with modules inherited from Covasim/Pathosim.
 
     pars['initial_conditions'] = {
         'human': 0, # Number of initial humans exposed
@@ -107,6 +111,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     } 
 
     # Parameters that control settings and defaults for multi-variant runs
+
 
 
     pars['n_variants'] = 1 # The number of variants circulating in the population
@@ -201,14 +206,6 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     # Background ILI parameters
     pars['bkg_ILI'] = znd.default_bkg_ILI # Weekly background ILI rates, used to infect human agents with ILI
     pars['Avian_to_ILI'] = znd.default_Avian_to_ILI # should we allow humans infected with avian influenza to also be infected with ILI? This is a boolean value, default is False
-
-    # Efficacy of non-pharmaceutical interventions (NPIs)
-    # pars['NPIs'] = {}
-
-    # pars['NPIs']['human'] = {
-    #     'quar_factor': None, # Quarantine multiplier on transmissibility and susceptibility; set by reset_layer_pars() below
-    #     'quar_period': 14 # Number of days to quarantine for; assumption based on standard policies
-    # }
 
         # Events and interventions
     pars['interventions'] = []   # The interventions present in this simulation; populated by the user

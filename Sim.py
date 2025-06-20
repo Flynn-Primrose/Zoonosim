@@ -362,6 +362,8 @@ class Sim(znb.BaseSim):
         self.results['pop_symp_protection'] = init_res('Population symptomatic protection', scale=False, color=human_dcols.pop_symp_protection)
 
         # Testing
+        self.results['new_tests']                     = init_res('Number of new tests administered', color=misc_dcols.misc1) # This is specific for tests UNRELATED to the custom testing module
+        self.results['cum_tests']                     = init_res('Cumulative tests administered', color=misc_dcols.misc2) # This is specific for tests UNRELATED to the custom testing module
         self.results['new_PCR_tests']                 = init_res('Number of new PCR tests administered', color=misc_dcols.misc1)
         self.results['cum_PCR_tests']                 = init_res('Cumulative PCR tests administered', color=misc_dcols.misc2)
         self.results['new_RAT_tests']                 = init_res('Number of new RAT tests administered', color=misc_dcols.misc3)
