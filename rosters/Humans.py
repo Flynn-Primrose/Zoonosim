@@ -109,7 +109,7 @@ class HumanMeta(sc.prettyobj):
             'x_p3',
             'y_p3',
         ]
-
+        self.all_recordable_states = self.agent + self.states + self.variant_states + self.nab_states + self.vacc_states + self.dates + self.durs + self.ctrl_points
         self.all_states = self.agent + self.states + self.variant_states + self.by_variant_states + self.imm_states + self.nab_states + self.vacc_states + self.dates + self.durs + self.ctrl_points
 
         # Validate

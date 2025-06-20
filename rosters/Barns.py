@@ -58,6 +58,7 @@ class BarnMeta(sc.prettyobj):
             'dur_cleaning', # Duration of the cleaning process
         ]
 
+        self.all_recordable_states = self.agent + self.states + self.variant_states + self.dates + self.durs
         self.all_states = self.agent + self.states + self.biosec_states + self.variant_states + self.by_variant_states + self.dates + self.durs
 
         # Validate

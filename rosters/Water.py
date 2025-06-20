@@ -38,6 +38,7 @@ class WaterMeta(sc.prettyobj):
             'dur_contamination', # Duration of contamination
         ]
 
+        self.all_recordable_states = self.agent + self.states + self.variant_states + self.dates + self.durs
         self.all_states = self.agent + self.states + self.variant_states + self.by_variant_states + self.dates + self.durs
 
         # Validate

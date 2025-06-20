@@ -85,6 +85,7 @@ class FlocksMeta(sc.prettyobj):
             'y_p3',
         ]
 
+        self.all_recordable_states = self.agent + self.states + self.variant_states + self.dates + self.durs + self.ctrl_points
         self.all_states = self.agent + self.states + self.variant_states + self.by_variant_states + self.dates + self.durs
 
         # Validate

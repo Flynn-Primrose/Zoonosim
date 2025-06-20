@@ -263,9 +263,8 @@ class biography(Analyzer):
         for ind in zni.find_day(self.days, sim.t):
             date = self.dates[ind]
             bio_record = {}
-            print(sim.agents[self.agent_type]['uid'] == self.uid) # For dubugging
             agent_ind = np.where(sim.agents[self.agent_type]['uid'] == self.uid)[0]
-            for state in sim.agents[self.agent_type]['meta'].all_states:
+            for state in sim.agents[self.agent_type]['meta'].all_recordable_states:
                 bio_record['state'] = sim.agents[self.agent_type][state][agent_ind]
             self.bio[date] = bio_record 
         return
