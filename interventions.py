@@ -536,35 +536,36 @@ class change_beta(Intervention):
         days    (int/arr):   the day or array of days to apply the interventions
         changes (float/arr): the changes in beta (1 = no change, 0 = no transmission)
         layers  (str/list):  the layers in which to change beta (default: all)
-        pathogen (int): the index of the pathogen to change the beta of
+        agent_type (str):  the type of agent to apply the intervention to e.g. 'human', 'flock' (required if layers is None)
         kwargs  (dict):      passed to Intervention()
 
     **Examples**::
 
-        interv = cv.change_beta(25, 0.3, 0) # On day 25, reduce overall beta by 70% to 0.3 for pathogen at index 0 
-        interv = cv.change_beta([14, 28], [0.7, 1], layers='s', 1) # On day 14, reduce beta by 30%, and on day 28, return to 1 for schools; for pathogen at index 1 
     '''
 
-    def __init__(self, days, changes, layers=None, pathogen = 0, **kwargs):
+    def __init__(self, days, changes, layers=None, agent_type=None, **kwargs):
         super().__init__(**kwargs) # Initialize the Intervention object
         self.days       = sc.dcp(days)
         self.changes    = sc.dcp(changes)
         self.layers     = sc.dcp(layers)
+        self.agent_type = sc.dcp(agent_type)
         self.orig_betas = None
-        self.pathogen = pathogen
         return
 
 
     def initialize(self, sim):
         ''' Fix days and store beta '''
         super().initialize()
+        if self.agent_type is None and self.layers is None: # pragma: no cover
+            errormsg = 'change_beta() requires either agent_type or layers to be specified'
+            raise ValueError(errormsg)
         self.days    = process_days(sim, self.days)
         self.changes = process_changes(sim, self.changes, self.days)
         self.layers  = sc.promotetolist(self.layers, keepnone=True)
         self.orig_betas = {}
         for lkey in self.layers:
             if lkey is None:
-                self.orig_betas['overall'] = sim.pathogens[self.pathogen].beta
+                self.orig_betas['overall'] = sim.pars['beta'][self.agent_type]
             else:
                 self.orig_betas[lkey] = sim['beta_layer'][lkey]
 
@@ -578,7 +579,7 @@ class change_beta(Intervention):
             for lkey,new_beta in self.orig_betas.items():
                 new_beta = new_beta * self.changes[ind]
                 if lkey == 'overall':
-                    sim.pathogens[self.pathogen].beta = new_beta
+                    sim.pars['beta'][self.agent_type] = new_beta
                 else:
                     sim['beta_layer'][lkey] = new_beta
 
@@ -2049,7 +2050,7 @@ class historical_vaccinate_prob(BaseVaccination):
             if len(inds):
                 inds = self.vaccinate(sim, inds, t=t)
                 sim.results['new_doses'][0] += len(inds)
-                sim.results['new_vaccinated'][0] += np.count_nonzero(sim.people.doses[inds] == 1)
+                sim.results['new_vaccinated'][0] += np.count_nonzero(sim.agents.human.doses[inds] == 1)
 
             # we need to update the NAbs as it is a cumulative effect
             # this will mess up those who are the seed infections if not reset to naive (see above)
