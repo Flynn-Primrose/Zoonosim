@@ -53,7 +53,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['start_day']  = '2025-01-01' # Start day of the simulation
     pars['end_day']    = None         # End day of the simulation
     pars['n_days']     = 150           # Number of days to run, if end_day isn't specified
-    pars['rand_seed']  = 1            # Random seed, if None, don't reset
+    pars['rand_seed']  = None            # Random seed, if None, don't reset
     pars['verbose']    = zno.verbose  # Whether or not to display information during the run -- options are 0 (silent), 0.1 (some; default), 1 (default), 2 (everything)
 
 

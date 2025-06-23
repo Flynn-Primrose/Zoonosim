@@ -5,7 +5,12 @@ but which are useful for particular investigations.
 
 import sciris as sc
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 from . import interventions as zni
+from . import defaults as znd
+from . import plotting as znplt
+from .Options import options as zno
 
 
 __all__ = ['Analyzer', 'snapshot', 'biography']
@@ -216,7 +221,8 @@ class biography(Analyzer):
     the dictionary directly, or use the get() method.
 
     Args:
-        uid    (Int): the uid of the agent to be tracked
+        uid    (Int): the uid of the agent to be tracked (optional, if agent_type is specified)
+        agent_type (str): the type of agent to be tracked (optional, if uid is specified)
         days   (list): list of ints/strings/date objects, the days on which to take the snapshot
         args   (list): additional day(s)
         die    (bool): whether or not to raise an exception if a date is not found (default true)
@@ -233,6 +239,7 @@ class biography(Analyzer):
         self.dates     = None # String representations
         self.start_day = None # Store the start date of the simulation
         self.bio = sc.odict() # Store the actual snapshots
+        self.df = None # Dataframe of results
         return
     
     def initialize(self, sim):
@@ -288,7 +295,53 @@ class biography(Analyzer):
             raise sc.KeyNotFoundError(errormsg)
         return bio_record
     
-
+    def to_df(self):
+        '''Create dataframe totals for each day'''
+        df = pd.DataFrame()
+        for date, k in self.bio.items():
+            df_ = pd.DataFrame(k, index=[0])  # Convert the record to a DataFrame
+            df_['date'] = date
+            df = pd.concat((df, df_))
+        cols = list(df.columns.values)
+        cols = [cols[-1]] + [cols[-2]] + cols[:-2]
+        self.df = df[cols]
+        return self.df
     
+    def plot(self, props_to_plot, do_show=None, fig_args=None, axis_args=None, plot_args=None,
+             dateformat=None, **kwargs):
+        '''
+        Plot the results.
 
-    
+        Args:
+            props_to_plot (list): list of properties to plot. Note that these must be valid properties for the agent type.
+            do_show   (bool): whether to show the plot
+            fig_args  (dict): passed to pl.figure()
+            axis_args (dict): passed to pl.subplots_adjust()
+            plot_args (dict): passed to pl.plot()
+            dateformat (str): the format to use for the x-axes (only used for time series)
+            kwargs    (dict): passed to ``zn.options.with_style()``
+        '''
+        if self.df is None:
+            self.to_df()
+
+        fig_args  = sc.mergedicts(dict(figsize=(18,11)), fig_args)
+        axis_args = sc.mergedicts(dict(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.25, hspace=0.4), axis_args)
+        plot_args = sc.mergedicts(dict(lw=2, alpha=0.5, marker='o'), plot_args)
+
+        with zno.with_style(**kwargs):
+            fig, axs = plt.subplots(nrows=1, ncols=1, **fig_args)
+            plt.subplots_adjust(**axis_args)
+            colors = sc.vectocolor(len(props_to_plot))
+            axs.set_title('Biography of agent uid={}'.format(self.uid))
+            axs.set_xlabel('Date')
+            axs.set_ylabel('Value')
+            for i, prop in enumerate(props_to_plot):
+                if prop not in self.df.columns:
+                    errormsg = f'Property "{prop}" not found in the biography data. Available properties: {list(self.df.columns)}'
+                    raise ValueError(errormsg)
+                axs.plot(self.df['date'], self.df[prop], **plot_args, color=colors[i % len(colors)], label=prop)
+                if dateformat is not None:
+                    znplt.format_date_axis(axs, dateformat=dateformat)
+                axs.legend(loc='best')
+
+        return znplt.handle_show_return(fig=fig, do_show=do_show)

@@ -1,10 +1,22 @@
 import Zoonosim as zn
 
-bio_analyzer = zn.biography(uid = None, agent_type = 'human', days = range(1, 100))
+bio_analyzer = zn.biography(uid = None, agent_type = 'flock', days = range(1, 100))
 
 sim=zn.Sim(analyzers = bio_analyzer)
 sim.initialize()
 sim.run()
 
 biography = sim['analyzers'][0]
-print(biography.bio)
+
+props_to_plot = [
+    #'headcount',
+    'infected_headcount',
+    'symptomatic_headcount',
+    'dead_headcount',
+    #'water_consumption',
+]
+
+biography.plot(
+    props_to_plot,
+    do_show=True,
+)

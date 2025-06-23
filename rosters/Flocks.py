@@ -313,8 +313,8 @@ class Flocks(Subroster):
         uninfected_headcount = self.headcount - self.infected_headcount
         dead_infected = self.infected_headcount * self.infected_mortality_rate
         dead_uninfected = uninfected_headcount * self.baseline_mortality_rate
-        self.dead_headcount = dead_infected + dead_uninfected
-        self.infected_headcount = self.infected_headcount - dead_infected
+        self.dead_headcount += dead_infected + dead_uninfected
+        self.infected_headcount -= dead_infected
         self.headcount -= dead_infected + dead_uninfected
         self.symptomatic_headcount = self.infected_headcount * self.infected_symptomatic_rate + uninfected_headcount * self.baseline_symptomatic_rate
         self.water_consumption = self.infected_headcount * self.infected_water_rate + uninfected_headcount * self.baseline_water_rate
