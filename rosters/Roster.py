@@ -319,3 +319,48 @@ use sim.people.save(force=True). Otherwise, the correct approach is:
             except:  # pragma: no cover # If not even partially initialized
                 keys = []
         return keys
+    
+    def __add__(self, roster2):
+        ''' Combine two Roster objects 
+        
+        NOTE: This is used in the context of multisims. I am defining it here so that __add__ is undefined for subroster objects.
+        NOTE: This operation must combine both rosters as well as their subrosters, so it is not a simple concatenation. I't also must reassign UIDs so that they are unique,
+        as well as ensure barns point to the correct flocks and waterbodies. If they exist, attributes like barn2flock water2barn, and other such pointers will need to be updated.
+        NOTE: This is not a trivial operation, so it is not implemented yet.
+        '''
+        # newroster = sc.dcp(self)
+        # keys = list(self.keys())
+        # for key in keys:
+        #     nrval = newroster[key]
+        #     r2val = roster2[key]
+
+        #     if isinstance(nrval, BaseRoster) or isinstance(r2val, BaseRoster):
+        #         if isinstance(nrval, BaseRoster) and isinstance(r2val, BaseRoster):
+        #             newroster.set(key, nrval + r2val, die=False) # NOTE: I'm not confident this will work
+        #         else: 
+        #             errormsg = f'Cannot add a roster to a non-roster object: {key}'
+        #             raise NotImplementedError(errormsg)
+        #     if nrval.ndim == 1:
+        #         newroster.set(key, np.concatenate([nrval, r2val], axis=0), die=False) # Allow size mismatch
+        #     elif nrval.ndim == 2:
+        #         newroster.set(key, np.concatenate([nrval, r2val], axis=1), die=False)
+        #     else:
+        #         errormsg = f'Not sure how to combine arrays of {nrval.ndim} dimensions for {key}'
+        #         raise NotImplementedError(errormsg)
+
+        # # Validate
+        # newroster.pars['pop_size'] += roster2.pars['pop_size']
+        # newroster.validate()
+
+        # # Reassign UIDs so they're unique
+        # newroster.set('uid', np.arange(len(newroster))) # This is going to be a problem since each roster only holds a subset of the agents. TODO:revisit
+
+        # return newroster
+
+        return NotImplementedError('Roster.__add__ is not implemented yet; this is a non-trivial operation that requires careful handling of UIDs and subrosters')
+
+
+    def __radd__(self, roster2):
+        ''' Allows sum() to work correctly '''
+        if not roster2: return self
+        else:           return self.__add__(roster2)
