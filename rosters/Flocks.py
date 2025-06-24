@@ -43,6 +43,8 @@ class FlocksMeta(sc.prettyobj):
         self.variant_states = [
             'exposed_variant',
             'infectious_variant',
+            'beta_variant', # Variant-specific beta
+            'gamma_variant', # Variant-specific gamma
         ]
 
         self.by_variant_states = [
@@ -64,20 +66,21 @@ class FlocksMeta(sc.prettyobj):
         self.durs = [
             'dur_exp2inf', # Mean time from exposed to infectious
             'dur_inf2symp', # Mean time from infectious to symptomatic
-            'dur_inf2peak', # Mean time from infectious to peak infection
-            'dur_peak2eq', # Mean time from peak infection to equilibrium infection
+            'dur_inf2r', # Mean time from infectious to recovered/removed
+            #'dur_inf2peak', # Mean time from infectious to peak infection
+            #'dur_peak2eq', # Mean time from peak infection to equilibrium infection
             'dur_susp2res', # Mean time from inspected to confirmation of status 
         ]
 
         # Control points for infection progression
-        self.ctrl_points = [
-            'x_p1',
-            'y_p1',
-            'x_p2',
-            'y_p2',
-            'x_p3',
-            'y_p3',
-        ]
+        # self.ctrl_points = [
+        #     'x_p1',
+        #     'y_p1',
+        #     'x_p2',
+        #     'y_p2',
+        #     'x_p3',
+        #     'y_p3',
+        # ]
 
         self.all_recordable_states = self.agent + self.states + self.variant_states + self.dates + self.durs + self.ctrl_points
         self.all_states = self.agent + self.states + self.variant_states + self.by_variant_states + self.dates + self.durs
@@ -152,8 +155,8 @@ class Flocks(Subroster):
             self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
 
         # Set dates for infection profile -- floats
-        for key in self.meta.ctrl_points:
-            self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
+        # for key in self.meta.ctrl_points:
+        #     self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
 
         # Store the dtypes used in a flat dict
         self._dtypes = {key:self[key].dtype for key in self.keys()} # Assign all to float by default
@@ -237,7 +240,7 @@ class Flocks(Subroster):
         self.flows['new_infectious'] = self.check_infectious() # For flocks that are exposed and not infectious, check if they begin being infectious
         self.flows['new_suspected'] = self.check_suspected()
         self.flows['new_quarantined'] = self.check_quarantined() # 
-        self.update_headcounts() # Update the headcounts and water consumption of the flocks
+        self.update_water_consumption() # Update the headcounts and water consumption of the flocks
         return
 
 
@@ -300,18 +303,18 @@ class Flocks(Subroster):
         inds = self.check_inds(self.quarantined, self.date_quarantined)
         self.quarantined[inds] = True
         return len(inds)
-    
-    
-    def update_headcounts(self):
+
+
+    def update_water_consumption(self):
         ''' Update the headcounts and water consumption of the flocks '''
         uninfected_headcount = self.headcount - self.infected_headcount
-        dead_infected = self.infected_headcount * self.infected_mortality_rate
-        dead_uninfected = uninfected_headcount * self.baseline_mortality_rate
-        self.new_dead_headcount = dead_infected + dead_uninfected
-        self.dead_headcount += self.new_dead_headcount
-        self.infected_headcount -= dead_infected
-        self.headcount -= dead_infected + dead_uninfected
-        self.symptomatic_headcount = self.infected_headcount * self.infected_symptomatic_rate + uninfected_headcount * self.baseline_symptomatic_rate
+        # dead_infected = self.infected_headcount * self.infected_mortality_rate
+        # dead_uninfected = uninfected_headcount * self.baseline_mortality_rate
+        # self.new_dead_headcount = dead_infected + dead_uninfected
+        # self.dead_headcount += self.new_dead_headcount
+        # self.infected_headcount -= dead_infected
+        # self.headcount -= dead_infected + dead_uninfected
+        # self.symptomatic_headcount = self.infected_headcount * self.infected_symptomatic_rate + uninfected_headcount * self.baseline_symptomatic_rate
         self.water_consumption = self.infected_headcount * self.infected_water_rate + uninfected_headcount * self.baseline_water_rate
         return
 
@@ -380,8 +383,8 @@ class Flocks(Subroster):
 
         # Calculate how long before this flock can infect other flocks
         self.dur_exp2inf[inds] = np.maximum(znu.sample(**durpars['exp2inf'], size=n_infections), 0) # Ensure that this is not negative
-        self.dur_inf2peak[inds] = np.maximum(znu.sample(**durpars['inf2peak'], size=n_infections), 0) # Ensure that this is not negative
-        self.dur_peak2eq[inds] = np.maximum(znu.sample(**durpars['peak2eq'], size=n_infections), 0) # Ensure that this is not negative
+        #self.dur_inf2peak[inds] = np.maximum(znu.sample(**durpars['inf2peak'], size=n_infections), 0) # Ensure that this is not negative
+        #self.dur_peak2eq[inds] = np.maximum(znu.sample(**durpars['peak2eq'], size=n_infections), 0) # Ensure that this is not negative
         self.date_exposed[inds] = self.t
         self.date_infectious[inds] = self.dur_exp2inf[inds] + self.t
 
@@ -406,18 +409,18 @@ class Flocks(Subroster):
 
         # HANDLE INFECTION LEVEL CONTROL POINTS
 
-        # Get P1: 
-        self.x_p1[inds] = self.date_infectious[inds] # Date of first infections.
-        self.y_p1[inds] = 3 # Initial number of infections. TODO: This should be sampled from a distribution, but I don't know what the best distribution is.
+        # # Get P1: 
+        # self.x_p1[inds] = self.date_infectious[inds] # Date of first infections.
+        # self.y_p1[inds] = 3 # Initial number of infections. TODO: This should be sampled from a distribution, but I don't know what the best distribution is.
 
-        # Get P2: 
-        self.x_p2[inds] = self.x_p1[inds] + self.dur_inf2peak[inds] # Date of peak infections.
-        self.y_p2[inds] = 0.7*self.headcount[inds] # Peak number of infections. TODO: This should be sampled from a distribution, but I don't know what the best distribution is.
+        # # Get P2: 
+        # self.x_p2[inds] = self.x_p1[inds] + self.dur_inf2peak[inds] # Date of peak infections.
+        # self.y_p2[inds] = 0.7*self.headcount[inds] # Peak number of infections. TODO: This should be sampled from a distribution, but I don't know what the best distribution is.
 
-        # Get P3: 
+        # # Get P3: 
 
-        self.x_p3[inds] = self.x_p2[inds] + self.dur_peak2eq[inds] # Date of equilibrium infections.
-        self.y_p3[inds] = 0.1*self.headcount[inds] # Equilibrium number of infections. TODO: This should be sampled from a distribution, but I don't know what the best distribution is.
+        # self.x_p3[inds] = self.x_p2[inds] + self.dur_peak2eq[inds] # Date of equilibrium infections.
+        # self.y_p3[inds] = 0.1*self.headcount[inds] # Equilibrium number of infections. TODO: This should be sampled from a distribution, but I don't know what the best distribution is.
 
         return n_infections # For incrementing counters
 

@@ -74,11 +74,19 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['asymp_factor']['flock'] = 1.0 # Multiply beta by this factor for asymptomatic cases.
     pars['asymp_factor']['barn'] = 1.0 # Multiply beta by this factor for asymptomatic cases.
     pars['asymp_factor']['water'] = 1.0 # Multiply beta by this factor for asymptomatic cases.
+
+
     pars['beta'] = {} # The transmissibility of the disease for each agent type.
     pars['beta']['human'] = 0.1 # The transmissibility of the disease for humans. This is a dummy variable!
     pars['beta']['flock'] = 0.3 # The transmissibility of the disease for flocks. This is a dummy variable!
     pars['beta']['barn'] = 0.1 # The transmissibility of the disease for barns. This is a dummy variable!
     pars['beta']['water'] = 0.1 # The transmissibility of the disease for water. This is a dummy variable!
+
+    # pars['gamma'] = {} # The recovery rate of the disease for each agent type. NOTE: Only actually used for flocks at this time. The rest are included for posterity.
+    # pars['gamma']['human'] = None # The recovery rate of the disease for humans. This is a dummy variable!
+    # pars['gamma']['flock'] = 0.33 # The recovery rate of the disease for flocks. This is a dummy variable!
+    # pars['gamma']['barn'] = None
+    # pars['gamma']['water'] = None
 
     # Basic disease transmission parameters
     pars['transmission_pars'] = {}
@@ -178,8 +186,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
 
     pars['dur']['flock'] = {
         'exp2inf': dict(dist='lognormal_int', par1=1.5, par2=0.5), # Duration from exposed to infectious. NOTE: This data is just a guess, and should be replaced with real data
-        'inf2peak': dict(dist='lognormal_int', par1=3.0, par2=1.0), # Duration from first infection to peak infection. NOTE: This data is just a guess, and should be replaced with real data
-        'peak2eq': dict(dist='lognormal_int', par1=6.0, par2=2.0), # Duration from peak infection to equilibrium infection. NOTE: This data is just a guess, and should be replaced with real data
+        'inf2r': dict(dist='lognormal_int', par1=2.0, par2=1.0), # Duration from infectious to recovery/removal. NOTE: This data is just a guess, and should be replaced with real data
         'susp2res': dict(dist='lognormal_int', par1=5.0, par2=1.0), # Duration from suspicion to a definitive test result. NOTE: This data is just a guess, and should be replaced with real data
     }
     pars['dur']['barn'] = {
@@ -400,21 +407,25 @@ def get_variant_pars(default=False, variant=None):
         HPAI = dict(
             human = dict(
                 rel_beta        = 1.0, # Default values
+                #rel_gamma      = 1.0, # Default values
                 rel_symp_prob   = 1.0, # Default values
                 rel_severe_prob = 1.0, # Default values
                 rel_death_prob  = 1.0, # Default values
             ),
             flock = dict(
                 rel_beta        = 1.0, # Default values
+                rel_gamma      = 1.0, # Default values
                 rel_symp_prob   = 1.0, # Default values
                 rel_death_prob  = 1.0, # Default values
             ),
             barn = dict(
                 rel_beta        = 1.0, # Default values
+                # rel_gamma      = 1.0, # Default values, not used for barns
                 rel_dur_contamination = 1.0, # Default values
             ),
             water = dict(
                 rel_beta        = 1.0, # Default values
+                # rel_gamma      = 1.0, # Default values, not used for water
                 rel_dur_contamination = 1.0, # Default values
             ),
         ),
@@ -422,21 +433,25 @@ def get_variant_pars(default=False, variant=None):
         LPAI = dict(
             human = dict(
                 rel_beta        = 1.0, # guessed values
+                # rel_gamma      = 1.0, # guessed value, not used for humans
                 rel_symp_prob   = 0.1, # guess but LPAI is less severe than HPAI
                 rel_severe_prob = 0.25, # guess but LPAI is less severe than HPAI
                 rel_death_prob  = 0.25, # guess but LPAI is less severe than HPAI
             ),
             flock = dict(
                 rel_beta        = 1.0, # guessed values
+                rel_gamma       = 0.5, # guessed values
                 rel_symp_prob   = 0.25, # guess but LPAI is less severe than HPAI
                 rel_death_prob  = 0.05, # guess but LPAI is less severe than HPAI
             ),
             barn = dict(
                 rel_beta        = 1.0, # guessed values
+                # rel_gamma      = 1.0, # guessed values, not used for barns
                 rel_dur_contamination = 0.5, # guess but LPAI is less severe than HPAI
             ),
             water = dict(
                 rel_beta        = 1.0, # guessed values
+                # rel_gamma      = 1.0, # guessed values, not used for water
                 rel_dur_contamination = 0.5, # guess but LPAI is less severe than HPAI
             ),
         ),

@@ -246,6 +246,9 @@ class Agents(Roster):
         Args:
             t (float): Current time in simulation
         '''
+        # Question: Should this be in the human subroster?
+        # Question: Should we filter the human subroster to only include humans that are infectious?
+
         x_p1, y_p1 = self.human.x_p1, self.human.y_p1
         x_p2, y_p2 = self.human.x_p2, self.human.y_p2
         x_p3, y_p3 = self.human.x_p3, self.human.y_p3
@@ -256,6 +259,15 @@ class Agents(Roster):
         return human_viral_load
     
     def update_flock_infection_levels(self, t):
+        infected_inds = znu.true(self.flock['infectious'])
+        if len(infected_inds) == 0:
+            self.flock.infected_headcount = np.zeros(self.flock.headcount.shape, dtype=znd.default_float)
+            return np.zeros(self.flock.headcount.shape, dtype=znd.default_float)
+        else:
+            variant_inds = self.flock['infectious_variant'][infected_inds]
+            if np.any(np.isnan(variant_inds)):
+                raise ValueError('There are NaN values in the flock infectious_variant array. This should not happen.')
+            
         x_p1, y_p1 = self.flock.x_p1, self.flock.y_p1
         x_p2, y_p2 = self.flock.x_p2, self.flock.y_p2
         x_p3, y_p3 = self.flock.x_p3, self.flock.y_p3

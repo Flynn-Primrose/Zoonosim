@@ -709,6 +709,8 @@ class Sim(znb.BaseSim):
 
         # Compute infection levels in flocks
         flock_infection_levels = self.agents.update_flock_infection_levels(t=t)
+
+        
         # Compute modifiers for barns
         # In principle the relative transmission and susceptibility of barns should vary based on temperature and humidity
         # For now, I'm just setting them to 1
