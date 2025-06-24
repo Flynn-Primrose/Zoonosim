@@ -22,7 +22,8 @@ class FlocksMeta(sc.prettyobj):
             'infected_headcount',
             'symptomatic_headcount',
             'baseline_symptomatic_rate', 
-            'infected_symptomatic_rate', 
+            'infected_symptomatic_rate',
+            'new_dead_headcount', # Number newly dead birds in the flock
             'dead_headcount',
             'baseline_mortality_rate',
             'infected_mortality_rate', 
@@ -38,13 +39,6 @@ class FlocksMeta(sc.prettyobj):
             'suspected', # Producer suspects flock is infected
             'quarantined', # Quarantined by CFIA agent
         ]
-
-        # NOTE: I'm not sure if we need to record the cfia risk level assessment directly or if it is implied by the other states
-        # self.risk_level = [
-        #     'negligible', # CFIA agent assesses flock as negligible risk
-        #     'tbc_negative', # CFIA agent assesses flock as negative but to be confirmed
-        #     'tbc_positive',# CFIA agent assesses flock as positive but to be confirmed
-        # ]
 
         self.variant_states = [
             'exposed_variant',
@@ -265,7 +259,7 @@ class Flocks(Subroster):
         if len(unsuspected_inds) == 0:
             return 0
         actual_symptomatic_rate = self.symptomatic_headcount[unsuspected_inds] / self.headcount[unsuspected_inds]
-        actual_mortality_rate = self.dead_headcount[unsuspected_inds] / self.headcount[unsuspected_inds]
+        actual_mortality_rate = self.new_dead_headcount[unsuspected_inds] / self.headcount[unsuspected_inds]
         actual_water_rate = self.water_consumption[unsuspected_inds] / self.headcount[unsuspected_inds]
 
         suspicious_symptomatic_inds = np.where(actual_symptomatic_rate > znd.default_suspicious_symptomatic_rate)[0]
@@ -313,7 +307,8 @@ class Flocks(Subroster):
         uninfected_headcount = self.headcount - self.infected_headcount
         dead_infected = self.infected_headcount * self.infected_mortality_rate
         dead_uninfected = uninfected_headcount * self.baseline_mortality_rate
-        self.dead_headcount = dead_infected + dead_uninfected
+        self.new_dead_headcount = dead_infected + dead_uninfected
+        self.dead_headcount += self.new_dead_headcount
         self.infected_headcount -= dead_infected
         self.headcount -= dead_infected + dead_uninfected
         self.symptomatic_headcount = self.infected_headcount * self.infected_symptomatic_rate + uninfected_headcount * self.baseline_symptomatic_rate

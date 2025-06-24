@@ -21,4 +21,4 @@ biography.plot(
     do_show=True,
 )
 
-sim.plot('flock')
+#sim.plot('flock')
