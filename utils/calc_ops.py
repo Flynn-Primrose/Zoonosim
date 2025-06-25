@@ -63,43 +63,11 @@ def compute_viral_load(t,       x_p1,       y_p1,       x_p2,       y_p2,       
 
     return vl, vl_rescaled
 
-@nb.njit(                   (nbint,   nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:]), cache=cache, parallel=safe_parallel)
-def compute_infection_level(t,       x_p1,       y_p1,       x_p2,       y_p2,       x_p3,       y_p3,       headcount): # pragma: no cover
-    '''
-    Calculate infection levels for infected flocks?
+# TODO: compute_exposed_delta
+# TODO: compute_infectious_delta
+# TODO: compute_symptomatic_delta
+# TODO: compute_dead_delta
 
-        Args:
-        t: (int) timestep
-        x_p1: (float[]) date of first infection
-        y_p1: (float[]) initial number of infected birds
-        x_p2: (float[]) date of peak infection
-        y_p2: (float[]) number of infected birds at peak infection
-        x_p3: (float[]) date of equilibrium infection
-        y_p3: (float[]) number of birds infected at equilibrium
-        headcount: (int[]) total number of birds in the flock
-
-    Returns:
-        infected_headcount (int): the number of infected birds in the flock
-        infected_headcount_rescaled (int): the number of infected birds in the flock, rescaled to a fraction of total headcount
-    '''
-        # Set up arrays
-    N = len(x_p2)
-    il = np.zeros(N, dtype=znd.default_float)
-    il_rescaled = np.zeros(N, dtype=znd.default_float)
-
-    # Calculate viral load for those for whom it is rising
-    rising_il = t < x_p2
-    il[rising_il] = y_p1[rising_il] + (y_p2[rising_il] - y_p1[rising_il])*(t - x_p1[rising_il])/(x_p2[rising_il] - x_p1[rising_il])
-
-    # Calculate viral load for those for whom it is falling
-    falling_il = t >= x_p2
-    il[falling_il] = y_p2[falling_il] + (y_p3[falling_il] - y_p2[falling_il])*(t - x_p2[falling_il])/(x_p3[falling_il] - x_p2[falling_il])
-
-    il_rescaled = il / headcount # Rescale to fraction of total headcount
-    il_rescaled[il_rescaled < 0] = 0 # Clip to 0
-    il_rescaled[il_rescaled > 1] = 1 # Clip to 1
-
-    return il, il_rescaled
 
 # jit means you let Numba's combiler optimize this function. 
 @nb.njit(            (nbfloat[:], nbfloat[:], nbbool[:], nbbool[:], nbfloat,    nbfloat[:], nbbool[:], nbbool[:], nbfloat[:],  nbfloat,     nbfloat[:]), cache=cache, parallel=safe_parallel)

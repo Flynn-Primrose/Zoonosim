@@ -19,12 +19,13 @@ class FlocksMeta(sc.prettyobj):
             'headcount', # Number of live birds in the flock
             'rel_sus', # Relative susceptibility
             'rel_trans', # Relative Transmissibility
-            'infected_headcount',
+            'exposed_headcount'
+            'infectious_headcount',
             'symptomatic_headcount',
+            'daily_dead_headcount', # Daily number of dead birds in the flock
+            'total_dead_headcount', # Total number of dead birds in the flock
             'baseline_symptomatic_rate', 
             'infected_symptomatic_rate',
-            'new_dead_headcount', # Number newly dead birds in the flock
-            'dead_headcount',
             'baseline_mortality_rate',
             'infected_mortality_rate', 
             'water_consumption', # Water consumption (L/day)
@@ -65,8 +66,8 @@ class FlocksMeta(sc.prettyobj):
         # Duration of different states: these are floats per flock.
         self.durs = [
             'dur_exp2inf', # Mean time from exposed to infectious
-            'dur_inf2symp', # Mean time from infectious to symptomatic
-            'dur_inf2r', # Mean time from infectious to recovered/removed
+            #'dur_inf2symp', # Mean time from infectious to symptomatic
+            'dur_inf2out', # Mean time from infectious to outcome (recovered/removed)
             #'dur_inf2peak', # Mean time from infectious to peak infection
             #'dur_peak2eq', # Mean time from peak infection to equilibrium infection
             'dur_susp2res', # Mean time from inspected to confirmation of status 

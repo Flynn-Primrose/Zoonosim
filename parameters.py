@@ -186,7 +186,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
 
     pars['dur']['flock'] = {
         'exp2inf': dict(dist='lognormal_int', par1=1.5, par2=0.5), # Duration from exposed to infectious. NOTE: This data is just a guess, and should be replaced with real data
-        'inf2r': dict(dist='lognormal_int', par1=2.0, par2=1.0), # Duration from infectious to recovery/removal. NOTE: This data is just a guess, and should be replaced with real data
+        'inf2out': dict(dist='lognormal_int', par1=2.0, par2=1.0), # Duration from infectious to recovery/removal. NOTE: This data is just a guess, and should be replaced with real data
         'susp2res': dict(dist='lognormal_int', par1=5.0, par2=1.0), # Duration from suspicion to a definitive test result. NOTE: This data is just a guess, and should be replaced with real data
     }
     pars['dur']['barn'] = {

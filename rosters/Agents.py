@@ -260,20 +260,43 @@ class Agents(Roster):
     
     def update_flock_infection_levels(self, t):
         infected_inds = znu.true(self.flock['infectious'])
+        output = np.zeros(self.flock.headcount.shape, dtype=znd.default_float)
         if len(infected_inds) == 0:
             self.flock.infected_headcount = np.zeros(self.flock.headcount.shape, dtype=znd.default_float)
-            return np.zeros(self.flock.headcount.shape, dtype=znd.default_float)
+            return output
         else:
             variant_inds = self.flock['infectious_variant'][infected_inds]
             if np.any(np.isnan(variant_inds)):
                 raise ValueError('There are NaN values in the flock infectious_variant array. This should not happen.')
             
-        x_p1, y_p1 = self.flock.x_p1, self.flock.y_p1
-        x_p2, y_p2 = self.flock.x_p2, self.flock.y_p2
-        x_p3, y_p3 = self.flock.x_p3, self.flock.y_p3
-        headcount = self.flock.headcount
-        self.flock.infected_headcount, flock_infection_levels = znu.compute_infection_level(t, x_p1, y_p1, x_p2, y_p2, x_p3, y_p3, headcount)
-        return flock_infection_levels
+            betas = self.pars['variant_pars'][variant_inds]['rel_beta'] * self.pars['beta']['flock'] # Get beta for each flock based on the variant
+            mean_exposed_time = self.flock['dur_exp2inf'][infected_inds] # Get the mean exposed time for each flock
+            mean_infectious_time = self.flock['dur_inf2out'][infected_inds] # Get the mean infectious time for each flock
+            baseline_symptomatic_rate = self.flock['baseline_symptomatic_rate'][infected_inds] # Get the baseline symptomatic rate for each flock
+            infected_symptomatic_rate = self.flock['infected_symptomatic_rate'][infected_inds] # Get the infected symptomatic rate for each flock
+            baseline_mortality_rate = self.flock['baseline_mortality_rate'][infected_inds] # Get the baseline mortality rate for each flock
+            infected_mortality_rate = self.flock['infected_mortality_rate'][infected_inds] # Get the infected mortality rate for each flock
+
+            headcount = self.flock['headcount'][infected_inds] # Get the total number of live birds in each flock
+            exposed_headcount = self.flock['exposed_headcount'][infected_inds] # Get the exposed headcount for each flock
+            infectious_headcount = self.flock['infectious_headcount'][infected_inds] # Get the infectious headcount for each flock
+            #symptomatic_headcount = self.flock['symptomatic_headcount'][infected_inds] # Get the symptomatic headcount for each flock
+            susceptible_headcount = headcount - exposed_headcount - infectious_headcount # Get the susceptible headcount for each flock
+            total_dead_headcount = self.flock['total_dead_headcount'][infected_inds] # Get the total dead headcount for each flock
+
+            new_exposed = znu.compute_new_exposed(infectious_headcount, susceptible_headcount, betas)
+            new_infectious = znu.compute_new_infectious(exposed_headcount, mean_exposed_time)
+            
+
+
+            symptomatic_headcount = znu.compute_symptomatic_headcount(susceptible_headcount, exposed_headcount, infectious_headcount, baseline_symptomatic_rate, infected_symptomatic_rate)
+
+
+
+
+            
+        #self.flock.infected_headcount, flock_infection_levels = znu.compute_infection_level(t, x_p1, y_p1, x_p2, y_p2, x_p3, y_p3, headcount)
+        return output
 
     def update_states_from_subrosters(self):
         susceptible_human_uids = np.array(self.human['uid'][znu.true(self.human['susceptible'])])
