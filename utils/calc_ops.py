@@ -3,7 +3,7 @@ import numpy as np # For numerics
 from .. import defaults as znd
 from ..Options import options as zno
 
-__all__ = ['compute_viral_load', 'compute_infection_level', 'compute_trans_sus', 'compute_infections', 'find_contacts']
+__all__ = ['compute_viral_load', 'compute_trans_sus', 'compute_infections', 'find_contacts']
 
 # Set dtypes -- note, these cannot be changed after import since Numba functions are precompiled
 nbbool  = znd.nbbool

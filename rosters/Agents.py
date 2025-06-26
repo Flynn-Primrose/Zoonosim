@@ -269,6 +269,7 @@ class Agents(Roster):
         infectious_delta = np.zeros(self.flock.infectious_headcount.shape, dtype=znd.default_float) # Initialize the infectious delta
         infectious_dead = np.zeros(self.flock.infectious_headcount.shape, dtype=znd.default_float) # Initialize the infectious dead delta
         dead_delta = np.zeros(self.flock.daily_dead_headcount.shape, dtype=znd.default_float) # Initialize the dead delta
+        infected_symptomatic_rate = np.zeros(self.flock.headcount.shape, dtype=znd.default_float) # Initialize the infected symptomatic rate
         infected_inds = znu.true(self.flock['infectious'])
 
         if len(infected_inds) > 0: # If there are any infected flocks
@@ -288,6 +289,11 @@ class Agents(Roster):
             infectious_out = self.flock.infectious_headcount[infected_inds] / self.flock['dur_inf2out'][infected_inds] + infectious_dead[infected_inds] # Calculate the infectious headcount that is leaving the infectious state for each infected flock
             infectious_delta[infected_inds] = infectious_in - infectious_out # Calculate the change in infectious headcount for each infected flock
 
+            # Get symptomatic rates for infected flocks
+            infected_symptomatic_rate[infected_inds] = self.flock.infected_symptomatic_rate[infected_inds] # Get the infected symptomatic rate for each infected flock
+
+
+
         susceptible_dead = (self.flock.headcount - self.flock.exposed_headcount - self.flock.infectious_headcount) * self.flock['baseline_mortality_rate'] # Calculate the susceptible headcount that is dying for each flock
         dead_delta = susceptible_dead + exposed_dead + infectious_dead # Calculate the total dead headcount for each flock
 
@@ -300,9 +306,9 @@ class Agents(Roster):
         self.flock.headcount -= dead_delta 
 
         # Calculate the new symptomatic headcount
-        infected_symptomatic_rate = np.zeros(self.flock.headcount.shape, dtype=znd.default_float) # Initialize the infected symptomatic rate
-        infected_symptomatic_rate[infected_inds] = self.flock.infected_symptomatic_rate[infected_inds] # Get the infected symptomatic rate for each infected flock
-        self.flock.symptomatic_headcount  = self.flock.headcount * self.flock.baseline_symptomatic_rate + (self.flock.exposed_headcount + self.flock.infectious_headcount) * infected_symptomatic_rate
+        
+        
+        self.flock.symptomatic_headcount = self.flock.headcount * self.flock.baseline_symptomatic_rate + (self.flock.exposed_headcount + self.flock.infectious_headcount) * infected_symptomatic_rate
 
         return self.flock.infectious_headcount/self.flock.headcount
 
@@ -472,7 +478,7 @@ class Agents(Roster):
     
     def check_result(self, t):
         '''
-        Check for flocks that have recieved their test results and update the states accordingly.
+        Check for flocks that have received their test results and update the states accordingly.
         '''
 
         flock_inds = np.where(self.flock.date_result <= t)[0]
@@ -484,23 +490,23 @@ class Agents(Roster):
 
 
         neg_flock_inds = np.where(self.flock.infectious[flock_inds] == False)[0]
-        #neg_barn_inds = np.isin(self.barn.flock, self.flock.uid[neg_flock_inds])
 
         self.barn.date_cycle_end[pos_barn_inds] = np.nan
         self.barn.composting[pos_barn_inds] = True
         self.barn.date_composting[pos_barn_inds] = t + znu.sample(**self.pars['dur']['barn']['composting'], size = len(pos_barn_inds))
 
         self.flock.headcount[pos_flock_inds] = 0
-        self.flock.infected_headcount[pos_flock_inds] = 0
+        self.flock.exposed_headcount[pos_flock_inds] = 0
+        self.flock.infectious_headcount[pos_flock_inds] = 0
         self.flock.symptomatic_headcount[pos_flock_inds] = 0
-        self.flock.dead_headcount[pos_flock_inds] = 0
+        self.flock.daily_dead_headcount[pos_flock_inds] = 0
+        self.flock.total_dead_headcount[pos_flock_inds] = 0
         self.flock.water_consumption[pos_flock_inds] = 0
 
         self.flock.susceptible[pos_flock_inds] = False
         self.flock.exposed[pos_flock_inds] = False
         self.flock.infectious[pos_flock_inds] = False
         self.flock.quarantined[pos_flock_inds] = False
-        #self.flock.suspected[pos_flock_inds] = False
         self.flock.date_infectious[pos_flock_inds] = np.nan
         self.flock.date_exposed[pos_flock_inds] = np.nan
         self.flock.date_suspected[pos_flock_inds] = np.nan
@@ -524,9 +530,11 @@ class Agents(Roster):
         self.barn.date_cleaning[barn_inds] = t + znu.sample(**self.pars['dur']['barn']['cleaning'], size = len(barn_inds))
 
         self.flock.headcount[flock_inds] = 0
-        self.flock.infected_headcount[flock_inds] = 0
+        self.flock.exposed_headcount[flock_inds] = 0
+        self.flock.infectious_headcount[flock_inds] = 0
         self.flock.symptomatic_headcount[flock_inds] = 0
-        self.flock.dead_headcount[flock_inds] = 0
+        self.flock.daily_dead_headcount[flock_inds] = 0
+        self.flock.total_dead_headcount[flock_inds] = 0
         self.flock.water_consumption[flock_inds] = 0
 
         self.flock.susceptible[flock_inds] = False
