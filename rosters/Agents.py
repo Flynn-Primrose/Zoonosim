@@ -270,13 +270,13 @@ class Agents(Roster):
         infectious_dead = np.zeros(self.flock.infectious_headcount.shape, dtype=znd.default_float) # Initialize the infectious dead delta
         dead_delta = np.zeros(self.flock.daily_dead_headcount.shape, dtype=znd.default_float) # Initialize the dead delta
         infected_symptomatic_rate = np.zeros(self.flock.headcount.shape, dtype=znd.default_float) # Initialize the infected symptomatic rate
-        infected_inds = znu.true(self.flock['infectious'])
+        infected_inds = znu.true(self.flock['exposed'])
 
         if len(infected_inds) > 0: # If there are any infected flocks
 
             # Calculate exposed_delta for all infected flocks
-            variant_inds = self.flock['infectious_variant'][infected_inds] # Get the variant indices for each infected flock
-            betas = self.pars['variant_pars'][variant_inds]['rel_beta'] * self.pars['beta']['flock'] # Get beta for each infected flock based on the variant
+            variant_key = self.pars['variant_map'][[self.flock['infectious_variant'][infected_inds]]] # Get the variant keys for each infected flock
+            betas = self.pars['variant_pars'][variant_key]['flock']['rel_beta'] * self.pars['beta']['flock'] # Get beta for each infected flock based on the variant
             susceptible_headcount = self.flock.headcount[infected_inds] - self.flock.exposed_headcount[infected_inds] - self.flock.infectious_headcount[infected_inds] # Get the susceptible headcount for each infected flock
             exposed_in = susceptible_headcount * self.flock.infectious_headcount[infected_inds] * betas / self.flock.headcount[infected_inds] # Calculate the new exposed headcount for each infected flock
             exposed_dead[infected_inds] = self.flock.exposed_headcount[infected_inds] * self.flock['baseline_mortality_rate'][infected_inds] # Question: Should this be the baseline mortality rate, the infected mortality rate, or both?
@@ -310,7 +310,11 @@ class Agents(Roster):
         
         self.flock.symptomatic_headcount = self.flock.headcount * self.flock.baseline_symptomatic_rate + (self.flock.exposed_headcount + self.flock.infectious_headcount) * infected_symptomatic_rate
 
-        return self.flock.infectious_headcount/self.flock.headcount
+        infection_levels = np.zeros(self.flock.headcount.shape, dtype=znd.default_float)
+        non_zero_headcount_inds = np.where(self.flock.headcount > 0)[0]
+        infection_levels[non_zero_headcount_inds] = self.flock.infectious_headcount[non_zero_headcount_inds]/self.flock.headcount[non_zero_headcount_inds]
+
+        return infection_levels
 
     def update_states_from_subrosters(self):
         susceptible_human_uids = np.array(self.human['uid'][znu.true(self.human['susceptible'])])
