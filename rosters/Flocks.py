@@ -285,7 +285,7 @@ class Flocks(Subroster):
 
     def check_infectious(self):
         ''' Check if they become infectious '''
-        inds = self.check_inds(self.infectious, self.date_infectious)
+        inds = np.which(self.infectious_headcount > 0)[0]
         self.infectious[inds] = True
         self.infectious_variant[inds] = self.exposed_variant[inds]
 
