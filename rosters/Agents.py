@@ -258,7 +258,7 @@ class Agents(Roster):
         self.human.viral_load, human_viral_load = znu.compute_viral_load(t, x_p1, y_p1, x_p2, y_p2, x_p3, y_p3, min_vl, max_vl)
         return human_viral_load
     
-    def update_flock_infection_levels(self, t):
+    def update_flock_infection_levels(self):
         '''
         Update the infection levels of the flock subroster. This is done by calculating the exposed and infectious deltas for each flock and updating the headcounts accordingly.
         NOTE: This is not optimized for speed, so it may be slow for large populations.
@@ -275,8 +275,9 @@ class Agents(Roster):
         if len(infected_inds) > 0: # If there are any infected flocks
 
             # Calculate exposed_delta for all infected flocks
-            variant_key = self.pars['variant_map'][[self.flock['infectious_variant'][infected_inds]]] # Get the variant keys for each infected flock
-            betas = self.pars['variant_pars'][variant_key]['flock']['rel_beta'] * self.pars['beta']['flock'] # Get beta for each infected flock based on the variant
+            variant_keys = np.array([self.pars['variant_map'][variant_ind] for variant_ind in self.flock.exposed_variant[infected_inds].astype(znd.default_int)]) # Get the variant keys for each infected flock
+            rel_betas = np.array([self.pars['variant_pars'][key]['flock']['rel_beta'] for key in variant_keys])
+            betas = rel_betas * self.pars['beta']['flock'] # Get beta for each infected flock based on the variant
             susceptible_headcount = self.flock.headcount[infected_inds] - self.flock.exposed_headcount[infected_inds] - self.flock.infectious_headcount[infected_inds] # Get the susceptible headcount for each infected flock
             exposed_in = susceptible_headcount * self.flock.infectious_headcount[infected_inds] * betas / self.flock.headcount[infected_inds] # Calculate the new exposed headcount for each infected flock
             exposed_dead[infected_inds] = self.flock.exposed_headcount[infected_inds] * self.flock['baseline_mortality_rate'][infected_inds] # Question: Should this be the baseline mortality rate, the infected mortality rate, or both?
@@ -284,7 +285,7 @@ class Agents(Roster):
             exposed_delta[infected_inds] = exposed_in - exposed_out # Calculate the change in exposed headcount for each infected flock
 
             # Calculate infectious_delta for all infected flocks
-            infectious_in = exposed_delta[infected_inds] * self.flock['dur_exp2inf'][infected_inds]
+            infectious_in = self.flock.exposed_headcount[infected_inds]/self.flock['dur_exp2inf'][infected_inds]
             infectious_dead[infected_inds] = self.flock.infectious_headcount[infected_inds] * self.flock['infected_mortality_rate'][infected_inds] # Question: Should this bw the infected mortality rate or a combination of the baseline and infected mortality rates?
             infectious_out = self.flock.infectious_headcount[infected_inds] / self.flock['dur_inf2out'][infected_inds] + infectious_dead[infected_inds] # Calculate the infectious headcount that is leaving the infectious state for each infected flock
             infectious_delta[infected_inds] = infectious_in - infectious_out # Calculate the change in infectious headcount for each infected flock

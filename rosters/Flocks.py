@@ -274,7 +274,8 @@ class Flocks(Subroster):
     def check_infectious(self):
         ''' Check if they become infectious '''
 
-        inds = np.where((self.infectious_headcount > 0) & (self.infectious == False))[0]
+        inds = np.where((self.infectious_headcount >= 1) & (self.infectious == False))[0] #Question: what is the cutoff for being considered infectious
+
         self.infectious[inds] = True
         self.infectious_variant[inds] = self.exposed_variant[inds]
         self.date_infectious[inds] = self.t
@@ -344,7 +345,7 @@ class Flocks(Subroster):
 
         # Deal with variant parameters
         variant_keys = ['rel_symp_prob', 'rel_death_prob']
-        infect_pars = {k:self.pars[k]['flock'] for k in variant_keys}
+        infect_pars = {k:self.pars['variant_pars']['wild']['flock'][k] for k in variant_keys}
         variant_label = self.pars['variant_map'][variant]
         if variant:
             for k in variant_keys:
@@ -353,9 +354,13 @@ class Flocks(Subroster):
         n_infections = len(inds)
         durpars      = self.pars['dur']['flock']
 
+        # Determine how many birds are initially exposed for each flock
+        initial_exposed = znu.n_multinomial(np.ones(6)/6.0, len(inds)) + 1 # All flocks start with between 1 and 6 initial exposures
+
         # Update states, variant info, and flows
         self.susceptible[inds]    = False
         self.exposed[inds]        = True
+        self.exposed_headcount[inds] = initial_exposed
         self.exposed_variant[inds] = variant
         self.exposed_by_variant[variant, inds] = True
         self.flows['new_exposed']   += len(inds)
