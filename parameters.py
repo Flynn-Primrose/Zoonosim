@@ -75,7 +75,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
 
     pars['beta'] = {} # The transmissibility of the disease for each agent type.
     pars['beta']['human'] = 0.1 # The transmissibility of the disease for humans. This is a dummy variable!
-    pars['beta']['flock'] = 0.3 # The transmissibility of the disease for flocks. This is a dummy variable!
+    pars['beta']['flock'] = 0.7 # The transmissibility of the disease for flocks. This is a dummy variable!
     pars['beta']['barn'] = 0.1 # The transmissibility of the disease for barns. This is a dummy variable!
     pars['beta']['water'] = 0.1 # The transmissibility of the disease for water. This is a dummy variable!
 

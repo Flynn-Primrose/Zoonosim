@@ -10,9 +10,9 @@ biography = sim['analyzers'][0]
 
 props_to_plot = [
     'headcount',
-    #'exposed_headcount',
-    #'infectious_headcount',
-    #'symptomatic_headcount',
+    'exposed_headcount',
+    'infectious_headcount',
+    'symptomatic_headcount',
     'total_dead_headcount',
     #'water_consumption',
 ]

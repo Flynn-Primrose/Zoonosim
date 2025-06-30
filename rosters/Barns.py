@@ -287,8 +287,8 @@ class Barns(Subroster):
         self.flows_variant['new_contaminated_by_variant'][variant] += len(inds)
 
         # Record transmissions
-        for i, target in enumerate(inds):
-            entry = dict(source=source[i] if source is not None else None, target=target, date=self.t, layer=layer, variant=variant_label)
+        for i, target_ind in enumerate(inds):
+            entry = dict(source=source[i] if source is not None else None, target=self.uid[target_ind], date=self.t, layer=layer, variant=variant_label)
             self.infection_log.append(entry)
 
         # Calculate how long before this person can infect other people

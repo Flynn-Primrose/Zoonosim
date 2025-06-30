@@ -115,6 +115,7 @@ class Flocks(Subroster):
         self._lock = False # Prevent further modification of keys
         self.meta = FlocksMeta() # Store list of keys and dtypes
         self.contacts = None
+        self.event_log = [] # Record of events - keys for ['target', 'event_type', 'date']
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
         
         pop_size = pars['pop_size_by_type']['flock']
@@ -142,10 +143,6 @@ class Flocks(Subroster):
         # Set dates and durations -- both floats
         for key in self.meta.dates + self.meta.durs:
             self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
-
-        # Set dates for infection profile -- floats
-        # for key in self.meta.ctrl_points:
-        #     self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
 
         # Store the dtypes used in a flat dict
         self._dtypes = {key:self[key].dtype for key in self.keys()} # Assign all to float by default
@@ -240,7 +237,23 @@ class Flocks(Subroster):
 
         return
 
+    def update_event_log(self, target_inds, event_type):
+        '''
+        Add an entry to the event log
 
+        args:
+            target_inds: array of indices of flocks that experienced a recordable event
+            event (str): The specific event in question
+        '''
+
+        if target_inds is None:
+            return
+        
+        for ind in target_inds:
+            entry = dict(target = self.uid[ind], event_type = event_type, date = self.t)
+            self.event_log.append(entry)
+
+        return
 
     #%% Methods for updating state
 
@@ -268,6 +281,10 @@ class Flocks(Subroster):
         self.quarantined[new_suspicious_inds] = True
         self.date_quarantined[new_suspicious_inds] = self.t
 
+        self.update_event_log(new_suspicious_inds, 'suspected')
+        self.update_event_log(new_suspicious_inds, 'quarantined')
+
+
         return len(suspicious_inds)
 
 
@@ -279,6 +296,7 @@ class Flocks(Subroster):
         self.infectious[inds] = True
         self.infectious_variant[inds] = self.exposed_variant[inds]
         self.date_infectious[inds] = self.t
+        self.update_event_log(inds, 'infectious')
 
 
         for variant in range(self.pars['n_variants']):
@@ -294,11 +312,12 @@ class Flocks(Subroster):
         ''' Check for new progressions to quarantined '''
         inds = self.check_inds(self.quarantined, self.date_quarantined)
         self.quarantined[inds] = True
+        self.update_event_log(inds, 'quarantined')
         return len(inds)
 
 
     def update_water_consumption(self):
-        ''' Update the headcounts and water consumption of the flocks '''
+        ''' Update the water consumption of the flocks '''
         infected_headcount = self.exposed_headcount + self.infectious_headcount
         uninfected_headcount = self.headcount - infected_headcount
         self.water_consumption = infected_headcount * self.infected_water_rate + uninfected_headcount * self.baseline_water_rate
@@ -367,8 +386,8 @@ class Flocks(Subroster):
         self.flows_variant['new_exposed_by_variant'][variant] += len(inds)
 
         # Record transmissions
-        for i, target in enumerate(inds):
-            entry = dict(source=source[i] if source is not None else None, target=target, date=self.t, layer=layer, variant=variant_label)
+        for i, target_ind in enumerate(inds):
+            entry = dict(source=source[i] if source is not None else None, target=self.uid[target_ind], date=self.t, layer=layer, variant=variant_label)
             self.infection_log.append(entry)
 
         # Calculate how long before this flock can infect other flocks
@@ -396,17 +415,103 @@ class Flocks(Subroster):
         return n_infections # For incrementing counters
 
 
-    def test(self, inds, test_sensitivity=1.0, loss_prob=0.0, test_delay=0):
+    def test(self, inds, sample_size, delay = 0):
         '''
         Method to test poultry. Typically not to be called by the user directly;
-        see the test_num() and test_prob() interventions.
+        see interventions.
 
         Args:
             inds: indices of who to test
-            test_sensitivity (float): probability of a true positive
-            loss_prob (float): probability of loss to follow-up
-            test_delay (int): number of days before test results are ready
+            sample_size (int): The number of birds to be tested in each flock
+            delay (int): The number of days until the test results are ready
         '''
         # TODO: Implement this method
-        return 
+        return
+    
+    def story(self, uid, *args):
+        '''
+        Print out a short history of events in the life of the specified flock.
+
+        Args:
+            uid (int/list): the flock or flocks whose story is to be regaled
+            args (list): these flocks will tell their stories too
+
+        **Example**::
+
+            sim = cv.Sim()
+            sim.run()
+            sim.agents.flock.story(12)
+            sim.agents.flock.story(795)
+        '''
+
+        def label_lkey(lkey):
+            ''' Friendly name for common layer keys '''
+            if lkey.lower() == 'fb':
+                llabel = 'flock-barn contacts'
+            if lkey.lower() == 'hf':
+                llabel = 'human-flock contacts'
+            elif lkey.lower() == 'fw':
+                llabel = 'flock-water contacts'
+            else:
+                llabel = f'"{lkey}"'
+            return llabel
+
+        uids = sc.promotetolist(uid)
+        uids.extend(args)
+
+        for uid in uids:
+
+            p = self[uid]
+            breed = p.breed
+            barn = p.barn
+
+            intro = f'\nThis is the story of {uid}, a flock of breed {breed}s housed in barn {barn}.'
+            print(f'{intro}')
+
+            # total_contacts = 0
+            # no_contacts = []
+            # for lkey in p.contacts.keys():
+            #     llabel = label_lkey(lkey)
+            #     n_contacts = len(p.contacts[lkey])
+            #     total_contacts += n_contacts
+            #     if n_contacts:
+            #         print(f'{uid} is connected to {n_contacts} agents in the {llabel} layer')
+            #     else:
+            #         no_contacts.append(llabel)
+            # if len(no_contacts):
+            #     nc_string = ', '.join(no_contacts)
+            #     print(f'{uid} has no contacts in the {nc_string} layer(s)')
+            # print(f'{uid} has {total_contacts} contacts in total')
+
+            events = []
+
+            event_dict = {
+                'suspected': 'was suspected of being infected with H5N1',
+                'infectious': 'became infectious with H5N1',
+                'quarantined': 'was quarantined'
+
+            }
+
+            for event in self.event_log[self.event_log.target == uid]:
+                events.append(event.date, event_dict[event.event_type])
+
+            for infection in self.infection_log:
+                lkey = infection['layer']
+                llabel = label_lkey(lkey)
+                if infection['target'] == uid:
+                    if lkey:
+                        events.append((infection['date'], f'was infected with H5N1 by {infection["source"]} via the {llabel} layer'))
+                    else:
+                        events.append((infection['date'], 'was infected with H5N1 as a seed infection'))
+
+                if infection['source'] == uid:
+                    x = len([a for a in self.infection_log if a['source'] == infection['target']])
+                    events.append((infection['date'],f'gave H5N1 to {infection["target"]} via the {llabel} layer ({x} secondary infections)'))
+
+            if len(events):
+                for day, event in sorted(events, key=lambda x: x[0]):
+                    print(f'On day {day:.0f}, {uid} {event}')
+            else:
+                print(f'Nothing happened to {uid} during the simulation.')
+        return
 

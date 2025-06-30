@@ -168,8 +168,6 @@ class Agents(Roster):
                 else:
                     self[key] = value
 
-        # self._pending_quarantine = defaultdict(list)  # Internal cache to record people that need to be quarantined on each timestep {t:(person, quarantine_end_day)}
-
         return
 
     #%% Methods for updating state
@@ -327,7 +325,6 @@ class Agents(Roster):
         susceptible_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['susceptible'])])
         exposed_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['exposed'])])
         infectious_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['infectious'])])
-        #symptomatic_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['symptomatic'])])
         quarantined_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['quarantined'])])
 
         susceptible_barn_uids = np.array(self.barn['uid'][znu.false(self.barn['contaminated'])])
@@ -341,7 +338,7 @@ class Agents(Roster):
         susceptible_uids = np.concatenate((susceptible_human_uids, susceptible_flock_uids, susceptible_barn_uids, susceptible_water_uids))
         exposed_uids = np.concatenate((exposed_human_uids, exposed_flock_uids, exposed_barn_uids, exposed_water_uids))
         infectious_uids = np.concatenate((infectious_human_uids, infectious_flock_uids, infectious_barn_uids, infectious_water_uids))
-        #symptomatic_uids = np.concatenate((symptomatic_human_uids, symptomatic_flock_uids))
+
         symptomatic_uids = symptomatic_human_uids
         quarantined_uids = np.concatenate((quarantined_human_uids, quarantined_flock_uids))
 
@@ -354,10 +351,6 @@ class Agents(Roster):
                                                   self.flock.infectious_variant,
                                                   self.barn.contaminated_variant,
                                                   self.water.contaminated_variant))
-        # self.infectious_by_variant = np.concatenate((self.human.infectious_by_variant,
-        #                                              self.flock.infectious_by_variant,
-        #                                              self.barn.contaminated_by_variant,
-        #                                              self.water.contaminated_by_variant))
         return
 
 
@@ -424,8 +417,6 @@ class Agents(Roster):
         return
     
     def infect(self, inds, hosp_max, source, layer, variant):
-
-        #TODO: Refactor sources so they actually work
 
         human_inds = np.where(np.isin(self.human.uid, self.uid[inds]))
         #human_inds = np.array([i for i, uid in enumerate(self.human.uid) if uid in set(self.uid[inds])]) # Supposedly faster if self.uid[inds] is large

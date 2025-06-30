@@ -617,8 +617,8 @@ class Humans(Subroster):
         self.flows_variant['new_infections_by_variant'][variant] += len(inds)
 
         # Record transmissions
-        for i, target in enumerate(inds):
-            entry = dict(source=source[i] if source is not None else None, target=target, date=self.t, layer=layer, variant=variant_label)
+        for i, target_ind in enumerate(inds):
+            entry = dict(source=source[i] if source is not None else None, target=self.uid[target_ind], date=self.t, layer=layer, variant=variant_label)
             self.infection_log.append(entry)
 
         # Calculate how long before this person can infect other people
@@ -787,32 +787,32 @@ class Humans(Subroster):
 
             p = self[uid]
             #sex = 'female' if p.sex == 0 else 'male'
-            sex = p.sex # I believe this is a string now, so no need to convert
+            sex = p.sex # This is a string now, so no need to convert
 
             intro = f'\nThis is the story of {uid}, a {p.age:.0f} year old {sex}'
 
             if not p.susceptible:
                 if np.isnan(p.date_symptomatic):
-                    print(f'{intro}, who had asymptomatic COVID.')
+                    print(f'{intro}, who had asymptomatic H5N1.')
                 else:
-                    print(f'{intro}, who had symptomatic COVID.')
+                    print(f'{intro}, who had symptomatic H5N1.')
             else:
-                print(f'{intro}, who did not contract COVID.')
+                print(f'{intro}, who did not contract H5N1.')
 
-            total_contacts = 0
-            no_contacts = []
-            for lkey in p.contacts.keys():
-                llabel = label_lkey(lkey)
-                n_contacts = len(p.contacts[lkey])
-                total_contacts += n_contacts
-                if n_contacts:
-                    print(f'{uid} is connected to {n_contacts} agents in the {llabel} layer')
-                else:
-                    no_contacts.append(llabel)
-            if len(no_contacts):
-                nc_string = ', '.join(no_contacts)
-                print(f'{uid} has no contacts in the {nc_string} layer(s)')
-            print(f'{uid} has {total_contacts} contacts in total')
+            # total_contacts = 0
+            # no_contacts = []
+            # for lkey in p.contacts.keys():
+            #     llabel = label_lkey(lkey)
+            #     n_contacts = len(p.contacts[lkey])
+            #     total_contacts += n_contacts
+            #     if n_contacts:
+            #         print(f'{uid} is connected to {n_contacts} agents in the {llabel} layer')
+            #     else:
+            #         no_contacts.append(llabel)
+            # if len(no_contacts):
+            #     nc_string = ', '.join(no_contacts)
+            #     print(f'{uid} has no contacts in the {nc_string} layer(s)')
+            # print(f'{uid} has {total_contacts} contacts in total')
 
             events = []
 
@@ -842,13 +842,13 @@ class Humans(Subroster):
                 llabel = label_lkey(lkey)
                 if infection['target'] == uid:
                     if lkey:
-                        events.append((infection['date'], f'was infected with COVID by {infection["source"]} via the {llabel} layer'))
+                        events.append((infection['date'], f'was infected with H5N1 by {infection["source"]} via the {llabel} layer'))
                     else:
-                        events.append((infection['date'], 'was infected with COVID as a seed infection'))
+                        events.append((infection['date'], 'was infected with H5N1 as a seed infection'))
 
                 if infection['source'] == uid:
                     x = len([a for a in self.infection_log if a['source'] == infection['target']])
-                    events.append((infection['date'],f'gave COVID to {infection["target"]} via the {llabel} layer ({x} secondary infections)'))
+                    events.append((infection['date'],f'gave H5N1 to {infection["target"]} via the {llabel} layer ({x} secondary infections)'))
 
             if len(events):
                 for day, event in sorted(events, key=lambda x: x[0]):
