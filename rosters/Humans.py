@@ -785,7 +785,7 @@ class Humans(Subroster):
 
         for uid in uids:
 
-            p = self[uid]
+            p = self[np.where(self.uid == uid)[0]]
             #sex = 'female' if p.sex == 0 else 'male'
             sex = p.sex # This is a string now, so no need to convert
 

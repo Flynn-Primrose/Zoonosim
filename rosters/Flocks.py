@@ -460,8 +460,7 @@ class Flocks(Subroster):
         uids.extend(args)
 
         for uid in uids:
-
-            p = self[uid]
+            p = self[np.where(self.uid == uid)[0]]
             breed = p.breed
             barn = p.barn
 
