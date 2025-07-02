@@ -74,16 +74,16 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['n_variants'] = 1 # The number of variants circulating in the population
 
     pars['beta'] = {} # The transmissibility of the disease for each agent type.
-    pars['beta']['human'] = 0.1 # The transmissibility of the disease for humans. This is a dummy variable!
+    pars['beta']['human'] = 0.3 # The transmissibility of the disease for humans. This is a dummy variable!
     pars['beta']['flock'] = 0.7 # The transmissibility of the disease for flocks. This is a dummy variable!
-    pars['beta']['barn'] = 0.1 # The transmissibility of the disease for barns. This is a dummy variable!
-    pars['beta']['water'] = 0.1 # The transmissibility of the disease for water. This is a dummy variable!
+    pars['beta']['barn'] = 0.2 # The transmissibility of the disease for barns. This is a dummy variable!
+    pars['beta']['water'] = 0.2 # The transmissibility of the disease for water. This is a dummy variable!
 
     # Default variant parameters
     # These are all dummy values
     pars['wild'] = dict(
         human = dict(
-            rel_beta = 0.1,
+            rel_beta = 0.33,
             rel_symp_prob = 0.33,
             rel_severe_prob = 0.25,
             rel_death_prob = 0.01,

@@ -278,11 +278,9 @@ class Flocks(Subroster):
         self.date_suspected[new_suspicious_inds] = self.t
         self.dur_susp2res[new_suspicious_inds] = znu.sample(**self.pars['dur']['flock']['susp2res'], size=len(new_suspicious_inds))
         self.date_result[new_suspicious_inds] = self.date_suspected[new_suspicious_inds] + self.dur_susp2res[new_suspicious_inds]
-        self.quarantined[new_suspicious_inds] = True
         self.date_quarantined[new_suspicious_inds] = self.t
 
         self.update_event_log(new_suspicious_inds, 'suspected')
-        self.update_event_log(new_suspicious_inds, 'quarantined')
 
 
         return len(suspicious_inds)
@@ -460,39 +458,28 @@ class Flocks(Subroster):
         uids.extend(args)
 
         for uid in uids:
-            p = self[np.where(self.uid == uid)[0]]
-            breed = p.breed
-            barn = p.barn
+            uid_ind = np.where(self.uid == uid)[0]
+            breed = self.breed[uid_ind].item()
+            barn = self.barn[uid_ind].item()
 
             intro = f'\nThis is the story of {uid}, a flock of breed {breed}s housed in barn {barn}.'
             print(f'{intro}')
-
-            # total_contacts = 0
-            # no_contacts = []
-            # for lkey in p.contacts.keys():
-            #     llabel = label_lkey(lkey)
-            #     n_contacts = len(p.contacts[lkey])
-            #     total_contacts += n_contacts
-            #     if n_contacts:
-            #         print(f'{uid} is connected to {n_contacts} agents in the {llabel} layer')
-            #     else:
-            #         no_contacts.append(llabel)
-            # if len(no_contacts):
-            #     nc_string = ', '.join(no_contacts)
-            #     print(f'{uid} has no contacts in the {nc_string} layer(s)')
-            # print(f'{uid} has {total_contacts} contacts in total')
 
             events = []
 
             event_dict = {
                 'suspected': 'was suspected of being infected with H5N1',
                 'infectious': 'became infectious with H5N1',
-                'quarantined': 'was quarantined'
-
+                'quarantined': 'was quarantined',
+                'cull': 'was culled',
+                'cycle_end': 'finished its production cycle',
+                'cycle_start':'began its production cycle',
+                'negative': 'was confirmed to be negative for H5N1' 
             }
 
-            for event in self.event_log[self.event_log.target == uid]:
-                events.append(event.date, event_dict[event.event_type])
+            for event in self.event_log:
+                if event['target'] == uid:
+                    events.append((event['date'], event_dict[event['event_type']]))
 
             for infection in self.infection_log:
                 lkey = infection['layer']
