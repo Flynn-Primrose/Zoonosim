@@ -462,7 +462,7 @@ class Flocks(Subroster):
             breed = self.breed[uid_ind].item()
             barn = self.barn[uid_ind].item()
 
-            intro = f'\nThis is the story of {uid}, a flock of breed {breed}s housed in barn {barn}.'
+            intro = f'\nThis is the story of {uid}, a flock of {breed}s housed in barn {barn}.'
             print(f'{intro}')
 
             events = []

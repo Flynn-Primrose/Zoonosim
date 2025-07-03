@@ -71,6 +71,7 @@ class Water(Subroster):
         self._lock = False # Prevent further modification of keys
         self.meta = WaterMeta() # Store list of keys and dtypes
         # self.init_contacts() # Initialize the contacts
+        self.event_log = [] # Record non-infection related events
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
 
         pop_size = self.pars['pop_size_by_type']['water']
@@ -158,6 +159,23 @@ class Water(Subroster):
 
         return
 
+    def update_event_log(self, target_inds, event_type):
+        '''
+        Add an entry to the event log
+
+        args:
+            target_inds: array of indices of flocks that experienced a recordable event
+            event (str): The specific event in question
+        '''
+
+        if target_inds is None:
+            return
+        
+        for ind in target_inds:
+            entry = dict(target = self.uid[ind], event_type = event_type, date = self.t)
+            self.event_log.append(entry)
+
+        return
 
 
     #%% Methods for updating state
@@ -169,6 +187,7 @@ class Water(Subroster):
         if len(inds) > 0:
             self.uncontaminated[inds] = True
             self.contaminated[inds]    = False
+            self.update_event_log(inds, 'uncontaminated')
 
         return len(inds)
 
@@ -232,3 +251,71 @@ class Water(Subroster):
 
 
         return n_infections # For incrementing counters
+    
+    def story(self, uid, *args):
+        '''
+        Print out a short history of events in the life of the specified waterbody.
+
+        Args:
+            uid (int/list): the waterbody or waterbodies whose story is to be regaled
+            args (list): these waterbodies will tell their stories too
+
+        **Example**::
+
+            sim = cv.Sim()
+            sim.run()
+            sim.agents.water.story(12)
+            sim.agents.water.story(795)
+        '''
+
+        def label_lkey(lkey):
+            ''' Friendly name for common layer keys '''
+            if lkey.lower() == 'bw':
+                llabel = 'barn-water contacts'
+            elif lkey.lower() == 'fw':
+                llabel = 'flock-water contacts'
+            else:
+                llabel = f'"{lkey}"'
+            return llabel
+
+        uids = sc.promotetolist(uid)
+        uids.extend(args)
+
+        for uid in uids:
+            uid_ind = np.where(self.uid == uid)[0]
+            flock = self.flock[uid_ind]
+            repops = self.repopulations[uid_ind]
+
+
+            intro = f'\nThis is the story of {uid}, a barn housing flock {flock}. It has repopulated {repops} times.'
+            print(f'{intro}')
+
+            events = []
+
+            event_dict = {
+                'uncontaminated': 'naturally lost its contamination',
+            }
+
+            for event in self.event_log:
+                if event['target'] == uid:
+                    events.append((event['date'], event_dict[event['event_type']]))
+
+            for infection in self.infection_log:
+                lkey = infection['layer']
+                llabel = label_lkey(lkey)
+                if infection['target'] == uid:
+                    if lkey:
+                        events.append((infection['date'], f'was contaminated with H5N1 by {infection["source"]} via the {llabel} layer'))
+                    else:
+                        events.append((infection['date'], 'was contaminated with H5N1 as a seed contamination'))
+
+                if infection['source'] == uid:
+                    x = len([a for a in self.infection_log if a['source'] == infection['target']])
+                    events.append((infection['date'],f'gave H5N1 to {infection["target"]} via the {llabel} layer ({x} secondary infections)'))
+
+            if len(events):
+                for day, event in sorted(events, key=lambda x: x[0]):
+                    print(f'On day {day:.0f}, {uid} {event}')
+            else:
+                print(f'Nothing happened to {uid} during the simulation.')
+        return

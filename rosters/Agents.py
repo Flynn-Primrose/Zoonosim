@@ -469,6 +469,7 @@ class Agents(Roster):
             self.flock.rel_trans[flock_inds] = progs['trans_ORs'][breed_inds]
 
             self.flock.update_event_log(flock_inds, 'cycle_start')
+            self.barn.update_event_log(barn_inds, 'cycle_start')
 
         return len(barn_inds)
     
@@ -554,6 +555,7 @@ class Agents(Roster):
             self.flock.date_quarantined[flock_inds] = np.nan
             self.flock.date_result[flock_inds] = np.nan
             self.flock.update_event_log(flock_inds, 'cycle_end')
+            self.barn.update_event_log(barn_inds, 'cycle_end')
 
 
         return len(barn_inds)
