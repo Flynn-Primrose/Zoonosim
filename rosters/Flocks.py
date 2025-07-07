@@ -413,7 +413,7 @@ class Flocks(Subroster):
         return n_infections # For incrementing counters
 
 
-    def test(self, inds, sample_size, delay = 0):
+    def test(self, inds, sample_size):
         '''
         Method to test poultry. Typically not to be called by the user directly;
         see interventions.
@@ -421,9 +421,33 @@ class Flocks(Subroster):
         Args:
             inds: indices of who to test
             sample_size (int): The number of birds to be tested in each flock
-            delay (int): The number of days until the test results are ready
         '''
-        # TODO: Implement this method
+        unsuspected_inds = np.where(self.suspected == False)[0]
+        inds_to_test = np.intersect1d(inds, unsuspected_inds)
+
+        already_suspected_inds = np.setdiff1d(inds, inds_to_test)
+        self.update_event_log(already_suspected_inds, 'screened_sus')
+
+        prop_infected = (self.exposed_headcount[inds_to_test] + self.infectious_headcount[inds_to_test])/self.headcount[inds_to_test] #exposed + infectious = infected, infected/total=proportion infected
+        non_zero_inds = prop_infected.non_zero()[0]
+        zero_inds = np.where(prop_infected == 0)[0]
+        prob_pos = np.ones(len(non_zero_inds)) - ((np.ones(len(non_zero_inds)) - prop_infected[non_zero_inds])**sample_size)
+
+        positives = (np.random.random(len(non_zero_inds)) < prob_pos[non_zero_inds])
+        pos_inds = inds_to_test[non_zero_inds[positives]]
+        neg_inds = np.concatenate(inds_to_test[non_zero_inds[positives == False]], inds_to_test[zero_inds])
+
+        if len(pos_inds)>0:
+            self.suspected[pos_inds] = True
+            self.date_suspected[pos_inds] = self.t
+            self.dur_susp2res[pos_inds] = znu.sample(**self.pars['dur']['flock']['susp2res'], size=len(pos_inds))
+            self.date_result[pos_inds] = self.date_suspected[pos_inds] + self.dur_susp2res[pos_inds]
+            self.date_quarantined[pos_inds] = self.t
+            self.update_event_log(pos_inds, 'screened_pos')
+
+        if len(neg_inds)>0:
+            self.update_event_log(neg_inds, 'screened_neg')
+
         return
     
     def story(self, uid, *args):
@@ -474,7 +498,10 @@ class Flocks(Subroster):
                 'cull': 'was culled',
                 'cycle_end': 'finished its production cycle',
                 'cycle_start':'began its production cycle',
-                'negative': 'was confirmed to be negative for H5N1' 
+                'negative': 'was confirmed to be negative for H5N1', 
+                'screened_pos': 'tested positive during screening',
+                'screened_neg': 'tested negative during screening',
+                'screened_sus': 'skipped regular screening due to prior suspicion'
             }
 
             for event in self.event_log:

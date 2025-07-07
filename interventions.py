@@ -674,7 +674,73 @@ class clip_edges(Intervention):
 
 #%% Testing interventions
 
-__all__+= ['test_num', 'test_prob', 'contact_tracing', 'notify_contacts']
+__all__+= ['test_flock', 'test_num', 'test_prob', 'contact_tracing', 'notify_contacts']
+
+class test_flock(Intervention):
+    '''
+    Regularly test a given set of flocks for infection.
+
+    Args:
+        flock_inds (arr): The indecies (in the flock subroster) of flocks to be tested regularly
+        flock_uids (arr): The UIDs of flocks to be tested regularly
+        auto_select (bool): Should the intervention autoselect flocks to test?
+        select_prop (float): what proportion of flocks should be selected for testing
+    '''
+
+    def __init__(self, flock_inds = None, flock_uids = None, auto_select = True, select_prop = 0.25, sample_size = 6, start_day = 0, end_day = None, **kwargs):
+        super.__init__(**kwargs)
+        self.flock_inds = flock_inds
+        self.flock_uids = flock_uids
+        self.auto_select = auto_select
+        self.select_prop = select_prop
+        self.sample_size = sample_size
+        self.start_day = start_day
+        self.end_day = end_day
+        return
+    
+    def initialize(self, sim):
+        super.initialize()
+
+        if self.auto_select:
+            if self.select_prop is None:
+                errormsg = 'the proportion of flocks to be selected for testing must be specified when using auto_select'
+                raise ValueError(errormsg)
+            
+            n_flocks = sim.pars['pop_size_by_type']['flock']
+            n_selections = int(round(n_flocks * self.select_prop))
+            selected_inds = znu.choose(n_flocks, n_selections)
+
+            self.flock_inds = np.unique(np.concatenate(self.flock_inds, selected_inds))
+
+        if self.flock_uids is not None:
+            uid_inds = np.where(np.isin(self.flock_uids, sim.agents.flock.uid))[0]
+            self.flock_inds = np.unique(np.concatonate(self.flock_inds, uid_inds))
+
+        self.flock_test_day = znu.choose(7, len(self.flock_inds))
+
+        return
+    
+    def finalize(self):
+        super.finalize()
+        return
+    
+    def apply(self, sim):
+        t = sim.t # For convenience
+
+        start_day = get_day(self.start_day, self, sim)
+        end_day = get_day(self.end_day, self, sim)
+
+        if t < start_day:
+            return
+        elif end_day is not None and t > end_day:
+            return
+        
+        todays_inds = np.where(self.flock_test_day == t%7)[0]
+
+        sim.agents.flock.test(todays_inds, self.sample_size)
+
+        return todays_inds
+        
 
 
 def get_quar_inds(quar_policy, sim):

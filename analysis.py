@@ -20,7 +20,7 @@ class Analyzer(sc.prettyobj):
     '''
     Base class for analyzers. Based on the Intervention class. Analyzers are used
     to provide more detailed information about a simulation than is available by
-    default -- for example, pulling states out of sim.people on a particular timestep
+    default -- for example, pulling states out of sim.agents on a particular timestep
     before it gets updated in the next timestep.
 
     To retrieve a particular analyzer from a sim, use sim.get_analyzer().

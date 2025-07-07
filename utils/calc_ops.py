@@ -63,12 +63,6 @@ def compute_viral_load(t,       x_p1,       y_p1,       x_p2,       y_p2,       
 
     return vl, vl_rescaled
 
-# TODO: Compute infection levels in flocks.
-# TODO: compute_exposed_delta
-# TODO: compute_infectious_delta
-# TODO: compute_symptomatic_delta
-# TODO: compute_dead_delta
-
 
 # jit means you let Numba's combiler optimize this function. 
 @nb.njit(            (nbfloat[:], nbfloat[:], nbbool[:], nbbool[:], nbfloat,    nbfloat[:], nbbool[:], nbbool[:], nbfloat[:],  nbfloat,     nbfloat[:]), cache=cache, parallel=safe_parallel)
