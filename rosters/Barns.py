@@ -107,7 +107,7 @@ class Barns(Subroster):
         self._lock = False # Prevent further modification of keys
         self.meta = BarnMeta() # Store list of keys and dtypes
   
-
+        self.event_log = []
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
 
         pop_size = self.pars['pop_size_by_type']['barn']
@@ -206,7 +206,23 @@ class Barns(Subroster):
 
         return
 
+    def update_event_log(self, target_inds, event_type):
+        '''
+        Add an entry to the event log
 
+        args:
+            target_inds: array of indices of flocks that experienced a recordable event
+            event (str): The specific event in question
+        '''
+
+        if target_inds is None:
+            return
+        
+        for ind in target_inds:
+            entry = dict(target = self.uid[ind], event_type = event_type, date = self.t)
+            self.event_log.append(entry)
+
+        return
     #%% Methods for updating state
 
     
@@ -219,6 +235,8 @@ class Barns(Subroster):
             self.contaminated_variant[inds] = np.nan
             self.date_contaminated[inds] = np.nan
             self.date_uncontaminated[inds] = np.nan
+
+            self.update_event_log(inds, 'uncontaminated')
         return len(inds)
     
     def check_cleaned(self):
@@ -232,6 +250,7 @@ class Barns(Subroster):
             self.contaminated_by_variant[:, inds] = False
             self.date_repopulate[inds] = self.date_cleaning[inds] + 1
             self.date_cleaning[inds] = np.nan
+            self.update_event_log(inds, 'cleaning_finished')
         return len(inds)
     
     def check_composted(self):
@@ -242,6 +261,8 @@ class Barns(Subroster):
             self.cleaning[inds] = True
             self.date_cleaning[inds] = self.date_composting[inds] + znu.sample(**self.pars['dur']['barn']['cleaning'], size=len(inds))
             self.date_composting[inds] = np.nan
+            self.update_event_log(inds, 'composting_finished')
+            self.update_event_log(inds, 'cleaning_started')
         return len(inds)
 
 
@@ -298,3 +319,79 @@ class Barns(Subroster):
 
 
         return n_infections # For incrementing counters
+    
+    def story(self, uid, *args):
+        '''
+        Print out a short history of events in the life of the specified flock.
+
+        Args:
+            uid (int/list): the flock or flocks whose story is to be regaled
+            args (list): these flocks will tell their stories too
+
+        **Example**::
+
+            sim = cv.Sim()
+            sim.run()
+            sim.agents.flock.story(12)
+            sim.agents.flock.story(795)
+        '''
+
+        def label_lkey(lkey):
+            ''' Friendly name for common layer keys '''
+            if lkey.lower() == 'fb':
+                llabel = 'flock-barn contacts'
+            if lkey.lower() == 'bw':
+                llabel = 'barn-water contacts'
+            elif lkey.lower() == 'hb':
+                llabel = 'human-barn contacts'
+            else:
+                llabel = f'"{lkey}"'
+            return llabel
+
+        uids = sc.promotetolist(uid)
+        uids.extend(args)
+
+        for uid in uids:
+            uid_ind = np.where(self.uid == uid)[0]
+            flock = self.flock[uid_ind]
+            repops = self.repopulations[uid_ind]
+
+
+            intro = f'\nThis is the story of {uid}, a barn housing flock {flock}. It has repopulated {repops} times.'
+            print(f'{intro}')
+
+            events = []
+
+            event_dict = {
+                'cleaning_started': 'started the cleaning process',
+                'cleaning_finished': 'completed the cleaning process',
+                'composting_started': 'started the composting process',
+                'composting_finished': 'finished the composting process',
+                'uncontaminated': 'naturally lost its contamination',
+                'cycle_end': 'finished its production cycle',
+                'cycle_start':'repopulated and began its production cycle',
+            }
+
+            for event in self.event_log:
+                if event['target'] == uid:
+                    events.append((event['date'], event_dict[event['event_type']]))
+
+            for infection in self.infection_log:
+                lkey = infection['layer']
+                llabel = label_lkey(lkey)
+                if infection['target'] == uid:
+                    if lkey:
+                        events.append((infection['date'], f'was contaminated with H5N1 by {infection["source"]} via the {llabel} layer'))
+                    else:
+                        events.append((infection['date'], 'was contaminated with H5N1 as a seed contamination'))
+
+                if infection['source'] == uid:
+                    x = len([a for a in self.infection_log if a['source'] == infection['target']])
+                    events.append((infection['date'],f'gave H5N1 to {infection["target"]} via the {llabel} layer ({x} secondary infections)'))
+
+            if len(events):
+                for day, event in sorted(events, key=lambda x: x[0]):
+                    print(f'On day {day:.0f}, {uid} {event}')
+            else:
+                print(f'Nothing happened to {uid} during the simulation.')
+        return
