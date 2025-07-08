@@ -429,13 +429,13 @@ class Flocks(Subroster):
         self.update_event_log(already_suspected_inds, 'screened_sus')
 
         prop_infected = (self.exposed_headcount[inds_to_test] + self.infectious_headcount[inds_to_test])/self.headcount[inds_to_test] #exposed + infectious = infected, infected/total=proportion infected
-        non_zero_inds = prop_infected.non_zero()[0]
+        non_zero_inds = prop_infected.nonzero()[0]
         zero_inds = np.where(prop_infected == 0)[0]
         prob_pos = np.ones(len(non_zero_inds)) - ((np.ones(len(non_zero_inds)) - prop_infected[non_zero_inds])**sample_size)
 
         positives = (np.random.random(len(non_zero_inds)) < prob_pos[non_zero_inds])
         pos_inds = inds_to_test[non_zero_inds[positives]]
-        neg_inds = np.concatenate(inds_to_test[non_zero_inds[positives == False]], inds_to_test[zero_inds])
+        neg_inds = np.concatenate((inds_to_test[non_zero_inds[positives == False]], inds_to_test[zero_inds]))
 
         if len(pos_inds)>0:
             self.suspected[pos_inds] = True

@@ -688,7 +688,7 @@ class test_flock(Intervention):
     '''
 
     def __init__(self, flock_inds = None, flock_uids = None, auto_select = True, select_prop = 0.25, sample_size = 6, start_day = 0, end_day = None, **kwargs):
-        super.__init__(**kwargs)
+        super().__init__(**kwargs)
         self.flock_inds = flock_inds
         self.flock_uids = flock_uids
         self.auto_select = auto_select
@@ -699,7 +699,7 @@ class test_flock(Intervention):
         return
     
     def initialize(self, sim):
-        super.initialize()
+        super().initialize()
 
         if self.auto_select:
             if self.select_prop is None:
@@ -709,19 +709,20 @@ class test_flock(Intervention):
             n_flocks = sim.pars['pop_size_by_type']['flock']
             n_selections = int(round(n_flocks * self.select_prop))
             selected_inds = znu.choose(n_flocks, n_selections)
+            if self.flock_inds is None: self.flock_inds = selected_inds
+            else: self.flock_inds = np.unique(np.concatenate((self.flock_inds, selected_inds)))
 
-            self.flock_inds = np.unique(np.concatenate(self.flock_inds, selected_inds))
-
-        if self.flock_uids is not None:
+        if self.flock_uids is None:
             uid_inds = np.where(np.isin(self.flock_uids, sim.agents.flock.uid))[0]
-            self.flock_inds = np.unique(np.concatonate(self.flock_inds, uid_inds))
+            if self.flock_inds is not None: self.flock_inds = uid_inds
+            else: self.flock_inds = np.unique(np.concatonate((self.flock_inds, uid_inds)))
 
         self.flock_test_day = znu.choose(7, len(self.flock_inds))
 
         return
     
-    def finalize(self):
-        super.finalize()
+    def finalize(self, sim):
+        super().finalize()
         return
     
     def apply(self, sim):
