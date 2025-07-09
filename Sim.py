@@ -487,6 +487,11 @@ class Sim(znb.BaseSim):
         self.agents = znpop.make_agents(self, reset=reset, verbose=verbose, **kwargs)
         self.agents.initialize(sim_pars=self.pars) # Fully initialize the people
         self.reset_layer_pars(force=False) # Ensure that layer keys match the loaded population
+
+        if self.pars['enable_smartwatches']:
+            self.agents.human.init_watches(self.pars['smartwatch_pars'])
+
+
         if init_infections:
             self.init_infections(verbose=verbose)
 

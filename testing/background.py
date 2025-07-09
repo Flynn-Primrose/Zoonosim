@@ -32,7 +32,7 @@ def ILI_float(sim):
     '''
     Args:
         sim          : Simulation object
-        COVID_to_ILI : Whether to initialize ILI infections in individuals who have COVID
+        Avian_to_ILI : Whether to initialize ILI infections in individuals who have Avian Influenza
     '''
     p_infect     = sim.pars['bkg_ILI']
     Avian_to_ILI = sim.pars['Avian_to_ILI']

@@ -5,6 +5,7 @@ from collections import defaultdict
 from .. import version as znv
 from .. import utils as znu
 from .. import defaults as znd
+from .. import watches as znw
 from .Subroster import Subroster
 #from .. import base as znb
 
@@ -27,6 +28,8 @@ class HumanMeta(sc.prettyobj):
             'rel_sus',          # Float
             'viral_load',       # Float
             'rescaled_vl',      # Float
+            'watch_fpr',        # Float
+            'has_watch',        # bool
             'n_infections',     # Int
             'n_breakthroughs',  # Int
             'cons_days_in_quar',    # Int
@@ -48,6 +51,7 @@ class HumanMeta(sc.prettyobj):
             'dead',
             'quarantined',
             'vaccinated',
+            'alerted',
         ]
 
         # Variant states -- these are ints
@@ -167,6 +171,8 @@ class Humans(Subroster):
                 self[key] = np.zeros(pop_size, dtype=znd.default_float)
             elif key in ['rescaled_vl']:  # for tracking purposes
                 self[key] = np.zeros(pop_size, dtype=znd.default_float)
+            elif key in ['has_watch']:
+                self[key] = np.full(pop_size, False, dtype = znd.default_bool)
             else:
                 self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
 
@@ -220,6 +226,31 @@ class Humans(Subroster):
         self._pending_quarantine = defaultdict(list)  # Internal cache to record people that need to be quarantined on each timestep {t:(person, quarantine_end_day)}
 
         return
+    
+    def init_watches(self, pars):
+        '''
+        Initialize the watches for the people.
+        '''
+
+        self.watches = znw.Watches(pars)
+        
+        # Initialize the people-specific P(non-inf alert)
+        n = len(self.uid)
+        if self.watches.pars['use_variable_fpr']:
+            self.watch_fpr = self.watches.pars['fpr_sampler'].sample(n=n)
+        else:
+            self.watch_fpr = np.ones(n) * self.watches.pars['mean_fpr']
+        
+        # Update the number of people who actually download the app and use it.
+        # We model this by setting all other people to "not have watches". 
+        usage_rate = self.watches.pars['usage_rate']
+        mask = np.random.binomial(1, usage_rate, n) # Get a binomial mask
+        self.has_watch = np.logical_and(self.has_watch, mask) # Update self.has_watch
+
+        # Bad coding practice to init here, but much simpler. TODO: Verify.
+        self.LEN_ALERT_HIST = 3
+        self.alert_histories = np.zeros((len(self.uid), self.LEN_ALERT_HIST))
+        return
 
 
     def init_flows(self):
@@ -228,6 +259,9 @@ class Humans(Subroster):
         self.flows_variant = {}
         for key in znd.new_human_flows_by_variant:
             self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=znd.default_float)
+        if self.pars['enable_smartwatches']:
+            for key in znd.new_result_flows_smartwatches:
+                self.flows[key] = 0
         return
 
     def initialize(self, agents_pars=None):
@@ -272,7 +306,34 @@ class Humans(Subroster):
         return
 
 
+    def check_alert_accuracy(self):
+        '''
+        Sorts alerts into true and false. Run before check_alerted() because check_alerted() will set alerted status to False in preparation for the next day.
+        '''
 
+        # Get those who were alerted and those who are infected
+        watch_owners = self.true('has_watch') # list of inds of people with watches
+        bool_mask_alerted = self.alerted[watch_owners]
+        bool_mask_exposed = self.exposed[watch_owners]
+
+        tp = np.sum(np.logical_and(bool_mask_alerted, bool_mask_exposed))
+        fn = np.sum(np.logical_and(np.logical_not(bool_mask_alerted), bool_mask_exposed))
+        tn = np.sum(np.logical_and(np.logical_not(bool_mask_alerted), np.logical_not(bool_mask_exposed)))
+        fp = np.sum(np.logical_and(bool_mask_alerted, np.logical_not(bool_mask_exposed)))
+
+        # print("DEBUG: SMARTWATCH ALERT PROBS 2")
+        # days = np.arange(-21, 22, 1)
+        # for day in days:
+        #     # filled conditionally on watch ownership. 
+        #     w_inf_day_i = self.all_peoples_infection_days == day
+        #     # alerted and has watch and infected on day i. 
+        #     w_inf_day_i_alerted = np.logical_and(w_inf_day_i, self.sw_alarmed)
+
+        #     self.sum_people_on_day[day] += np.sum(w_inf_day_i)
+        #     self.sum_alert_on_day[day] += np.sum(w_inf_day_i_alerted)
+        # #### END DEBUG
+
+        return tp, fn, tn, fp
 
     def update_states_pre(self, t):
         ''' Perform all state updates at the current timestep '''
@@ -298,13 +359,31 @@ class Humans(Subroster):
 
 
         self.flows['new_diagnosed'] += self.check_diagnosed()
-        #self.flows['new_quarantined'] += self.check_quar()
+        self.flows['new_quarantined'] += self.check_quar()
+
+        # Take care of smartwatch calculations
+        if self.pars['enable_smartwatches']:
+            tp, fn, tn, fp = self.check_alert_accuracy()
+            self.flows['new_alerts_tp'] += tp
+            self.flows['new_alerts_fn'] += fn
+            self.flows['new_alerts_tn'] += tn
+            self.flows['new_alerts_fp'] += fp
+            self.flows['new_alerted'] += self.check_alerted()
+            sw_quar, sw_i_quar = self.check_sw_quarantined() # Update the number of smartwatch users quarantined. 
+            self.flows['new_Q_w'] += sw_quar
+            self.flows['new_Q_w_i'] += sw_i_quar
 
         del self.is_exp  # Tidy up
 
         return
 
+    def check_sw_quarantined(self):
+        sw_quarantined_arr = np.logical_and(self.quarantined, self.has_watch)
+        sw_quarantined_count = np.sum(sw_quarantined_arr)
+        sw_correctly_quarantined_arr = np.logical_and(sw_quarantined_arr, self.exposed)
+        sw_i_quarantined_count = sw_quarantined_count - np.sum(sw_correctly_quarantined_arr)
 
+        return sw_quarantined_count, sw_i_quarantined_count
 
     
     def schedule_behaviour(self):
@@ -325,7 +404,19 @@ class Humans(Subroster):
 
     #%% Methods for updating state
 
+    def check_alerted(self):
+        '''
+        Check which people received alerts on this timestep and whether they were correct or incorrect.
+        Reset alerted status to False for everyone to prepare for the next day.
+        '''
 
+        # Check who was alerted
+        n_alerted = len(znu.true(self.alerted))
+
+        # Set the alerted status of everyone to false
+        self.alerted[:] = False
+
+        return n_alerted
 
     def check_inds_diagnosed(self, current, date, filter_inds=None):
         '''
@@ -751,6 +842,28 @@ class Humans(Subroster):
         self.date_pos_test[final_inds] = self.t
 
         return final_inds
+    
+    def schedule_quarantine(self, inds, start_date=None, period=None):
+        '''
+        Schedule a quarantine. Typically not called by the user directly except
+        via a custom intervention; see the contact_tracing() intervention instead.
+
+        This function will create a request to quarantine a person on the start_date for
+        a period of time. Whether they are on an existing quarantine that gets extended, or
+        whether they are no longer eligible for quarantine, will be checked when the start_date
+        is reached.
+
+        Args:
+            inds (int): indices of who to quarantine, specified by check_quar()
+            start_date (int): day to begin quarantine (defaults to the current day, `sim.t`)
+            period (int): quarantine duration (defaults to ``pars['quar_period']``)
+        '''
+
+        start_date = self.t if start_date is None else int(start_date)
+        period = self.pars['quar_period'] if period is None else int(period)
+        for ind in inds:
+            self._pending_quarantine[start_date].append((ind, start_date + period))
+        return
     
     def story(self, uid, *args):
         '''

@@ -62,6 +62,10 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['testobjs'] = None  # This naming convention is possibly ambiguous - do NOT supply actually test objects (do that for pars['testing'])
 
 
+    pars['enable_smartwatches'] = False
+    pars['smartwatch_pars'] = None
+
+
     # Network parameters, generally initialized after the population has been constructed
     #pars['contacts']        = None  # The number of contacts per layer; set by reset_layer_pars() below
     pars['dynam_layer']     = None  # Which layers are dynamic; set by reset_layer_pars() below
