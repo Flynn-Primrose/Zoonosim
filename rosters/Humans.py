@@ -260,7 +260,7 @@ class Humans(Subroster):
         for key in znd.new_human_flows_by_variant:
             self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=znd.default_float)
         if self.pars['enable_smartwatches']:
-            for key in znd.new_result_flows_smartwatches:
+            for key in znd.result_flows_smartwatches:
                 self.flows[key] = 0
         return
 

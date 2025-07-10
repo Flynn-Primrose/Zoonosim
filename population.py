@@ -224,7 +224,13 @@ def make_humans(sim_pars, uid):
     sex = znu.n_binomial(0.5, len(uid))
     age  = np.maximum(18, znu.n_poisson(40, len(uid))) # NOTE: Dummy values (assume average worker age of 40)
 
-    humans = znr.Humans(sim_pars, strict = False, uid = uid, age = age, sex = sex)
+    if sim_pars['enable_smartwatches']: # If smartwatches are enabled we randomly assign them to 25% of the human population
+        n_true = int(len(uid)*0.25)
+        n_false = len(uid) - n_true
+        has_watch = np.array([True]*n_true + [False]*n_false)
+        has_watch = np.random.shuffle(has_watch)
+        humans = znr.Humans(sim_pars, strict = False, uid = uid, age = age, sex = sex, has_watch = has_watch)
+    else: humans = znr.Humans(sim_pars, strict = False, uid = uid, age = age, sex = sex)
 
     return humans
 
