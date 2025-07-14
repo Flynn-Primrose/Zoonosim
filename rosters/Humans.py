@@ -260,7 +260,7 @@ class Humans(Subroster):
         for key in znd.new_human_flows_by_variant:
             self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=znd.default_float)
         if self.pars['enable_smartwatches']:
-            for key in znd.result_flows_smartwatches:
+            for key in znd.new_smartwatch_flows:
                 self.flows[key] = 0
         return
 
@@ -364,14 +364,14 @@ class Humans(Subroster):
         # Take care of smartwatch calculations
         if self.pars['enable_smartwatches']:
             tp, fn, tn, fp = self.check_alert_accuracy()
-            self.flows['new_alerts_tp'] += tp
-            self.flows['new_alerts_fn'] += fn
-            self.flows['new_alerts_tn'] += tn
-            self.flows['new_alerts_fp'] += fp
+            self.flows['new_alerts_tp'] += tp #tp = True-Positive
+            self.flows['new_alerts_fn'] += fn #fn = False-Negative
+            self.flows['new_alerts_tn'] += tn #tn = True-Negative
+            self.flows['new_alerts_fp'] += fp #fp = False-Positive
             self.flows['new_alerted'] += self.check_alerted()
             sw_quar, sw_i_quar = self.check_sw_quarantined() # Update the number of smartwatch users quarantined. 
-            self.flows['new_Q_w'] += sw_quar
-            self.flows['new_Q_w_i'] += sw_i_quar
+            self.flows['new_Q_w'] += sw_quar #Quarantined with smartwatch 
+            self.flows['new_Q_w_i'] += sw_i_quar #Incorrectly quarantined with smartwatch
 
         del self.is_exp  # Tidy up
 

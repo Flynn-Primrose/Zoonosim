@@ -512,13 +512,15 @@ human_flows = {
 new_human_flows = [f'new_{key}' for key in human_flows.keys()]
 cum_human_flows = [f'cum_{key}' for key in human_flows.keys()]
 
-result_flows_smartwatches = {'alerted': 'smartwatch alerts',
+smartwatch_flows = {'alerted': 'smartwatch alerts',
                              'alerts_tp': 'true positive smartwatch alerts',
                              'alerts_fn': 'false negative smartwatch alerts',
                              'alerts_tn': 'true negative smartwatch alerts',
                              'alerts_fp': 'false positives smartwatch alerts',
                              'Q_w_i': 'smartwatch users incorrectly quarantined',
                              'Q_w': 'smartwatch users quarantined'}
+
+new_smartwatch_flows = [f'new_{key}' for key in smartwatch_flows.keys()]
 
 flock_flows = {
     'exposed':     'exposed flocks',

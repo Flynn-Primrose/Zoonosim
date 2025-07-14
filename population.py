@@ -228,7 +228,7 @@ def make_humans(sim_pars, uid):
         n_true = int(len(uid)*0.25)
         n_false = len(uid) - n_true
         has_watch = np.array([True]*n_true + [False]*n_false)
-        has_watch = np.random.shuffle(has_watch)
+        np.random.shuffle(has_watch)
         humans = znr.Humans(sim_pars, strict = False, uid = uid, age = age, sex = sex, has_watch = has_watch)
     else: humans = znr.Humans(sim_pars, strict = False, uid = uid, age = age, sex = sex)
 
