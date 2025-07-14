@@ -308,6 +308,7 @@ class Sim(znb.BaseSim):
         barn_dcols  = znd.get_default_colors('barn')  # Get default barn colors
         water_dcols = znd.get_default_colors('water') # Get default water colors
         misc_dcols = znd.get_default_colors('misc') # Get default misc colors
+        sw_dcols = znd.get_default_colors('smartwatch')
 
         # Flows and cumulative flows
 
@@ -364,12 +365,20 @@ class Sim(znb.BaseSim):
         # Testing
         self.results['new_tests']                     = init_res('Number of new tests administered', color=misc_dcols.misc1) # This is specific for tests UNRELATED to the custom testing module
         self.results['cum_tests']                     = init_res('Cumulative tests administered', color=misc_dcols.misc2) # This is specific for tests UNRELATED to the custom testing module
-        self.results['new_PCR_tests']                 = init_res('Number of new PCR tests administered', color=misc_dcols.misc1)
-        self.results['cum_PCR_tests']                 = init_res('Cumulative PCR tests administered', color=misc_dcols.misc2)
-        self.results['new_RAT_tests']                 = init_res('Number of new RAT tests administered', color=misc_dcols.misc3)
-        self.results['cum_RAT_tests']                 = init_res('Cumulative RAT tests administered', color=misc_dcols.misc4)
-        self.results['new_diagnoses_custom']      = init_res('Number of new diagnoses with custom testing module', color=misc_dcols.misc5)
-        self.results['cum_diagnoses_custom']      = init_res('Cumulative diagnoses with custom testing module', color=misc_dcols.misc6)
+        if self.pars['enable_testobjs']:
+            self.results['new_PCR_tests']                 = init_res('Number of new PCR tests administered', color=misc_dcols.misc1)
+            self.results['cum_PCR_tests']                 = init_res('Cumulative PCR tests administered', color=misc_dcols.misc2)
+            self.results['new_RAT_tests']                 = init_res('Number of new RAT tests administered', color=misc_dcols.misc3)
+            self.results['cum_RAT_tests']                 = init_res('Cumulative RAT tests administered', color=misc_dcols.misc4)
+            self.results['new_diagnoses_custom']      = init_res('Number of new diagnoses with custom testing module', color=misc_dcols.misc5)
+            self.results['cum_diagnoses_custom']      = init_res('Cumulative diagnoses with custom testing module', color=misc_dcols.misc6)
+
+        # Smartwatches
+        if self.pars['enable_smartwatches']:
+            for key,label in znd.smartwatch_flows.items():
+                color = sw_dcols[key]
+                self.results[f'new_{key}'] = init_res(f'Number of new {label}', color=color)
+                self.results[f'cum_{key}'] = init_res(f'Cumulative {label}', color=color)
 
         # Handle variants
 

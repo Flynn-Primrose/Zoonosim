@@ -350,6 +350,14 @@ def get_default_colors(agent_type):
             c.uncontaminated = '#fbb4ae' # 
             c.contaminated = '#b3cde3' # 
             c.contaminated_by_variant = '#ccebc5' # 
+        case 'smartwatch':
+            c.alerted = '#000000'
+            c.alerts_tp = '#e41a1c'
+            c.alerts_tn = '#377eb8'
+            c.alerts_fp = '#4daf4a'
+            c.alerts_fn = '#984ea3'
+            c.Q_w_i = '#ff7f00'
+            c.Q_w = '#ffff33'
         case 'misc':
             c.misc1 = '#e41a1c'
             c.misc2 = '#377eb8'
@@ -513,14 +521,15 @@ new_human_flows = [f'new_{key}' for key in human_flows.keys()]
 cum_human_flows = [f'cum_{key}' for key in human_flows.keys()]
 
 smartwatch_flows = {'alerted': 'smartwatch alerts',
-                             'alerts_tp': 'true positive smartwatch alerts',
-                             'alerts_fn': 'false negative smartwatch alerts',
-                             'alerts_tn': 'true negative smartwatch alerts',
-                             'alerts_fp': 'false positives smartwatch alerts',
-                             'Q_w_i': 'smartwatch users incorrectly quarantined',
-                             'Q_w': 'smartwatch users quarantined'}
+                    'alerts_tp': 'true positive smartwatch alerts',
+                    'alerts_fn': 'false negative smartwatch alerts',
+                    'alerts_tn': 'true negative smartwatch alerts',
+                    'alerts_fp': 'false positives smartwatch alerts',
+                    'Q_w_i': 'smartwatch users incorrectly quarantined',
+                    'Q_w': 'smartwatch users quarantined'}
 
 new_smartwatch_flows = [f'new_{key}' for key in smartwatch_flows.keys()]
+cum_smartwatch_flows = [f'cum_{key}' for key in smartwatch_flows.keys()]
 
 flock_flows = {
     'exposed':     'exposed flocks',
