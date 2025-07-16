@@ -82,6 +82,7 @@ class Watches:
         # Mark alerted individuals as alerted
         sim.agents.human.alerted[to_alert] = True
         sim.agents.human.date_alerted[to_alert] = sim.t
+        sim.agents.human.update_event_log(to_alert, 'sw_baseline_alert')
         return
 
 
@@ -113,6 +114,7 @@ class Watches:
         alert_inds = inds_inf_watches[bin_mask > 0]
         sim.agents.human.alerted[alert_inds] = True
         sim.agents.human.date_alerted[alert_inds] = sim.t # Results in logical OR when used in conjunction with send_alerts_baseline.
+        sim.agents.human.update_event_log(alert_inds, 'sw_infected_alert')
         return
 
 
@@ -142,7 +144,7 @@ class Watches:
         # Find dates for asymp people.
         # First, sample a hypothetical symptom onset date. 
         num_asymp = len(inds_asymp)
-        dur_inf2sym = znu.sample(**sim.agents.human.pars['dur']['inf2sym'], size=num_asymp)
+        dur_inf2sym = znu.sample(**sim.pars['dur']['human']['inf2sym'], size=num_asymp)
 
         t_fake_symp = sim.agents.human.date_infectious[inds_asymp] + dur_inf2sym
         days_rel_symp[mask_asymp] = sim.t - t_fake_symp

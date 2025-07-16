@@ -157,6 +157,7 @@ class Humans(Subroster):
         self.t = 0 # Keep current simulation time
         self._lock = False # Prevent further modification of keys
         self.meta = HumanMeta() # Store list of keys and dtypes
+        self.event_log = [] # Record of events that have occurred
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
         
         pop_size = self.pars['pop_size_by_type']['human']
@@ -374,6 +375,24 @@ class Humans(Subroster):
             self.flows['new_Q_w_i'] += sw_i_quar #Incorrectly quarantined with smartwatch
 
         del self.is_exp  # Tidy up
+
+        return
+    
+    def update_event_log(self, target_inds, event_type):
+        '''
+        Add an entry to the event log
+
+        args:
+            target_inds: array of indices of flocks that experienced a recordable event
+            event (str): The specific event in question
+        '''
+
+        if target_inds is None:
+            return
+        
+        for ind in target_inds:
+            entry = dict(target = self.uid[ind], event_type = event_type, date = self.t)
+            self.event_log.append(entry)
 
         return
 
@@ -930,25 +949,31 @@ class Humans(Subroster):
             events = []
 
             dates = {
-                'date_critical'       : 'became critically ill and needed ICU care',
-                'date_dead'           : 'died ☹',
-                'date_diagnosed'      : 'was diagnosed with COVID',
-                'date_end_quarantine' : 'ended quarantine',
-                'date_infectious'     : 'became infectious',
-                'date_known_contact'  : 'was notified they may have been exposed to COVID',
-                'date_pos_test'       : 'took a positive test',
-                'date_quarantined'    : 'entered quarantine',
-                'date_recovered'      : 'recovered',
-                'date_severe'         : 'developed severe symptoms and needed hospitalization',
-                'date_symptomatic'    : 'became symptomatic',
-                'date_tested'         : 'was tested for COVID',
-                'date_vaccinated'     : 'was vaccinated against COVID',
+                'date_critical'                 : 'became critically ill and needed ICU care',
+                'date_dead'                     : 'died ☹',
+                'date_diagnosed'                : 'was diagnosed with COVID',
+                'date_end_quarantine'           : 'ended quarantine',
+                'date_infectious'               : 'became infectious',
+                'date_known_contact'            : 'was notified they may have been exposed to COVID',
+                'date_pos_test'                 : 'took a positive test',
+                'date_quarantined'              : 'entered quarantine',
+                'date_recovered'                : 'recovered',
+                'date_severe'                   : 'developed severe symptoms and needed hospitalization',
+                'date_symptomatic'              : 'became symptomatic',
+                'date_tested'                   : 'was tested for COVID',
+                'date_vaccinated'               : 'was vaccinated against COVID',
+                'sw_baseline_alert'        : 'had a smartwatch alert (baseline)',
+                'sw_infected_alert'        : 'had a smartwatch alert (infected)',
             }
 
             for attribute, message in dates.items():
                 date = getattr(p,attribute)
                 if not np.isnan(date):
                     events.append((date, message))
+
+            for event in self.event_log:
+                if event['target'] == uid:
+                    events.append((event['date'], dates[event['event_type']]))
 
             for infection in self.infection_log:
                 lkey = infection['layer']

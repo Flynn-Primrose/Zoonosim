@@ -716,6 +716,11 @@ class Sim(znb.BaseSim):
             if isinstance(variant, znimm.variant):
                 variant.apply(self)
 
+        # Sent smartwatch alerts and update alert histories
+        if self.pars['enable_smartwatches']:
+            self.agents.human.watches.send_alerts_baseline(self)
+            self.agents.human.watches.send_alerts_infected(self)
+            self.agents.human.watches.update_alert_histories(self)
 
         # Compute viral loads in humans
         human_viral_load = self.agents.update_human_viral_loads(t=t)
@@ -872,6 +877,10 @@ class Sim(znb.BaseSim):
         # Update counts for this time step: Human flows
         for key in znd.human_flows:
             self.results[f'new_human_{key}'][t] = agents.human.flows[f'new_{key}']
+        
+        if self.pars['enable_smartwatches']:
+            for key in znd.smartwatch_flows:
+                self.results[f'new_{key}'][t] = agents.human.flows[f'new_{key}']
 
         # Update counts for this time step: Flock flows
         for key in znd.flock_flows:
@@ -1040,6 +1049,11 @@ class Sim(znb.BaseSim):
             # Because the results are rescaled in-place, finalizing the sim cannot be run more than once or
             # otherwise the scale factor will be applied multiple times
             raise AlreadyRunError('Simulation has already been finalized')
+        
+        # Calculate cumulative results for smartwatches
+        if self.pars['enable_smartwatches']:
+            for key in znd.smartwatch_flows.keys():
+                self.results[f'cum_{key}'][:] = np.cumsum(self.results[f'new_{key}'][:], axis=0)
 
         # Calculate cumulative results: Human
         for key in znd.human_flows:
