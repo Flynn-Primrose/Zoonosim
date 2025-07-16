@@ -63,7 +63,16 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
 
 
     pars['enable_smartwatches'] = False
-    pars['smartwatch_pars'] = None
+    pars['smartwatch_pars'] = {
+        'mean_fpr'                  :   0.08, # mean false positive rate
+        'use_variable_fpr'          : True, # Whether to use a variable false positive rate
+        'day_i'                     : np.arange(-21, 22, 1), #
+        'loc'                       : 3.25, # Day of max probability of alert, relative to the day of symptom onset.
+        'alpha'                     : 1, # Scales the probability of receiving an alert
+        'usage_rate'                : 1, # Out of people who have smartwatches, the amount who use download the alerting app and stick with it.
+        'compliance_rate'           :   0.05, # probability of quarantining if a smartwatch detects symptoms
+        'participation_rate'        :   0.3,  # proportion of the population that has a smartwatch
+    }
 
 
     # Network parameters, generally initialized after the population has been constructed

@@ -23,6 +23,7 @@ class Watches:
     def make_pars(self, pars=None):
 
         # Configure default parameter values
+        # TODO: Move these to defaults.py
         watch_pars = sc.objdict()
         watch_pars['mean_fpr']          = 0.08345302977643946 # Mean P(non-inf alert) from Alavi et al
         watch_pars['use_variable_fpr']  = True
@@ -36,9 +37,10 @@ class Watches:
         # Override the default values if any others are passed in
         if pars is not None:
             for par_name, par_value in pars.items(): 
-                if par_name not in watch_pars:
-                    raise KeyError(f"Parameter {par_name} doesn't exist, check watches.py:make_pars()!")
-                watch_pars[par_name] = par_value
+                if par_name in watch_pars:
+                    watch_pars[par_name] = par_value
+                # else:
+                #   raise KeyError(f"Parameter {par_name} doesn't exist, check watches.py:make_pars()!")
 
         # Check if parameter values are valid
         # e.g., check that alpha >= 0

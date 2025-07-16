@@ -405,20 +405,20 @@ class Humans(Subroster):
         return sw_quarantined_count, sw_i_quarantined_count
 
     
-    def schedule_behaviour(self):
-        ''' Schedules events on the basis of results received today '''
+    # def schedule_behaviour(self):
+    #     ''' Schedules events on the basis of results received today '''
 
 
-        return
+    #     return
 
     
-    def get_key_to_use(self, policy_dict):
-        ''' Helper function used to determine what policy to use when scheduling events '''
+    # def get_key_to_use(self, policy_dict):
+    #     ''' Helper function used to determine what policy to use when scheduling events '''
 
-        keys = np.array(list(policy_dict.keys()))
-        key_to_use = keys[znu.true(keys <= self.t)[-1]]
+    #     keys = np.array(list(policy_dict.keys()))
+    #     key_to_use = keys[znu.true(keys <= self.t)[-1]]
 
-        return key_to_use
+    #     return key_to_use
 
 
     #%% Methods for updating state
@@ -431,6 +431,8 @@ class Humans(Subroster):
 
         # Check who was alerted
         n_alerted = len(znu.true(self.alerted))
+
+        # TODO: Select people who received alerts this day and quarantine them according to the compliance rate
 
         # Set the alerted status of everyone to false
         self.alerted[:] = False
