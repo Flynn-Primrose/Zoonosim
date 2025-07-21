@@ -137,6 +137,24 @@ testing_plots = sc.odict({
     ],
 })
 
+smartwatch_plots = sc.odict({
+    'new counts': ['new_alerted',
+                    'new_alerts_tp',
+                    'new_alerts_fn',
+                    #'new_alerts_tn',
+                    #'new_alerts_fp',
+                    'new_Q_w_i',
+                    'new_Q_w'],
+    'cumulative counts': ['cum_alerted',
+                    'cum_alerts_tp',
+                    'cum_alerts_fn',
+                    #'cum_alerts_tn',
+                    #'cum_alerts_fp',
+                    'cum_Q_w_i',
+                    'cum_Q_w'],
+})
+
+
 def get_default_plots(which='default', kind='sim', sim=None):
     '''
     Specify which quantities to plot; used in sim.py.
@@ -235,6 +253,9 @@ def get_default_plots(which='default', kind='sim', sim=None):
 
     elif which == 'testing': # pragma: no cover
         plots = sc.dcp(testing_plots)
+
+    elif which == 'smartwatch': # pragma: no cover
+        plots = sc.dcp(smartwatch_plots)
 
     # Show an overview plus variants
     elif 'overview' in which and 'variant' in which: # pragma: no cover

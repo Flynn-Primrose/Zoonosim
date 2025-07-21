@@ -29,14 +29,14 @@ class HumanMeta(sc.prettyobj):
             'viral_load',       # Float
             'rescaled_vl',      # Float
             'watch_fpr',        # Float
-            'has_watch',        # bool
+
             'n_infections',     # Int
             'n_breakthroughs',  # Int
             'cons_days_in_quar',    # Int
             'cons_days_neg_rat',    # Int
         ]
 
-        # Set the states that a person can be in: these are all booleans per person -- used in people.py
+        # Set the states that a human agent can be in: these are all booleans.
         self.states = [
             'susceptible',
             'exposed',
@@ -52,6 +52,7 @@ class HumanMeta(sc.prettyobj):
             'quarantined',
             'vaccinated',
             'alerted',
+            'has_watch',        # bool
         ]
 
         # Variant states -- these are ints
@@ -404,22 +405,6 @@ class Humans(Subroster):
 
         return sw_quarantined_count, sw_i_quarantined_count
 
-    
-    # def schedule_behaviour(self):
-    #     ''' Schedules events on the basis of results received today '''
-
-
-    #     return
-
-    
-    # def get_key_to_use(self, policy_dict):
-    #     ''' Helper function used to determine what policy to use when scheduling events '''
-
-    #     keys = np.array(list(policy_dict.keys()))
-    #     key_to_use = keys[znu.true(keys <= self.t)[-1]]
-
-    #     return key_to_use
-
 
     #%% Methods for updating state
 
@@ -430,9 +415,12 @@ class Humans(Subroster):
         '''
 
         # Check who was alerted
-        n_alerted = len(znu.true(self.alerted))
+        alerted = znu.true(self.alerted)
+        n_alerted = len(alerted)
 
-        # TODO: Select people who received alerts this day and quarantine them according to the compliance rate
+        quarantine_inds = znu.ifalsei(self.quarantined, alerted) # Find people who were alerted but are not quarantined
+
+        self.schedule_quarantine(quarantine_inds) # Schedule quarantine for these people
 
         # Set the alerted status of everyone to false
         self.alerted[:] = False
