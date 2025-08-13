@@ -756,7 +756,7 @@ class Sim(znb.BaseSim):
 
                 testobj(self)
                 
-                # Interface with quarantine behaviour. TODO?
+                # Interface with quarantine behaviour.
                 self.agents.human.date_pos_test[testobj.date_pos_test == t] = t  # Update date_pos_test with people who received a test today that will return positive
                 self.agents.human.date_diagnosed[testobj.date_positive == t] = t  # Update date_diagnosed with people who received at least one positive test today
                 
@@ -776,6 +776,12 @@ class Sim(znb.BaseSim):
         sus = agents.susceptible
         symp = agents.symptomatic
         quar = agents.quarantined
+
+        iso_uids = agents.human.uid[agents.human.diagnosed] # UIDs of people who are isolated (i.e. diagnosed)
+        iso = np.isin(agents.uid, iso_uids) # Boolean array of agents who are isolated (always false for non-human agents)
+
+        quar = np.logical_or(quar, iso) # Our model treats quarantined and isolated people the same, so we combine them here
+
         prel_trans = agents.get_rel_trans()
         prel_sus   = agents.get_rel_sus()
 
