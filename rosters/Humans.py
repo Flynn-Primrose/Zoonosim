@@ -413,14 +413,17 @@ class Humans(Subroster):
         Check which people received alerts on this timestep and whether they were correct or incorrect.
         Reset alerted status to False for everyone to prepare for the next day.
         '''
-
+        
         # Check who was alerted
         alerted = znu.true(self.alerted)
         n_alerted = len(alerted)
 
-        quarantine_inds = znu.ifalsei(self.quarantined, alerted) # Find people who were alerted but are not quarantined
-
-        self.schedule_quarantine(quarantine_inds) # Schedule quarantine for these people
+        if ~self.pars['enable_testobjs']: # if not using test objects, quarantine people who were alerted and compliant
+            quarantine_inds = znu.ifalsei(self.quarantined, alerted) # Find people who were alerted but are not quarantined
+            n_compliant = int(len(quarantine_inds) * self.pars['compliance_rate']) # Number of people who will quarantine
+            if n_compliant > 0:
+                quarantine_inds = np.random.choice(quarantine_inds, size=n_compliant, replace=False)
+                self.schedule_quarantine(quarantine_inds) # Schedule quarantine for these people
 
         # Set the alerted status of everyone to false
         self.alerted[:] = False

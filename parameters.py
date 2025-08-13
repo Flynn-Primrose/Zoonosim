@@ -70,7 +70,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
         'loc'                       : 3.25, # Day of max probability of alert, relative to the day of symptom onset.
         'alpha'                     : 1, # Scales the probability of receiving an alert
         'usage_rate'                : 1, # Out of people who have smartwatches, the amount who use download the alerting app and stick with it.
-        'compliance_rate'           :   0.05, # probability of quarantining if a smartwatch detects symptoms
+        'compliance_rate'           :   0.05, # probability of quarantining if a smartwatch detects symptoms (only used if testobjs are not available)
         'participation_rate'        :   0.3,  # proportion of the population that has a smartwatch
     }
 
