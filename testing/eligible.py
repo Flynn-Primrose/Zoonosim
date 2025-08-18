@@ -30,6 +30,8 @@ def check_criteria(base_testobj, testobj, sim, **crit_kwargs):
                 all_eligible['sx_quar'] = sx_quar(sim)
             if name == 'sev_crit':
                 all_eligible['sev_crit'] = sev_crit(sim)
+            if name == 'alerted':
+                all_eligible['alerted'] = alerted(sim)
             if name == 'other':
                 if 'other' in crit_kwargs.keys(): 
                     all_eligible['other'] = other(sim, **crit_kwargs['other'])
@@ -152,6 +154,16 @@ def RAT_testers(sim, RAT, mode='pos_RAT', d=3):
 
     elif mode == 'neg_RAT': 
         return set(neg_d_inds.tolist())
+    
+def alerted(sim):
+    '''
+    Get people who have been alerted by the system to seek a test. 
+    '''
+    if (~sim.pars['enable_smartwatches']):
+        raise RuntimeError('Smartwatches are not enabled, but alerted function was called. Please enable smartwatches in the simulation parameters.')
+    
+    all_alerted = znu.true(sim.agents.human.alerted)
+    return set(all_alerted.tolist())
 
 def other(sim, p=0.05):
     return set(np.random.choice(sim.pars['pop_size_by_type']['human'], int(p * sim.pars['pop_size_by_type']['human']), replace=False).tolist())

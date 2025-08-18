@@ -342,8 +342,8 @@ class MultiSim(znb.FlexPretty):
         combined_sim.parallelized = dict(parallelized=True, combined=True, n_runs=n_runs)  # Store how this was parallelized
 
         for s,sim in enumerate(self.sims[1:]): # Skip the first one
-            if combined_sim.people: # If the people are there, add them and increment the population size accordingly
-                combined_sim.people += sim.people # NOTE: Addition of roster objects is not implemented, so this will not work
+            if combined_sim.agents: # If the agents are there, add them and increment the population size accordingly
+                combined_sim.agents += sim.agents # NOTE: Not sure if the addition of agent objects will work properly.
                 combined_sim['pop_size'] = combined_sim.people.pars['pop_size'] # NOTE: pop_size_by_type needs to be updated as well.
             else: # If not, manually update population size
                 combined_sim['pop_size'] += sim['pop_size']  # Record the number of people
