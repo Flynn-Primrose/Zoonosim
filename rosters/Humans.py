@@ -420,7 +420,7 @@ class Humans(Subroster):
 
         if ~self.pars['enable_testobjs']: # if not using test objects, quarantine people who were alerted and compliant
             quarantine_inds = znu.ifalsei(self.quarantined, alerted) # Find people who were alerted but are not quarantined
-            n_compliant = int(len(quarantine_inds) * self.pars['compliance_rate']) # Number of people who will quarantine
+            n_compliant = int(len(quarantine_inds) * self.pars['smartwatch_pars']['compliance_rate']) # Number of people who will quarantine
             if n_compliant > 0:
                 quarantine_inds = np.random.choice(quarantine_inds, size=n_compliant, replace=False)
                 self.schedule_quarantine(quarantine_inds) # Schedule quarantine for these people

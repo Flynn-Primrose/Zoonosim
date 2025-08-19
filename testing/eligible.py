@@ -159,7 +159,7 @@ def alerted(sim):
     '''
     Get people who have been alerted by the system to seek a test. 
     '''
-    if (~sim.pars['enable_smartwatches']):
+    if (not sim.pars['enable_smartwatches']):
         raise RuntimeError('Smartwatches are not enabled, but alerted function was called. Please enable smartwatches in the simulation parameters.')
     
     all_alerted = znu.true(sim.agents.human.alerted)
