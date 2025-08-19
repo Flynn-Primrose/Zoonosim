@@ -26,3 +26,4 @@ from .immunity import *
 from .population import *
 from .testing import *
 from .Sim import *
+from .run import *

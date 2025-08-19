@@ -20,7 +20,7 @@ from .. import version as znv
 from .. import misc as znm
 from .. import utils as znu
 
-__all__ = ['BaseSim']
+__all__ = ['ParsObj', 'set_metadata', 'BaseSim']
 
 class ParsObj(FlexPretty):
     '''

@@ -10,7 +10,7 @@ from collections import defaultdict
 from . import defaults as znd
 from . import misc as znm
 from . import base as znb
-from . import Sim as zns
+from . import Sim as Sim
 from . import plotting as znpl
 from .Options import options as zno
 
@@ -74,7 +74,7 @@ class MultiSim(znb.FlexPretty):
 
         # Handle inputs
         if base_sim is None:
-            if isinstance(sims, zns.Sim):
+            if isinstance(sims, Sim):
                 base_sim = sims
                 sims = None
             elif isinstance(sims, list):
@@ -344,7 +344,7 @@ class MultiSim(znb.FlexPretty):
         for s,sim in enumerate(self.sims[1:]): # Skip the first one
             if combined_sim.agents: # If the agents are there, add them and increment the population size accordingly
                 combined_sim.agents += sim.agents # NOTE: Not sure if the addition of agent objects will work properly.
-                combined_sim['pop_size'] = combined_sim.people.pars['pop_size'] # NOTE: pop_size_by_type needs to be updated as well.
+                combined_sim['pop_size'] = combined_sim.agents.pars['pop_size'] # NOTE: pop_size_by_type needs to be updated as well.
             else: # If not, manually update population size
                 combined_sim['pop_size'] += sim['pop_size']  # Record the number of people
             for key in sim.result_keys():
@@ -906,7 +906,7 @@ class Scenarios(znb.ParsObj):
 
         # Create the simulation and handle basepars
         if sim is None:
-            sim = zns.Sim()
+            sim = Sim()
         self.base_sim = sc.dcp(sim)
         self.basepars = sc.dcp(sc.mergedicts(basepars))
         self.base_sim.update_pars(self.basepars)
@@ -1454,7 +1454,7 @@ def multi_run(sim, n_runs=4, reseed=None, noise=0.0, noisepar=None, iterpars=Non
                 n_runs = new_n
 
     # Run the sims
-    if isinstance(sim, zns.Sim): # One sim
+    if isinstance(sim, Sim): # One sim
         if reseed is None: reseed = True
         iterkwargs = dict(ind=np.arange(n_runs))
         iterkwargs.update(iterpars)
@@ -1470,6 +1470,9 @@ def multi_run(sim, n_runs=4, reseed=None, noise=0.0, noisepar=None, iterpars=Non
     # Actually run!
     if parallel:
         try:
+            print(iterkwargs)
+            print(kwargs)
+            print(par_args)
             sims = sc.parallelize(single_run, iterkwargs=iterkwargs, kwargs=kwargs, **par_args) # Run in parallel
         except RuntimeError as E: # Handle if run outside of __main__ on Windows
             if 'freeze_support' in E.args[0]: # For this error, add additional information
