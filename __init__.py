@@ -7,10 +7,10 @@ classes directly, e.g. zn.Sim() rather than zn.sim.Sim()
 
 # Check that requirements are met and set options
 from . import requirements
-from .Options import options as zno
+from . import options as zno
 
 from .version import __version__, __versiondate__, __license__
-if zno.verbose:
+if zno.options.verbose:
     print(__license__)
 
 
@@ -25,5 +25,5 @@ from .analysis import *
 from .immunity import *
 from .population import *
 from .testing import *
-from .Sim import *
+from .sim import *
 from .run import *

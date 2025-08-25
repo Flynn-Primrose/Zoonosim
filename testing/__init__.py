@@ -10,3 +10,4 @@ from .allocate import *
 from .seek import *
 from .purpose import *
 from .TestObj import *
+from .TestObj import TestObj

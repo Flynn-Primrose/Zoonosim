@@ -293,6 +293,8 @@ class Humans(Subroster):
             indices [0, 1, 0, 5]. Age bins are not guaranteed to be uniform
             width, which is why this can't be done as an array operation.
             '''
+            #print(age_cutoffs) #debug
+            #print(age) #debug
             return np.nonzero(age_cutoffs <= age)[0][-1]  # Index of the age bin to use
 
         znu.set_seed(pars['rand_seed'])

@@ -434,7 +434,7 @@ class Sim(znb.BaseSim):
         return
 
 
-    def load_population(self, popfile=None, init_people=True, **kwargs):
+    def load_population(self, popfile=None, init_agents=True, **kwargs):
         '''
         Load the population dictionary from file -- typically done automatically
         as part of ``sim.initialize()``.
@@ -458,8 +458,8 @@ class Sim(znb.BaseSim):
         if self['verbose']:
             print(f'Loading population from {popfile}')
 
-        if init_people:
-            self.init_people(**kwargs)
+        if init_agents:
+            self.init_agents(**kwargs)
 
         return
 

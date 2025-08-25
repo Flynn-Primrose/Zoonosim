@@ -13,6 +13,10 @@ from .. import utils as znu
 from .. import defaults as znd
 
 from .Roster import Roster
+from .Humans import Humans
+from .Flocks import Flocks
+from .Barns import Barns
+from .Water import Water
 
 #from . import plotting as cvplt
 #from . import immunity as cvi
@@ -105,6 +109,10 @@ class Agents(Roster):
         self._lock = False # Prevent further modification of keys
         self.meta = AgentsMeta() # Store list of keys and dtypes
         self.contacts = None
+        # self.human = Humans(pars)
+        # self.flock = Flocks(pars)
+        # self.barn = Barns(pars)
+        # self.water = Water(pars)
         self.human = kwargs['human'] if 'human' in kwargs else None 
         self.flock = kwargs['flock'] if 'flock' in kwargs else None
         self.barn = kwargs['barn'] if 'barn' in kwargs else None
@@ -172,13 +180,13 @@ class Agents(Roster):
 
     #%% Methods for updating state
 
-    def init_flows(self):
-        ''' Initialize flows to be zero '''
-        self.flows = {key:0 for key in znd.new_result_flows}
-        self.flows_variant = {}
-        for key in znd.new_result_flows_by_variant:
-            self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=znd.default_float)
-        return
+    # def init_flows(self):
+    #     ''' Initialize flows to be zero '''
+    #     self.flows = {key:0 for key in znd.new_result_flows}
+    #     self.flows_variant = {}
+    #     for key in znd.new_result_flows_by_variant:
+    #         self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=znd.default_float)
+    #     return
 
     def initialize(self, sim_pars=None):
         ''' Perform initializations '''

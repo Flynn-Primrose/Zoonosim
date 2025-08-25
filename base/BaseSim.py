@@ -142,12 +142,6 @@ class BaseSim(ParsObj):
         # Merge everything together
         pars = sc.mergedicts(pars, kwargs)
         if pars:
-
-            # Handle other special parameters
-            # if pars.get('some_parameter'):
-            #     self.some_method(pars['some_parameter'])
-
-            # Call update_pars() for ParsObj
             super().update_pars(pars=pars, create=create)
 
         return
