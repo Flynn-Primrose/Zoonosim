@@ -11,7 +11,7 @@ import pylab as pl
 import sciris as sc
 from . import misc as znm
 from . import defaults as znd
-from .Options import options as zno
+from . import options as zno
 
 
 
@@ -85,7 +85,7 @@ def handle_show(do_show):
     ''' Helper function to handle the slightly complex logic of show -- not for users '''
     backend = pl.get_backend()
     if do_show is None:  # If not supplied, reset to global value
-        do_show = zno.show
+        do_show = zno.options.show
     if backend == 'agg': # Cannot show plots for a non-interactive backend
         do_show = False
     if do_show: # Now check whether to show, and atually do it
@@ -100,12 +100,12 @@ def handle_show_return(do_show=None, fig=None, figs=None):
 
     # Show the figure, or close it
     do_show = handle_show(do_show)
-    if zno.close and not do_show:
+    if zno.options.close and not do_show:
         for f in figlist:
             pl.close(f)
 
     # Return the figure or figures unless we're in Jupyter
-    if not zno.returnfig:
+    if not zno.options.returnfig:
         return
     else:
         if figs is not None:
@@ -382,7 +382,7 @@ def plot_sim(to_plot=None, sim=None, do_save=None, fig_path=None, fig_args=None,
     to_plot, n_cols, n_rows = handle_to_plot('sim', to_plot, n_cols, sim=sim)
 
     # Do the plotting
-    with zno.with_style(args.style):
+    with zno.options.with_style(args.style):
         fig, figs = create_figs(args, sep_figs, fig, ax)
         variant_keys = sim.result_keys('variant')
         for pnum,title,keylabels in to_plot.enumitems():
@@ -437,7 +437,7 @@ def plot_scens(to_plot=None, scens=None, do_save=None, fig_path=None, fig_args=N
     to_plot, n_cols, n_rows = handle_to_plot('scens', to_plot, n_cols, sim=scens.base_sim, check_ready=False) # Since this sim isn't run
 
     # Do the plotting
-    with zno.with_style(args.style):
+    with zno.options.with_style(args.style):
         fig, figs = create_figs(args, sep_figs, fig, ax)
         default_colors = sc.gridcolors(ncolors=len(scens.sims))
         for pnum,title,reskeys in to_plot.enumitems():
@@ -498,7 +498,7 @@ def plot_result(key, sim=None, fig_args=None, plot_args=None, axis_args=None, sc
         color = res.color
 
     # Do the plotting
-    with zno.with_style(args.style):
+    with zno.options.with_style(args.style):
         fig, figs = create_figs(args, sep_figs, fig, ax)
 
         # Reuse the figure, if available
@@ -550,7 +550,7 @@ def plot_compare(df, log_scale=True, fig_args=None, axis_args=None, style_args=N
     df['category'] = category
 
     # Plot
-    with zno.with_style(args.style):
+    with zno.options.with_style(args.style):
         fig, figs = create_figs(args, sep_figs=False, fig=fig)
         for i,m in enumerate(mapping):
             not_r_eff = m != 'r'
@@ -596,7 +596,7 @@ def plot_people(people, bins=None, width=1.0, alpha=0.6, fig_args=None, axis_arg
     edges = np.append(bins, np.inf) # Add an extra bin to end to turn them into edges
     age_counts = np.histogram(people.age, edges)[0]
 
-    with zno.with_style(style_args):
+    with zno.options.with_style(style_args):
 
         # Create the figure
         if fig is None:

@@ -10,9 +10,9 @@ from collections import defaultdict
 from . import defaults as znd
 from . import misc as znm
 from . import base as znb
-from . import Sim as Sim
+from . import sim as zns
 from . import plotting as znpl
-from .Options import options as zno
+from . import options as zno
 
 
 # Specify all externally visible functions this file defines
@@ -28,7 +28,7 @@ def make_metapars():
         noisepar  = 'beta',
         rand_seed = 1,
         quantiles = {'low':0.1, 'high':0.9},
-        verbose   = zno.verbose,
+        verbose   = zno.options.verbose,
     )
     return metapars
 
@@ -74,7 +74,7 @@ class MultiSim(znb.FlexPretty):
 
         # Handle inputs
         if base_sim is None:
-            if isinstance(sims, Sim):
+            if isinstance(sims, zns.Sim):
                 base_sim = sims
                 sims = None
             elif isinstance(sims, list):
@@ -906,7 +906,7 @@ class Scenarios(znb.ParsObj):
 
         # Create the simulation and handle basepars
         if sim is None:
-            sim = Sim()
+            sim = zns.Sim()
         self.base_sim = sc.dcp(sim)
         self.basepars = sc.dcp(sc.mergedicts(basepars))
         self.base_sim.update_pars(self.basepars)
@@ -1454,7 +1454,7 @@ def multi_run(sim, n_runs=4, reseed=None, noise=0.0, noisepar=None, iterpars=Non
                 n_runs = new_n
 
     # Run the sims
-    if isinstance(sim, Sim): # One sim
+    if isinstance(sim, zns.Sim): # One sim
         if reseed is None: reseed = True
         iterkwargs = dict(ind=np.arange(n_runs))
         iterkwargs.update(iterpars)

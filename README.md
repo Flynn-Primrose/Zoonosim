@@ -9,321 +9,318 @@ In terms of operating the software, the most important component is the "pars" o
 ## Model Parameters
 
 - agent_types
-    - An array of strings
-    - Each string corresponds to a different type of agent
+  - An array of strings
+  - Each string corresponds to a different type of agent
 - n_farms
-    - The total number of farms in the simulation.
-    - This value only gets used when generating the population, it is not referenced during actual simulations.
+  - The total number of farms in the simulation.
+  - This value only gets used when generating the population, it is not referenced during actual simulations.
 - pop_size
-    - The total number of agents (of all types) in the simulation.
-    - This value is typically set automatically when the population is generated
+  - The total number of agents (of all types) in the simulation.
+  - This value is typically set automatically when the population is generated
 - pop_size_by_type
-    - A dictionary, the keys are the agent types and the values are number of agents of that specific type
-    - Typically set automatically when the population is created
+  - A dictionary, the keys are the agent types and the values are number of agents of that specific type
+  - Typically set automatically when the population is created
 - pop_scale
-    - vestigial parameter left over from the dynamic rescaling functionality present in parent versions of the software
-    - in principle the value shouldn't matter but we set it to 1.0 out of an abundance of caution
+  - vestigial parameter left over from the dynamic rescaling functionality present in parent versions of the software
+  - in principle the value shouldn't matter but we set it to 1.0 out of an abundance of caution
 - rescale
-    - vestigial parameter left over from the dynamic rescaling functionality present in parent versions of the software
-    - Some of the older parts of code expect this to exist but it must be set to False since dynamic rescaling is not supported
+  - vestigial parameter left over from the dynamic rescaling functionality present in parent versions of the software
+  - Some of the older parts of code expect this to exist but it must be set to False since dynamic rescaling is not supported
 - initial_conditions
-    - A dictionary, the keys are the agent types and the values are the number of initial infections among that type of agent
+  - A dictionary, the keys are the agent types and the values are the number of initial infections among that type of agent
 - start_day
-    - initial day of the simulation
-    - in the form yyyy-mm-dd
+  - initial day of the simulation
+  - in the form yyyy-mm-dd
 - end_day
-    - final day of the simulation
-    - in the form yyyy-mm-dd
-    - when set to None, n_days gets used instead
+  - final day of the simulation
+  - in the form yyyy-mm-dd
+  - when set to None, n_days gets used instead
 - n_days
-    - the number of days the simulation should run for
-    - used if end_day is None
+  - the number of days the simulation should run for
+  - used if end_day is None
 - rand_seed
-    - setting this will reset the seed to this value before any RNG operations. This allows for reproducible simulations
-    - when set to None, the seed is not reset
+  - setting this will reset the seed to this value before any RNG operations. This allows for reproducible simulations
+  - when set to None, the seed is not reset
 - verbose
-    - Whether or not to display messages during the run
-    - options are 0 (silent), 0.1 (some), 1 (more), 2 (everything)
+  - Whether or not to display messages during the run
+  - options are 0 (silent), 0.1 (some), 1 (more), 2 (everything)
 - enable_testobj
-    - Boolean
-    - Whether or not to use custom testing objects
+  - Boolean
+  - Whether or not to use custom testing objects
 - testobjs
-    - Do not supple the actual test objects here, that is done for the testing parameter
-    - This gets set automatically
+  - Do not supple the actual test objects here, that is done for the testing parameter
+  - This gets set automatically
 - enable_smartwatches
-    - mean_fpr
-        - Mean false positive rate
-    - use_variable_fpr
-        - whether or not to use a variable false positive rate
-    - day_i
-        - 
+  - mean_fpr
+    - Mean false positive rate
+  - use_variable_fpr
+    - whether or not to use a variable false positive rate
+  - day_i
     - loc
-        - day of maximum probability of alert relative to symptom onset
+      - day of maximum probability of alert relative to symptom onset
     - alpha
-        - the probability an agent receives an alert
+      - the probability an agent receives an alert
     - usage_rate
-        - Proportion of people with smart devices that actually use them as intended
+      - Proportion of people with smart devices that actually use them as intended
     - compliance_rate
-        - proportion of people who quarantine if the receive a smart device alert
+      - proportion of people who quarantine if the receive a smart device alert
     - participation_rate
-        - proportion of the (human) population that has a smart device
+      - proportion of the (human) population that has a smart device
 - dynam_layer
-    - which contact layers are dynamic
-    - set by reset_layer_pars
+  - which contact layers are dynamic
+  - set by reset_layer_pars
 - beta_layer
-    - transmissibility per layer
-    - set by reset_layer_pars
+  - transmissibility per layer
+  - set by reset_layer_pars
 - quar_factor
-    - Quarantine multiplier on transmissibility and susceptibility
-    - set by reset_layer_pars
+  - Quarantine multiplier on transmissibility and susceptibility
+  - set by reset_layer_pars
 - quar_period
-    - how long quarantine lasts for
-    - currently the same for all agents types but eventually this should be refactored into a dict with a separate vale for each type
+  - how long quarantine lasts for
+  - currently the same for all agents types but eventually this should be refactored into a dict with a separate vale for each type
 - n_variants
-    - the number of circulating variants
+  - the number of circulating variants
 - beta
-    - human
-        - transmissibility of the disease for humans
-    - flock
-        - transmissibility of the disease for flocks
-    - barn
-        - transmissibility of the disease for barns
-    - water
-        - transmissibility of the disease for water
+  - human
+    - transmissibility of the disease for humans
+  - flock
+    - transmissibility of the disease for flocks
+  - barn
+    - transmissibility of the disease for barns
+  - water
+    - transmissibility of the disease for water
 - wild
-    - A dictionary containing the parameters for the wild (default) variant of the disease
-    - human
-        - rel_beta
-            - the transmissibility of this variant relative to beta.human
-        - rel_symp_prob
-            - the probability an infected human will display symptoms
-        - rel_severe_prob
-            - the probability a symptomatic human will develop severe symptoms
-        - rel_death_prob
-            - the probability a human with severe symptoms will perish as a result
-        - rel_asymp_factor
-            - the transmissibility of asymptomatic cases relative to symptomatic ones
-    - flock
-        - rel_beta
-            - the transmissibility of this variant relative to beta.flock
-        - rel_symp_prob
-            - the probability an infected (bird or flock?) will experience symptoms
-            - I'm not sure if this actually gets used
-        - rel_severe_prob
-            - I'm not sure if this parameter actually gets used
-        - rel_death_prob
-            - I'm not sure if this parameter actually gets used
-    - barn
-        - rel_beta
-            - the transmissibility of this variant relative to beta.barn
-        - rel_contamination_dur
-            - The relative duration of contamination for this variant (relative to what?)
-    - water
-        - rel_beta
-            - the transmissibility of this variant relative to beta.water
-        - rel_contamination_dur
-            - the relative duration of contamination for this variant (relative to what?)
+  - A dictionary containing the parameters for the wild (default) variant of the disease
+  - human
+    - rel_beta
+      - the transmissibility of this variant relative to beta.human
+    - rel_symp_prob
+      - the probability an infected human will display symptoms
+    - rel_severe_prob
+      - the probability a symptomatic human will develop severe symptoms
+    - rel_death_prob
+      - the probability a human with severe symptoms will perish as a result
+    - rel_asymp_factor
+      - the transmissibility of asymptomatic cases relative to symptomatic ones
+  - flock
+    - rel_beta
+      - the transmissibility of this variant relative to beta.flock
+    - rel_symp_prob
+      - the probability an infected (bird or flock?) will experience symptoms
+      - I'm not sure if this actually gets used
+  - rel_severe_prob
+    - I'm not sure if this parameter actually gets used
+  - rel_death_prob
+    - I'm not sure if this parameter actually gets used
+  - barn
+    - rel_beta
+      - the transmissibility of this variant relative to beta.barn
+    - rel_contamination_dur
+      - The relative duration of contamination for this variant (relative to what?)
+  - water
+    - rel_beta
+      - the transmissibility of this variant relative to beta.water
+  - rel_contamination_dur
+    - the relative duration of contamination for this variant (relative to what?)
 - transmission_pars
-    - human
-        - beta_dist
-            - the distribution to draw betas from
-            - a dictionary with the following keys
-                - dist
-                    - a string specifying the distribution to use. typically 'neg_binomial'
-                - par1
-                - par2
-                - step
-        - viral_dist
-            - the time varying viral load. A dictionary with the following keys:
-                - frac_time
-                - load_ratio
-                - high_cap
-        - enable_vl
-            - Boolean. whether or not to use custom viral load calculations. False means the native calculations get used.
-    - flock
-        - beta_dist
-            - same as for humans, but for flocks
-    - barn
-        - beta_dist
-            - same as for humans, but for barns
-    - water
-        - beta_dist
-            - same as for humans, but for water
-- n_imports
-    - The average number of new cases that are introduced each day, for each agent type. There is no need for this to be an integer as it's an average value
-    - human
-    - flock
-    - barn
-    - water
-- immunity_pars
-    - human
-        - use_waning
-            - Boolean. Whether or not to use waning for human agents
-        - nab_init
-            - a dict with the parameters for the distribution that initial nab levels
-            - dist (e.g. 'normal')
-            - par1
-            - par2
-        - nab_decay
-            - parameters needed to initialize nab_kin
-            - form (e.g. 'nab_growth_decay)
-            - growth_time
-            - decay_rate1
-            - decay_time1
-            - decay_rate2
-            - decay_time2
-        - nab_kin
-            - set automatically during initialization
-        - nab_boost
-            - Multiplicative factor applied to a person's nab levels if they get reinfected.
-        - nab_eff
-            - parameters to mab nabs to efficacy.
-            - alpha_inf
-            - alpha_inf_diff
-            - beta_inf
-            - alpha_symp_inf
-            - beta_symp_inf
-            - alpha_sev_symp
-            - beta_sev_symp
-        - rel_imm_symp
-            - relative immunity granted by different symptom severities
-            - asymp
-            - mild
-            - severe
-        - immunity
-            - set automatically upon initialization
-        - trans_redux
-            - reduction in transmission for breakthrough infections
-    - flock
-        - use_waning
-            - must be False as waning is not supported for flocks
-    - barn
-        - use_waning
-            - must be False as waning is not supported for barns
-    - water
-        - use_waning
-            - must be False as waning is not supported for water
-- dur
-    - Various durations involved in disease progression
-    - all values are dictionaries with the values needed to create a distribution
-        - dist (e.g. 'lognormal_int)
+  - human
+    - beta_dist
+      - the distribution to draw betas from
+      - a dictionary with the following keys
+        - dist
+          - a string specifying the distribution to use. typically 'neg_binomial'
         - par1
         - par2
-    - human
-        - exp2inf
-            - duration from exposure to infectious
-        - inf2sym
-            - duration from infectious to symptomatic
-        - sym2sev
-            - duration from symptomatic to severe symptoms
-        - asym2rec
-            - duration for asymptomatic cases to recover
-        - mild2rec
-            - duration for mild symptomatic cases to recover
-        - sev2rec
-            - duration for severely symptomatic cases to recover
-        - sev2die
-            - duration from severely symptomatic to death
-    - flock
-        - exp2inf
-            - duration from exposure to infectious
-        - inf2out
-            - duration from infectious to recovery/removal
-        - susp2res
-            - duration from suspicion of infection to a definitive test result
-    - barn
-        - contamination
-            - how long contaminations last
-        - composting
-            - how long the composting phase lasts
-        - cleaning
-            - how long the cleaning phase lasts
-    - water
-        - contamination
-            - how long contamination lasts
+        - step
+    - viral_dist
+      - the time varying viral load. A dictionary with the following keys:
+        - frac_time
+        - load_ratio
+        - high_cap
+    - enable_vl
+      - Boolean. whether or not to use custom viral load calculations. False means the native calculations get used.
+  - flock
+    - beta_dist
+      - same as for humans, but for flocks
+  - barn
+    - beta_dist
+      - same as for humans, but for barns
+  - water
+    - beta_dist
+      - same as for humans, but for water
+- n_imports
+  - The average number of new cases that are introduced each day, for each agent type. There is no need for this to be an integer as it's an average value
+  - human
+  - flock
+  - barn
+  - water
+- immunity_pars
+  - human
+    - use_waning
+      - Boolean. Whether or not to use waning for human agents
+    - nab_init
+      - a dict with the parameters for the distribution that initial nab levels
+      - dist (e.g. 'normal')
+      - par1
+      - par2
+    - nab_decay
+      - parameters needed to initialize nab_kin
+      - form (e.g. 'nab_growth_decay)
+      - growth_time
+      - decay_rate1
+      - decay_time1
+      - decay_rate2
+      - decay_time2
+    - nab_kin
+      - set automatically during initialization
+    - nab_boost
+      - Multiplicative factor applied to a person's nab levels if they get reinfected.
+    - nab_eff
+      - parameters to mab nabs to efficacy.
+      - alpha_inf
+      - alpha_inf_diff
+      - beta_inf
+      - alpha_symp_inf
+      - beta_symp_inf
+      - alpha_sev_symp
+      - beta_sev_symp
+    - rel_imm_symp
+      - relative immunity granted by different symptom severities
+      - asymp
+      - mild
+      - severe
+    - immunity
+      - set automatically upon initialization
+    - trans_redux
+      - reduction in transmission for breakthrough infections
+  - flock
+    - use_waning
+    - must be False as waning is not supported for flocks
+  - barn
+    - use_waning
+      - must be False as waning is not supported for barns
+  - water
+    - use_waning
+      - must be False as waning is not supported for water
+- dur
+  - Various durations involved in disease progression
+  - all values are dictionaries with the values needed to create a distribution
+    - dist (e.g. 'lognormal_int)
+    - par1
+    - par2
+  - human
+    - exp2inf
+      - duration from exposure to infectious
+    - inf2sym
+      - duration from infectious to symptomatic
+    - sym2sev
+      - duration from symptomatic to severe symptoms
+    - asym2rec
+      - duration for asymptomatic cases to recover
+    - mild2rec
+      - duration for mild symptomatic cases to recover
+    - sev2rec
+      - duration for severely symptomatic cases to recover
+    - sev2die
+      - duration from severely symptomatic to death
+  - flock
+    - exp2inf
+      - duration from exposure to infectious
+    - inf2out
+      - duration from infectious to recovery/removal
+    - susp2res
+      - duration from suspicion of infection to a definitive test result
+  - barn
+    - contamination
+      - how long contaminations last
+    - composting
+      - how long the composting phase lasts
+    - cleaning
+      - how long the cleaning phase lasts
+  - water
+    - contamination
+      - how long contamination lasts
 - prognoses
-    - human
-        - age_cutoffs
-            - an array of integer values specifying the cutoffs for each age group
-        - sus_ORs
-            - relative susceptibility for each age group
-        - trans_ORs
-            - relative transmissibility for each age group
-        - comorbidities
-            - comorbidity by age
-        - symp_probs
-            - relative probability of developing symptoms for each age group
-        - severe_probs
-            - relative probability of developing severe symptoms for each age group
-        - death_probs
-            - relative probability of mortality for each age group
-    - flock
-        - breeds
-            - an array of strings corresponding to the different breeds being simulated
-        - sus_ORs
-            - relative susceptibility for each breed
-        - trans_ORs
-            - relative transmissibility for each breed
-        - baseline_symptomatic_rate
-            - proportion of healthy birds that appear symptomatic anyway
-        - mean_symptomatic_rate_increase
-            - the mean increase in the rate of symptomatic birds among those infected
-        - baseline_mortality_rate
-            - the baseline mortality rate for healthy birds
-        - mean_mortality_rate_increase
-            - the mean increase in mortality rate among infected birds
-        - baseline_water_rate
-            - the rate of water consumption among healthy birds
-        - mean_water_rate_increase
-            - the mean increase in water consumption among infected birds
-    - barn
-        - sus_ORs
-            - the relative susceptibility of barns
-        - trans_ORs
-            - the relative transmissibility of barns
-    - water
-        - sus_ORs
-            - the relative susceptibility of water
-        - trans_ORs
-            - the relative transmissibility of water
-- production_cycle
-    - parameters governing the production cycle of poultry flocks
+  - human
+    - age_cutoffs
+      - an array of integer values specifying the cutoffs for each age group
+    - sus_ORs
+      - relative susceptibility for each age group
+    - trans_ORs
+      - relative transmissibility for each age group
+    - comorbidities
+      - comorbidity by age
+    - symp_probs
+      - relative probability of developing symptoms for each age group
+    - severe_probs
+      - relative probability of developing severe symptoms for each age group
+    - death_probs
+      - relative probability of mortality for each age group
+  - flock
     - breeds
-        - an array of strings corresponding to the breed being simulated
-    - cycle_dur
-        - an array of distribution dictionaries for the cycle duration of each breed
-    - flock_size
-        - an array of distribution dictionaries for the size of flocks for each breed
+      - an array of strings corresponding to the different breeds being simulated
+    - sus_ORs
+      - relative susceptibility for each breed
+    - trans_ORs
+      - relative transmissibility for each breed
+    - baseline_symptomatic_rate
+      - proportion of healthy birds that appear symptomatic anyway
+    - mean_symptomatic_rate_increase
+      - the mean increase in the rate of symptomatic birds among those infected
+    - baseline_mortality_rate
+      - the baseline mortality rate for healthy birds
+    - mean_mortality_rate_increase
+      - the mean increase in mortality rate among infected birds
+    - baseline_water_rate
+      - the rate of water consumption among healthy birds
+    - mean_water_rate_increase
+      - the mean increase in water consumption among infected birds
+  - barn
+    - sus_ORs
+      - the relative susceptibility of barns
+    - trans_ORs
+      - the relative transmissibility of barns
+  - water
+    - sus_ORs
+      - the relative susceptibility of water
+    - trans_ORs
+      - the relative transmissibility of water
+- production_cycle
+  - parameters governing the production cycle of poultry flocks
+  - breeds
+    - an array of strings corresponding to the breed being simulated
+  - cycle_dur
+    - an array of distribution dictionaries for the cycle duration of each breed
+  - flock_size
+    - an array of distribution dictionaries for the size of flocks for each breed
 - bkg_ILI
-    - background rate of influenza like illnesses among humans
+  - background rate of influenza like illnesses among humans
 - Avian_to_ILI
-    - Boolean
-    - should humans infected with avian influenza also be susceptible to ILIs
+  - Boolean
+  - should humans infected with avian influenza also be susceptible to ILIs
 - interventions
-    - an array of intervention objects to include
+  - an array of intervention objects to include
 - surveillance
-    - an array of surveillance objects to include
+  - an array of surveillance objects to include
 - testing
-    - an array of testobjs to include
+  - an array of testobjs to include
 - analyzers
-    - an array of analyzer objects to include
+  - an array of analyzer objects to include
 - timelimit
-    - a timelimit for the simulation.  May be None
+  - a timelimit for the simulation.  May be None
 - stopping_func
-    - a function to call to end the simulation partway through. May be None
+  - a function to call to end the simulation partway through. May be None
 - n_beds_hosp
-    - the number of hospital beds available for severely symptomatic people. None means no constrain
+  - the number of hospital beds available for severely symptomatic people. None means no constrain
 - no_hosp_factor
-    - the relative likelihood of mortality if no hospital beds are available
+  - the relative likelihood of mortality if no hospital beds are available
 - vaccine_pars
-    - parameters for vaccines. populated during initialization
+  - parameters for vaccines. populated during initialization
 - vaccine_map
-    - reverse mapping from number to vaccine key. populated automatically
+  - reverse mapping from number to vaccine key. populated automatically
 - variants
-    - an array of additional variants to include in the simulation
+  - an array of additional variants to include in the simulation
 - variant_map
-    - reverse mapping from number to variant key. populated automatically
+  - reverse mapping from number to variant key. populated automatically
 - variant_pars
-    - populated automatically
-
-
+  - populated automatically

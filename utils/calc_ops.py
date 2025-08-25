@@ -1,7 +1,7 @@
 import numba as nb # For faster computations
 import numpy as np # For numerics
 from .. import defaults as znd
-from ..Options import options as zno
+from .. import options as zno
 
 __all__ = ['compute_viral_load', 'compute_trans_sus', 'compute_infections', 'find_contacts']
 
@@ -12,12 +12,12 @@ nbfloat = znd.nbfloat
 
 # Specify whether to allow parallel Numba calculation -- 10% faster for safe and 20% faster for random, but the random number stream becomes nondeterministic for the latter
 
-safe_parallel = zno.numba_parallel in znd.safe_opts + znd.full_opts
-rand_parallel = zno.numba_parallel in znd.full_opts
-if zno.numba_parallel not in [0, 1, 2, '0', '1', '2', 'none', 'safe', 'full']:
-    errormsg = f'Numba parallel must be "none", "safe", or "full", not "{zno.numba_parallel}"'
+safe_parallel = zno.options.numba_parallel in znd.safe_opts + znd.full_opts
+rand_parallel = zno.options.numba_parallel in znd.full_opts
+if zno.options.numba_parallel not in [0, 1, 2, '0', '1', '2', 'none', 'safe', 'full']:
+    errormsg = f'Numba parallel must be "none", "safe", or "full", not "{zno.options.numba_parallel}"'
     raise ValueError(errormsg)
-cache = zno.numba_cache # Turning this off can help switching parallelization options
+cache = zno.options.numba_cache # Turning this off can help switching parallelization options
 
 @nb.njit(             (nbint,   nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:], nbfloat,    nbfloat), cache=cache, parallel=safe_parallel)
 def compute_viral_load(t,       x_p1,       y_p1,       x_p2,       y_p2,       x_p3,       y_p3,       min_vl,     max_vl): # pragma: no cover

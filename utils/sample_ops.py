@@ -10,7 +10,7 @@ from scipy import stats as st
 import warnings
 from .. import base as znb
 from .. import defaults as znd
-from ..Options import options as zno
+from .. import options as zno
 from . import stats_ops as znso # For additional statistical operations
 
 __all__ = ['sample', 'get_pdf', 'set_seed', 'fast_choice',
@@ -25,12 +25,12 @@ nbfloat = znd.nbfloat
 
 #safe_opts = [1, '1', 'safe'] # TODO: Move this to config
 #full_opts = [2, '2', 'full'] # TODO: Move this to config
-safe_parallel = zno.numba_parallel in znd.safe_opts + znd.full_opts
-rand_parallel = zno.numba_parallel in znd.full_opts
-if zno.numba_parallel not in [0, 1, 2, '0', '1', '2', 'none', 'safe', 'full']:
-    errormsg = f'Numba parallel must be "none", "safe", or "full", not "{zno.numba_parallel}"'
+safe_parallel = zno.options.numba_parallel in znd.safe_opts + znd.full_opts
+rand_parallel = zno.options.numba_parallel in znd.full_opts
+if zno.options.numba_parallel not in [0, 1, 2, '0', '1', '2', 'none', 'safe', 'full']:
+    errormsg = f'Numba parallel must be "none", "safe", or "full", not "{zno.options.numba_parallel}"'
     raise ValueError(errormsg)
-cache = zno.numba_cache # Turning this off can help switching parallelization options
+cache = zno.options.numba_cache # Turning this off can help switching parallelization options
 
 def sample(dist=None, par1=None, par2=None, size=None, **kwargs):
     '''

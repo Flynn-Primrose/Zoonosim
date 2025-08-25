@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from . import interventions as zni
 from . import defaults as znd
 from . import plotting as znplt
-from .Options import options as zno
+from . import options as zno
 
 
 __all__ = ['Analyzer', 'snapshot', 'biography']
@@ -328,7 +328,7 @@ class biography(Analyzer):
         axis_args = sc.mergedicts(dict(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.25, hspace=0.4), axis_args)
         plot_args = sc.mergedicts(dict(lw=2, alpha=0.5, marker='o'), plot_args)
 
-        with zno.with_style(**kwargs):
+        with zno.options.with_style(**kwargs):
             fig, axs = plt.subplots(nrows=1, ncols=1, **fig_args)
             plt.subplots_adjust(**axis_args)
             colors = sc.vectocolor(len(props_to_plot))
