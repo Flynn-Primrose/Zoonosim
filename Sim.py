@@ -488,6 +488,7 @@ class Sim(znb.BaseSim):
             if self.agents:
                 resetstr = ' (resetting agents)' if reset else ' (warning: not resetting sim.agents)'
             print(f'Initializing sim{resetstr} with {self["n_farms"]:0n} farms for {self["n_days"]} days')
+            
         if self.popfile and self.popdict is None: # If there's a popdict, we initialize it via cvpop.make_people()
             self.load_population(init_agents=False)
         

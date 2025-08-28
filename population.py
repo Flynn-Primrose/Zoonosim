@@ -6,9 +6,16 @@ import numpy as np # Needed for a few things not provided by pl
 import sciris as sc
 
 from . import base_module as znb
-from . import rosters as znr
 from . import defaults as znd
 from . import utils as znu
+
+from .agent_module import Agents
+from .human_module import Humans
+from .flock_module import Flocks
+from .barn_module import Barns
+from .water_module import Water
+from .contacts_module import Contacts, Layer
+
 
 __all__ = ['make_agents']
 
@@ -59,15 +66,15 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
 
     contacts = make_contacts(popdict['contactdict'])
 
-    agents = znr.Agents(sim.pars, 
-                        uid = popdict['uid'],
-                        fid = popdict['fid'], 
-                        agent_type = popdict['agent_type'], 
-                        human = human,
-                        flock = flock,
-                        barn = barn,
-                        water = water,
-                        contacts = contacts)
+    agents = Agents(sim.pars, 
+                    uid = popdict['uid'],
+                    fid = popdict['fid'], 
+                    agent_type = popdict['agent_type'], 
+                    human = human,
+                    flock = flock,
+                    barn = barn,
+                    water = water,
+                    contacts = contacts)
 
     return agents
 
@@ -229,8 +236,8 @@ def make_humans(sim_pars, uid):
         n_false = len(uid) - n_true
         has_watch = np.array([True]*n_true + [False]*n_false)
         np.random.shuffle(has_watch)
-        humans = znr.Humans(sim_pars, strict = False, uid = uid, age = age, sex = sex, has_watch = has_watch)
-    else: humans = znr.Humans(sim_pars, strict = False, uid = uid, age = age, sex = sex)
+        humans = Humans(sim_pars, strict = False, uid = uid, age = age, sex = sex, has_watch = has_watch)
+    else: humans = Humans(sim_pars, strict = False, uid = uid, age = age, sex = sex)
 
     return humans
 
@@ -249,7 +256,7 @@ def make_flocks(sim_pars, uid, flock2barn, breed_index):
     for this_breed, freq in breed_dict.items():
         headcount[breed_index == this_breed] = znu.sample(**prod_pars['flock_size'][this_breed], size = freq)
     
-    flocks = znr.Flocks(sim_pars, strict = False, uid=uid, breed = breed, barn = barn, headcount=headcount)
+    flocks = Flocks(sim_pars, strict = False, uid=uid, breed = breed, barn = barn, headcount=headcount)
     return flocks
 
 def make_barns(sim_pars, uid, barn2flock, barn2breed):
@@ -269,13 +276,13 @@ def make_barns(sim_pars, uid, barn2flock, barn2breed):
     for breed, freq in breed_dict.items():
         date_cycle_end[breed_index == breed] = znu.sample(**prod_pars['cycle_dur'][breed], size = freq)
         
-    barns = znr.Barns(sim_pars, strict = False, uid=uid, temperature = temperature, humidity = humidity, flock = flock, date_cycle_end = date_cycle_end)
+    barns = Barns(sim_pars, strict = False, uid=uid, temperature = temperature, humidity = humidity, flock = flock, date_cycle_end = date_cycle_end)
     return barns
 
 def make_water(sim_pars, uid):
 
     temperature = znu.n_poisson(22.5, len(uid)) # NOTE: Dummy values
-    water = znr.Water(sim_pars, strict = False, uid = uid, temperature = temperature)
+    water = Water(sim_pars, strict = False, uid = uid, temperature = temperature)
     
     return water
 
@@ -288,13 +295,13 @@ def make_contacts(contactdict):
     hf_layer = make_hf_contacts(contactdict) # Human-flock contacts
     hh_layer = make_hh_contacts(contactdict) # Human-human contacts
 
-    return znb.Contacts(fb = fb_layer,
-                        bw = bw_layer,
-                        fw = fw_layer,
-                        hb = hb_layer,
-                        hf = hf_layer,
-                        hh = hh_layer,
-                        )
+    return Contacts(fb = fb_layer,
+                    bw = bw_layer,
+                    fw = fw_layer,
+                    hb = hb_layer,
+                    hf = hf_layer,
+                    hh = hh_layer,
+                    )
 
 def make_fb_contacts(contactdict):
     '''
@@ -319,11 +326,11 @@ def make_fb_contacts(contactdict):
 
     beta = np.repeat(0.25, len(fb_p1)) # NOTE: Dummy values
 
-    fb_layer = znb.Layer(p1 = fb_p1,
-                         p2 = fb_p2,
-                         beta = beta,
-                         label = 'flock-barn contacts'
-                        )
+    fb_layer = Layer(p1 = fb_p1,
+                     p2 = fb_p2,
+                     beta = beta,
+                     label = 'flock-barn contacts'
+                    )
 
     return fb_layer
 
@@ -350,11 +357,11 @@ def make_bw_contacts(contactdict):
 
     beta = np.repeat(0.25, len(bw_p1)) # NOTE: Dummy values
 
-    bw_layer = znb.Layer(p1 = bw_p1,
-                         p2 = bw_p2,
-                         beta = beta,
-                         label = 'barn-water contacts'
-                        )
+    bw_layer = Layer(p1 = bw_p1,
+                     p2 = bw_p2,
+                     beta = beta,
+                     label = 'barn-water contacts'
+                    )
 
     return bw_layer
 
@@ -381,11 +388,11 @@ def make_fw_contacts(contactdict):
 
     beta = np.repeat(0.25, len(fw_p1)) # NOTE: Dummy values
 
-    fw_layer = znb.Layer(p1 = fw_p1,
-                         p2 = fw_p2,
-                         beta = beta,
-                         label = 'flock-water contacts'
-                        )
+    fw_layer = Layer(p1 = fw_p1,
+                     p2 = fw_p2,
+                     beta = beta,
+                     label = 'flock-water contacts'
+                    )
 
     return fw_layer
 
@@ -414,11 +421,11 @@ def make_hb_contacts(contactdict):
 
     beta = np.repeat(0.25, len(hb_p1)) # NOTE: Dummy values
 
-    hb_layer = znb.Layer(p1 = hb_p1,
-                         p2 = hb_p2,
-                         beta = beta,
-                         label = 'human-barn contacts'
-                        )
+    hb_layer = Layer(p1 = hb_p1,
+                     p2 = hb_p2,
+                     beta = beta,
+                     label = 'human-barn contacts'
+                    )
 
     return hb_layer
 
@@ -447,11 +454,11 @@ def make_hf_contacts(contactdict):
 
     beta = np.repeat(1, len(hf_p1)) # NOTE: Dummy values
 
-    hf_layer = znb.Layer(p1 = hf_p1,
-                         p2 = hf_p2,
-                         beta = beta,
-                         label = 'human-flock contacts'
-                        )
+    hf_layer = Layer(p1 = hf_p1,
+                     p2 = hf_p2,
+                     beta = beta,
+                     label = 'human-flock contacts'
+                    )
 
     return hf_layer
 
@@ -481,10 +488,10 @@ def make_hh_contacts(contactdict):
 
     beta = np.repeat(0.25, len(hh_p1)) # NOTE: Dummy values
 
-    hh_layer = znb.Layer(p1 = hh_p1,
-                         p2 = hh_p2,
-                         beta = beta,
-                         label = 'human-human contacts'
-                        )
+    hh_layer = Layer(p1 = hh_p1,
+                     p2 = hh_p2,
+                     beta = beta,
+                     label = 'human-human contacts'
+                    )
 
     return hh_layer
