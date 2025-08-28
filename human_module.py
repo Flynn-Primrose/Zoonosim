@@ -1,15 +1,18 @@
+'''
+Defines the subroster and metaroster for human agents.
+'''
 
 import numpy as np
 import sciris as sc
 from collections import defaultdict
-from .. import version as znv
-from .. import utils as znu
-from .. import defaults as znd
-from .. import watches as znw
-from .Subroster import Subroster
-#from .. import base as znb
 
-__all__ = ['Humans']
+from . import version as znv
+from . import utils as znu
+from . import defaults as znd
+from . import watches as znw
+from .roster_module import Subroster
+
+__all__ = ['Humans', 'HumanMeta']
 
 class HumanMeta(sc.prettyobj):
     ''' Defines all keys used for human agents '''
@@ -989,4 +992,3 @@ class Humans(Subroster):
             else:
                 print(f'Nothing happened to {uid} during the simulation.')
         return
-

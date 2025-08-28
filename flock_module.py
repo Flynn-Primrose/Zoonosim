@@ -1,11 +1,15 @@
+'''
+Defines the subroster and metaroster for flock-like agents
+'''
+
 import numpy as np
 import sciris as sc
-from .. import version as znv
-from .. import utils as znu
-from .. import defaults as znd
-from .Subroster import Subroster
+from . import version as znv
+from . import utils as znu
+from . import defaults as znd
+from .roster_module import Subroster
 
-__all__ = ['Flocks']
+__all__ = ['Flocks', 'FlocksMeta']
 
 class FlocksMeta(sc.prettyobj):
     ''' Defines all keys that are used by flocks '''
@@ -527,4 +531,3 @@ class Flocks(Subroster):
             else:
                 print(f'Nothing happened to {uid} during the simulation.')
         return
-

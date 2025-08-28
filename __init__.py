@@ -18,7 +18,7 @@ from .defaults import *
 from .misc import *
 from .utils import *
 from .parameters import *
-from .base import *
+from .base_module import *
 from .rosters import *
 from .interventions import *
 from .analysis import *

@@ -9,7 +9,7 @@ import sciris as sc
 from collections import defaultdict
 from . import defaults as znd
 from . import misc as znm
-from . import base as znb
+from . import base_module as znb
 from . import sim as zns
 from . import plotting as znpl
 from . import options as zno
@@ -1459,11 +1459,9 @@ def multi_run(sim, n_runs=4, reseed=None, noise=0.0, noisepar=None, iterpars=Non
         iterkwargs = dict(ind=np.arange(n_runs))
         iterkwargs.update(iterpars)
         kwargs = dict(sim = sim, reseed=reseed, noise=noise, noisepar=noisepar, verbose=verbose, keep_people=keep_people, sim_args=sim_args, run_args=run_args, do_run=do_run)
-        # kwargs = dict(sim_json = sim.to_json, reseed=reseed, noise=noise, noisepar=noisepar, verbose=verbose, keep_people=keep_people, sim_args=sim_args, run_args=run_args, do_run=do_run)
     elif isinstance(sim, list): # List of sims
         if reseed is None: reseed = False
         iterkwargs = dict(sim=sim, ind=np.arange(len(sim)))
-        #iterkwargs = dict(sim_json=[s.to_json() for s in sim], ind=np.arange(len(sim)))
         kwargs = dict(reseed=reseed, verbose=verbose, keep_people=keep_people, sim_args=sim_args, run_args=run_args, do_run=do_run)
     else:
         errormsg = f'Must be Sim object or list, not {type(sim)}'

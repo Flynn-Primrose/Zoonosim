@@ -5,6 +5,8 @@ from .. import utils as znu
 This file implements functions for checking test-eligibility.
 '''
 
+__all__ = ['check_criteria']
+
 def check_criteria(base_testobj, testobj, sim, **crit_kwargs): 
         '''
         Given the criterion names, call respective criterion functions to identify who meets each criterion. Apply restrictions at the end.

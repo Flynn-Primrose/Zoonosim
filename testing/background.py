@@ -7,6 +7,8 @@ from .. import utils as znu
 This file implements a simple model of background ILI.
 '''
 
+__all__ = ['infect_ILI', 'ILI_float', 'ILI_array']
+
 def infect_ILI(sim): 
     '''
     Void function that infects some proportion of the population with non-COVID ILI, refreshed each week. Meant to be called at each time step. We assume 

@@ -1,12 +1,6 @@
 '''
-ParsObj inherits from FlexPretty and adds an attribute self.pars, which is a dictionary of parameters.
-It also defines methods for manipulating the parameters.
-
-BaseSim inherits from ParsObj and defines methods for manipulating the simulation object that are not
-directly related to simulating the epidemic. This includes methods for saving and loading the simulation,
-exporting results, and getting interventions and analyzers.
-
-Also defines the function set_metadata(), which sets the metadata for the simulation object.
+Provides base classes derived from the FlexPretty class, which is itself derived from Sciris' prettyobj class.
+These base classes are intended to handle common functionality so that their children can focus on specific tasks.
 '''
 
 import sciris as sc
@@ -14,13 +8,128 @@ import numpy as np
 import pandas as pd
 import datetime as dt
 
-from . import FlexPretty
-from . import Result as znres
-from .. import version as znv
-from .. import misc as znm
-from .. import utils as znu
+from . import defaults as znd
+from . import version as znv
+from . import misc as znm
+from . import utils as znu
 
-__all__ = ['ParsObj', 'set_metadata', 'BaseSim']
+__all__ = ['FlexPretty']
+
+class FlexPretty(sc.prettyobj):
+    '''
+    A class that supports multiple different display options: namely obj.brief()
+    for a one-line description and obj.disp() for a full description.
+    '''
+
+    def __repr__(self):
+        ''' Use brief repr by default '''
+        try:
+            string = self._brief()
+        except Exception as E:
+            string = sc.objectid(self)
+            string += f'Warning, something went wrong printing object:\n{str(E)}'
+        return string
+
+    def _disp(self):
+        ''' Verbose output -- use Sciris' pretty repr by default '''
+        return sc.prepr(self)
+
+    def disp(self, output=False):
+        ''' Print or output verbose representation of the object '''
+        string = self._disp()
+        if not output:
+            print(string)
+        else:
+            return string
+
+    def _brief(self):
+        ''' Brief output -- use a one-line output, a la Python's default '''
+        return sc.objectid(self)
+
+    def brief(self, output=False):
+        ''' Print or output a brief representation of the object '''
+        string = self._brief()
+        if not output:
+            print(string)
+        else:
+            return string
+        
+__all__ += ['Result']
+
+class Result(object):
+    '''
+    Stores a single result -- by default, acts like an array.
+
+    Args:
+        name (str): name of this result, e.g. new_infections
+        npts (int): if values is None, precreate it to be of this length
+        scale (bool): whether or not the value scales by population scale factor
+        color (str/arr): default color for plotting (hex or RGB notation)
+        n_variants (int): the number of variants the result is for (0 for results not by variant)
+
+    **Example**::
+
+    '''
+
+    def __init__(self, name=None, npts=None, scale=True, color=None, n_variants=0):
+        self.name =  name  # Name of this result
+        self.scale = scale # Whether or not to scale the result by the scale factor
+        if color is None:
+            color = znd.get_default_colors('default')['default']
+        self.color = color # Default color
+        if npts is None:
+            npts = 0
+        npts = int(npts)
+
+        if n_variants>0:
+            self.values = np.zeros((n_variants, npts), dtype=znd.result_float)
+        else:
+            self.values = np.zeros(npts, dtype=znd.result_float)
+
+        self.low  = None
+        self.high = None
+        return
+
+
+    def __repr__(self):
+        ''' Use pretty repr, like sc.prettyobj, but displaying full values '''
+        output  = sc.prepr(self, skip=['values', 'low', 'high'], use_repr=False)
+        output += 'values:\n' + repr(self.values)
+        if self.low is not None:
+            output += '\nlow:\n' + repr(self.low)
+        if self.high is not None:
+            output += '\nhigh:\n' + repr(self.high)
+        return output
+
+
+    def __getitem__(self, key):
+        ''' To allow e.g. result['high'] instead of result.high, and result[5] instead of result.values[5] '''
+        if isinstance(key, str):
+            output = getattr(self, key)
+        else:
+            output = self.values.__getitem__(key)
+        return output
+
+
+    def __setitem__(self, key, value):
+        ''' To allow e.g. result[:] = 1 instead of result.values[:] = 1 '''
+        if isinstance(key, str):
+            setattr(self, key, value)
+        else:
+            self.values.__setitem__(key, value)
+        return
+
+
+    def __len__(self):
+        ''' To allow len(result) instead of len(result.values) '''
+        return len(self.values)
+
+
+    @property
+    def npts(self):
+        return len(self.values)
+
+__all__ += ['ParsObj', 'set_metadata', 'BaseSim']
 
 class ParsObj(FlexPretty):
     '''
@@ -168,25 +277,13 @@ class BaseSim(ParsObj):
         znu.set_seed(self['rand_seed'])
         return
 
-    @property
-    def n(self):
-        ''' Count the number of people -- if it fails, assume none '''
-        # Im not sure how this needs to change to reflect multiple species.
-        # TODO: Revisit this
-        return -1 # Placeholder until this is updated
-        # try: # By default, the length of the people dict
-        #     return len(self.people)
-        # except:  # pragma: no cover # If it's None or missing
-        #     return 0
-
-    # NOTE: We arn't using scaling so this should be unnecessary
     # @property
-    # def scaled_pop_size(self):
-    #     ''' Get the total population size, i.e. the number of agents times the scale factor -- if it fails, assume none '''
-    #     try:
-    #         return self['pop_size']*self['pop_scale']
-    #     except:  # pragma: no cover # If it's None or missing
-    #         return 0
+    # def n(self):
+    #     ''' Count the number of people -- if it fails, assume none '''
+    #     # Im not sure how this needs to change to reflect multiple species.
+    #     # TODO: Revisit this
+    #     return -1 # Placeholder until this is updated
+
 
     @property
     def npts(self):
@@ -299,9 +396,9 @@ class BaseSim(ParsObj):
         keys = []
         choices = ['main', 'variant', 'all']
         if which in ['main', 'all']:
-            keys += [key for key,res in self.results.items() if isinstance(res, znres.Result)]
+            keys += [key for key,res in self.results.items() if isinstance(res, Result)]
         if which in ['variant', 'all'] and 'variant' in self.results:
-            keys += [key for key,res in self.results['variant'].items() if isinstance(res, znres.Result)]
+            keys += [key for key,res in self.results['variant'].items() if isinstance(res, Result)]
         if which not in choices: # pragma: no cover
             errormsg = f'Choice "which" not available; choices are: {sc.strjoin(choices)}'
             raise ValueError(errormsg)
@@ -342,7 +439,7 @@ class BaseSim(ParsObj):
         if for_json:
             resdict['timeseries_keys'] = self.result_keys()
         for key,res in self.results.items():
-            if isinstance(res, znres.Result):
+            if isinstance(res, Result):
                 resdict[key] = res.values
                 if res.low is not None:
                     resdict[key+'_low'] = res.low
@@ -730,3 +827,230 @@ class BaseSim(ParsObj):
         Same as get_intervention(), but for analyzers.
         '''
         return self._get_ia('analyzers', label=label, partial=partial, first=first, die=die, as_inds=False, as_list=False)
+    
+__all__ += ['BaseRoster']
+
+class BaseRoster(FlexPretty):
+    '''
+    Base class for rosters, which are collections of agents.
+    '''
+
+    def set_pars(self, pars=None):
+        '''
+        Re-link the parameters stored in the roster object to the object containing it.
+        '''
+        orig_pars = self.__dict__.get('pars') # Get the current parameters using dict's get method
+        if pars is None:
+            if orig_pars is not None: # If it has existing parameters, use them
+                pars = orig_pars
+            else:
+                pars = {}
+
+        # Copy from old parameters to new parameters
+        if isinstance(orig_pars, dict):
+            for k,v in orig_pars.items():
+                if k not in pars:
+                    pars[k] = v
+
+        # Do minimal validation -- needed here since pop_size must exist should be converted to an int when first set
+        if 'pop_size' not in pars:
+            errormsg = f'The parameter "pop_size" must be included in a population; keys supplied were:\n{sc.newlinejoin(pars.keys())}'
+            raise sc.KeyNotFoundError(errormsg)
+        pars['pop_size'] = int(pars['pop_size'])
+        pars.setdefault('n_variants', 1)
+        self.pars = pars # Actually store the pars
+        return
+    
+    def _resize_arrays(self, new_size=None, keys=None):
+        ''' Resize arrays if any mismatches are found '''
+
+        # Handle None or tuple input (representing variants and pop_size)
+        if new_size is None:
+            new_size = len(self)
+        pop_size = new_size if not isinstance(new_size, tuple) else new_size[1]
+        self.pars['pop_size'] = pop_size
+
+        # Reset sizes
+        if keys is None:
+            keys = self.keys()
+        keys = sc.promotetolist(keys)
+        for key in keys:
+            self[key].resize(new_size, refcheck=False) # Don't worry about cross-references to the arrays
+
+        return
+
+
+    def lock(self):
+        ''' Lock the roster object to prevent keys from being added '''
+        self._lock = True
+        return
+
+
+    def unlock(self):
+        ''' Unlock the roster object to allow keys to be added '''
+        self._lock = False
+        return
+
+
+    def __getitem__(self, key):
+        ''' Allow roster['attr'] instead of getattr(roster, 'attr')
+        '''
+        try:
+            return self.__dict__[key]
+        except: # pragma: no cover
+            errormsg = f'Key "{key}" is not a valid attribute of the this roster'
+            raise AttributeError(errormsg)
+
+
+    def __setitem__(self, key, value):
+        ''' Ditto '''
+        if self._lock and key not in self.__dict__: # pragma: no cover
+            errormsg = f'Key "{key}" is not a current attribute of this roster, and the roster object is locked; see roster.unlock()'
+            raise AttributeError(errormsg)
+        self.__dict__[key] = value
+        return
+
+
+    def __len__(self):
+        ''' This is just a scalar, but validate() and _resize_arrays() make sure it's right '''
+        #return int(self.pars['pop_size'])
+        return len(self.uid) # NOTE: this is probably slower but it's necessary because self.pars['pop_size'] will always equal the size of the total population.
+
+
+    def __iter__(self):
+        ''' Iterate over agents '''
+        for i in range(len(self)):
+            yield self[i]
+
+    def set(self, key, value, die=True):
+        ''' Ensure sizes and dtypes match '''
+        current = self[key]
+        value = np.array(value, dtype=self._dtypes[key]) # Ensure it's the right type
+        if die and len(value) != len(current): # pragma: no cover
+            errormsg = f'Length of new array does not match current ({len(value)} vs. {len(current)})'
+            raise IndexError(errormsg)
+        self[key] = value
+        return
+
+
+    def get(self, key):
+        ''' Convenience method -- key can be string or list of strings '''
+        if isinstance(key, str):
+            return self[key]
+        elif isinstance(key, list):
+            arr = np.zeros((len(self), len(key)))
+            for k,ky in enumerate(key):
+                arr[:,k] = self[ky]
+            return arr
+
+
+    def true(self, key):
+        ''' Return indices matching the condition '''
+        return self[key].nonzero()[0]
+
+
+    def false(self, key):
+        ''' Return indices not matching the condition '''
+        return (~self[key]).nonzero()[0]
+
+
+    def defined(self, key):
+        ''' Return indices of agents who are not-nan '''
+        return (~np.isnan(self[key])).nonzero()[0]
+
+
+    def undefined(self, key):
+        ''' Return indices of agents who are nan '''
+        return np.isnan(self[key]).nonzero()[0]
+
+
+    def count(self, key):
+        ''' Count the number of agents for a given key '''
+        return np.count_nonzero(self[key])
+
+
+    def count_by_variant(self, key, variant):
+        ''' Count the number of agents for a given key '''
+        return np.count_nonzero(self[key][variant,:])
+
+    def r_count(self, key, i_start, i_end):
+        ''' Count the number of agents for a given key in the half-open
+        interval [i_start, i_end), for the given range of agent id's. '''
+        return np.count_nonzero(self[key][i_start:i_end])
+
+
+    def r_count_by_variant(self, key, variant, i_start, i_end):
+        ''' Count the number of agents for a given key. In a range, as above. '''
+        return np.count_nonzero(self[key][variant,i_start:i_end])
+
+
+    def count_not(self, key):
+        ''' Count the number of agents who do not have a property for a given key '''
+        return len(self[key]) - self.count(key)
+
+
+    def keys(self):
+        ''' Returns keys for all properties of the roster object '''
+        return self.meta.all_states[:]
+
+
+    def agent_keys(self):
+        ''' Returns keys specific to an agent (e.g., their age) '''
+        return self.meta.agent[:]
+
+
+    def state_keys(self):
+        ''' Returns keys for different states of an agent (e.g., symptomatic) '''
+        return self.meta.states[:]
+
+
+    def date_keys(self):
+        ''' Returns keys for different event dates (e.g., date a person became symptomatic) '''
+        return self.meta.dates[:]
+
+
+    def dur_keys(self):
+        ''' Returns keys for different durations (e.g., the duration from exposed to infectious) '''
+        return self.meta.durs[:]
+
+
+    def indices(self):
+        ''' The indices of each agent array '''
+        return np.arange(len(self))
+    
+    def to_df(self):
+        ''' Convert to a Pandas dataframe '''
+        df = pd.DataFrame.from_dict({key:self[key] for key in self.keys()})
+        return df
+
+
+    def to_arr(self):
+        ''' Return as numpy array '''
+        arr = np.empty((len(self), len(self.keys())), dtype=znd.default_float)
+        for k,key in enumerate(self.keys()):
+            if key == 'uid':
+                arr[:,k] = np.arange(len(self))
+            else:
+                arr[:,k] = self[key]
+        return arr
+
+
+    def to_list(self):
+        ''' Return all agents as a list '''
+        return list(self)
+
+
+    def from_list(self, agents, resize=True):
+        ''' Convert a list of agents back into a Roster object '''
+
+        # Handle population size
+        pop_size = len(agents)
+        if resize:
+            self._resize_arrays(new_size=pop_size)
+
+        # Iterate over people -- slow!
+        for a,agent in enumerate(agents):
+            for key in self.keys():
+                self[key][a] = getattr(agent, key)
+
+        return

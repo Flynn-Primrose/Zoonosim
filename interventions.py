@@ -11,7 +11,7 @@ import scipy as sp
 import inspect
 import datetime as dt
 
-from . import base as znb
+from . import base_module as znb
 from . import utils as znu
 from . import misc as znm
 from . import defaults as znd

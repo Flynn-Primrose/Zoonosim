@@ -7,6 +7,8 @@ from . import seek as sk
 
 import numpy as np
 
+__all__ = ['Diagnostic', 'Screening', 'Surveillance']
+
 class Diagnostic:
     # Used to conduct diagnostic testing
     # Takes as input:

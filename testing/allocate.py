@@ -9,6 +9,8 @@ from .background import *
 This file implements functions for checking test-allocation.
 '''
 
+__all__ = ['allocate_tests', 'basic_allocation', 'proportional_allocation', 'compute_members', 'compute_proportions', 'compute_powset']
+
 def allocate_tests(sim, testobj, seekers_dict=None, mode='proportional'): 
 
     if mode == 'proportional': 

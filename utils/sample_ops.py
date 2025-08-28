@@ -8,7 +8,7 @@ import bisect
 import scipy
 from scipy import stats as st
 import warnings
-from .. import base as znb
+from .. import base_module as znb
 from .. import defaults as znd
 from .. import options as zno
 from . import stats_ops as znso # For additional statistical operations

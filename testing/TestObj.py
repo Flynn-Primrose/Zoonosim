@@ -1,10 +1,11 @@
 import pickle as pkl
 import numpy as np
-import pandas as pd 
+
 from scipy import stats
 from . import purpose as tp
 from . import allocate as ac
 from . import mechanism as tm
+
 
 __all__ = ['TestObj', 'PCR_disc', 'RAT_disc']
 

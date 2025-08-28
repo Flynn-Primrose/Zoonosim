@@ -4,6 +4,8 @@ import numpy as np
 This file implements functions for checking test-seeking.
 '''
 
+__all__ = ['get_seekers', 'get_all_seekers']
+
 def get_seekers(candidates, prob): 
         ''' 
         Takes as input a set of potential test-seekers. Determines if they actually will seek a test, probabilistically. 

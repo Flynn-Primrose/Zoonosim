@@ -42,7 +42,7 @@ sim.initialize()
 #         print(f"Problem with attribute {key!r}: {type(val)} -> {e}")
 
 dump = dill.dumps(type(sim.agents.meta))
-sim2 = dill.loads(dump)
+load = dill.loads(dump)
 
 # bad_attrs = []
 # for k,v in sim.agents.__dict__.items():

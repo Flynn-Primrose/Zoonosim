@@ -5,7 +5,7 @@ Defines functions for creating agents
 import numpy as np # Needed for a few things not provided by pl
 import sciris as sc
 
-from . import base as znb
+from . import base_module as znb
 from . import rosters as znr
 from . import defaults as znd
 from . import utils as znu

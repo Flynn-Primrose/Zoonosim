@@ -1,4 +1,6 @@
-import numpy as np 
+import numpy as np
+
+__all__ = ['LOD_test', 'basic_test']
 
 def LOD_test(testobj, sim, inds): 
     '''
