@@ -19,7 +19,11 @@ from .misc import *
 from .utils import *
 from .parameters import *
 from .base_module import *
-from .rosters import *
+from .roster_module import *
+from .human_module import *
+from .flock_module import *
+from .barn_module import *
+from .water_module import *
 from .interventions import *
 from .analysis import *
 from .immunity import *

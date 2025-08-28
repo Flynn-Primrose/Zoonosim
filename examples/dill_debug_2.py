@@ -4,7 +4,7 @@ import dill
 sim = zn.Sim()
 sim.initialize()
 # Get the class of your object
-meta_cls = type(sim.agents.meta)
+meta_cls = sim.agents.human
 
 for name, value in meta_cls.__dict__.items():
     try:
@@ -17,4 +17,3 @@ for name, value in meta_cls.__dict__.items():
 
 print(meta_cls)
 print(meta_cls.__module__)
-print(meta_cls.__qualname__)

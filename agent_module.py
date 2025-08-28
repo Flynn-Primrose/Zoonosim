@@ -8,7 +8,12 @@ from . import version as znv
 from . import utils as znu
 from . import defaults as znd
 
+from .contacts_module import Contacts
 from .roster_module import Roster
+from .human_module import Humans
+from .flock_module import Flocks
+from .barn_module import Barns
+from .water_module import Water
 
 __all__ = ['Agents']
 
@@ -97,20 +102,37 @@ class Agents(Roster):
         self.meta = AgentsMeta() # Store list of keys and dtypes
         self.contacts = None
 
-        self.human = kwargs['human'] if 'human' in kwargs else None 
-        self.flock = kwargs['flock'] if 'flock' in kwargs else None
-        self.barn = kwargs['barn'] if 'barn' in kwargs else None
-        self.water = kwargs['water'] if 'water' in kwargs else None        
+        human = kwargs.pop('human', None)
+        if isinstance(human, Humans):
+            self.human = human
+        else:
+            raise ValueError("human must be an instance of Humans class")
+            
+        flock = kwargs.pop('flock', None)
+        if isinstance(flock, Flocks):
+            self.flock = flock
+        else:
+            raise ValueError("flock must be an instance of Flocks class")
+        
+        barn = kwargs.pop('barn', None)
+        if isinstance(barn, Barns):
+            self.barn = barn
+        else:
+            raise ValueError("barn must be an instance of Barns class")
+        
+        water = kwargs.pop('water', None)
+        if isinstance(water, Water):
+            self.water = water
+        else:
+            raise ValueError("water must be an instance of Water class")
+       
+        self.contacts = None
         self.init_contacts() # Initialize the contacts
+
+        if 'contacts' in kwargs:
+            self.add_contacts(kwargs.pop('contacts'))
+
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
-
-        # Set the population size
-
-        # if self.pars['pop_size'] is None:
-        #     pop_size = 0
-        #     for type in self.pars['agent_types']:
-        #         pop_size += self.pars['pop_size_by_type'][type]
-        #     self.pars['pop_size'] = pop_size
         
         # Set agent properties -- all floats except for UID
         for key in self.meta.agent:
@@ -141,36 +163,21 @@ class Agents(Roster):
         if strict:
             self.lock() # If strict is true, stop further keys from being set (does not affect attributes)
 
-        # Store flows to be computed during simulation
-        #self.init_flows()
-
         # Although we have called init(), we still need to call initialize()
         self.initialized = False
 
-        # Handle contacts, if supplied (note: they usually are)
-        if 'contacts' in kwargs:
-            self.add_contacts(kwargs.pop('contacts'))
+
 
         # Handle all other values, e.g. age
         for key,value in kwargs.items():
-            if key not in ['human', 'flock', 'barn', 'water']: # These are handled separately
-                if strict:
-
-                    self.set(key, value)
-                else:
+            if strict:
+                self.set(key, value)
+            else:
                     self[key] = value
 
         return
 
     #%% Methods for updating state
-
-    # def init_flows(self):
-    #     ''' Initialize flows to be zero '''
-    #     self.flows = {key:0 for key in znd.new_result_flows}
-    #     self.flows_variant = {}
-    #     for key in znd.new_result_flows_by_variant:
-    #         self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=znd.default_float)
-    #     return
 
     def initialize(self, sim_pars=None):
         ''' Perform initializations '''
