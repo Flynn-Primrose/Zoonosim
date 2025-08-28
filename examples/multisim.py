@@ -7,7 +7,7 @@ new_pars = {'rand_seed': 42}
 sim.update_pars(new_pars)  # Update parameters if needed.
 sim.initialize()  # Initialize the simulation.
 
-msim = zn.MultiSim(sim, n_runs = 5)  # Wrap the simulation in a MultiSim object.
+msim = zn.MultiSim(sim, n_runs = 3)  # Wrap the simulation in a MultiSim object.
 
 if __name__ == "__main__":
     # Run the multi-simulation

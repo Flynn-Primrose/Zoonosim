@@ -3,6 +3,7 @@ Functions and classes for running multiple Zoonosim runs.
 '''
 
 #%% Imports
+import warnings
 import numpy as np
 import pandas as pd
 import sciris as sc
@@ -1323,7 +1324,7 @@ class Scenarios(znb.ParsObj):
             return string
 
 
-def single_run(sim, ind=0, reseed=True, noise=0.0, noisepar=None, keep_people=False, run_args=None, sim_args=None, verbose=None, do_run=True, **kwargs):
+def single_run(sim, ind=0, reseed=True, noise=0.0, noisepar=None, noisetype=None, keep_people=False, run_args=None, sim_args=None, verbose=None, do_run=True, **kwargs):
     '''
     Convenience function to perform a single simulation run. Mostly used for
     parallelization, but can also be used directly.
@@ -1334,6 +1335,7 @@ def single_run(sim, ind=0, reseed=True, noise=0.0, noisepar=None, keep_people=Fa
         reseed      (bool)  : whether or not to generate a fresh seed for each run
         noise       (float) : the amount of noise to add to each run
         noisepar    (str)   : the name of the parameter to add noise to
+        noisetype   (str)   : The name of the agent type whose parameters to modify with noise
         keep_people (bool)  : whether to keep the people after the sim run
         run_args    (dict)  : arguments passed to sim.run()
         sim_args    (dict)  : extra parameters to pass to the sim, e.g. 'n_infected'
@@ -1367,8 +1369,24 @@ def single_run(sim, ind=0, reseed=True, noise=0.0, noisepar=None, keep_people=Fa
     # If the noise parameter is not found, guess what it should be
     if noisepar is None:
         noisepar = 'beta'
+        warnings.warn(f'No noisepar specified; defaulting to {noisepar}', UserWarning)
         if noisepar not in sim.pars.keys():
             raise sc.KeyNotFoundError(f'Noise parameter {noisepar} was not found in sim parameters')
+        
+
+    if not isinstance(sim[noisepar], dict):
+         if noisetype is not None:
+            warnings.warn(f'Noisetype {noisetype} specified but {noisepar} is not a dict; ignoring noisetype', UserWarning)
+            noisetype = None
+    else:
+        if noisetype is None:
+            noisetype = 'human'
+            warnings.warn(f'Noisepar is a dict but noisetype not specified; defaulting to {noisetype}', UserWarning)
+        if noisetype not in sim[noisepar].keys():
+            raise sc.KeyNotFoundError(f'Noisetype {noisetype} was not found in {noisepar}')
+        
+            
+
 
     # Handle noise -- normally distributed fractional error
     noiseval = noise*np.random.normal()
@@ -1376,7 +1394,11 @@ def single_run(sim, ind=0, reseed=True, noise=0.0, noisepar=None, keep_people=Fa
         noisefactor = 1 + noiseval
     else:
         noisefactor = 1/(1-noiseval)
-    sim[noisepar] *= noisefactor
+    
+    if isinstance(sim[noisepar], dict):
+        sim[noisepar][noisetype] *= noisefactor
+    else:
+        sim[noisepar] *= noisefactor
 
     if verbose>=1:
         verb = 'Running' if do_run else 'Creating'
@@ -1474,19 +1496,19 @@ def multi_run(sim, n_runs=4, reseed=None, noise=0.0, noisepar=None, iterpars=Non
         except RuntimeError as E: # Handle if run outside of __main__ on Windows
             if 'freeze_support' in E.args[0]: # For this error, add additional information
                 errormsg = '''
- Uh oh! It appears you are trying to run with multiprocessing on Windows outside
- of the __main__ block; please see https://docs.python.org/3/library/multiprocessing.html
- for more information. The correct syntax to use is e.g.
-
-     import covasim as cv
-     sim = cv.Sim()
-     msim = cv.MultiSim(sim)
-
-     if __name__ == '__main__':
-         msim.run()
-
-Alternatively, to run without multiprocessing, set parallel=False.
- '''
+                         Uh oh! It appears you are trying to run with multiprocessing on Windows outside
+                         of the __main__ block; please see https://docs.python.org/3/library/multiprocessing.html
+                         for more information. The correct syntax to use is e.g.
+                        
+                             import covasim as cv
+                             sim = cv.Sim()
+                             msim = cv.MultiSim(sim)
+                        
+                             if __name__ == '__main__':
+                                 msim.run()
+                        
+                          Alternatively, to run without multiprocessing, set parallel=False.
+                         '''
                 raise RuntimeError(errormsg) from E
             else: # For all other runtime errors, raise the original exception
                 raise E
