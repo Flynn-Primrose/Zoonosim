@@ -1424,8 +1424,35 @@ def single_run(sim, ind=0, reseed=True, noise=0.0, noisepar=None, noisetype=None
 
     return sim
 
+def safe_single_run(sim, ind=0, reseed=True, noise=0.0, noisepar=None, noisetype=None, keep_people=False, run_args=None, sim_args=None, verbose=None, do_run=True, **kwargs):
+    '''
+    A wrapper for single_run which catches exceptions and returns them instead of
+    raising them. Used internally by multi_run().
 
-def multi_run(sim, n_runs=4, reseed=None, noise=0.0, noisepar=None, iterpars=None, combine=False, keep_people=None, run_args=None, sim_args=None, par_args=None, do_run=True, parallel=True, n_cpus=None, verbose=None, **kwargs):
+    Args:
+        sim         (Sim)   : the sim instance to be run
+        ind         (int)   : the index of this sim
+        reseed      (bool)  : whether or not to generate a fresh seed for each run
+        noise       (float) : the amount of noise to add to each run
+        noisepar    (str)   : the name of the parameter to add noise to
+        noisetype   (str)   : The name of the agent type whose parameters to modify with noise
+        keep_people (bool)  : whether to keep the people after the sim run
+        run_args    (dict)  : arguments passed to sim.run()
+        sim_args    (dict)  : extra parameters to pass to the sim
+        verbose     (int)   : detail to print
+        do_run      (bool)  : whether to actually run the sim (if not, just initialize it)
+        kwargs      (dict)  : also passed to the sim
+    '''
+
+    try:
+        return single_run(sim, ind=ind, reseed=reseed, noise=noise, noisepar=noisepar, noisetype=noisetype, keep_people=keep_people, run_args=run_args, sim_args=sim_args, verbose=verbose, do_run=do_run, **kwargs)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return f"Worker failed: {e}"
+
+
+def multi_run(sim, n_runs=4, reseed=None, noise=0.0, noisepar=None, noisetype=None, iterpars=None, combine=False, keep_people=None, run_args=None, sim_args=None, par_args=None, do_run=True, parallel=True, n_cpus=None, verbose=None, **kwargs):
     '''
     For running multiple runs in parallel. If the first argument is a list of sims,
     exactly these will be run and most other arguments will be ignored.
@@ -1436,6 +1463,7 @@ def multi_run(sim, n_runs=4, reseed=None, noise=0.0, noisepar=None, iterpars=Non
         reseed      (bool)  : whether or not to generate a fresh seed for each run (default: true for single, false for list of sims)
         noise       (float) : the amount of noise to add to each run
         noisepar    (str)   : the name of the parameter to add noise to
+        noisetype   (str)   : The name of the agent type whose parameters to modify with noise
         iterpars    (dict)  : any other parameters to iterate over the runs; see sc.parallelize() for syntax
         combine     (bool)  : whether or not to combine all results into one sim, rather than return multiple sim objects
         keep_people (bool)  : whether to keep the people after the sim run (default false)
@@ -1480,7 +1508,7 @@ def multi_run(sim, n_runs=4, reseed=None, noise=0.0, noisepar=None, iterpars=Non
         if reseed is None: reseed = True
         iterkwargs = dict(ind=np.arange(n_runs))
         iterkwargs.update(iterpars)
-        kwargs = dict(sim = sim, reseed=reseed, noise=noise, noisepar=noisepar, verbose=verbose, keep_people=keep_people, sim_args=sim_args, run_args=run_args, do_run=do_run)
+        kwargs = dict(sim = sim, reseed=reseed, noise=noise, noisepar=noisepar, noisetype=noisetype, verbose=verbose, keep_people=keep_people, sim_args=sim_args, run_args=run_args, do_run=do_run)
     elif isinstance(sim, list): # List of sims
         if reseed is None: reseed = False
         iterkwargs = dict(sim=sim, ind=np.arange(len(sim)))
@@ -1493,6 +1521,7 @@ def multi_run(sim, n_runs=4, reseed=None, noise=0.0, noisepar=None, iterpars=Non
     if parallel:
         try:
             sims = sc.parallelize(single_run, iterkwargs=iterkwargs, kwargs=kwargs, **par_args) # Run in parallel
+            #sims = sc.parallelize(safe_single_run, iterkwargs=iterkwargs, kwargs=kwargs, **par_args) # Run in parallel, catching exceptions # DeBug
         except RuntimeError as E: # Handle if run outside of __main__ on Windows
             if 'freeze_support' in E.args[0]: # For this error, add additional information
                 errormsg = '''
