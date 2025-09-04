@@ -184,11 +184,11 @@ class ParsObj(FlexPretty):
             self.pars.update(pars)
         return
     
-def set_metadata(obj, **kwargs):
+def set_metadata(obj, frame = 4, **kwargs):
     ''' Set standard metadata for an object '''
     obj.created = kwargs.get('created', sc.now())
     obj.version = kwargs.get('version', znv.__version__)
-    obj.git_info = kwargs.get('git_info', znm.git_info())
+    obj.git_info = kwargs.get('git_info', znm.git_info(frame=frame))
     return
 
 class BaseSim(ParsObj):
@@ -608,12 +608,12 @@ class BaseSim(ParsObj):
         Returns:
             shrunken (Sim): a Sim object with the listed attributes removed
         '''
-        # from . import interventions as zni # To avoid circular imports
-        # from . import analysis as zna
+        from . import interventions as zni # To avoid circular imports
+        from . import analysis as zna
 
         # By default, skip people (~90% of memory), the popdict (which is usually empty anyway), and _orig_pars (which is just a backup)
         if skip_attrs is None:
-            skip_attrs = ['popdict', 'agents', '_orig_pars'] # TODO: Modify these to reflect the actual attributes to skip. Ideally this should be set in defaults.py
+            skip_attrs = ['popdict', 'agents', '_orig_pars'] # TODO: Ideally this should be set in defaults.py
         # Create the new object, and copy original dict, skipping the skipped attributes
         if in_place:
             shrunken = self
@@ -624,10 +624,10 @@ class BaseSim(ParsObj):
             shrunken.__dict__ = {k:(v if k not in skip_attrs else None) for k,v in self.__dict__.items()}
 
         # Shrink interventions and analyzers, with a lot of checking along the way
-        # for key in ['interventions', 'analyzers']:
-        #     ias = self.pars[key] # List of interventions or analyzers
-        #     shrunken_ias = [ia.shrink(in_place=in_place) for ia in ias if isinstance(ia, (cvi.Intervention, cva.Analyzer))]
-        #     self.pars[key] = shrunken_ias # Actually shrink, and re-store
+        for key in ['interventions', 'analyzers']:
+            ias = self.pars[key] # List of interventions or analyzers
+            shrunken_ias = [ia.shrink(in_place=in_place) for ia in ias if isinstance(ia, (zni.Intervention, zna.Analyzer))]
+            self.pars[key] = shrunken_ias # Actually shrink, and re-store
 
         # Don't return if in place
         if in_place:

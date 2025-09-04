@@ -1023,7 +1023,7 @@ class Sim(znb.BaseSim):
             errormsg = f'Simulation is currently at t={self.t}, requested to run until t={until} which has already been reached'
         if self.complete:
             errormsg = 'Simulation is already complete (call sim.initialize() to re-run)'
-        if self.agents.t not in [self.t, self.t-1]: # Depending on how the sim stopped, either of these states are possible
+        if self.agents and self.agents.t not in [self.t, self.t-1]: # Depending on how the sim stopped, either of these states are possible 
             errormsg = f'The simulation has been run independently from the agents (t={self.t}, agents.t={self.agents.t}): if this is intentional, manually set sim.agents.t = sim.t. Remember to save the agents object before running the sim.'
         if errormsg:
             raise AlreadyRunError(errormsg)
