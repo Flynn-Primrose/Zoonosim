@@ -1458,6 +1458,7 @@ def single_run_wrapper(sim, ind=0, reseed=True, noise=0.0, noisepar=None, noiset
     pid = os.getpid()
     start_time = time.time()
     print(f"[PID {pid}] Worker {ind} START at {start_time:.2f}")
+    print(f"sim reads as completed: {sim.complete}")
     try:
         result = single_run(sim, ind=ind, reseed=reseed, noise=noise, noisepar=noisepar, noisetype=noisetype, keep_people=keep_people, run_args=run_args, sim_args=sim_args, verbose=verbose, do_run=do_run, **kwargs)  
         end_time = time.time()
