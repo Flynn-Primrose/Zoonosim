@@ -1539,39 +1539,41 @@ def multi_run(sim, n_runs=4, reseed=None, noise=0.0, noisepar=None, noisetype=No
 
     # Actually run!
     if parallel:
-        print(f"[Main PID {os.getpid()}] BEFORE parallelize at {time.time():.2f}")
-        try:
-            sims = sc.parallelize(single_run_wrapper, iterkwargs=iterkwargs, kwargs=kwargs, **par_args)
-            print(f"[Main PID {os.getpid()}] AFTER parallelize at {time.time():.2f}")
-        except Exception as e:
-            print(f"[Main PID {os.getpid()}] EXCEPTION during parallelize: {e}")
-            traceback.print_exc()
-            sims = None
-        finally:
-            print(f"[Main PID {os.getpid()}] FINAL block at {time.time():.2f}")
 
+        # Debugging prints
+        # print(f"[Main PID {os.getpid()}] BEFORE parallelize at {time.time():.2f}")
         # try:
-        #     sims = sc.parallelize(single_run_wrapper, iterkwargs=iterkwargs, kwargs=kwargs, **par_args) # Run in parallel
-        #     print(f'Done with {n_sims} runs')
-        # except RuntimeError as E: # Handle if run outside of __main__ on Windows
-        #     if 'freeze_support' in E.args[0]: # For this error, add additional information
-        #         errormsg = '''
-        #                  Uh oh! It appears you are trying to run with multiprocessing on Windows outside
-        #                  of the __main__ block; please see https://docs.python.org/3/library/multiprocessing.html
-        #                  for more information. The correct syntax to use is e.g.
+        #     sims = sc.parallelize(single_run_wrapper, iterkwargs=iterkwargs, kwargs=kwargs, **par_args)
+        #     print(f"[Main PID {os.getpid()}] AFTER parallelize at {time.time():.2f}")
+        # except Exception as e:
+        #     print(f"[Main PID {os.getpid()}] EXCEPTION during parallelize: {e}")
+        #     traceback.print_exc()
+        #     sims = None
+        # finally:
+        #     print(f"[Main PID {os.getpid()}] FINAL block at {time.time():.2f}")
+
+        try:
+            sims = sc.parallelize(single_run, iterkwargs=iterkwargs, kwargs=kwargs, **par_args) # Run in parallel
+            print(f'Done with {n_sims} runs')
+        except RuntimeError as E: # Handle if run outside of __main__ on Windows
+            if 'freeze_support' in E.args[0]: # For this error, add additional information
+                errormsg = '''
+                         Uh oh! It appears you are trying to run with multiprocessing on Windows outside
+                         of the __main__ block; please see https://docs.python.org/3/library/multiprocessing.html
+                         for more information. The correct syntax to use is e.g.
                         
-        #                      import covasim as cv
-        #                      sim = cv.Sim()
-        #                      msim = cv.MultiSim(sim)
+                             import covasim as cv
+                             sim = cv.Sim()
+                             msim = cv.MultiSim(sim)
                         
-        #                      if __name__ == '__main__':
-        #                          msim.run()
+                             if __name__ == '__main__':
+                                 msim.run()
                         
-        #                   Alternatively, to run without multiprocessing, set parallel=False.
-        #                  '''
-        #         raise RuntimeError(errormsg) from E
-        #     else: # For all other runtime errors, raise the original exception
-        #         raise E
+                          Alternatively, to run without multiprocessing, set parallel=False.
+                         '''
+                raise RuntimeError(errormsg) from E
+            else: # For all other runtime errors, raise the original exception
+                raise E
     else: # Run in serial, not in parallel
         sims = []
         n_sims = len(list(iterkwargs.values())[0]) # Must have length >=1 and all entries must be the same length

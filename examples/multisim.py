@@ -21,7 +21,7 @@ msim = zn.MultiSim(sim, n_runs = 5)  # Wrap the simulation in a MultiSim object.
 if __name__ == "__main__":
     # Run the multi-simulation
     #msim.run(keep_people = True, par_args=dict(parallelizer = 'serial'))  # Use n_cpus > 1 for parallel execution.
-    msim.run(verbose = 1, n_cpus = 1)  # Use n_cpus > 1 for parallel execution.
+    msim.run(verbose = 1, parallel = True)  # Use n_cpus > 1 for parallel execution.
     print('done run')
 
     # msim.combine()  # Combine the results from all simulations.
