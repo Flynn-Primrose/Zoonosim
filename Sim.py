@@ -121,7 +121,7 @@ class Sim(znb.BaseSim):
         '''
         self.t = 0  # The current time index
 
-       
+        self.validate_pars() # Ensure parameters have valid values
 
         self.set_seed() # Reset the random seed before the population is created
 
@@ -131,9 +131,7 @@ class Sim(znb.BaseSim):
 
         self.init_results() # After initializing the variant, create the results structure
 
-
         self.init_agents(reset=reset, init_infections=init_infections, **kwargs)
-
 
         self.init_interventions()  # Initialize the interventions...
 
@@ -141,7 +139,7 @@ class Sim(znb.BaseSim):
 
         self.init_analyzers() # ...and the analyzers...
 
-        self.validate_pars() # Ensure parameters have valid values
+        
 
         self.validate_layer_pars() # Once the population is initialized, validate the layer parameters again
 
@@ -232,19 +230,20 @@ class Sim(znb.BaseSim):
         '''
 
         # Handle population size
-        recorded_pop_size = self['pop_size']
-        actual_pop_size = 0
-        for key in self.pars['agent_types']:
-            if key in self.pars['pop_size_by_type']:
-                actual_pop_size += self.pars['pop_size_by_type'][key]
-            else:
-                errormsg = f'You have specified agent_types {self.pars["agent_types"]} but not provided a pop_size_by_type entry for "{key}"'
-                raise KeyError(errormsg)
-        if recorded_pop_size != actual_pop_size:
-            if recorded_pop_size != 0:
-                warnmsg = f'pop_size ({recorded_pop_size}) does not match sum of pop_size_by_type ({actual_pop_size}); using the latter'
-                znm.warn(warnmsg)
-            self['pop_size'] = actual_pop_size
+        # Can't handle population size here as population hasn't been created yet.
+        # recorded_pop_size = self['pop_size']
+        # actual_pop_size = 0
+        # for key in self.pars['agent_types']:
+        #     if key in self.pars['pop_size_by_type']:
+        #         actual_pop_size += self.pars['pop_size_by_type'][key]
+        #     else:
+        #         errormsg = f'You have specified agent_types {self.pars["agent_types"]} but not provided a pop_size_by_type entry for "{key}"'
+        #         raise KeyError(errormsg)
+        # if recorded_pop_size != actual_pop_size:
+        #     if recorded_pop_size != 0:
+        #         warnmsg = f'pop_size ({recorded_pop_size}) does not match sum of pop_size_by_type ({actual_pop_size}); using the latter'
+        #         znm.warn(warnmsg)
+        #     self['pop_size'] = actual_pop_size
 
         # Handle types
 

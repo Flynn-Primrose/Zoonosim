@@ -342,9 +342,7 @@ class MultiSim(znb.FlexPretty):
 
         n_runs = len(self)
 
-        print('starting deepcopy of Sim0 ...') # debug
         combined_sim = sc.dcp(self.sims[0])
-        print('finished deepcopy of Sim0') # debug
             
 
         combined_sim.parallelized = dict(parallelized=True, combined=True, n_runs=n_runs)  # Store how this was parallelized
