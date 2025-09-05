@@ -141,14 +141,14 @@ smartwatch_plots = sc.odict({
     'new counts': ['new_alerted',
                     'new_alerts_tp',
                     'new_alerts_fn',
-                    'new_alerts_tn',
+                    # 'new_alerts_tn', # TNs are generally very large and not that interesting to plot
                     'new_alerts_fp',
                     'new_Q_w_i',
                     'new_Q_w'],
     'cumulative counts': ['cum_alerted',
                     'cum_alerts_tp',
                     'cum_alerts_fn',
-                    'cum_alerts_tn',
+                    # 'cum_alerts_tn', # TNs are generally very large and not that interesting to plot
                     'cum_alerts_fp',
                     'cum_Q_w_i',
                     'cum_Q_w'],
