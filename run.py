@@ -1359,7 +1359,8 @@ def single_run(sim, ind=0, reseed=True, noise=0.0, noisepar=None, noisetype=None
         sim = cv.Sim() # Create a default simulation
         sim = cv.single_run(sim) # Run it, equivalent(ish) to sim.run()
     '''
-    print(f"[PID {os.getpid()}] Running single_run {ind}") #debugging
+    pid = os.getpid()
+    start_time = time.time()
 
     # Set sim and run arguments
     sim_args = sc.mergedicts(sim_args, kwargs)
@@ -1377,19 +1378,22 @@ def single_run(sim, ind=0, reseed=True, noise=0.0, noisepar=None, noisetype=None
     # If the noise parameter is not found, guess what it should be
     if noisepar is None:
         noisepar = 'beta'
-        warnings.warn(f'No noisepar specified; defaulting to {noisepar}', UserWarning)
+        if verbose >= 2:
+            print(f'No noisepar specified; defaulting to {noisepar}')
         if noisepar not in sim.pars.keys():
             raise sc.KeyNotFoundError(f'Noise parameter {noisepar} was not found in sim parameters')
         
 
     if not isinstance(sim[noisepar], dict):
          if noisetype is not None:
-            warnings.warn(f'Noisetype {noisetype} specified but {noisepar} is not a dict; ignoring noisetype', UserWarning)
+            if verbose >= 2:
+                print(f'Noisetype {noisetype} specified but {noisepar} is not a dict; ignoring noisetype')
             noisetype = None
     else:
         if noisetype is None:
             noisetype = 'human'
-            warnings.warn(f'Noisepar is a dict but noisetype not specified; defaulting to {noisetype}', UserWarning)
+            if verbose >= 2:
+                print(f'Noisepar is a dict but noisetype not specified; defaulting to {noisetype}')
         if noisetype not in sim[noisepar].keys():
             raise sc.KeyNotFoundError(f'Noisetype {noisetype} was not found in {noisepar}')
         
@@ -1455,17 +1459,20 @@ def single_run_wrapper(sim, ind=0, reseed=True, noise=0.0, noisepar=None, noiset
     """Wraps your single_func to log start, finish, and any exceptions."""
     pid = os.getpid()
     start_time = time.time()
-    print(f"[PID {pid}] Worker {ind} START at {start_time:.2f}")
-    print(f"sim reads as completed: {sim.complete}")
+    if verbose >= 2:
+        print(f"[PID {pid}] Worker {ind} START at {start_time:.2f}")
+        print(f"sim reads as completed: {sim.complete}")
     try:
         result = single_run(sim, ind=ind, reseed=reseed, noise=noise, noisepar=noisepar, noisetype=noisetype, keep_people=keep_people, run_args=run_args, sim_args=sim_args, verbose=verbose, do_run=do_run, **kwargs)  
         end_time = time.time()
-        print(f"[PID {pid}] Worker {ind} FINISHED at {end_time:.2f}, return type: {type(result)}")
+        if verbose >= 2:
+            print(f"[PID {pid}] Worker {ind} FINISHED at {end_time:.2f}, return type: {type(result)}")
         return result
     except Exception as e:
         end_time = time.time()
-        print(f"[PID {pid}] Worker {ind} EXCEPTION at {end_time:.2f}: {e}")
-        traceback.print_exc()
+        if verbose >= 2:
+            print(f"[PID {pid}] Worker {ind} EXCEPTION at {end_time:.2f}: {e}")
+            traceback.print_exc()
         # Return something safe so the pool does not crash
         return f"Worker {ind} exception: {e}"
 
@@ -1537,41 +1544,40 @@ def multi_run(sim, n_runs=4, reseed=None, noise=0.0, noisepar=None, noisetype=No
 
     # Actually run!
     if parallel:
-
-        # Debugging prints
-        # print(f"[Main PID {os.getpid()}] BEFORE parallelize at {time.time():.2f}")
-        # try:
-        #     sims = sc.parallelize(single_run_wrapper, iterkwargs=iterkwargs, kwargs=kwargs, **par_args)
-        #     print(f"[Main PID {os.getpid()}] AFTER parallelize at {time.time():.2f}")
-        # except Exception as e:
-        #     print(f"[Main PID {os.getpid()}] EXCEPTION during parallelize: {e}")
-        #     traceback.print_exc()
-        #     sims = None
-        # finally:
-        #     print(f"[Main PID {os.getpid()}] FINAL block at {time.time():.2f}")
-
+        if verbose >= 2:
+            print(f"[Main PID {os.getpid()}] BEFORE parallelize at {time.time():.2f}")
         try:
-            sims = sc.parallelize(single_run, iterkwargs=iterkwargs, kwargs=kwargs, **par_args) # Run in parallel
-            print(f'Done with {n_sims} runs')
-        except RuntimeError as E: # Handle if run outside of __main__ on Windows
-            if 'freeze_support' in E.args[0]: # For this error, add additional information
-                errormsg = '''
-                         Uh oh! It appears you are trying to run with multiprocessing on Windows outside
-                         of the __main__ block; please see https://docs.python.org/3/library/multiprocessing.html
-                         for more information. The correct syntax to use is e.g.
-                        
-                             import covasim as cv
-                             sim = cv.Sim()
-                             msim = cv.MultiSim(sim)
-                        
-                             if __name__ == '__main__':
-                                 msim.run()
-                        
-                          Alternatively, to run without multiprocessing, set parallel=False.
-                         '''
-                raise RuntimeError(errormsg) from E
-            else: # For all other runtime errors, raise the original exception
-                raise E
+            sims = sc.parallelize(single_run_wrapper, iterkwargs=iterkwargs, kwargs=kwargs, **par_args) # Run in parallel
+            if verbose >= 2:
+                print(f"[Main PID {os.getpid()}] AFTER parallelize at {time.time():.2f}")
+        except Exception as E: # Handle if run outside of __main__ on Windows
+            if isinstance(E, RuntimeError):
+                if 'freeze_support' in E.args[0]: # For this error, add additional information
+                    errormsg = '''
+                            Uh oh! It appears you are trying to run with multiprocessing on Windows outside
+                            of the __main__ block; please see https://docs.python.org/3/library/multiprocessing.html
+                            for more information. The correct syntax to use is e.g.
+                            
+                                import covasim as cv
+                                sim = cv.Sim()
+                                msim = cv.MultiSim(sim)
+                            
+                                if __name__ == '__main__':
+                                    msim.run()
+                            
+                            Alternatively, to run without multiprocessing, set parallel=False.
+                            '''
+                    raise RuntimeError(errormsg) from E
+                else: # For all other runtime errors, raise the original exception
+                    raise E
+            else:
+                if verbose >= 2:
+                    print(f"[Main PID {os.getpid()}] EXCEPTION during parallelize: {E}")
+                    traceback.print_exc()
+                    sims = None
+        finally:
+            if verbose >= 2:
+                print(f"[Main PID {os.getpid()}] FINAL block at {time.time():.2f}")
     else: # Run in serial, not in parallel
         sims = []
         n_sims = len(list(iterkwargs.values())[0]) # Must have length >=1 and all entries must be the same length

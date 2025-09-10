@@ -15,7 +15,7 @@ msim = zn.MultiSim(sim, n_runs = 10)  # Wrap the simulation in a MultiSim object
 
 if __name__ == "__main__":
     msim.run(verbose = 0.1, parallel = False) 
-    msim.save('smartwatches_w_RAT_serial.msim')
+    msim.save('msims/smartwatches_w_RAT_serial.msim')
     msim.combine()  # Combine the results from all runs.
     msim.plot('testing')  # Plot the results of the testing.
     msim.plot('smartwatch')  # Plot the smartwatch data.

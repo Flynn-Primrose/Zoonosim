@@ -12,7 +12,7 @@ msim = zn.MultiSim(sim, n_runs = 10)  # Wrap the simulation in a MultiSim object
 
 if __name__ == "__main__":
     msim.run(verbose = 0.1, parallel = False) 
-    msim.save('flock_screening_serial.msim')
+    msim.save('msims/flock_screening_serial.msim')
     msim.combine()  # Combine the results from all runs.
     msim.plot()  # Plot the combined results.
     msim.plot('flock')
