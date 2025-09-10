@@ -1457,9 +1457,10 @@ def single_run_wrapper(sim, ind=0, reseed=True, noise=0.0, noisepar=None, noiset
         kwargs      (dict)  : also passed to the sim
     '''
     """Wraps your single_func to log start, finish, and any exceptions."""
-    pid = os.getpid()
-    start_time = time.time()
+
     if verbose >= 2:
+        pid = os.getpid()
+        start_time = time.time()
         print(f"[PID {pid}] Worker {ind} START at {start_time:.2f}")
         print(f"sim reads as completed: {sim.complete}")
     try:
@@ -1468,13 +1469,13 @@ def single_run_wrapper(sim, ind=0, reseed=True, noise=0.0, noisepar=None, noiset
         if verbose >= 2:
             print(f"[PID {pid}] Worker {ind} FINISHED at {end_time:.2f}, return type: {type(result)}")
         return result
-    except Exception as e:
-        end_time = time.time()
+    except Exception as e:        
         if verbose >= 2:
+            end_time = time.time()
             print(f"[PID {pid}] Worker {ind} EXCEPTION at {end_time:.2f}: {e}")
             traceback.print_exc()
         # Return something safe so the pool does not crash
-        return f"Worker {ind} exception: {e}"
+        return e
 
 
 def multi_run(sim, n_runs=4, reseed=None, noise=0.0, noisepar=None, noisetype=None, iterpars=None, combine=False, keep_people=None, run_args=None, sim_args=None, par_args=None, do_run=True, parallel=True, n_cpus=None, verbose=None, **kwargs):
@@ -1585,8 +1586,19 @@ def multi_run(sim, n_runs=4, reseed=None, noise=0.0, noisepar=None, noisetype=No
             this_iter = {k:v[s] for k,v in iterkwargs.items()} # Pull out items specific to this iteration
             this_iter.update(kwargs) # Merge with the kwargs
             this_iter['sim'] = this_iter['sim'].copy() # Ensure we have a fresh sim; this happens implicitly on pickling with multiprocessing
-            sim = single_run(**this_iter) # Run in series
+            sim = single_run_wrapper(**this_iter) # Run in series
             sims.append(sim)
+
+    worker_exception_log = []
+    for item in sims:
+        if isinstance(item, BaseException):
+            worker_exception_log.append(item)
+    if worker_exception_log:
+        if verbose > 0:
+            print(f'worker processes returned {len(worker_exception_log)} exceptions.')
+        if verbose >= 2:
+            for item in worker_exception_log:
+                print(f'Worker returned exception: {item}')
 
     return sims
 
