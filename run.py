@@ -1517,6 +1517,11 @@ def multi_run(sim, n_runs=4, reseed=None, noise=0.0, noisepar=None, noisetype=No
     sim_args = sc.mergedicts(sim_args, kwargs) # Handle blank
     par_args = sc.mergedicts({'ncpus':n_cpus}, par_args) # Handle blank
 
+    par_args.setdefault('parallelizer', 'concurrent')
+
+    if par_args['parallelizer'] != 'concurrent' and verbose >= 1:
+        print(f"Warning: Parallelizer is explicitly set to '{par_args['parallelizer']}', this may cause issues on Windows machines. Consider setting parallelizer to 'concurrent'")
+
     # Handle iterpars
     if iterpars is None:
         iterpars = {}
