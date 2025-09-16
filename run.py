@@ -3,7 +3,6 @@ Functions and classes for running multiple Zoonosim runs.
 '''
 
 #%% Imports
-import warnings
 import numpy as np
 import pandas as pd
 import sciris as sc
