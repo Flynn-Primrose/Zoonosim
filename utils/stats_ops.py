@@ -126,7 +126,7 @@ def n_poisson(rate, n):
 
 def n_neg_binomial(rate, dispersion, n, step=1): # Numba not used due to incompatible implementation
     '''
-    An array of negative binomial trials. See cv.sample() for more explanation.
+    An array of negative binomial trials. See zn.sample() for more explanation.
 
     Args:
         rate (float): the rate of the process (mean, same as Poisson)
@@ -136,8 +136,8 @@ def n_neg_binomial(rate, dispersion, n, step=1): # Numba not used due to incompa
 
     **Example**::
 
-        outcomes = cv.n_neg_binomial(100, 1, 50) # 50 negative binomial trials with mean 100 and dispersion roughly equal to mean (large-mean limit)
-        outcomes = cv.n_neg_binomial(1, 100, 20) # 20 negative binomial trials with mean 1 and dispersion still roughly equal to mean (approximately Poisson)
+        outcomes = zn.n_neg_binomial(100, 1, 50) # 50 negative binomial trials with mean 100 and dispersion roughly equal to mean (large-mean limit)
+        outcomes = zn.n_neg_binomial(1, 100, 20) # 20 negative binomial trials with mean 1 and dispersion still roughly equal to mean (approximately Poisson)
     '''
     nbn_n = dispersion
     nbn_p = dispersion/(rate/step + dispersion)
