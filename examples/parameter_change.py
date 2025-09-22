@@ -99,7 +99,7 @@ new_param = {
             'contamination': dict(dist='lognormal_int', par1=3.0, par2=1.5), # Duration of contamination. 
         }
     },
-    'prognosis': {
+    'prognoses': {
         'human': {
             'age_cutoffs'   : np.array([0,       10,      20,      30,      40,      50,      60,      70,      80,      90,]),     # Age cutoffs (lower limits)
             'sus_ORs'       : np.array([0.25,    0.50,    0.75,    1.0,     1.25,    1.50,    1.75,    2.0,     2.25,    2.50]),    # Odds ratios for relative susceptibility 
@@ -137,9 +137,16 @@ new_param = {
             'flock_size'  : [dict(dist = 'normal_pos', par1 = 10000, par2 = 1000),
                             dict(dist = 'normal_pos', par1 = 50000, par2 = 5000),
                             dict(dist = 'normal_pos', par1 = 25000, par2 = 1000)]
-    }
-
+    },
+    'rand_seed': 42
 }
 
 sim = zn.Sim(new_param)
-sim.export_pars('parameter_change.json')
+sim.export_pars('saved_pars/parameter_change.json')
+
+msim = zn.MultiSim(sim, n_runs=10)
+
+if __name__ == "__main__":
+    msim.run(verbose=1, parallel=True)  # Use n_cpus > 1 for parallel execution.
+    msim.combine()
+    msim.plot()  # Plot the results.

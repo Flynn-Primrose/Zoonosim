@@ -1,0 +1,516 @@
+{
+  "agent_types": [
+    "human",
+    "flock",
+    "barn",
+    "water"
+  ],
+  "n_farms": 100,
+  "pop_size": null,
+  "pop_size_by_type": {
+    "human": null,
+    "flock": null,
+    "barn": null,
+    "water": null
+  },
+  "pop_scale": 1.0,
+  "rescale": false,
+  "initial_conditions": {
+    "human": 0,
+    "flock": 0,
+    "barn": 0,
+    "water": 0
+  },
+  "start_day": "2025-01-01",
+  "end_day": null,
+  "n_days": 1000,
+  "rand_seed": 42,
+  "verbose": 0.1,
+  "enable_testobjs": false,
+  "testobjs": null,
+  "enable_smartwatches": false,
+  "smartwatch_pars": {
+    "mean_fpr": 0.08,
+    "use_variable_fpr": true,
+    "day_i": [
+      -21.0,
+      -20.0,
+      -19.0,
+      -18.0,
+      -17.0,
+      -16.0,
+      -15.0,
+      -14.0,
+      -13.0,
+      -12.0,
+      -11.0,
+      -10.0,
+      -9.0,
+      -8.0,
+      -7.0,
+      -6.0,
+      -5.0,
+      -4.0,
+      -3.0,
+      -2.0,
+      -1.0,
+      0.0,
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0,
+      7.0,
+      8.0,
+      9.0,
+      10.0,
+      11.0,
+      12.0,
+      13.0,
+      14.0,
+      15.0,
+      16.0,
+      17.0,
+      18.0,
+      19.0,
+      20.0,
+      21.0
+    ],
+    "loc": 3.25,
+    "alpha": 1,
+    "usage_rate": 1,
+    "compliance_rate": 0.05,
+    "participation_rate": 0.3
+  },
+  "dynam_layer": null,
+  "beta_layer": null,
+  "quar_factor": null,
+  "quar_period": 14,
+  "n_variants": 1,
+  "beta": {
+    "human": 1.0,
+    "flock": 1.0,
+    "barn": 1.0,
+    "water": 1.0
+  },
+  "wild": {
+    "human": {
+      "rel_beta": 1.0,
+      "rel_symp_prob": 1.0,
+      "rel_sev_prob": 1.0,
+      "rel_death_prob": 1.0,
+      "rel_asymp_fact": 1.0
+    },
+    "flock": {
+      "rel_beta": 1.0,
+      "rel_symp_prob": 1.0,
+      "rel_sev_prob": 1.0,
+      "rel_death_prob": 1.0
+    },
+    "barn": {
+      "rel_beta": 1.0,
+      "rel_dur_contamination": 1.0
+    },
+    "water": {
+      "rel_beta": 1.0,
+      "rel_dur_contamination": 1.0
+    }
+  },
+  "transmission_pars": {
+    "human": {
+      "beta_dist": {
+        "dist": "neg_binomial",
+        "par1": 1.0,
+        "par2": 5.0,
+        "step": 0.01
+      },
+      "viral_dist": null,
+      "enable_vl": true,
+      "viral_levels": {
+        "min_vl": 0.5,
+        "max_vl": 2.0
+      }
+    },
+    "flock": {
+      "beta_dist": {
+        "dist": "neg_binomial",
+        "par1": 1.0,
+        "par2": 5.0,
+        "step": 0.01
+      }
+    },
+    "barn": {
+      "beta_dist": {
+        "dist": "neg_binomial",
+        "par1": 1.0,
+        "par2": 5.0,
+        "step": 0.01
+      }
+    },
+    "water": {
+      "beta_dist": {
+        "dist": "neg_binomial",
+        "par1": 1.0,
+        "par2": 5.0,
+        "step": 0.01
+      }
+    }
+  },
+  "n_imports": {
+    "human": 0,
+    "flock": 0,
+    "barn": 0.1,
+    "water": 0.1
+  },
+  "immunity_pars": {
+    "human": {
+      "use_waning": true,
+      "nab_init": {
+        "dist": "normal",
+        "par1": 0,
+        "par2": 2
+      },
+      "nab_decay": {
+        "form": "nab_growth_decay",
+        "growth_time": 21,
+        "decay_rate1": 0.013862943611198907,
+        "decay_time1": 150,
+        "decay_rate2": 0.0027725887222397813,
+        "decay_time2": 365
+      },
+      "nab_kin": null,
+      "nab_boost": 2.0,
+      "nab_eff": {
+        "alpha_inf": 1.0,
+        "alpha_inf_diff": 2.0,
+        "beta_inf": 1.0,
+        "alpha_symp_inf": -1.0,
+        "beta_symp_inf": 0.1,
+        "alpha_sev_symp": -0.01,
+        "beta_sev_symp": 0.1
+      },
+      "rel_imm_symp": {
+        "asymp": 1.0,
+        "mild": 1.0,
+        "severe": 1.0
+      },
+      "immunity": null,
+      "trans_redux": 1.0
+    },
+    "flock": {
+      "use_waning": false
+    },
+    "barn": {
+      "use_waning": false
+    },
+    "water": {
+      "use_waning": false
+    }
+  },
+  "dur": {
+    "human": {
+      "exp2inf": {
+        "dist": "lognormal_int",
+        "par1": 14.0,
+        "par2": 2.0
+      },
+      "inf2sym": {
+        "dist": "lognormal_int",
+        "par1": 7.0,
+        "par2": 1.0
+      },
+      "sym2sev": {
+        "dist": "lognormal_int",
+        "par1": 7.0,
+        "par2": 1.0
+      },
+      "asym2rec": {
+        "dist": "lognormal_int",
+        "par1": 7.0,
+        "par2": 1.0
+      },
+      "mild2rec": {
+        "dist": "lognormal_int",
+        "par1": 7.0,
+        "par2": 1.0
+      },
+      "sev2rec": {
+        "dist": "lognormal_int",
+        "par1": 14.0,
+        "par2": 2.0
+      },
+      "sev2die": {
+        "dist": "lognormal_int",
+        "par1": 21.0,
+        "par2": 3.0
+      }
+    },
+    "flock": {
+      "exp2inf": {
+        "dist": "lognormal_int",
+        "par1": 7.0,
+        "par2": 1.0
+      },
+      "inf2out": {
+        "dist": "lognormal_int",
+        "par1": 7.0,
+        "par2": 1.0
+      },
+      "susp2res": {
+        "dist": "lognormal_int",
+        "par1": 7.0,
+        "par2": 1.0
+      }
+    },
+    "barn": {
+      "contamination": {
+        "dist": "lognormal_int",
+        "par1": 3.0,
+        "par2": 1.5
+      },
+      "composting": {
+        "dist": "lognormal_int",
+        "par1": 7.0,
+        "par2": 2.0
+      },
+      "cleaning": {
+        "dist": "lognormal_int",
+        "par1": 7.0,
+        "par2": 2.0
+      }
+    },
+    "water": {
+      "contamination": {
+        "dist": "lognormal_int",
+        "par1": 3.0,
+        "par2": 1.5
+      }
+    }
+  },
+  "prognoses": {
+    "human": {
+      "age_cutoffs": [
+        0.0,
+        10.0,
+        20.0,
+        30.0,
+        40.0,
+        50.0,
+        60.0,
+        70.0,
+        80.0,
+        90.0
+      ],
+      "sus_ORs": [
+        0.25,
+        0.5,
+        0.75,
+        1.0,
+        1.25,
+        1.5,
+        1.75,
+        2.0,
+        2.25,
+        2.5
+      ],
+      "trans_ORs": [
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ],
+      "comorbidities": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "symp_probs": [
+        0.6,
+        0.6,
+        0.7,
+        0.7,
+        0.8,
+        0.8,
+        0.9,
+        0.9,
+        0.96,
+        0.96
+      ],
+      "severe_probs": [
+        0.1,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ],
+      "death_probs": [
+        0.1,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ]
+    },
+    "flock": {
+      "breeds": [
+        "duck",
+        "broiler",
+        "layer"
+      ],
+      "sus_ORs": [
+        2.0,
+        1.0,
+        0.75
+      ],
+      "trans_ORs": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "baseline_symptomatic_rate": [
+        0.001,
+        0.001,
+        0.001
+      ],
+      "mean_symptomatic_rate_increase": [
+        0.003,
+        0.003,
+        0.003
+      ],
+      "baseline_mortality_rate": [
+        0.001,
+        0.001,
+        0.001
+      ],
+      "mean_mortality_rate_increase": [
+        0.003,
+        0.003,
+        0.003
+      ],
+      "baseline_water_rate": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_water_rate_increase": [
+        1.5,
+        1.0,
+        0.75
+      ]
+    },
+    "barn": {
+      "sus_ORs": 1.0,
+      "trans_ORs": 1.0
+    },
+    "water": {
+      "sus_ORs": 1.0,
+      "trans_ORs": 1.0
+    }
+  },
+  "production_cycle": {
+    "breeds": [
+      "duck",
+      "broiler",
+      "layer"
+    ],
+    "cycle_dur": [
+      {
+        "dist": "normal_pos",
+        "par1": 175,
+        "par2": 50
+      },
+      {
+        "dist": "normal_pos",
+        "par1": 90,
+        "par2": 25
+      },
+      {
+        "dist": "normal_pos",
+        "par1": 175,
+        "par2": 50
+      }
+    ],
+    "flock_size": [
+      {
+        "dist": "normal_pos",
+        "par1": 10000,
+        "par2": 1000
+      },
+      {
+        "dist": "normal_pos",
+        "par1": 50000,
+        "par2": 5000
+      },
+      {
+        "dist": "normal_pos",
+        "par1": 25000,
+        "par2": 1000
+      }
+    ]
+  },
+  "bkg_ILI": 0.02,
+  "Avian_to_ILI": false,
+  "interventions": [],
+  "surveillance": [],
+  "testing": [],
+  "analyzers": [],
+  "timelimit": null,
+  "stopping_func": null,
+  "n_beds_hosp": null,
+  "no_hosp_factor": 2.0,
+  "vaccine_pars": {},
+  "vaccine_map": {},
+  "variants": [],
+  "variant_map": {
+    "0": "wild"
+  },
+  "variant_pars": {
+    "wild": {
+      "human": {
+        "rel_beta": 0.33,
+        "rel_symp_prob": 0.33,
+        "rel_severe_prob": 0.25,
+        "rel_death_prob": 0.01,
+        "rel_asymp_fact": 0.5
+      },
+      "flock": {
+        "rel_beta": 1.0,
+        "rel_symp_prob": 0.75,
+        "rel_severe_prob": 1.0,
+        "rel_death_prob": 1.0
+      },
+      "barn": {
+        "rel_beta": 1.0,
+        "rel_dur_contamination": 1.0
+      },
+      "water": {
+        "rel_beta": 1.0,
+        "rel_dur_contamination": 1.0
+      }
+    }
+  }
+}

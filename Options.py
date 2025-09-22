@@ -144,7 +144,7 @@ class Options(sc.objdict):
     @staticmethod
     def get_orig_options():
         '''
-        Set the default options for Covasim -- not to be called by the user, use
+        Set the default options for Zoonosim -- not to be called by the user, use
         ``cv.options.set('defaults')`` instead.
         '''
 
@@ -194,9 +194,6 @@ class Options(sc.objdict):
         optdesc.sep = 'Set thousands seperator for text output'
         options.sep = str(os.getenv('ZOONOSIM_SEP', ','))
 
-
-        # NOTE: Numba options are not set here, since they are set in the defaults.py file.
-        # This may change in the future, but for now, they are set in the defaults.py file.
         optdesc.precision = 'Set arithmetic precision for Numba -- 32-bit by default for efficiency'
         options.precision = int(os.getenv('ZOONOSIM_PRECISION', 32))
 
