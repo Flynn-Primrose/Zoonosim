@@ -333,7 +333,7 @@ class MultiSim(znb.FlexPretty):
 
         **Example**::
 
-            msim = cv.MultiSim(cv.Sim())
+            msim = zn.MultiSim(zn.Sim())
             msim.run()
             msim.combine()
             msim.summarize()
@@ -882,7 +882,7 @@ class Scenarios(znb.ParsObj):
 
     **Example**::
 
-        scens = cv.Scenarios()
+        scens = zn.Scenarios()
 
     Returns:
         scens: a Scenarios object
