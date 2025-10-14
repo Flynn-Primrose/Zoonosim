@@ -4,7 +4,7 @@ Defines classes and methods for calculating immunity
 
 import numpy as np
 import sciris as sc
-from .. import utils as znu
+from . import utils as znu
 from . import defaults as znd
 from . import parameters as znpar
 from . import interventions as zni

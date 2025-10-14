@@ -637,7 +637,7 @@ For help on Zoonosim options, see zn.options.help().
 
     else:
 
-        import src as zn # Here to avoid circular import
+        import zoonosim as zn # Here to avoid circular import
 
         # Handle inputs
         flags = sc.promotetolist(flags)

@@ -1,7 +1,7 @@
 import numba as nb # For faster computations
 import numpy as np # For numerics
-from ..src import defaults as znd
-from ..src import options as zno
+from .. import defaults as znd
+from .. import options as zno
 
 __all__ = ['compute_viral_load', 'compute_trans_sus', 'compute_infections', 'find_contacts']
 

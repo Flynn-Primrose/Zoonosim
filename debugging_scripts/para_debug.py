@@ -1,4 +1,4 @@
-import src as zn
+import Zoonosim as zn
 import dill
 
 sim = zn.Sim()  # Initialize the simulation object.

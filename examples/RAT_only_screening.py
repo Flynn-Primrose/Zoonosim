@@ -1,7 +1,7 @@
 # Example of screening using RAT only
 # This code sets up a simulation with a RAT test configured as a screening test.
 
-import src as zn
+import Zoonosim as zn
 
 
 rat = zn.RAT_disc(di_criteria = ['sx'], di_seekprobs = {'sx':0.0}, sc_criteria = ['work'], sc_seekprobs = {'work': 0.5},) # Configure the RAT test. 

@@ -1,4 +1,4 @@
-import src as zn
+from .. import zoonosim as zn
 
 sim = zn.Sim()
 new_pars = {'rand_seed': 1}

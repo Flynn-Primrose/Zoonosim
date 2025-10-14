@@ -1,6 +1,6 @@
 # An example using the multisim functionality in Zoonosim
 
-import src as zn
+import Zoonosim as zn
 import sciris as sc
 #import warnings
 

@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zoonosim"
+dynamic = ["version"]
+description = "A descendant of Covasim and Pathosim designed to investigate zoonotic pathogens"
+authors = [
+    { name = "Darren Flynn-Primrose", email = "DMFlynnPrimrose@outlook.com" }
+]
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "numba",
+    "sciris"
+]
+
+[tool.setuptools.dynamic]
+version = { attr = "zoonosim.version.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["zoonosim*"]

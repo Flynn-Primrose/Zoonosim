@@ -8,9 +8,8 @@ import bisect
 import scipy
 from scipy import stats as st
 import warnings
-from ..src import base as znb
-from ..src import defaults as znd
-from ..src import options as zno
+from .. import defaults as znd
+from .. import options as zno
 from . import stats_ops as znso # For additional statistical operations
 
 __all__ = ['sample', 'get_pdf', 'set_seed', 'fast_choice',
@@ -249,6 +248,39 @@ def resample_age(age_dist_vals, age):
     return age_range[fast_choice(age_distr)]
 
 
+__all__ += ['norm_dic', 'norm_age_group']
+
+
+def norm_dic(dic):
+    """
+    Normalize the dictionary ``dic``.
+
+    Args:
+        dic (dict): A dictionary with numerical values.
+
+    Returns:
+        A normalized dictionary.
+    """
+    total = float(sum(dic.values()))
+    if total == 0.0:
+        return dic
+    return {k: v / total for k, v in dic.items()}
+
+def norm_age_group(age_dic, age_min, age_max):
+    """
+    Create a normalized dictionary for the range ``age_min`` to ``age_max``, inclusive.
+
+    Args:
+        age_dic (dict) : A dictionary with numerical values.
+        age_min (int)  : The minimum value of the range for the dictionary.
+        age_max (int)  : The maximum value of the range for the dictionary.
+
+    Returns:
+        A normalized dictionary for keys in the range ``age_min`` to ``age_max``, inclusive.
+    """
+    dic = {a: age_dic[a] for a in range(age_min, age_max + 1)}
+    return norm_dic(dic)
+
 def sample_from_range(distr, min_val, max_val):
     """
     Sample from a distribution from min_val to max_val, inclusive.
@@ -260,7 +292,7 @@ def sample_from_range(distr, min_val, max_val):
     Returns:
         A sampled number from the range min_val to max_val in the distribution distr.
     """
-    new_distr = znb.norm_age_group(distr, min_val, max_val)
+    new_distr = norm_age_group(distr, min_val, max_val)
     distr_keys = np.array(list(new_distr.keys()), dtype=np.int64)
     distr_vals = np.array(list(new_distr.values()), dtype=np.float64)
     return sample_single_dict(distr_keys, distr_vals)

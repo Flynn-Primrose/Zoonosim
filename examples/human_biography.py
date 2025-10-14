@@ -1,4 +1,4 @@
-import src as zn
+import Zoonosim as zn
 
 bio_analyzer = zn.biography(uid = 44, agent_type = 'human', days = range(1, 150))
 sim=zn.Sim(analyzers = bio_analyzer)

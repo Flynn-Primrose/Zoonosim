@@ -1,6 +1,6 @@
 # This example shows how to run a simulation with the default parameters.
 
-import src as zn
+import Zoonosim as zn
 sim=zn.Sim()
 sim.initialize()
 sim.run()

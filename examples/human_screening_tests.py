@@ -1,6 +1,6 @@
 # This code sets up a simulation with a RAT and PCR test, both of which are configured to be screening tests.
 
-import src as zn
+import Zoonosim as zn
 
 
 

@@ -1,5 +1,5 @@
 import dill
-import src as zn
+import Zoonosim as zn
 
 sim = zn.Sim()
 sim.initialize()

@@ -1,7 +1,7 @@
 import numba as nb # For faster computations
 import numpy as np # For numerics
-from ..src import defaults as znd # For default settings
-from ..src import options as zno
+from .. import defaults as znd # For default settings
+from .. import options as zno
 
 # Set dtypes -- note, these cannot be changed after import since Numba functions are precompiled
 nbbool  = nb.bool_

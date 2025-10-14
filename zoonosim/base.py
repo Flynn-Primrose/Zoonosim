@@ -11,7 +11,7 @@ import datetime as dt
 from . import defaults as znd
 from . import version as znv
 from . import misc as znm
-from .. import utils as znu
+from . import utils as znu
 
 __all__ = ['FlexPretty']
 

@@ -1,4 +1,4 @@
-import src as zn
+import Zoonosim as zn
 
 sim=zn.Sim()
 new_pars = {'enable_smartwatches': True}

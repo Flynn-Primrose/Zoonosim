@@ -1,4 +1,4 @@
-from .. import utils as znu
+from . import utils as znu
 
 class HumanCategories:
     """

@@ -9,7 +9,7 @@ import sciris as sc
 
 from . import options as zno
 
-from .. import utils as znu
+from . import utils as znu
 from . import misc as znm
 from . import base as znb
 from . import defaults as znd
@@ -19,7 +19,7 @@ from . import parameters as znpar
 from . import population as znpop
 from . import immunity as znimm
 from . import plotting as znplt
-from .. import testing as znt
+from . import testing as znt
 
 __all__ = ['Sim']
 

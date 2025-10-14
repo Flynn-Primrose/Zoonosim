@@ -1,5 +1,5 @@
 '''
-Initialize Zoonosim by importing all modules.
+Initialize zoonosim by importing all modules.
 
 Convention is to use "import zoonosim as zn", and then to use all functions and
 classes directly, e.g. zn.Sim() rather than zn.sim.Sim()
@@ -16,7 +16,7 @@ if zno.options.verbose:
 
 from .defaults import *
 from .misc import *
-from ..utils import *
+from .utils import *
 from .parameters import *
 from .base import *
 from .rosters.rosters import *
