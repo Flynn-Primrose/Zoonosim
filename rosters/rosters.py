@@ -1,17 +1,17 @@
 '''
-Defines the Roster class, for managing agents of all types, and the Sunroster class, for managing all agents of a particular type.
+Defines the Roster class, for managing agents of all types, and the Subroster class, for managing all agents of a particular type.
 '''
 
 import sciris as sc
 import numpy as np
 import pandas as pd
 
-from .base_module import BaseRoster
-from .contacts_module import Contacts, Layer
+from ..base import BaseRoster
+from .contacts import Contacts, Layer
 
-from . import defaults as znd
-from . import misc as znm
-from . import utils as znu
+from .. import defaults as znd
+from .. import misc as znm
+from .. import utils as znu
 
 __all__ = ['Roster']
 

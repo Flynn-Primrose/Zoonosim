@@ -4,8 +4,8 @@ Defines classes related to contacts between agents
 import sciris as sc
 import numpy as np
 import pandas as pd
-from . import utils as znu
-from . import defaults as znd
+from .. import utils as znu
+from .. import defaults as znd
 
 __all__ = ['FlexDict', 'Contacts', 'Layer']
 

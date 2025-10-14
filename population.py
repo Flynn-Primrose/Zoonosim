@@ -5,16 +5,16 @@ Defines functions for creating agents
 import numpy as np # Needed for a few things not provided by pl
 import sciris as sc
 
-from . import base_module as znb
+from . import base as znb
 from . import defaults as znd
 from . import utils as znu
 
-from .agent_module import Agents
-from .human_module import Humans
-from .flock_module import Flocks
-from .barn_module import Barns
-from .water_module import Water
-from .contacts_module import Contacts, Layer
+from .rosters.agents import Agents
+from .rosters.humans import Humans
+from .rosters.flocks import Flocks
+from .rosters.barns import Barns
+from .rosters.waters import Water
+from .rosters.contacts import Contacts, Layer
 
 
 __all__ = ['make_agents']

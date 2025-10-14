@@ -4,10 +4,10 @@ Defines the subroster and metaroster for flock-like agents
 
 import numpy as np
 import sciris as sc
-from . import version as znv
-from . import utils as znu
-from . import defaults as znd
-from .roster_module import Subroster
+from .. import version as znv
+from .. import utils as znu
+from .. import defaults as znd
+from .rosters import Subroster
 
 __all__ = ['Flocks', 'FlocksMeta']
 

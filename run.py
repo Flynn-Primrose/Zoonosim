@@ -9,7 +9,7 @@ import sciris as sc
 from collections import defaultdict
 from . import defaults as znd
 from . import misc as znm
-from . import base_module as znb
+from . import base as znb
 from . import sim as zns
 from . import plotting as znpl
 from . import options as zno

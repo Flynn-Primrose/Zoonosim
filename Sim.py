@@ -11,7 +11,7 @@ from . import options as zno
 
 from . import utils as znu
 from . import misc as znm
-from . import base_module as znb
+from . import base as znb
 from . import defaults as znd
 from . import interventions as zni
 from . import analysis as zna

@@ -6,11 +6,11 @@ import numpy as np
 import sciris as sc
 from collections import defaultdict
 
-from . import version as znv
-from . import utils as znu
-from . import defaults as znd
-from . import watches as znw
-from .roster_module import Subroster
+from .. import version as znv
+from .. import utils as znu
+from .. import defaults as znd
+from .. import watches as znw
+from .rosters import Subroster
 
 __all__ = ['Humans', 'HumanMeta']
 
