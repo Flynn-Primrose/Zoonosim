@@ -1,6 +1,6 @@
 import sciris as sc
 import numpy as np
-from . import utils as znu
+from .. import utils as znu
 import scipy.stats as stats
 
 class RVSampler:

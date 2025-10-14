@@ -562,7 +562,7 @@ def reload_numba():
     '''
     print('Reloading Zoonosim so changes take effect...')
     import importlib
-    import Zoonosim as zn
+    import src as zn
     importlib.reload(zn.defaults)
     importlib.reload(zn.utils)
     importlib.reload(zn)

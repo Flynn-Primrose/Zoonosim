@@ -1,4 +1,4 @@
-import Zoonosim as zn
+import src as zn
 import numpy as np
 
 new_param = {

@@ -1,6 +1,6 @@
 # Example of using RAT in combination with smartwatch alerts
 
-import Zoonosim as zn
+import src as zn
 
 rat = zn.RAT_disc(di_criteria = ['sx'], di_seekprobs = {'sx':0.0}, sc_criteria = ['alerted'], sc_seekprobs = {'alerted': 0.1},)  # Configure the RAT test.
 

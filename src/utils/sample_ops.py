@@ -8,9 +8,9 @@ import bisect
 import scipy
 from scipy import stats as st
 import warnings
-from .. import base as znb
-from .. import defaults as znd
-from .. import options as zno
+from ..src import base as znb
+from ..src import defaults as znd
+from ..src import options as zno
 from . import stats_ops as znso # For additional statistical operations
 
 __all__ = ['sample', 'get_pdf', 'set_seed', 'fast_choice',

@@ -16,7 +16,7 @@ if zno.options.verbose:
 
 from .defaults import *
 from .misc import *
-from .utils import *
+from ..utils import *
 from .parameters import *
 from .base import *
 from .rosters.rosters import *

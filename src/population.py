@@ -7,7 +7,7 @@ import sciris as sc
 
 from . import base as znb
 from . import defaults as znd
-from . import utils as znu
+from .. import utils as znu
 
 from .rosters.agents import Agents
 from .rosters.humans import Humans

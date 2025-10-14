@@ -1,6 +1,6 @@
 # An example simulation using regular screening of flocks
 
-import Zoonosim as zn
+import src as zn
 
 flock_screening = zn.test_flock()
 

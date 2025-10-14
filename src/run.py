@@ -10,7 +10,7 @@ from collections import defaultdict
 from . import defaults as znd
 from . import misc as znm
 from . import base as znb
-from . import sim as zns
+from .. import sim as zns
 from . import plotting as znpl
 from . import options as zno
 
