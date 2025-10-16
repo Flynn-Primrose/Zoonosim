@@ -80,7 +80,6 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['dynam_layer']     = None  # Which layers are dynamic; set by reset_layer_pars() below
     pars['beta_layer']      = None  # Transmissibility per layer; set by reset_layer_pars() below
     pars['quar_factor']     = None  # Quarantine multiplier on transmissibility and susceptibility; set by reset_layer_pars() below
-    pars['quar_period']     = 14  # Number of days to quarantine for. Assumption based on standard policies
 
 
     # Parameters that control settings and defaults for multi-variant runs
@@ -190,12 +189,19 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
         'mild2rec': dict(dist='lognormal_int', par1=8.0,  par2=2.0), # Duration for people with mild symptoms to recover
         'sev2rec': dict(dist='lognormal_int', par1=14.0, par2=6.0), # Duration for people with severe symptoms to recover
         'sev2die': dict(dist='lognormal_int', par1=10.0, par2=5.0), # Duration from critical symptoms to death, 18.8 days total
+
+        # Duration: quarantine
+        'quar': 7 
     }
 
     pars['dur']['flock'] = {
+        # Duration: disease progression
         'exp2inf': dict(dist='lognormal_int', par1=1.5, par2=0.5), # Duration from exposed to infectious. NOTE: This data is just a guess, and should be replaced with real data
         'inf2out': dict(dist='lognormal_int', par1=2.0, par2=1.0), # Duration from infectious to recovery/removal. NOTE: This data is just a guess, and should be replaced with real data
         'susp2res': dict(dist='lognormal_int', par1=5.0, par2=1.0), # Duration from suspicion to a definitive test result. NOTE: This data is just a guess, and should be replaced with real data
+
+        # Duration: Quarantine
+        'quar': 14
     }
     pars['dur']['barn'] = {
         'contamination': dict(dist='lognormal_int', par1=14, par2=5.0), # Duration of contamination. NOTE: This data is just a guess, and should be replaced with real data

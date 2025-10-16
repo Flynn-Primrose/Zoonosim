@@ -491,6 +491,7 @@ class Humans(Subroster):
                 self.date_quarantined[ind] = self.t
                 self.date_end_quarantine[ind] = end_day
                 n_quarantined += 1
+                self.update_event_log(ind, 'quarantined')
 
         # If someone on quarantine has reached the end of their quarantine, release them
         end_inds = self.check_inds(~self.quarantined, self.date_end_quarantine, filter_inds=None) # Note the double-negative here (~)
@@ -873,11 +874,11 @@ class Humans(Subroster):
         Args:
             inds (int): indices of who to quarantine, specified by check_quar()
             start_date (int): day to begin quarantine (defaults to the current day, `sim.t`)
-            period (int): quarantine duration (defaults to ``pars['quar_period']``)
+            period (int): quarantine duration (defaults to ``pars['dur']['human']['quar']``)
         '''
 
         start_date = self.t if start_date is None else int(start_date)
-        period = self.pars['quar_period'] if period is None else int(period)
+        period = self.pars['dur']['human']['quar'] if period is None else int(period)
         for ind in inds:
             self._pending_quarantine[start_date].append((ind, start_date + period))
         return

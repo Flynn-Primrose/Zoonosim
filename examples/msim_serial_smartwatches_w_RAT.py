@@ -1,4 +1,4 @@
-import Zoonosim as zn
+import zoonosim as zn
 import warnings
 
 warnings.filterwarnings("ignore", category=UserWarning)  # Ignore some warnings for cleaner output.

@@ -1,4 +1,4 @@
-import Zoonosim as zn
+import zoonosim as zn
 
 bio_analyzer = zn.biography(uid = 266, agent_type = 'flock', days = range(1, 150))
 

@@ -4,6 +4,8 @@ Defines the subroster and metaroster for flock-like agents
 
 import numpy as np
 import sciris as sc
+from collections import defaultdict
+
 from .. import version as znv
 from .. import utils as znu
 from .. import defaults as znd
@@ -59,6 +61,7 @@ class FlocksMeta(sc.prettyobj):
 
         # Set the dates various events took place: these are floats per agent
         self.state_dates = [f'date_{state}' for state in self.states] # Convert each state into a date
+        self.dates.append('date_end_quarantine') # Store the date when a flock comes out of quarantine
 
         # Dates for the cfia protocols: these are floats per flock
         self.protocol_dates = [
@@ -167,7 +170,7 @@ class Flocks(Subroster):
             else:
                 self[key] = value
 
-        # self._pending_quarantine = defaultdict(list)  # Internal cache to record people that need to be quarantined on each timestep {t:(person, quarantine_end_day)}
+        self._pending_quarantine = defaultdict(list)  # Internal cache to record flocks that need to be quarantined on each timestep {t:(person, quarantine_end_day)}
 
         return
 
@@ -278,11 +281,14 @@ class Flocks(Subroster):
         if len(suspicious_inds) == 0:
             return 0
         new_suspicious_inds = unsuspected_inds[suspicious_inds]
-        self.suspected[new_suspicious_inds] = True
-        self.date_suspected[new_suspicious_inds] = self.t
-        self.dur_susp2res[new_suspicious_inds] = znu.sample(**self.pars['dur']['flock']['susp2res'], size=len(new_suspicious_inds))
-        self.date_result[new_suspicious_inds] = self.date_suspected[new_suspicious_inds] + self.dur_susp2res[new_suspicious_inds]
-        self.date_quarantined[new_suspicious_inds] = self.t
+
+        if len(new_suspicious_inds):
+            self.suspected[new_suspicious_inds] = True
+            self.date_suspected[new_suspicious_inds] = self.t
+            self.dur_susp2res[new_suspicious_inds] = znu.sample(**self.pars['dur']['flock']['susp2res'], size=len(new_suspicious_inds))
+            self.date_result[new_suspicious_inds] = self.date_suspected[new_suspicious_inds] + self.dur_susp2res[new_suspicious_inds]
+            self.schedule_quarantine(new_suspicious_inds)
+            #self.date_quarantined[new_suspicious_inds] = self.t
 
         self.update_event_log(new_suspicious_inds, 'suspected')
 
@@ -312,10 +318,23 @@ class Flocks(Subroster):
 
     def check_quarantined(self):
         ''' Check for new progressions to quarantined '''
-        inds = self.check_inds(self.quarantined, self.date_quarantined)
-        self.quarantined[inds] = True
-        self.update_event_log(inds, 'quarantined')
-        return len(inds)
+        n_quarantined = 0 # Number of flocks entering quarantine
+        for ind,end_day in self._pending_quarantine[self.t]:
+            if self.quarantined[ind]: # Update when quarantine should be finished (in case schedule_quarantine is called on someone already in quarantine)
+                self.date_end_quarantine[ind] = max(self.date_end_quarantine[ind], end_day) # Extend quarantine if required
+            else:
+                self.quarantined[ind] = True
+                self.date_quarantined[ind] = self.t
+                self.date_end_quarantine[ind] = end_day
+                n_quarantined += 1
+                self.update_event_log(ind, 'quarantined')
+
+        # If someone on quarantine has reached the end of their quarantine, release them
+        end_inds = self.check_inds(~self.quarantined, self.date_end_quarantine, filter_inds=None) # Note the double-negative here (~)
+        self.quarantined[end_inds] = False # Release from quarantine
+
+        return n_quarantined
+
 
 
     def update_water_consumption(self):
@@ -454,6 +473,28 @@ class Flocks(Subroster):
 
         return
     
+    def schedule_quarantine(self, inds, start_date=None, period=None):
+        '''
+        Schedule a quarantine. Typically not called by the user directly except
+        via a custom intervention; see the contact_tracing() intervention instead.
+
+        This function will create a request to quarantine a flock on the start_date for
+        a period of time. Whether they are on an existing quarantine that gets extended, or
+        whether they are no longer eligible for quarantine, will be checked when the start_date
+        is reached.
+
+        Args:
+            inds (int): indices of who to quarantine, specified by check_quar()
+            start_date (int): day to begin quarantine (defaults to the current day, `sim.t`)
+            period (int): quarantine duration (defaults to ``pars['dur']['flock']['quar']``)
+        '''
+
+        start_date = self.t if start_date is None else int(start_date)
+        period = self.pars['dur']['human']['quar'] if period is None else int(period)
+        for ind in inds:
+            self._pending_quarantine[start_date].append((ind, start_date + period))
+        return
+
     def story(self, uid, *args):
         '''
         Print out a short history of events in the life of the specified flock.
