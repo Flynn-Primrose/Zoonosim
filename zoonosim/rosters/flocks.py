@@ -61,7 +61,7 @@ class FlocksMeta(sc.prettyobj):
 
         # Set the dates various events took place: these are floats per agent
         self.state_dates = [f'date_{state}' for state in self.states] # Convert each state into a date
-        self.dates.append('date_end_quarantine') # Store the date when a flock comes out of quarantine
+        self.state_dates.append('date_end_quarantine') # Store the date when a flock comes out of quarantine
 
         # Dates for the cfia protocols: these are floats per flock
         self.protocol_dates = [
@@ -319,6 +319,7 @@ class Flocks(Subroster):
     def check_quarantined(self):
         ''' Check for new progressions to quarantined '''
         n_quarantined = 0 # Number of flocks entering quarantine
+        quarantined_inds = []
         for ind,end_day in self._pending_quarantine[self.t]:
             if self.quarantined[ind]: # Update when quarantine should be finished (in case schedule_quarantine is called on someone already in quarantine)
                 self.date_end_quarantine[ind] = max(self.date_end_quarantine[ind], end_day) # Extend quarantine if required
@@ -327,7 +328,10 @@ class Flocks(Subroster):
                 self.date_quarantined[ind] = self.t
                 self.date_end_quarantine[ind] = end_day
                 n_quarantined += 1
-                self.update_event_log(ind, 'quarantined')
+                quarantined_inds.append(ind)
+            
+            if len(quarantined_inds):
+                self.update_event_log(quarantined_inds, 'quarantined')
 
         # If someone on quarantine has reached the end of their quarantine, release them
         end_inds = self.check_inds(~self.quarantined, self.date_end_quarantine, filter_inds=None) # Note the double-negative here (~)

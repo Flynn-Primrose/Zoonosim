@@ -378,7 +378,6 @@ class Subroster(BaseRoster):
     '''
 
 
-
     def validate(self, roster_pars=None, die=True, verbose=False):
         '''
         Perform validation on the roster object.
