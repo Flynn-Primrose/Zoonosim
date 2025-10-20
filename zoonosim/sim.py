@@ -790,11 +790,6 @@ class Sim(znb.BaseSim):
         symp = agents.symptomatic
         quar = agents.quarantined
 
-        iso_uids = agents.human.uid[agents.human.diagnosed] # UIDs of people who are isolated (i.e. diagnosed)
-        iso = np.isin(agents.uid, iso_uids) # Boolean array of agents who are isolated (always false for non-human agents)
-
-        quar = np.logical_or(quar, iso) # Our model treats quarantined and isolated people the same, so we combine them here
-
         prel_trans = agents.get_rel_trans()
         prel_sus   = agents.get_rel_sus()
 

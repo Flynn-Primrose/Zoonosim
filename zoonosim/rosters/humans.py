@@ -467,13 +467,14 @@ class Humans(Subroster):
         diag_inds  = self.check_inds_diagnosed(self.diagnosed, self.date_diagnosed, filter_inds=None) # Find who are not diagnosed and have a date of diagnosis that is today or earlier
 
         self.diagnosed[diag_inds]   = True # Set these people to be diagnosed
+        self.schedule_quarantine(diag_inds) # Schedule quarantine for diagnosed individuals
 
-        quarantined = znu.itruei(self.quarantined, diag_inds) # Find individuals who were just diagnosed who are in quarantine
-        self.date_end_quarantine[quarantined] = self.t # Set end quarantine date to match when the person left quarantine (and entered isolation)
-        self.quarantined[diag_inds] = False # If you are diagnosed, you are isolated, not in quarantine
+        # quarantined = znu.itruei(self.quarantined, diag_inds) # Find individuals who were just diagnosed who are in quarantine
+        # self.date_end_quarantine[quarantined] = self.t # Set end quarantine date to match when the person left quarantine (and entered isolation)
+        # self.quarantined[diag_inds] = False # If you are diagnosed, you are isolated, not in quarantine
 
         # Remove diagnosed individuals if they were diagnosed more than 14 days ago
-        diag_expired_inds = znu.true(self.t - self.date_diagnosed > 14)
+        diag_expired_inds = znu.true(self.t - self.date_diagnosed > self.pars['dur']['diag'])
         self.diag_expired_inds = diag_expired_inds
         self.diagnosed[diag_expired_inds] = False
 

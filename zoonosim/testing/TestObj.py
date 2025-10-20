@@ -85,7 +85,7 @@ class TestObj:
         self.dist_skcons_nI_C        = np.zeros(sim.pars['n_days'] + 1)
         self.dist_skcons_nI_nC       = np.zeros(sim.pars['n_days'] + 1)
 
-        # Initialize date trackers -- important for integrating with Covasim quarantine behaviour
+        # Initialize date trackers -- important for integrating with Zoonosim quarantine behaviour
         self.date_positive           = np.full(sim.pars['pop_size_by_type']['human'], -1)
         self.date_negative           = np.full(sim.pars['pop_size_by_type']['human'], -1)
         self.date_pos_test           = np.full(sim.pars['pop_size_by_type']['human'], -1)
