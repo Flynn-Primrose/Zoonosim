@@ -468,6 +468,7 @@ class Humans(Subroster):
 
         self.diagnosed[diag_inds]   = True # Set these people to be diagnosed
         self.schedule_quarantine(diag_inds) # Schedule quarantine for diagnosed individuals
+        self.update_event_log(diag_inds, 'diagnosed')
 
         # quarantined = znu.itruei(self.quarantined, diag_inds) # Find individuals who were just diagnosed who are in quarantine
         # self.date_end_quarantine[quarantined] = self.t # Set end quarantine date to match when the person left quarantine (and entered isolation)
@@ -477,6 +478,7 @@ class Humans(Subroster):
         diag_expired_inds = znu.true(self.t - self.date_diagnosed > self.pars['dur']['diag'])
         self.diag_expired_inds = diag_expired_inds
         self.diagnosed[diag_expired_inds] = False
+        self.update_event_log(diag_expired_inds, 'diagnosis expired')
 
         return len(test_pos_inds)
 
@@ -497,6 +499,7 @@ class Humans(Subroster):
         # If someone on quarantine has reached the end of their quarantine, release them
         end_inds = self.check_inds(~self.quarantined, self.date_end_quarantine, filter_inds=None) # Note the double-negative here (~)
         self.quarantined[end_inds] = False # Release from quarantine
+        self.update_event_log(end_inds, 'released from quarantine')
 
         # Update the counter for consecutive days in quarantine
         self.cons_days_in_quar[self.quarantined] += 1
