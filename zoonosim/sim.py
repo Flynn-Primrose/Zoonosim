@@ -317,6 +317,7 @@ class Sim(znb.BaseSim):
 
         human_dcols = znd.get_default_colors('human') # Get default human colors
         flock_dcols = znd.get_default_colors('flock') # Get default flock colors
+        breed_dcols = znd.get_default_colors('breed') # Get default breed colors
         barn_dcols  = znd.get_default_colors('barn')  # Get default barn colors
         water_dcols = znd.get_default_colors('water') # Get default water colors
         misc_dcols = znd.get_default_colors('misc') # Get default misc colors
@@ -335,6 +336,13 @@ class Sim(znb.BaseSim):
 
         for key,label in znd.flock_flows.items():
             self.results[f'new_flock_{key}'] = init_res(f'Number of new {label}', color=flock_dcols[key])
+
+        for breed in znd.default_flock_breeds:
+            for key,label in znd.flock_flows.items():
+                self.results[f'cum_flock_{breed}_{key}'] = init_res(f'Cumulative {label} ({breed})', color=breed_dcols[breed])
+
+            for key,label in znd.flock_flows.items():
+                self.results[f'new_flock_{breed}_{key}'] = init_res(f'Number of new {label} ({breed})', color=breed_dcols[breed])
 
         for key,label in znd.barn_flows.items():
             self.results[f'cum_barn_{key}'] = init_res(f'Cumulative {label}', color=barn_dcols[key])
@@ -899,6 +907,8 @@ class Sim(znb.BaseSim):
         # Update counts for this time step: Flock flows
         for key in znd.flock_flows:
             self.results[f'new_flock_{key}'][t] = agents.flock.flows[f'new_{key}']
+            for breed in znd.flock_breeds:
+                self.results[f'new_flock_{key}_{breed}'][t] = agents.flock.flows_breed[f'new_{key}'][breed]
 
         # Update counts for this time step: Barn flows
         for key in znd.barn_flows:
@@ -1079,6 +1089,8 @@ class Sim(znb.BaseSim):
         # Calculate cumulative results: Flock
         for key in znd.flock_flows:
             self.results[f'cum_flock_{key}'][:] = np.cumsum(self.results[f'new_flock_{key}'][:], axis=0)
+            for breed in znd.flock_breeds:
+                self.results[f'cum_flock_{key}_{breed}'][:] = np.cumsum(self.results[f'new_flock_{key}_{breed}'][:], axis=0)
         for key in znd.flock_flows_by_variant:
             for variant in range(self['n_variants']):
                 self.results['variant'][f'cum_flock_{key}'][variant, :] = np.cumsum(self.results['variant'][f'new_flock_{key}'][variant, :], axis=0)

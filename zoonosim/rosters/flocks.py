@@ -178,6 +178,10 @@ class Flocks(Subroster):
     def init_flows(self):
         ''' Initialize flows to be zero '''
         self.flows = {key:0 for key in znd.new_flock_flows}
+        self.flows_breed = {}
+        for breed in znd.default_flock_breeds:
+            for key in znd.new_flock_flows:
+                self.flows_breed[(breed, key)] = 0
         self.flows_variant = {}
         for key in znd.new_flock_flows_by_variant:
             self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=znd.default_float)
@@ -264,6 +268,18 @@ class Flocks(Subroster):
 
     #%% Methods for updating state
 
+    def check_breed(self, inds, breed):
+        '''
+        Check if the specified flocks are of the specified breed
+
+        Args:
+            inds (array): indices of flocks to check
+            breed (str): breed to check for
+        Returns:
+            bool array: array of booleans indicating whether each flock is of the specified breed
+        '''
+        return self.breed[inds] == breed
+
     def check_suspected(self):
         ''' Check for new progressions to suspected '''
 
@@ -281,6 +297,11 @@ class Flocks(Subroster):
         if len(suspicious_inds) == 0:
             return 0
         new_suspicious_inds = unsuspected_inds[suspicious_inds]
+
+        for breed in znd.default_flock_breeds: # Update flows by breed
+            breed_inds = znu.itrue(self.check_breed(new_suspicious_inds, breed), new_suspicious_inds)
+            n_breed_inds = len(breed_inds)
+            self.flows_breed[(breed, 'new_suspected')] += n_breed_inds
 
         if len(new_suspicious_inds):
             self.suspected[new_suspicious_inds] = True
@@ -306,6 +327,10 @@ class Flocks(Subroster):
         self.date_infectious[inds] = self.t
         self.update_event_log(inds, 'infectious')
 
+        for breed in znd.default_flock_breeds: # Update flows by breed
+            breed_inds = znu.itrue(self.check_breed(inds, breed), inds)
+            n_breed_inds = len(breed_inds)
+            self.flows_breed[(breed, 'new_infectious')] += n_breed_inds
 
         for variant in range(self.pars['n_variants']):
             this_variant_inds = znu.itrue(self.infectious_variant[inds] == variant, inds)
@@ -332,6 +357,10 @@ class Flocks(Subroster):
             
             if len(quarantined_inds):
                 self.update_event_log(quarantined_inds, 'quarantined')
+                for breed in znd.default_flock_breeds: # Update flows by breed
+                    breed_inds = znu.itrue(self.check_breed(quarantined_inds, breed), quarantined_inds)
+                    n_breed_inds = len(breed_inds)
+                    self.flows_breed[(breed, 'new_quarantined')] += n_breed_inds
 
         # If someone on quarantine has reached the end of their quarantine, release them
         end_inds = self.check_inds(~self.quarantined, self.date_end_quarantine, filter_inds=None) # Note the double-negative here (~)
@@ -407,6 +436,10 @@ class Flocks(Subroster):
         self.exposed_headcount[inds] = initial_exposed
         self.exposed_variant[inds] = variant
         self.exposed_by_variant[variant, inds] = True
+        for breed in znd.default_flock_breeds: # Update flows by breed
+            breed_inds = znu.itrue(self.check_breed(inds, breed), inds)
+            n_breed_inds = len(breed_inds)
+            self.flows_breed[(breed, 'new_exposed')] += n_breed_inds
         self.flows['new_exposed']   += len(inds)
         self.flows_variant['new_exposed_by_variant'][variant] += len(inds)
 

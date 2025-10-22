@@ -359,6 +359,10 @@ def get_default_colors(agent_type):
             c.quarantined = '#a6d854' # 
             c.exposed_by_variant = '#ffd92f' # 
             c.infectious_by_variant = '#e5c494' # 
+        case 'breed':
+            c.duck = '#66c2a5' # 
+            c.broiler = '#fc8d62' # 
+            c.layer = '#8da0cb' #
         case 'barn': 
             c.uncontaminated = '#1b9e77' # 
             c.contaminated = '#d95f02' # 
@@ -401,7 +405,7 @@ default_pop_pars = {
     'avg_water_per_farm': 1.0,
 }
 
-default_flock_breeds = ['duck', 'layer', 'broiler'] # Breeds of flocks present
+default_flock_breeds = ['duck', 'layer', 'broiler'] # Breeds of flocks present. Must match those in default_flock_prognoses.
 default_flock_breed_freqs = [0.1, 0.2, 0.7] # frequency of the different breed types
 default_suspicious_mortality_rate = 0.003 # mortality rate that triggers a flock to be considered suspicious
 default_suspicious_symptomatic_rate = 0.001 # symptomatic rate that triggers a flock to be considered suspicious
