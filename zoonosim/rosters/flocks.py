@@ -355,12 +355,14 @@ class Flocks(Subroster):
                 n_quarantined += 1
                 quarantined_inds.append(ind)
             
-            if len(quarantined_inds):
-                self.update_event_log(quarantined_inds, 'quarantined')
-                for breed in znd.default_flock_breeds: # Update flows by breed
-                    breed_inds = znu.itrue(self.check_breed(quarantined_inds, breed), quarantined_inds)
-                    n_breed_inds = len(breed_inds)
-                    self.flows_breed[(breed, 'new_quarantined')] += n_breed_inds
+        quarantined_inds = np.array(quarantined_inds)
+
+        if len(quarantined_inds):
+            self.update_event_log(quarantined_inds, 'quarantined')
+            for breed in znd.default_flock_breeds: # Update flows by breed
+                breed_inds = znu.itrue(self.check_breed(quarantined_inds, breed), quarantined_inds)
+                n_breed_inds = len(breed_inds)
+                self.flows_breed[(breed, 'new_quarantined')] += n_breed_inds
 
         # If someone on quarantine has reached the end of their quarantine, release them
         end_inds = self.check_inds(~self.quarantined, self.date_end_quarantine, filter_inds=None) # Note the double-negative here (~)

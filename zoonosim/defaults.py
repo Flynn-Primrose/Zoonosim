@@ -88,6 +88,29 @@ flock_plots = sc.odict({
     ],
 })
 
+breed_plots = sc.odict({
+    'new exposed counts' : [
+        'new_duck_flock_exposed',
+        'new_broiler_flock_exposed',
+        'new_layer_flock_exposed',
+    ],
+    'new infectious counts' : [
+        'new_duck_flock_infectious',
+        'new_broiler_flock_infectious',
+        'new_layer_flock_infectious',
+    ],
+    'new suspected counts' : [
+        'new_duck_flock_suspected',
+        'new_broiler_flock_suspected',
+        'new_layer_flock_suspected',
+    ],
+    'new quarantined counts' : [
+        'new_duck_flock_quarantined',
+        'new_broiler_flock_quarantined',
+        'new_layer_flock_quarantined',
+    ],
+})
+
 barn_plots = sc.odict({
     'Total counts': [
         'n_barn_contaminated',
@@ -244,6 +267,9 @@ def get_default_plots(which='default', kind='sim', sim=None):
 
     elif which == 'flock': # pragma: no cover
         plots = sc.dcp(flock_plots)
+
+    elif which == 'breed': # pragma: no cover
+        plots = sc.dcp(breed_plots)
 
     elif which == 'barn': # pragma: no cover
         plots = sc.dcp(barn_plots)

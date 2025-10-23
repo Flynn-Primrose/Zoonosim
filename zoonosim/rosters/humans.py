@@ -475,7 +475,7 @@ class Humans(Subroster):
         # self.quarantined[diag_inds] = False # If you are diagnosed, you are isolated, not in quarantine
 
         # Remove diagnosed individuals if they were diagnosed more than 14 days ago
-        diag_expired_inds = znu.true(self.t - self.date_diagnosed > self.pars['dur']['diag'])
+        diag_expired_inds = znu.true(self.t - self.date_diagnosed > self.pars['dur']['human']['diag'])
         self.diag_expired_inds = diag_expired_inds
         self.diagnosed[diag_expired_inds] = False
         self.update_event_log(diag_expired_inds, 'diagnosis expired')

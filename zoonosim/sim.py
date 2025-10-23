@@ -339,10 +339,10 @@ class Sim(znb.BaseSim):
 
         for breed in znd.default_flock_breeds:
             for key,label in znd.flock_flows.items():
-                self.results[f'cum_flock_{breed}_{key}'] = init_res(f'Cumulative {label} ({breed})', color=breed_dcols[breed])
+                self.results[f'cum_{breed}_flock_{key}'] = init_res(f'Cumulative {label} ({breed})', color=breed_dcols[breed])
 
             for key,label in znd.flock_flows.items():
-                self.results[f'new_flock_{breed}_{key}'] = init_res(f'Number of new {label} ({breed})', color=breed_dcols[breed])
+                self.results[f'new_{breed}_flock_{key}'] = init_res(f'Number of new {label} ({breed})', color=breed_dcols[breed])
 
         for key,label in znd.barn_flows.items():
             self.results[f'cum_barn_{key}'] = init_res(f'Cumulative {label}', color=barn_dcols[key])
@@ -376,6 +376,14 @@ class Sim(znb.BaseSim):
         self.results['n_flock_imports'] = init_res('Number of imported flock infections', scale = True)
         self.results['n_barn_imports'] = init_res('Number of imported barn infections', scale = True)
         self.results['n_water_imports'] = init_res('Number of imported water infections', scale = True)
+
+        # Derived human results
+        self.results['n_human_alive']         =  init_res('Number of people still alive', scale=True)
+        self.results['n_human_naive']         =  init_res('Number of people naive', scale=True)
+        self.results['n_human_removed']       =  init_res('Calculate the number removed: recovered + dead', scale=True)
+        self.results['human_prevalence']      =  init_res('Calculate the prevalence', scale=True)
+        self.results['human_incidence']       =  init_res('Calculate the incidence', scale=True)
+        # self.results['frac_human_vaccinated'] =  init_res('Calculate the fraction vaccinated', scale=True)
 
         # Nab levels and population immunity
         self.results['pop_nabs']            = init_res('nab levels in human population', scale=False, color=human_dcols.pop_nabs)
@@ -907,8 +915,8 @@ class Sim(znb.BaseSim):
         # Update counts for this time step: Flock flows
         for key in znd.flock_flows:
             self.results[f'new_flock_{key}'][t] = agents.flock.flows[f'new_{key}']
-            for breed in znd.flock_breeds:
-                self.results[f'new_flock_{key}_{breed}'][t] = agents.flock.flows_breed[f'new_{key}'][breed]
+            for breed in znd.default_flock_breeds:
+                self.results[f'new_{breed}_flock_{key}'][t] = agents.flock.flows_breed[(breed, f'new_{key}')]
 
         # Update counts for this time step: Barn flows
         for key in znd.barn_flows:
@@ -1089,8 +1097,8 @@ class Sim(znb.BaseSim):
         # Calculate cumulative results: Flock
         for key in znd.flock_flows:
             self.results[f'cum_flock_{key}'][:] = np.cumsum(self.results[f'new_flock_{key}'][:], axis=0)
-            for breed in znd.flock_breeds:
-                self.results[f'cum_flock_{key}_{breed}'][:] = np.cumsum(self.results[f'new_flock_{key}_{breed}'][:], axis=0)
+            for breed in znd.default_flock_breeds:
+                self.results[f'cum_{breed}_flock_{key}'][:] = np.cumsum(self.results[f'new_{breed}_flock_{key}'][:], axis=0)
         for key in znd.flock_flows_by_variant:
             for variant in range(self['n_variants']):
                 self.results['variant'][f'cum_flock_{key}'][variant, :] = np.cumsum(self.results['variant'][f'new_flock_{key}'][variant, :], axis=0)
@@ -1142,7 +1150,7 @@ class Sim(znb.BaseSim):
 
     def compute_results(self, verbose=None):
          ''' Perform final calculations on the results '''
-        # self.compute_states()
+         self.compute_states()
         # self.compute_yield()
         # self.compute_doubling()
         # self.compute_r_eff()
@@ -1150,30 +1158,26 @@ class Sim(znb.BaseSim):
          return
 
 
-    # def compute_states(self):
-    #     '''
-    #     Compute prevalence, incidence, and other states. Prevalence is the current
-    #     number of infected people divided by the number of people who are alive.
-    #     Incidence is the number of new infections per day divided by the susceptible
-    #     population. Also calculates the number of people alive, the number preinfectious,
-    #     the number removed, and recalculates susceptibles to handle scaling.
-    #     '''
-    #     res = self.results
-    #     count_recov = 1-self['use_waning'] # If waning is on, don't count recovered people as removed
-    #     self.results['n_alive'][:]         = self.scaled_pop_size - res['cum_deaths'][:] # Number of people still alive
-    #     self.results['n_naive'][:]         = self.scaled_pop_size - res['cum_deaths'][:] - res['n_recovered'][:] - res['n_exposed'][:] # Number of people naive
-    #     self.results['n_susceptible'][:]   = res['n_alive'][:] - res['n_exposed'][:] - count_recov*res['cum_recoveries'][:] # Recalculate the number of susceptible people, not agents
-    #     self.results['n_preinfectious'][:] = res['n_exposed'][:] - res['n_infectious'][:] # Calculate the number not yet infectious: exposed minus infectious
-    #     self.results['n_removed'][:]       = count_recov*res['cum_recoveries'][:] + res['cum_deaths'][:] # Calculate the number removed: recovered + dead
-    #     self.results['prevalence'][:]      = res['n_exposed'][:]/res['n_alive'][:] # Calculate the prevalence
-    #     self.results['incidence'][:]       = res['new_infections'][:]/res['n_susceptible'][:] # Calculate the incidence
-    #     self.results['frac_vaccinated'][:] = res['n_vaccinated'][:]/res['n_alive'][:] # Calculate the fraction vaccinated
+    def compute_states(self):
+        '''
+        Compute prevalence, incidence, and other states. Prevalence is the current
+        number of infected people divided by the number of people who are alive.
+        Incidence is the number of new infections per day divided by the susceptible
+        population. Also calculates the number of people alive and the number removed.
+        '''
+        res = self.results
+        count_recov = 1-self['immunity_pars']['human']['use_waning'] # If waning is on, don't count recovered people as removed
+        self.results['n_human_alive'][:]         = self['pop_size_by_type']['human'] - res['cum_human_dead'][:] # Number of people still alive
+        self.results['n_human_naive'][:]         = self['pop_size_by_type']['human'] - res['cum_human_dead'][:] - res['n_human_recovered'][:] - res['n_human_exposed'][:] # Number of people naive
+        self.results['n_human_removed'][:]       = count_recov*res['cum_human_recovered'][:] + res['cum_human_dead'][:] # Calculate the number removed: recovered + dead
+        self.results['human_prevalence'][:]      = res['n_human_exposed'][:]/res['n_human_alive'][:] # Calculate the prevalence
+        self.results['human_incidence'][:]       = res['new_human_infections'][:]/res['n_human_susceptible'][:] # Calculate the incidence
+        # self.results['frac_human_vaccinated'][:] = res['n_human_vaccinated'][:]/res['n_human_alive'][:] # Calculate the fraction vaccinated
 
-    #     self.results['variant']['incidence_by_variant'][:] = np.einsum('ji,i->ji',res['variant']['new_infections_by_variant'][:], 1/res['n_susceptible'][:]) # Calculate the incidence
-    #     self.results['variant']['prevalence_by_variant'][:] = np.einsum('ji,i->ji',res['variant']['new_infections_by_variant'][:], 1/res['n_alive'][:])  # Calculate the prevalence
+        # self.results['variant']['incidence_by_variant'][:] = np.einsum('ji,i->ji',res['variant']['new_infections_by_variant'][:], 1/res['n_susceptible'][:]) # Calculate the incidence
+        # self.results['variant']['prevalence_by_variant'][:] = np.einsum('ji,i->ji',res['variant']['new_infections_by_variant'][:], 1/res['n_alive'][:])  # Calculate the prevalence
 
-    #     return
-
+        return
 
     # def compute_yield(self):
     #     '''
@@ -1276,15 +1280,12 @@ class Sim(znb.BaseSim):
 
         **Examples**::
 
-            sim = cv.Sim().run()
+            sim = zn.Sim().run()
             sim.plot() # Default plotting
             sim.plot('overview') # Show overview
             sim.plot('overview', maximize=True, outer=True, rotation=15) # Make some modifications to make plots easier to see
             sim.plot(style='seaborn-whitegrid') # Use a built-in Matplotlib style
             sim.plot(style='simple', font='Rosario', dpi=200) # Use the other house style with several customizations
-
-        | New in version 2.1.0: argument passing, date_args, and mpl_args
-        | New in version 3.1.2: updated date arguments; mpl_args renamed style_args
         '''
         fig = znplt.plot_sim(sim=self, *args, **kwargs)
         return fig
@@ -1303,7 +1304,7 @@ class Sim(znb.BaseSim):
 
         **Example**::
 
-            sim = cv.Sim().run()
+            sim = zn.Sim().run()
             sim.plot_result('r_eff')
         '''
         fig = znplt.plot_result(sim=self, key=key, *args, **kwargs)
