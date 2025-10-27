@@ -385,6 +385,11 @@ class Sim(znb.BaseSim):
         self.results['human_incidence']       =  init_res('Calculate the incidence', scale=True)
         # self.results['frac_human_vaccinated'] =  init_res('Calculate the fraction vaccinated', scale=True)
 
+        # Derived breed results
+        for breed in znd.default_flock_breeds:
+            for key,label in znd.flock_flows.items():
+                self.results[f'n_{breed}_flock_{key}'] = init_res(f'Number of {label} ({breed})', color=breed_dcols[breed])
+
         # Nab levels and population immunity
         self.results['pop_nabs']            = init_res('nab levels in human population', scale=False, color=human_dcols.pop_nabs)
         self.results['pop_protection']      = init_res('Population immunity protection', scale=False, color=human_dcols.pop_protection)
@@ -875,6 +880,10 @@ class Sim(znb.BaseSim):
         # Update counts for this time step: Flock stocks
         for key in znd.flock_stocks:
             self.results[f'n_flock_{key}'][t] = agents.flock.count(key)
+
+        for breed in znd.default_flock_breeds:
+            for key,label in znd.flock_flows.items():
+                self.results[f'n_{breed}_flock_{key}'][t] = np.count_nonzero(self.agents.flock[key][agents.flock.breed == breed])
 
         # Update counts for this time step: Barn stocks
         for key in znd.barn_stocks:

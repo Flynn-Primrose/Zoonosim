@@ -89,25 +89,25 @@ flock_plots = sc.odict({
 })
 
 breed_plots = sc.odict({
-    'new exposed counts' : [
-        'new_duck_flock_exposed',
-        'new_broiler_flock_exposed',
-        'new_layer_flock_exposed',
+    'number exposed' : [
+        'n_duck_flock_exposed',
+        'n_broiler_flock_exposed',
+        'n_layer_flock_exposed',
     ],
-    'new infectious counts' : [
-        'new_duck_flock_infectious',
-        'new_broiler_flock_infectious',
-        'new_layer_flock_infectious',
+    'number infectious' : [
+        'n_duck_flock_infectious',
+        'n_broiler_flock_infectious',
+        'n_layer_flock_infectious',
     ],
-    'new suspected counts' : [
-        'new_duck_flock_suspected',
-        'new_broiler_flock_suspected',
-        'new_layer_flock_suspected',
+    'number suspected' : [
+        'n_duck_flock_suspected',
+        'n_broiler_flock_suspected',
+        'n_layer_flock_suspected',
     ],
-    'new quarantined counts' : [
-        'new_duck_flock_quarantined',
-        'new_broiler_flock_quarantined',
-        'new_layer_flock_quarantined',
+    'number quarantined' : [
+        'n_duck_flock_quarantined',
+        'n_broiler_flock_quarantined',
+        'n_layer_flock_quarantined',
     ],
 })
 
