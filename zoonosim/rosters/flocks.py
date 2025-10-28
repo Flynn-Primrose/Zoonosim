@@ -419,7 +419,7 @@ class Flocks(Subroster):
             source = source[keep]
 
         # Deal with variant parameters
-        variant_keys = ['rel_symp_prob', 'rel_death_prob']
+        variant_keys = ['rel_symp_delta', 'rel_death_delta', 'rel_water_delta']
         infect_pars = {k:self.pars['variant_pars']['wild']['flock'][k] for k in variant_keys}
         variant_label = self.pars['variant_map'][variant]
         if variant:
@@ -467,9 +467,9 @@ class Flocks(Subroster):
         breed_freq = zip(breed, frequency)
         for breed, frequency in breed_freq:
             # NOTE: I'm just guessing at the distribution of these parameters.
-            self.infected_symptomatic_rate[inds[breed_inds == breed]] = self.baseline_symptomatic_rate[inds[breed_inds == breed]] + np.maximum(znu.sample('lognormal', progs['mean_symptomatic_rate_increase'][breed], 1.0, size=frequency), 0)*infect_pars['rel_symp_prob']
-            self.infected_mortality_rate[inds[breed_inds == breed]] = self.baseline_mortality_rate[inds[breed_inds == breed]] + np.maximum(znu.sample('lognormal', progs['mean_mortality_rate_increase'][breed], 1.0, size=frequency), 0)*infect_pars['rel_death_prob']
-            self.infected_water_rate[inds[breed_inds == breed]] = self.baseline_water_rate[inds[breed_inds == breed]] + np.maximum(znu.sample('lognormal', progs['mean_water_rate_increase'][breed], 1.0, size=frequency), 0)
+            self.infected_symptomatic_rate[inds[breed_inds == breed]] = self.baseline_symptomatic_rate[inds[breed_inds == breed]] + np.maximum(znu.sample('lognormal', progs['mean_symptomatic_rate_increase'][breed], 1.0, size=frequency), 0)*infect_pars['rel_symp_delta']
+            self.infected_mortality_rate[inds[breed_inds == breed]] = self.baseline_mortality_rate[inds[breed_inds == breed]] + np.maximum(znu.sample('lognormal', progs['mean_mortality_rate_increase'][breed], 1.0, size=frequency), 0)*infect_pars['rel_death_delta']
+            self.infected_water_rate[inds[breed_inds == breed]] = self.baseline_water_rate[inds[breed_inds == breed]] + np.maximum(znu.sample('lognormal', progs['mean_water_rate_increase'][breed], 1.0, size=frequency), 0)*infect_pars['rel_water_delta']
 
 
         return n_infections # For incrementing counters

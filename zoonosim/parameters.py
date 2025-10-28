@@ -433,8 +433,9 @@ def get_variant_pars(default=False, variant=None):
             flock = dict(
                 rel_beta        = 1.0, # Default values
                 rel_gamma      = 1.0, # Default values
-                rel_symp_prob   = 1.0, # Default values
-                rel_death_prob  = 1.0, # Default values
+                rel_symp_delta   = 1.0, # Default values
+                rel_death_delta  = 1.0, # Default values
+                rel_water_delta = 1.0, # Default values
             ),
             barn = dict(
                 rel_beta        = 1.0, # Default values

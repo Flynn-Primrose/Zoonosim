@@ -103,13 +103,14 @@ In terms of operating the software, the most important component is the "pars" o
   - flock
     - rel_beta
       - the transmissibility of this variant relative to beta.flock
-    - rel_symp_prob
-      - the probability an infected (bird or flock?) will experience symptoms
-      - I'm not sure if this actually gets used
-    - rel_severe_prob
-      - I'm not sure if this parameter actually gets used
-    - rel_death_prob
-      - I'm not sure if this parameter actually gets used
+    - rel_symp_delta
+      - The change in the expected difference in baseline symptomatic rate vs infected symptomatic rate, relative to the wild variant
+    - rel_death_delta
+      - The change in the expected difference in baseline mortality rate vs infected mortality rate, relative to the wild variant
+
+    - rel_water_delta
+      - The change in the expected difference in baseline water consumption vs infected water consumption, relative to the wild variant
+
   - barn
     - rel_beta
       - the transmissibility of this variant relative to beta.barn
