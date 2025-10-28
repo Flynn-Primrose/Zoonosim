@@ -87,40 +87,7 @@ In terms of operating the software, the most important component is the "pars" o
     - transmissibility of the disease for barns
   - water
     - transmissibility of the disease for water
-- wild
-  - A dictionary containing the parameters for the wild (default) variant of the disease
-  - human
-    - rel_beta
-      - the transmissibility of this variant relative to beta.human
-    - rel_symp_prob
-      - the probability an infected human will display symptoms
-    - rel_severe_prob
-      - the probability a symptomatic human will develop severe symptoms
-    - rel_death_prob
-      - the probability a human with severe symptoms will perish as a result
-    - rel_asymp_factor
-      - the transmissibility of asymptomatic cases relative to symptomatic ones
-  - flock
-    - rel_beta
-      - the transmissibility of this variant relative to beta.flock
-    - rel_symp_delta
-      - The change in the expected difference in baseline symptomatic rate vs infected symptomatic rate, relative to the wild variant
-    - rel_death_delta
-      - The change in the expected difference in baseline mortality rate vs infected mortality rate, relative to the wild variant
 
-    - rel_water_delta
-      - The change in the expected difference in baseline water consumption vs infected water consumption, relative to the wild variant
-
-  - barn
-    - rel_beta
-      - the transmissibility of this variant relative to beta.barn
-    - rel_contamination_dur
-      - The relative duration of contamination for this variant (relative to what?)
-  - water
-    - rel_beta
-      - the transmissibility of this variant relative to beta.water
-  - rel_contamination_dur
-    - the relative duration of contamination for this variant (relative to what?)
 - transmission_pars
   - human
     - beta_dist
@@ -323,6 +290,38 @@ In terms of operating the software, the most important component is the "pars" o
   - parameters for vaccines. populated during initialization
 - vaccine_map
   - reverse mapping from number to vaccine key. populated automatically
+- wild
+  - A dictionary containing the parameters for the wild (default) variant of the disease
+  - human
+    - rel_beta
+      - the transmissibility of this variant relative to beta.human
+    - rel_symp_prob
+      - the probability an infected human will display symptoms
+    - rel_severe_prob
+      - the probability a symptomatic human will develop severe symptoms
+    - rel_death_prob
+      - the probability a human with severe symptoms will perish as a result
+    - rel_asymp_factor
+      - the transmissibility of asymptomatic cases relative to symptomatic ones
+  - flock
+    - rel_beta
+      - the transmissibility of this variant relative to beta.flock
+    - rel_symp_delta
+      - The change in the expected difference in baseline symptomatic rate vs infected symptomatic rate, relative to the wild variant
+    - rel_death_delta
+      - The change in the expected difference in baseline mortality rate vs infected mortality rate, relative to the wild variant
+    - rel_water_delta
+      - The change in the expected difference in baseline water consumption vs infected water consumption, relative to the wild variant
+  - barn
+    - rel_beta
+      - the transmissibility of this variant relative to beta.barn
+    - rel_contamination_dur
+      - The relative duration of contamination for this variant compared to the wild variant (should be set to 1 for the wild variant)
+  - water
+    - rel_beta
+      - the transmissibility of this variant relative to beta.water
+  - rel_contamination_dur
+    - the relative duration of contamination for this variant compared to the wild variant (should be set to 1 for the wild variant) 
 - variants
   - an array of additional variants to include in the simulation
 - variant_map
