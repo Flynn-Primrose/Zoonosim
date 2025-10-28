@@ -27,7 +27,8 @@ In terms of operating the software, the most important component is the "pars" o
   - vestigial parameter left over from the dynamic rescaling functionality present in parent versions of the software
   - Some of the older parts of code expect this to exist but it must be set to False since dynamic rescaling is not supported
 - initial_conditions
-  - A dictionary, the keys are the agent types and the values are the number of initial infections among that type of agent
+  - A dictionary, the keys are the agent types and the values are the number of initial infections among that type of agent.
+  - initial infections are distributed randomly across all agents of the given type.
 - start_day
   - initial day of the simulation
   - in the form yyyy-mm-dd
@@ -75,9 +76,6 @@ In terms of operating the software, the most important component is the "pars" o
 - quar_factor
   - Quarantine multiplier on transmissibility and susceptibility
   - set by reset_layer_pars
-- quar_period
-  - how long quarantine lasts for
-  - currently the same for all agents types but eventually this should be refactored into a dict with a separate vale for each type
 - n_variants
   - the number of circulating variants
 - beta
@@ -108,10 +106,10 @@ In terms of operating the software, the most important component is the "pars" o
     - rel_symp_prob
       - the probability an infected (bird or flock?) will experience symptoms
       - I'm not sure if this actually gets used
-  - rel_severe_prob
-    - I'm not sure if this parameter actually gets used
-  - rel_death_prob
-    - I'm not sure if this parameter actually gets used
+    - rel_severe_prob
+      - I'm not sure if this parameter actually gets used
+    - rel_death_prob
+      - I'm not sure if this parameter actually gets used
   - barn
     - rel_beta
       - the transmissibility of this variant relative to beta.barn
@@ -223,6 +221,10 @@ In terms of operating the software, the most important component is the "pars" o
       - duration for severely symptomatic cases to recover
     - sev2die
       - duration from severely symptomatic to death
+    - quar
+      - duration of quarantine for humans
+    - diag
+      - duration of a diagnosis for humans
   - flock
     - exp2inf
       - duration from exposure to infectious
@@ -230,6 +232,8 @@ In terms of operating the software, the most important component is the "pars" o
       - duration from infectious to recovery/removal
     - susp2res
       - duration from suspicion of infection to a definitive test result
+    - quar
+      - duration of quarantine for flocks
   - barn
     - contamination
       - how long contaminations last

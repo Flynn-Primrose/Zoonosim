@@ -228,26 +228,6 @@ class Sim(znb.BaseSim):
         Args:
             validate_layers (bool): whether to validate layer parameters as well via validate_layer_pars() -- usually yes, except during initialization
         '''
-
-        # Handle population size
-        # Can't handle population size here as population hasn't been created yet.
-        # recorded_pop_size = self['pop_size']
-        # actual_pop_size = 0
-        # for key in self.pars['agent_types']:
-        #     if key in self.pars['pop_size_by_type']:
-        #         actual_pop_size += self.pars['pop_size_by_type'][key]
-        #     else:
-        #         errormsg = f'You have specified agent_types {self.pars["agent_types"]} but not provided a pop_size_by_type entry for "{key}"'
-        #         raise KeyError(errormsg)
-        # if recorded_pop_size != actual_pop_size:
-        #     if recorded_pop_size != 0:
-        #         warnmsg = f'pop_size ({recorded_pop_size}) does not match sum of pop_size_by_type ({actual_pop_size}); using the latter'
-        #         znm.warn(warnmsg)
-        #     self['pop_size'] = actual_pop_size
-
-        # Handle types
-
-
         # Handle start day
         start_day = self['start_day'] # Shorten
         if start_day in [None, 0]: # Use default start day

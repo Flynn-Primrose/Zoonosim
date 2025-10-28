@@ -105,8 +105,8 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
         flock = dict(
             rel_beta = 1.0,
             rel_symp_prob = 0.75,
-            rel_severe_prob = 1.0,
-            rel_death_prob = 1.0
+            # rel_severe_prob = 1.0,
+            # rel_death_prob = 1.0
         ),
         barn = dict(
             rel_beta = 1.0,
@@ -288,7 +288,7 @@ def reset_layer_pars(pars, layer_keys=None, force=False):
     layer_defaults = dict(
         beta_layer = dict(fb=1.0, bw=1.0, fw = 1.0, hb = 1.0, hf = 1.0, hh = 1.0), # Transmissibility per layer -- set to one by default
         dynam_layer = dict(fb=0.0, bw=0.0, fw = 0.0, hb = 0.0, hf = 0.0, hh = 0.0), # Dynamic layer -- set to zero by default
-        quar_factor = dict(fb=0.0, bw=0.0, fw = 0.0, hb = 0.0, hf = 0.0, hh = 0.0), # Quarantine factor -- set to one by default
+        quar_factor = dict(fb=0.0, bw=0.0, fw = 0.0, hb = 0.0, hf = 0.0, hh = 0.0), # Quarantine factor -- set to zero by default
     )
 
     default_val = 1.0 # Default value for parameters that are not specified
