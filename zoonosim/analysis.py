@@ -754,7 +754,7 @@ class Calibration(Analyzer):
         # Handle run arguments
         if n_trials  is None: n_trials  = 20
         if n_workers is None: n_workers = mp.cpu_count()
-        if name      is None: name      = 'covasim_calibration'
+        if name      is None: name      = 'zoonosim_calibration'
         if db_name   is None: db_name   = f'{name}.db'
         if keep_db   is None: keep_db   = False
         if storage   is None: storage   = f'sqlite:///{db_name}'
@@ -970,8 +970,6 @@ class Calibration(Analyzer):
     def to_json(self, filename=None):
         '''
         Convert the data to JSON.
-
-        New in version 3.1.1.
         '''
         order = np.argsort(self.df['mismatch'])
         json = []
@@ -990,8 +988,6 @@ class Calibration(Analyzer):
     def plot_sims(self, **kwargs):
         '''
         Plot sims, before and after calibration.
-
-        New in version 3.1.1: renamed from plot() to plot_sims().
         '''
         msim = znr.MultiSim([self.before, self.after])
         fig = msim.plot(**kwargs)
@@ -1001,8 +997,6 @@ class Calibration(Analyzer):
     def plot_trend(self, best_thresh=2):
         '''
         Plot the trend in best mismatch over time.
-
-        New in version 3.1.1.
         '''
         mismatch = sc.dcp(self.df['mismatch'].values)
         best_mismatch = np.zeros(len(mismatch))
@@ -1035,8 +1029,6 @@ class Calibration(Analyzer):
     def plot_all(self): # pragma: no cover
         '''
         Plot every point in the calibration. Warning, very slow for more than a few hundred trials.
-
-        New in version 3.1.1.
         '''
         g = pairplotpars(self.data, color_column='mismatch', bounds=self.par_bounds)
         return g
@@ -1053,8 +1045,6 @@ class Calibration(Analyzer):
     def plot_stride(self, npts=200): # pragma: no cover
         '''
         Plot a fixed number of points in order across the results.
-
-        New in version 3.1.1.
         '''
         npts = min(len(self.df), npts)
         inds = np.linspace(0, len(self.df)-1, npts).round()
