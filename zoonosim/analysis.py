@@ -349,6 +349,349 @@ class biography(Analyzer):
 
         return znplt.handle_show_return(fig=fig, do_show=do_show)
 
+class Fit(Analyzer):
+    '''
+    A class for calculating the fit between the model and the data. Note the
+    following terminology is used here:
+
+        - fit: nonspecific term for how well the model matches the data
+        - difference: the absolute numerical differences between the model and the data (one time series per result)
+        - goodness-of-fit: the result of passing the difference through a statistical function, such as mean squared error
+        - loss: the goodness-of-fit for each result multiplied by user-specified weights (one time series per result)
+        - mismatches: the sum of all the losses (a single scalar value per time series)
+        - mismatch: the sum of the mismatches -- this is the value to be minimized during calibration
+
+    Args:
+        sim (Sim): the sim object
+        weights (dict): the relative weight to place on each result (by default: 10 for deaths, 5 for diagnoses, 1 for everything else)
+        keys (list): the keys to use in the calculation
+        custom (dict): a custom dictionary of additional data to fit; format is e.g. {'my_output':{'data':[1,2,3], 'sim':[1,2,4], 'weights':2.0}}
+        compute (bool): whether to compute the mismatch immediately
+        verbose (bool): detail to print
+        die (bool): whether to raise an exception if no data are supplied
+        label (str): the label for the analyzer
+        kwargs (dict): passed to cv.compute_gof() -- see this function for more detail on goodness-of-fit calculation options
+
+    **Example**::
+
+        sim = zn.Sim(datafile='my-data-file.csv')
+        sim.run()
+        fit = sim.compute_fit()
+        fit.plot()
+    '''
+
+    def __init__(self, sim, weights=None, keys=None, custom=None, compute=True, verbose=False, die=True, label=None, **kwargs):
+        super().__init__(label=label) # Initialize the Analyzer object
+
+        # Handle inputs
+        self.weights    = weights
+        self.custom     = sc.mergedicts(custom)
+        self.verbose    = verbose
+        self.weights    = sc.mergedicts({'cum_deaths':10, 'cum_diagnoses':5}, weights)
+        self.keys       = keys
+        self.gof_kwargs = kwargs
+        self.die        = die
+
+        # Copy data
+        if sim.data is None: # pragma: no cover
+            errormsg = 'Model fit cannot be calculated until data are loaded'
+            if self.die:
+                raise RuntimeError(errormsg)
+            else:
+                znm.warn(errormsg)
+                sim.data = pd.DataFrame() # Use an empty dataframe
+        self.data = sim.data
+
+        # Copy sim results
+        if not sim.results_ready: # pragma: no cover
+            errormsg = 'Model fit cannot be calculated until results are run'
+            if self.die: raise RuntimeError(errormsg)
+            else:        znm.warn(errormsg)
+        self.sim_results = sc.objdict()
+        for key in sim.result_keys() + ['t', 'date']:
+            self.sim_results[key] = sim.results[key]
+        self.sim_npts = sim.npts # Number of time points in the sim
+
+        # Copy other things
+        self.sim_dates = sim.datevec.tolist()
+
+        # These are populated during initialization
+        self.inds         = sc.objdict() # To store matching indices between the data and the simulation
+        self.inds.sim     = sc.objdict() # For storing matching indices in the sim
+        self.inds.data    = sc.objdict() # For storing matching indices in the data
+        self.date_matches = sc.objdict() # For storing matching dates, largely for plotting
+        self.pair         = sc.objdict() # For storing perfectly paired points between the data and the sim
+        self.diffs        = sc.objdict() # Differences between pairs
+        self.gofs         = sc.objdict() # Goodness-of-fit for differences
+        self.losses       = sc.objdict() # Weighted goodness-of-fit
+        self.mismatches   = sc.objdict() # Final mismatch values
+        self.mismatch     = None # The final value
+
+        if compute:
+            self.compute()
+
+        return
+
+
+    def compute(self):
+        ''' Perform all required computations '''
+        self.reconcile_inputs() # Find matching values
+        self.compute_diffs() # Perform calculations
+        self.compute_gofs()
+        self.compute_losses()
+        self.compute_mismatch()
+        return self.mismatch
+
+
+    def reconcile_inputs(self):
+        ''' Find matching keys and indices between the model and the data '''
+
+        data_cols = self.data.columns
+        if self.keys is None:
+            sim_keys = [k for k in self.sim_results.keys() if k.startswith('cum_')] # Default sim keys, only keep cumulative keys if no keys are supplied
+            intersection = list(set(sim_keys).intersection(data_cols)) # Find keys in both the sim and data
+            self.keys = [key for key in sim_keys if key in intersection] # Maintain key order
+            if not len(self.keys): # pragma: no cover
+                errormsg = f'No matches found between simulation result keys:\n{sc.strjoin(sim_keys)}\n\nand data columns:\n{sc.strjoin(data_cols)}'
+                if self.die: raise sc.KeyNotFoundError(errormsg)
+                else:        znm.warn(errormsg)
+        mismatches = [key for key in self.keys if key not in data_cols]
+        if len(mismatches): # pragma: no cover
+            mismatchstr = ', '.join(mismatches)
+            errormsg = f'The following requested key(s) were not found in the data: {mismatchstr}'
+            if self.die: raise sc.KeyNotFoundError(errormsg)
+            else:        znm.warn(errormsg)
+
+        for key in self.keys: # For keys present in both the results and in the data
+            self.inds.sim[key]  = []
+            self.inds.data[key] = []
+            self.date_matches[key] = []
+            count = -1
+            for d, datum in self.data[key].iteritems():
+                count += 1
+                if np.isfinite(datum):
+                    if d in self.sim_dates:
+                        self.date_matches[key].append(d)
+                        self.inds.sim[key].append(self.sim_dates.index(d))
+                        self.inds.data[key].append(count)
+            self.inds.sim[key]  = np.array(self.inds.sim[key])
+            self.inds.data[key] = np.array(self.inds.data[key])
+
+        # Convert into paired points
+        matches = 0 # Count how many data points match
+        for key in self.keys:
+            self.pair[key] = sc.objdict()
+            sim_inds = self.inds.sim[key]
+            data_inds = self.inds.data[key]
+            n_inds = len(sim_inds)
+            self.pair[key].sim  = np.zeros(n_inds)
+            self.pair[key].data = np.zeros(n_inds)
+            for i in range(n_inds):
+                matches += 1
+                self.pair[key].sim[i]  = self.sim_results[key].values[sim_inds[i]]
+                self.pair[key].data[i] = self.data[key].values[data_inds[i]]
+
+        # Process custom inputs
+        self.custom_keys = list(self.custom.keys())
+        for key in self.custom.keys():
+            matches += 1 # If any of these exist, count it as  amatch
+
+            # Initialize and do error checking
+            custom = self.custom[key]
+            c_keys = list(custom.keys())
+            if 'sim' not in c_keys or 'data' not in c_keys:
+                errormsg = f'Custom input must have "sim" and "data" keys, not {c_keys}'
+                raise sc.KeyNotFoundError(errormsg)
+            c_data = custom['data']
+            c_sim  = custom['sim']
+            try:
+                assert len(c_data) == len(c_sim)
+            except: # pragma: no cover
+                errormsg = f'Custom data and sim must be arrays, and be of the same length: data = {c_data}, sim = {c_sim} could not be processed'
+                raise ValueError(errormsg)
+            if key in self.pair: # pragma: no cover
+                errormsg = f'You cannot use a custom key "{key}" that matches one of the existing keys: {self.pair.keys()}'
+                raise ValueError(errormsg)
+
+            # If all tests pass, simply copy the data
+            self.pair[key] = sc.objdict()
+            self.pair[key].sim  = c_sim
+            self.pair[key].data = c_data
+
+            # Process weight, if available
+            wt = custom.get('weight', 1.0) # Attempt to retrieve key 'weight', or use the default if not provided
+            wt = custom.get('weights', wt) # ...but also try "weights"
+            self.weights[key] = wt # Set the weight
+
+        if matches == 0:
+            errormsg = 'No paired data points were found between the supplied data and the simulation; please check the dates for each'
+            if self.die: raise ValueError(errormsg)
+            else:        znm.warn(errormsg)
+
+        return
+
+
+    def compute_diffs(self, absolute=False):
+        ''' Find the differences between the sim and the data '''
+        for key in self.pair.keys():
+            self.diffs[key] = self.pair[key].sim - self.pair[key].data
+            if absolute:
+                self.diffs[key] = np.abs(self.diffs[key])
+        return
+
+
+    def compute_gofs(self, **kwargs):
+        ''' Compute the goodness-of-fit '''
+        kwargs = sc.mergedicts(self.gof_kwargs, kwargs)
+        for key in self.pair.keys():
+            actual    = sc.dcp(self.pair[key].data)
+            predicted = sc.dcp(self.pair[key].sim)
+            self.gofs[key] = znm.compute_gof(actual, predicted, **kwargs)
+        return
+
+
+    def compute_losses(self):
+        ''' Compute the weighted goodness-of-fit '''
+        for key in self.gofs.keys():
+            if key in self.weights:
+                weight = self.weights[key]
+                if sc.isiterable(weight): # It's an array
+                    len_wt = len(weight)
+                    len_sim = self.sim_npts
+                    len_match = len(self.gofs[key])
+                    if len_wt == len_match: # If the weight already is the right length, do nothing
+                        pass
+                    elif len_wt == len_sim: # Most typical case: it's the length of the simulation, must trim
+                        weight = weight[self.inds.sim[key]] # Trim to matching indices
+                    else: # pragma: no cover
+                        errormsg = f'Could not map weight array of length {len_wt} onto simulation of length {len_sim} or data-model matches of length {len_match}'
+                        raise ValueError(errormsg)
+            else:
+                weight = 1.0
+            self.losses[key] = self.gofs[key]*weight
+        return
+
+
+    def compute_mismatch(self, use_median=False):
+        ''' Compute the final mismatch '''
+        for key in self.losses.keys():
+            if use_median:
+                self.mismatches[key] = np.median(self.losses[key])
+            else:
+                self.mismatches[key] = np.sum(self.losses[key])
+        self.mismatch = self.mismatches[:].sum()
+        return self.mismatch
+
+
+    def plot(self, keys=None, width=0.8, fig_args=None, axis_args=None, plot_args=None,
+             date_args=None, do_show=None, fig=None, **kwargs):
+        '''
+        Plot the fit of the model to the data. For each result, plot the data
+        and the model; the difference; and the loss (weighted difference). Also
+        plots the loss as a function of time.
+
+        Args:
+            keys      (list):  which keys to plot (default, all)
+            width     (float): bar width
+            fig_args  (dict):  passed to ``pl.figure()``
+            axis_args (dict):  passed to ``pl.subplots_adjust()``
+            plot_args (dict):  passed to ``pl.plot()``
+            date_args (dict):  passed to ``zn.plotting.reset_ticks()`` (handle date format, rotation, etc.)
+            do_show   (bool):  whether to show the plot
+            fig       (fig):   if supplied, use this figure to plot in
+            kwargs    (dict):  passed to ``zn.options.with_style()``
+
+        Returns:
+            Figure object
+        '''
+
+        fig_args  = sc.mergedicts(dict(figsize=(18,11)), fig_args)
+        axis_args = sc.mergedicts(dict(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.3, hspace=0.3), axis_args)
+        plot_args = sc.mergedicts(dict(lw=2, alpha=0.5, marker='o'), plot_args)
+        date_args = sc.mergedicts(sc.objdict(as_dates=True, dateformat=None, rotation=None, start=None, end=None), date_args)
+
+        if keys is None:
+            keys = self.keys + self.custom_keys
+        n_keys = len(keys)
+
+        loss_ax = None
+        colors = sc.gridcolors(n_keys)
+        n_rows = 4
+
+        # Plot
+        with zno.with_style(**kwargs):
+            if fig is None:
+                fig = pl.figure(**fig_args)
+            pl.subplots_adjust(**axis_args)
+            main_ax1 = pl.subplot(n_rows, 2, 1)
+            main_ax2 = pl.subplot(n_rows, 2, 2)
+            bottom = sc.objdict() # Keep track of the bottoms for plotting cumulative
+            bottom.daily = np.zeros(self.sim_npts)
+            bottom.cumul = np.zeros(self.sim_npts)
+            for k,key in enumerate(keys):
+                if key in self.keys: # It's a time series, plot with days and dates
+                    days      = self.inds.sim[key] # The "days" axis (or not, for custom keys)
+                    daylabel  = 'Date'
+                else: #It's custom, we don't know what it is
+                    days      = np.arange(len(self.losses[key])) # Just use indices
+                    daylabel  = 'Index'
+
+                # Cumulative totals can't mix daily and non-daily inputs, so skip custom keys
+                if key in self.keys:
+                    for i,ax in enumerate([main_ax1, main_ax2]):
+
+                        if i == 0:
+                            data = self.losses[key]
+                            ylabel = 'Daily mismatch'
+                            title = 'Daily total mismatch'
+                        else:
+                            data = np.cumsum(self.losses[key])
+                            ylabel = 'Cumulative mismatch'
+                            title = f'Cumulative mismatch: {self.mismatch:0.3f}'
+
+                        dates = self.sim_results['date'][days] # Show these with dates, rather than days, as a reference point
+                        ax.bar(dates, data, width=width, bottom=bottom[i][self.inds.sim[key]], color=colors[k], label=f'{key}')
+
+                        if i == 0:
+                            bottom.daily[self.inds.sim[key]] += self.losses[key]
+                        else:
+                            bottom.cumul = np.cumsum(bottom.daily)
+
+                        if k == len(self.keys)-1:
+                            ax.set_xlabel('Date')
+                            ax.set_ylabel(ylabel)
+                            ax.set_title(title)
+                            znplt.reset_ticks(ax=ax, date_args=date_args, start_day=self.sim_results['date'][0])
+                            ax.legend()
+
+                ts_ax = pl.subplot(n_rows, n_keys, k+1*n_keys+1)
+                ts_ax.plot(days, self.pair[key].data, c='k', label='Data', **plot_args)
+                ts_ax.plot(days, self.pair[key].sim, c=colors[k], label='Simulation', **plot_args)
+                ts_ax.set_title(key)
+                if k == 0:
+                    ts_ax.set_ylabel('Time series (counts)')
+                    ts_ax.legend()
+
+                diff_ax = pl.subplot(n_rows, n_keys, k+2*n_keys+1)
+                diff_ax.bar(days, self.diffs[key], width=width, color=colors[k], label='Difference')
+                diff_ax.axhline(0, c='k')
+                if k == 0:
+                    diff_ax.set_ylabel('Differences (counts)')
+                    diff_ax.legend()
+
+                loss_ax = pl.subplot(n_rows, n_keys, k+3*n_keys+1, sharey=loss_ax)
+                loss_ax.bar(days, self.losses[key], width=width, color=colors[k], label='Losses')
+                loss_ax.set_xlabel(daylabel)
+                loss_ax.set_title(f'Total loss: {self.losses[key].sum():0.3f}')
+                if k == 0:
+                    loss_ax.set_ylabel('Losses')
+                    loss_ax.legend()
+
+                if daylabel == 'Date':
+                    for ax in [ts_ax, diff_ax, loss_ax]:
+                        znplt.reset_ticks(ax=ax, date_args=date_args, start_day=self.sim_results['date'][0])
+
+        return znplt.handle_show_return(fig=fig, do_show=do_show)
 
 def import_optuna():
     ''' A helper function to import Optuna, which is an optional dependency '''
@@ -392,13 +735,13 @@ class Calibration(Analyzer):
 
     **Example**::
 
-        sim = cv.Sim(datafile='data.csv')
+        sim = zn.Sim(datafile='data.csv')
         calib_pars = dict(beta=[0.015, 0.010, 0.020])
-        calib = cv.Calibration(sim, calib_pars, total_trials=100)
+        calib = zn.Calibration(sim, calib_pars, total_trials=100)
         calib.calibrate()
         calib.plot()
 
-    New in version 3.0.3.
+ 
     '''
 
     def __init__(self, sim, calib_pars=None, fit_args=None, custom_fn=None, par_samplers=None,

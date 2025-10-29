@@ -1414,6 +1414,55 @@ class Sim(znb.BaseSim):
         else:
             return string
         
+    def compute_fit(self, *args, **kwargs):
+        '''
+        Compute the fit between the model and the data. See cv.Fit() for more
+        information.
+
+        Args:
+            args   (list): passed to zn.Fit()
+            kwargs (dict): passed to zn.Fit()
+
+        Returns:
+            A Fit object
+
+        **Example**::
+
+            sim = zn.Sim(datafile='data.csv')
+            sim.run()
+            fit = sim.compute_fit()
+            fit.plot()
+        '''
+        if not self.results_ready:
+            errormsg = 'Cannot compute fit since results are not ready yet -- did you run the sim?'
+            raise RuntimeError(errormsg)
+        self.fit = zna.Fit(self, *args, **kwargs)
+        return self.fit
+
+
+    def calibrate(self, calib_pars, **kwargs):
+        '''
+        Automatically calibrate the simulation, returning a Calibration object
+        (a type of analyzer). See the documentation on that class for more information.
+
+        Args:
+            calib_pars (dict): a dictionary of the parameters to calibrate of the format dict(key1=[best, low, high])
+            kwargs (dict): passed to cv.Calibration()
+
+        Returns:
+            A Calibration object
+
+        **Example**::
+
+            sim = cv.Sim(datafile='data.csv')
+            calib_pars = dict(beta=[0.015, 0.010, 0.020])
+            calib = sim.calibrate(calib_pars, n_trials=50)
+            calib.plot()
+        '''
+        calib = zna.Calibration(sim=self, calib_pars=calib_pars, **kwargs)
+        calib.calibrate()
+        return calib
+        
 class AlreadyRunError(RuntimeError):
     '''
     This error is raised if a simulation is run in such a way that no timesteps
