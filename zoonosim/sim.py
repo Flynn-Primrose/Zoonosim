@@ -1447,7 +1447,7 @@ class Sim(znb.BaseSim):
 
         Args:
             calib_pars (dict): a dictionary of the parameters to calibrate of the format dict(key1=[best, low, high])
-            kwargs (dict): passed to cv.Calibration()
+            kwargs (dict): passed to zn.Calibration()
 
         Returns:
             A Calibration object

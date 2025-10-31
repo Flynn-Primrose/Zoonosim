@@ -693,6 +693,8 @@ class Fit(Analyzer):
 
         return znplt.handle_show_return(fig=fig, do_show=do_show)
 
+# Helper functions for calibration
+
 def import_optuna():
     ''' A helper function to import Optuna, which is an optional dependency '''
     try:
@@ -761,7 +763,25 @@ def dict_sampler(trial, calib_pars, par_samplers):
             raise ValueError(errormsg)
     return sampled_pars
             
-
+def dict_parser(calib_pars):
+    '''
+    A helper function to parse calibration parameters into initial, and bounds.
+    '''
+    initial_pars = {}
+    par_bounds = {}
+    for key, value in calib_pars.items():
+        if isinstance(value, list) and len(value) == 3:
+            best, low, high = value
+            initial_pars[key] = best
+            par_bounds[key] = [low, high]
+        elif isinstance(value, dict):
+            sub_best, sub_bounds = dict_parser(value) # Recurse into sub-dictionaries
+            initial_pars[key] = sub_best
+            par_bounds[key] = sub_bounds
+        else:
+            errormsg = f'Parameter "{key}" must be a list of [best, low, high] or a dictionary for nested parameters'
+            raise ValueError(errormsg)
+    return initial_pars, par_bounds
 
 class Calibration(Analyzer):
     '''
@@ -950,8 +970,11 @@ class Calibration(Analyzer):
         self.elapsed = sc.toc(t0, output=True)
 
         # Compare the results
-        self.initial_pars = sc.objdict({k:v[0] for k,v in self.calib_pars.items()})
-        self.par_bounds   = sc.objdict({k:np.array([v[1], v[2]]) for k,v in self.calib_pars.items()})
+        initial_pars, par_bounds = dict_parser(self.calib_pars)
+        self.initial_pars  = sc.objdict(initial_pars)
+        self.par_bounds    = sc.objdict(par_bounds)
+        #self.initial_pars = sc.objdict({k:v[0] for k,v in self.calib_pars.items()})
+        #self.par_bounds   = sc.objdict({k:np.array([v[1], v[2]]) for k,v in self.calib_pars.items()})
         self.before = self.run_sim(calib_pars=self.initial_pars, label='Before calibration', return_sim=True)
         self.after  = self.run_sim(calib_pars=self.best_pars,    label='After calibration',  return_sim=True)
         self.parse_study()
