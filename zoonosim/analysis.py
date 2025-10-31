@@ -701,6 +701,68 @@ def import_optuna():
         errormsg = f'Optuna import failed ({str(E)}), please install first (pip install optuna)'
         raise ModuleNotFoundError(errormsg)
     return op
+
+def compare_dicts(dict_new, dict_orig):
+    """
+    Compare two dictionaries recursively.
+    Returns:
+        common  -> keys (and subkeys) present in both dict_new and dict_orig
+        missing -> keys (and subkeys) present in dict_new but not in dict_orig
+    """
+    common = {}
+    missing = {}
+    for key, val in dict_new.items():
+        if key in dict_orig:
+            if isinstance(val, dict) and isinstance(dict_orig[key], dict):
+                # Recurse into subdicts
+                sub_common, sub_missing = compare_dicts(val, dict_orig[key])
+                if sub_common:
+                    common[key] = sub_common
+                if sub_missing:
+                    missing[key] = sub_missing
+            else:
+                # Key exists in both, keep dict_new's value
+                common[key] = val
+        else:
+            # Key missing from dict_orig
+            missing[key] = val
+    return common, missing
+
+def is_empty(d):
+    ''' Check if a dictionary (possibly nested) is empty '''
+    if not isinstance(d, dict):
+        return False
+    return all(is_empty(v) for v in d.values()) if d else True
+
+def dict_sampler(trial, calib_pars, par_samplers):
+    '''
+    A helper function to sample parameters from Optuna trials
+    '''
+    sampled_pars = {}
+    for key, value in calib_pars.items():
+        if isinstance(value, list) and len(value) == 3:
+            best, low, high = value
+            if key in par_samplers: # If a custom sampler is used, get it now
+                try:
+                    sampler_fn = getattr(trial, par_samplers[key])
+                except Exception as E:
+                    errormsg = 'The requested sampler function is not found: ensure it is a valid attribute of an Optuna Trial object'
+                    raise AttributeError(errormsg) from E
+            else:
+                sampler_fn = trial.suggest_uniform
+            sampled_pars[key] = sampler_fn(key, low, high) # Sample from values within this range
+        elif isinstance(value, list):
+            errormsg = f'Parameter "{key}" must be a list of [best, low, high]'
+            raise ValueError(errormsg)
+        elif isinstance(value, dict):
+            sampled_pars[key] = dict_sampler(trial, value, par_samplers.get(key, {})) # Recurse into sub-dictionaries
+        else:
+            errormsg = f'Parameter "{key}" must be a list of [best, low, high] or a dictionary for nested parameters'
+            raise ValueError(errormsg)
+    return sampled_pars
+            
+
+
 class Calibration(Analyzer):
     '''
     A class to handle calibration of Covasim simulations. Uses the Optuna hyperparameter
@@ -781,18 +843,19 @@ class Calibration(Analyzer):
         return
 
 
+
+
     def run_sim(self, calib_pars, label=None, return_sim=False):
         ''' Create and run a simulation '''
         sim = self.sim.copy()
         if label: sim.label = label
-        valid_pars = {k:v for k,v in calib_pars.items() if k in sim.pars}
+        valid_pars, invalid_pars = compare_dicts(calib_pars, sim.pars)
         sim.update_pars(valid_pars)
         if self.custom_fn:
             sim = self.custom_fn(sim, calib_pars)
         else:
-            if len(valid_pars) != len(calib_pars):
-                extra = set(calib_pars.keys()) - set(valid_pars.keys())
-                errormsg = f'The following parameters are not part of the sim, nor is a custom function specified to use them: {sc.strjoin(extra)}'
+            if not is_empty(invalid_pars):
+                errormsg = f'The following parameters are not part of the sim, nor is a custom function specified to use them: {invalid_pars}'
                 raise ValueError(errormsg)
         try:
             sim.run()
@@ -813,17 +876,7 @@ class Calibration(Analyzer):
 
     def run_trial(self, trial):
         ''' Define the objective for Optuna '''
-        pars = {}
-        for key, (best,low,high) in self.calib_pars.items():
-            if key in self.par_samplers: # If a custom sampler is used, get it now
-                try:
-                    sampler_fn = getattr(trial, self.par_samplers[key])
-                except Exception as E:
-                    errormsg = 'The requested sampler function is not found: ensure it is a valid attribute of an Optuna Trial object'
-                    raise AttributeError(errormsg) from E
-            else:
-                sampler_fn = trial.suggest_uniform
-            pars[key] = sampler_fn(key, low, high) # Sample from values within this range
+        pars = dict_sampler(trial, self.calib_pars, self.par_samplers)
         mismatch = self.run_sim(pars)
         return mismatch
 
@@ -852,8 +905,6 @@ class Calibration(Analyzer):
     def remove_db(self):
         '''
         Remove the database file if keep_db is false and the path exists.
-
-        New in version 3.1.0.
         '''
         if os.path.exists(self.run_args.db_name):
             os.remove(self.run_args.db_name)
