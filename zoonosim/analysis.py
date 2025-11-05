@@ -370,7 +370,7 @@ class Fit(Analyzer):
         verbose (bool): detail to print
         die (bool): whether to raise an exception if no data are supplied
         label (str): the label for the analyzer
-        kwargs (dict): passed to cv.compute_gof() -- see this function for more detail on goodness-of-fit calculation options
+        kwargs (dict): passed to zn.compute_gof() -- see this function for more detail on goodness-of-fit calculation options
 
     **Example**::
 
@@ -387,7 +387,7 @@ class Fit(Analyzer):
         self.weights    = weights
         self.custom     = sc.mergedicts(custom)
         self.verbose    = verbose
-        self.weights    = sc.mergedicts({'cum_deaths':10, 'cum_diagnoses':5}, weights)
+        # self.weights    = sc.mergedicts({'cum_deaths':10, 'cum_diagnoses':5}, weights)
         self.keys       = keys
         self.gof_kwargs = kwargs
         self.die        = die
