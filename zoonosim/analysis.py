@@ -16,7 +16,7 @@ from . import options as zno
 from . import run as znr
 
 
-__all__ = ['Analyzer', 'snapshot', 'biography']
+__all__ = ['Analyzer', 'snapshot', 'biography', 'Fit' ,'Calibration' ]
 
 
 class Analyzer(sc.prettyobj):
