@@ -704,7 +704,7 @@ def import_optuna():
         raise ModuleNotFoundError(errormsg)
     return op
 
-def compare_dicts(dict_new, dict_orig):
+def compare_pars(dict_new, dict_orig):
     """
     Compare two dictionaries recursively.
     Returns:
@@ -717,7 +717,7 @@ def compare_dicts(dict_new, dict_orig):
         if key in dict_orig:
             if isinstance(val, dict) and isinstance(dict_orig[key], dict):
                 # Recurse into subdicts
-                sub_common, sub_missing = compare_dicts(val, dict_orig[key])
+                sub_common, sub_missing = compare_pars(val, dict_orig[key])
                 if sub_common:
                     common[key] = sub_common
                 if sub_missing:
@@ -736,7 +736,7 @@ def is_empty(d):
         return False
     return all(is_empty(v) for v in d.values()) if d else True
 
-def dict_sampler(trial, calib_pars, par_samplers):
+def pars_sampler(trial, calib_pars, par_samplers):
     '''
     A helper function to sample parameters from Optuna trials
     '''
@@ -757,13 +757,13 @@ def dict_sampler(trial, calib_pars, par_samplers):
             errormsg = f'Parameter "{key}" must be a list of [best, low, high]'
             raise ValueError(errormsg)
         elif isinstance(value, dict):
-            sampled_pars[key] = dict_sampler(trial, value, par_samplers.get(key, {})) # Recurse into sub-dictionaries
+            sampled_pars[key] = pars_sampler(trial, value, par_samplers.get(key, {})) # Recurse into sub-dictionaries
         else:
             errormsg = f'Parameter "{key}" must be a list of [best, low, high] or a dictionary for nested parameters'
             raise ValueError(errormsg)
     return sampled_pars
             
-def dict_parser(calib_pars):
+def pars_parser(calib_pars):
     '''
     A helper function to parse calibration parameters into initial, and bounds.
     '''
@@ -775,7 +775,7 @@ def dict_parser(calib_pars):
             initial_pars[key] = best
             par_bounds[key] = [low, high]
         elif isinstance(value, dict):
-            sub_best, sub_bounds = dict_parser(value) # Recurse into sub-dictionaries
+            sub_best, sub_bounds = pars_parser(value) # Recurse into sub-dictionaries
             initial_pars[key] = sub_best
             par_bounds[key] = sub_bounds
         else:
@@ -843,6 +843,11 @@ class Calibration(Analyzer):
         if total_trials is not None: n_trials = total_trials/n_workers
         self.run_args   = sc.objdict(n_trials=int(n_trials), n_workers=int(n_workers), name=name, db_name=db_name, keep_db=keep_db, storage=storage)
 
+        self.run_args.setdefault('parallelizer', 'concurrent')
+
+        # if self.run_args['parallelizer'] != 'concurrent' and verbose >= 1:
+        #     print(f"Warning: Parallelizer is explicitly set to '{self.run_args['parallelizer']}', this may cause issues on Windows machines. Consider setting parallelizer to 'concurrent'")
+
         # Handle other inputs
         self.sim          = sim
         self.calib_pars   = calib_pars
@@ -869,7 +874,7 @@ class Calibration(Analyzer):
         ''' Create and run a simulation '''
         sim = self.sim.copy()
         if label: sim.label = label
-        valid_pars, invalid_pars = compare_dicts(calib_pars, sim.pars)
+        valid_pars, invalid_pars = compare_pars(calib_pars, sim.pars)
         sim.update_pars(valid_pars)
         if self.custom_fn:
             sim = self.custom_fn(sim, calib_pars)
@@ -896,7 +901,7 @@ class Calibration(Analyzer):
 
     def run_trial(self, trial):
         ''' Define the objective for Optuna '''
-        pars = dict_sampler(trial, self.calib_pars, self.par_samplers)
+        pars = pars_sampler(trial, self.calib_pars, self.par_samplers)
         mismatch = self.run_sim(pars)
         return mismatch
 
@@ -916,7 +921,28 @@ class Calibration(Analyzer):
     def run_workers(self):
         ''' Run multiple workers in parallel '''
         if self.run_args.n_workers > 1: # Normal use case: run in parallel
-            output = sc.parallelize(self.worker, iterarg=self.run_args.n_workers)
+            try:
+                output = sc.parallelize(self.worker, iterarg=self.run_args.n_workers, parallelizer=self.run_args.parallelizer)
+            except Exception as E:
+                if isinstance(E, RuntimeError):
+                    if 'freeze_support' in E.args[0]: # For this error, add additional information
+                        errormsg = '''
+                                Uh oh! It appears you are trying to run with multiprocessing on Windows outside
+                                of the __main__ block; please see https://docs.python.org/3/library/multiprocessing.html
+                                for more information. The correct syntax to use is e.g.
+                            
+                                    import zoonosim as zn
+                                    sim = zn.Sim(data_file='data.csv')
+                                    calib = zn.Calibration(sim, calib_pars, n_workers=4, total_trials=100)
+                            
+                                    if __name__ == '__main__':
+                                        calib.calibrate()
+                            
+                                Alternatively, to run without multiprocessing, set n_workers = 1.
+                                '''
+                    raise RuntimeError(errormsg) from E
+                else: # For all other runtime errors, raise the original exception
+                    raise E
         else: # Special case: just run one
             output = [self.worker()]
         return output
@@ -961,6 +987,7 @@ class Calibration(Analyzer):
             raise ValueError(errormsg)
         self.run_args.update(kwargs) # Update optuna settings
 
+
         # Run the optimization
         t0 = sc.tic()
         self.make_study()
@@ -970,7 +997,7 @@ class Calibration(Analyzer):
         self.elapsed = sc.toc(t0, output=True)
 
         # Compare the results
-        initial_pars, par_bounds = dict_parser(self.calib_pars)
+        initial_pars, par_bounds = pars_parser(self.calib_pars)
         self.initial_pars  = sc.objdict(initial_pars)
         self.par_bounds    = sc.objdict(par_bounds)
         #self.initial_pars = sc.objdict({k:v[0] for k,v in self.calib_pars.items()})

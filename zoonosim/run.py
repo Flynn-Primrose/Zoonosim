@@ -54,21 +54,21 @@ class MultiSim(znb.FlexPretty):
 
     **Examples**::
 
-        sim = cv.Sim() # Create the sim
-        msim = cv.MultiSim(sim, n_runs=5) # Create the multisim
+        sim = zn.Sim() # Create the sim
+        msim = zn.MultiSim(sim, n_runs=5) # Create the multisim
         msim.run() # Run them in parallel
         msim.combine() # Combine into one sim
         msim.plot() # Plot results
 
-        sim = cv.Sim() # Create the sim
-        msim = cv.MultiSim(sim, n_runs=11, noise=0.1, keep_people=True) # Set up a multisim with noise
+        sim = zn.Sim() # Create the sim
+        msim = zn.MultiSim(sim, n_runs=11, noise=0.1, keep_people=True) # Set up a multisim with noise
         msim.run() # Run
         msim.reduce() # Compute statistics
         msim.plot() # Plot
 
-        sims = [cv.Sim(beta=0.015*(1+0.02*i)) for i in range(5)] # Create sims
+        sims = [zn.Sim(beta=0.015*(1+0.02*i)) for i in range(5)] # Create sims
         for sim in sims: sim.run() # Run sims in serial
-        msim = cv.MultiSim(sims) # Convert to multisim
+        msim = zn.MultiSim(sims) # Convert to multisim
         msim.plot() # Plot as single sim
     '''
 
@@ -467,8 +467,8 @@ class MultiSim(znb.FlexPretty):
 
         **Examples**::
 
-            sim = cv.Sim()
-            msim = cv.MultiSim(sim)
+            sim = zn.Sim()
+            msim = zn.MultiSim(sim)
             msim.run()
             msim.plot() # Plots individual sims
             msim.reduce()
@@ -676,8 +676,8 @@ class MultiSim(znb.FlexPretty):
 
         **Examples**:
 
-            mm1 = cv.MultiSim.merge(msim1, msim2, base=True)
-            mm2 = cv.MultiSim.merge([m1, m2, m3, m4], base=False)
+            mm1 = zn.MultiSim.merge(msim1, msim2, base=True)
+            mm2 = zn.MultiSim.merge([m1, m2, m3, m4], base=False)
         '''
 
         # Handle arguments
@@ -722,13 +722,13 @@ class MultiSim(znb.FlexPretty):
 
         **Examples**::
 
-            m1 = cv.MultiSim(cv.Sim(label='sim1'), initialize=True)
-            m2 = cv.MultiSim(cv.Sim(label='sim2'), initialize=True)
-            m3 = cv.MultiSim.merge(m1, m2)
+            m1 = zn.MultiSim(zn.Sim(label='sim1'), initialize=True)
+            m2 = zn.MultiSim(zn.Sim(label='sim2'), initialize=True)
+            m3 = zn.MultiSim.merge(m1, m2)
             m3.run()
             m1b, m2b = m3.split()
 
-            msim = cv.MultiSim(cv.Sim(), n_runs=6)
+            msim = zn.MultiSim(zn.Sim(), n_runs=6)
             msim.run()
             m1, m2 = msim.split(inds=[[0,2,4], [1,3,5]])
             mlist1 = msim.split(chunks=[2,4]) # Equivalent to inds=[[0,1], [2,3,4,5]]
@@ -772,7 +772,7 @@ class MultiSim(znb.FlexPretty):
 
         **Example**::
 
-            msim = cv.MultiSim(cv.Sim(verbose=0), label='Example multisim')
+            msim = zn.MultiSim(zn.Sim(verbose=0), label='Example multisim')
             msim.run()
             msim.disp() # Displays detailed output
         '''
@@ -793,7 +793,7 @@ class MultiSim(znb.FlexPretty):
 
         **Example**::
 
-            msim = cv.MultiSim(cv.Sim(verbose=0), label='Example multisim')
+            msim = zn.MultiSim(zn.Sim(verbose=0), label='Example multisim')
             msim.run()
             msim.summarize() # Prints moderate length output
         '''
@@ -1507,9 +1507,9 @@ def multi_run(sim, n_runs=4, reseed=None, noise=0.0, noisepar=None, noisetype=No
 
     **Example**::
 
-        import covasim as cv
-        sim = cv.Sim()
-        sims = cv.multi_run(sim, n_runs=6, noise=0.2)
+        import zoonosim as zn
+        sim = zn.Sim()
+        sims = zn.multi_run(sim, n_runs=6, noise=0.2)
     '''
 
     # Handle inputs
@@ -1563,9 +1563,9 @@ def multi_run(sim, n_runs=4, reseed=None, noise=0.0, noisepar=None, noisetype=No
                             of the __main__ block; please see https://docs.python.org/3/library/multiprocessing.html
                             for more information. The correct syntax to use is e.g.
                             
-                                import covasim as cv
-                                sim = cv.Sim()
-                                msim = cv.MultiSim(sim)
+                                import zoonosim as zn
+                                sim = zn.Sim()
+                                msim = zn.MultiSim(sim)
                             
                                 if __name__ == '__main__':
                                     msim.run()

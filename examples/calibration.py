@@ -1,7 +1,5 @@
 import zoonosim as zn
 
-import os
-
 sim = zn.Sim(datafile="zoonosim/data/H5N1_cases_in_QC_poultry.csv")
 calib_pars = dict(
     beta = dict(
@@ -13,7 +11,7 @@ calib_pars = dict(
 )
 
 calib = zn.Calibration(sim, calib_pars, total_trials=10, die=True)
-print(calib.run_args.db_name)
 
-#calib.calibrate()
+if __name__ == "__main__":
+    calib.calibrate()
 #calib.plot()
