@@ -321,7 +321,7 @@ In terms of operating the software, the most important component is the "pars" o
     - rel_beta
       - the transmissibility of this variant relative to beta.water
   - rel_contamination_dur
-    - the relative duration of contamination for this variant compared to the wild variant (should be set to 1 for the wild variant) 
+    - the relative duration of contamination for this variant compared to the wild variant (should be set to 1 for the wild variant)
 - variants
   - an array of additional variants to include in the simulation
 - variant_map

@@ -387,7 +387,7 @@ class Fit(Analyzer):
         self.weights    = weights
         self.custom     = sc.mergedicts(custom)
         self.verbose    = verbose
-        # self.weights    = sc.mergedicts({'cum_deaths':10, 'cum_diagnoses':5}, weights)
+        self.weights    = sc.mergedicts({'cum_deaths':10, 'cum_diagnoses':5}, weights)
         self.keys       = keys
         self.gof_kwargs = kwargs
         self.die        = die
@@ -467,7 +467,7 @@ class Fit(Analyzer):
             self.inds.data[key] = []
             self.date_matches[key] = []
             count = -1
-            for d, datum in self.data[key].iteritems():
+            for d, datum in self.data[key].items():
                 count += 1
                 if np.isfinite(datum):
                     if d in self.sim_dates:
@@ -619,7 +619,7 @@ class Fit(Analyzer):
         n_rows = 4
 
         # Plot
-        with zno.with_style(**kwargs):
+        with zno.options.with_style(**kwargs):
             if fig is None:
                 fig = pl.figure(**fig_args)
             pl.subplots_adjust(**axis_args)
@@ -901,8 +901,12 @@ class Calibration(Analyzer):
 
     def run_trial(self, trial):
         ''' Define the objective for Optuna '''
-        pars = pars_sampler(trial, self.calib_pars, self.par_samplers)
-        mismatch = self.run_sim(pars)
+        try:
+            pars = pars_sampler(trial, self.calib_pars, self.par_samplers)
+            mismatch = self.run_sim(pars)
+        except Exception as E:
+            errormsg = f'Error during trial sampling or simulation run: {str(E)}'
+            raise RuntimeError(errormsg) from E
         return mismatch
 
 
@@ -913,8 +917,12 @@ class Calibration(Analyzer):
             op.logging.set_verbosity(op.logging.DEBUG)
         else:
             op.logging.set_verbosity(op.logging.ERROR)
-        study = op.load_study(storage=self.run_args.storage, study_name=self.run_args.name)
-        output = study.optimize(self.run_trial, n_trials=self.run_args.n_trials)
+        try:
+            study = op.load_study(storage=self.run_args.storage, study_name=self.run_args.name)
+            output = study.optimize(self.run_trial, n_trials=self.run_args.n_trials)
+        except Exception as E:
+            errormsg = f'Optuna study could not be loaded or optimized; please ensure the database path is correct: {self.run_args.storage}'
+            raise RuntimeError(errormsg) from E
         return output
 
 
