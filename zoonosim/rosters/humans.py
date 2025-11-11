@@ -10,6 +10,7 @@ from .. import version as znv
 from .. import utils as znu
 from .. import defaults as znd
 from .. import watches as znw
+from .. import immunity as zni 
 from .rosters import Subroster
 
 __all__ = ['Humans', 'HumanMeta']
@@ -828,9 +829,9 @@ class Humans(Subroster):
             #     self.pars['y_p3'][:, self.t] = self.y_p3
 
         # Handle immunity aspects
-        # if self.pars['use_waning']:
-        #    symp = dict(asymp=asymp_inds, mild=mild_inds, sev=sev_inds)
-        #    cvi.update_peak_nab(self, inds, nab_pars=self.pars, symp=symp)
+        if self.pars['immunity_pars']['human']['use_waning']:
+            symp = dict(asymp=asymp_inds, mild=mild_inds, sev=sev_inds)
+            zni.update_peak_nab(self, inds, nab_pars=self.pars, symp=symp)
 
         return n_infections # For incrementing counters
 
