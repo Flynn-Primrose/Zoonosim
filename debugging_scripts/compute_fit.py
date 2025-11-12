@@ -7,5 +7,6 @@ new_pars = dict(
 
 sim = zn.Sim(datafile="zoonosim/data/H5N1_cases_in_QC_poultry.csv", pars=new_pars)
 sim.run()
-fit = sim.compute_fit()
-fit.plot()
+sim.compute_fit()
+print(sim.fit.mismatch)
+# fit.plot()

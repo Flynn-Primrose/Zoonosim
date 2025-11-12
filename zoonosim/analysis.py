@@ -803,8 +803,8 @@ class Calibration(Analyzer):
         n_trials     (int)  : the number of trials per worker
         n_workers    (int)  : the number of parallel workers (default: maximum
         total_trials (int)  : if n_trials is not supplied, calculate by dividing this number by n_workers)
-        name         (str)  : the name of the database (default: 'covasim_calibration')
-        db_name      (str)  : the name of the database file (default: 'covasim_calibration.db')
+        name         (str)  : the name of the database (default: 'zoonosim_calibration')
+        db_name      (str)  : the name of the database file (default: 'zoonosim_calibration.db')
         keep_db      (bool) : whether to keep the database after calibration (default: false)
         storage      (str)  : the location of the database (default: sqlite)
         label        (str)  : a label for this calibration object

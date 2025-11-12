@@ -187,9 +187,9 @@ def update_peak_nab(people, inds, nab_pars, symp=None):
         if symp is not None:
             # Setting up for symptom scaling
             prior_symp = np.full(pars['pop_size'], np.nan)
-            prior_symp[symp['asymp']] = pars['rel_imm_symp']['asymp']
-            prior_symp[symp['mild']] = pars['rel_imm_symp']['mild']
-            prior_symp[symp['sev']] = pars['rel_imm_symp']['severe']
+            prior_symp[symp['asymp']] = nab_pars['rel_imm_symp']['asymp']
+            prior_symp[symp['mild']] = nab_pars['rel_imm_symp']['mild']
+            prior_symp[symp['sev']] = nab_pars['rel_imm_symp']['severe']
             prior_symp[prior_nab_inds] = np.nan
             prior_symp = prior_symp[~np.isnan(prior_symp)]
             # Applying symptom scaling and a normalization factor to the NAbs
@@ -210,7 +210,7 @@ def update_nab(people, inds):
     Step NAb levels forward in time
     '''
     t_since_boost = people.t - people.t_nab_event[inds]
-    people.nab[inds] += people.pars['nab_kin'][t_since_boost]*people.peak_nab[inds]
+    people.nab[inds] += people.pars['immunity_pars']['human']['nab_kin'][t_since_boost]*people.peak_nab[inds]
     people.nab[inds] = np.where(people.nab[inds]<0, 0, people.nab[inds]) # Make sure nabs don't drop below 0
     people.nab[inds] = np.where([people.nab[inds] > people.peak_nab[inds]], people.peak_nab[inds], people.nab[inds]) # Make sure nabs don't exceed peak_nab
     return

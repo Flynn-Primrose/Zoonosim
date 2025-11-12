@@ -21,10 +21,14 @@ calib_pars = dict(
         flock = [0.5, 0.0, 2.0],
         barn = [0.5, 0.0, 2.0],
         water = [0.5, 0.0, 2.0],
+    ),
+    n_imports = dict(
+        barn = [0.1, 0, 1],
+        water = [0.1, 0, 1],
     )
 )
 
-calib = zn.Calibration(sim, calib_pars, total_trials=10, die=True)
+calib = zn.Calibration(sim, calib_pars, n_trials=5, die=True)
 
 if __name__ == "__main__":
     calib.calibrate()

@@ -831,7 +831,7 @@ class Humans(Subroster):
         # Handle immunity aspects
         if self.pars['immunity_pars']['human']['use_waning']:
             symp = dict(asymp=asymp_inds, mild=mild_inds, sev=sev_inds)
-            zni.update_peak_nab(self, inds, nab_pars=self.pars, symp=symp)
+            zni.update_peak_nab(self, inds, nab_pars=self.pars['immunity_pars']['human'], symp=symp)
 
         return n_infections # For incrementing counters
 
