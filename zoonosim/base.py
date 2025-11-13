@@ -162,7 +162,7 @@ class ParsObj(FlexPretty):
         return
 
 
-    def update_pars(self, pars=None, create=False):
+    def update_pars(self, pars=None, create=False, recursive=False,):
         '''
         Update internal dict with new pars.
 
@@ -181,7 +181,10 @@ class ParsObj(FlexPretty):
                 if len(mismatches):
                     errormsg = f'Key(s) {mismatches} not found; available keys are {available_keys}'
                     raise sc.KeyNotFoundError(errormsg)
-            self.pars.update(pars)
+            if not recursive:
+                self.pars.update(pars)
+            else:
+                self.pars = sc.mergenested(self.pars, pars)
         return
     
 def set_metadata(obj, frame = 4, **kwargs):
@@ -245,13 +248,13 @@ class BaseSim(ParsObj):
         return string
 
 
-    def update_pars(self, pars=None, create=False, **kwargs):
+    def update_pars(self, pars=None, create=False, recursive = False, **kwargs):
         ''' Ensure that metaparameters get used properly before being updated '''
 
         # Merge everything together
         pars = sc.mergedicts(pars, kwargs)
         if pars:
-            super().update_pars(pars=pars, create=create)
+            super().update_pars(pars=pars, create=create, recursive=recursive)
 
         return
 

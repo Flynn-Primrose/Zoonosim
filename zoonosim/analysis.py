@@ -810,7 +810,7 @@ class Calibration(Analyzer):
         label        (str)  : a label for this calibration object
         die          (bool) : whether to stop if an exception is encountered (default: false)
         verbose      (bool) : whether to print details of the calibration
-        kwargs       (dict) : passed to cv.Calibration()
+        kwargs       (dict) : passed to zn.Calibration()
 
     Returns:
         A Calibration object
@@ -875,7 +875,7 @@ class Calibration(Analyzer):
         sim = self.sim.copy()
         if label: sim.label = label
         valid_pars, invalid_pars = compare_pars(calib_pars, sim.pars)
-        sim.update_pars(valid_pars)
+        sim.update_pars(valid_pars, recursive=True)
         if self.custom_fn:
             sim = self.custom_fn(sim, calib_pars)
         else:
@@ -1001,7 +1001,7 @@ class Calibration(Analyzer):
         self.make_study()
         self.run_workers()
         self.study = op.load_study(storage=self.run_args.storage, study_name=self.run_args.name)
-        self.best_pars = sc.objdict(self.study.best_params)
+        #self.best_pars = sc.objdict(self.study.best_params)
         self.elapsed = sc.toc(t0, output=True)
 
         # Compare the results
@@ -1011,7 +1011,7 @@ class Calibration(Analyzer):
         #self.initial_pars = sc.objdict({k:v[0] for k,v in self.calib_pars.items()})
         #self.par_bounds   = sc.objdict({k:np.array([v[1], v[2]]) for k,v in self.calib_pars.items()})
         self.before = self.run_sim(calib_pars=self.initial_pars, label='Before calibration', return_sim=True)
-        self.after  = self.run_sim(calib_pars=self.best_pars,    label='After calibration',  return_sim=True)
+        #self.after  = self.run_sim(calib_pars=self.best_pars,    label='After calibration',  return_sim=True)
         self.parse_study()
 
         # Tidy up
