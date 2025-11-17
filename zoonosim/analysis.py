@@ -736,15 +736,29 @@ def is_empty(d):
         return False
     return all(is_empty(v) for v in d.values()) if d else True
 
-def pars_sampler(trial, calib_pars, par_samplers):
+def pars_sampler(trial, calib_pars, par_samplers, past_keys=None):
     '''
     A helper function to sample parameters from Optuna trials
+
+    Args:
+        trial        (optuna.trial.Trial): the Optuna trial object
+        calib_pars   (dict): the calibration parameters dictionary
+        par_samplers (dict): mapping from parameters to the Optuna sampler to use for choosing new points for each.
+        past_keys    (list): used for recursion to keep track of nested keys
     '''
     sampled_pars = {}
+    if past_keys is None:
+        past_keys = []
     for key, value in calib_pars.items():
+        if key == 'prognoses':
+            errormsg = 'Calibration of prognoses parameters is not supported'
+            raise ValueError(errormsg)
         if isinstance(value, list) and len(value) == 3:
             best, low, high = value
             if key in par_samplers: # If a custom sampler is used, get it now
+                if not isinstance(par_samplers[key], str):
+                    errormsg = f'Parameter sampler for "{".".join(past_keys + [key])}" must be a string representing an Optuna Trial method'
+                    raise ValueError(errormsg)
                 try:
                     sampler_fn = getattr(trial, par_samplers[key])
                 except Exception as E:
@@ -752,14 +766,14 @@ def pars_sampler(trial, calib_pars, par_samplers):
                     raise AttributeError(errormsg) from E
             else:
                 sampler_fn = trial.suggest_uniform
-            sampled_pars[key] = sampler_fn(key, low, high) # Sample from values within this range
+            sampled_pars[key] = sampler_fn(".".join(past_keys + [key]), low, high) # Sample from values within this range
         elif isinstance(value, list):
-            errormsg = f'Parameter "{key}" must be a list of [best, low, high]'
+            errormsg = f'Parameter "{".".join(past_keys + [key])}" must be a list of [best, low, high]'
             raise ValueError(errormsg)
         elif isinstance(value, dict):
-            sampled_pars[key] = pars_sampler(trial, value, par_samplers.get(key, {})) # Recurse into sub-dictionaries
+            sampled_pars[key] = pars_sampler(trial, value, par_samplers.get(key, {}), past_keys=past_keys + [key]) # Recurse into sub-dictionaries
         else:
-            errormsg = f'Parameter "{key}" must be a list of [best, low, high] or a dictionary for nested parameters'
+            errormsg = f'Parameter "{".".join(past_keys + [key ])}" must be a list of [best, low, high] or a dictionary for nested parameters'
             raise ValueError(errormsg)
     return sampled_pars
             
@@ -782,6 +796,27 @@ def pars_parser(calib_pars):
             errormsg = f'Parameter "{key}" must be a list of [best, low, high] or a dictionary for nested parameters'
             raise ValueError(errormsg)
     return initial_pars, par_bounds
+
+def unflatten_dict(flat_dict):
+    '''
+    A helper function to unflatten a dictionary with dot-separated keys into a nested dictionary.
+
+    Args:
+        flat_dict (dict): the flattened dictionary
+
+    Returns:
+        A nested dictionary
+    '''
+    nested_dict = {}
+    for flat_key, value in flat_dict.items():
+        keys = flat_key.split('.')
+        d = nested_dict
+        for key in keys[:-1]:
+            if key not in d:
+                d[key] = {}
+            d = d[key]
+        d[keys[-1]] = value
+    return nested_dict
 
 class Calibration(Analyzer):
     '''
@@ -1001,23 +1036,22 @@ class Calibration(Analyzer):
         self.make_study()
         self.run_workers()
         self.study = op.load_study(storage=self.run_args.storage, study_name=self.run_args.name)
-        #self.best_pars = sc.objdict(self.study.best_params)
+        self.best_pars_flat = sc.objdict(self.study.best_params)
+        self.best_pars = sc.objdict(unflatten_dict(self.study.best_params))
         self.elapsed = sc.toc(t0, output=True)
 
         # Compare the results
         initial_pars, par_bounds = pars_parser(self.calib_pars)
         self.initial_pars  = sc.objdict(initial_pars)
         self.par_bounds    = sc.objdict(par_bounds)
-        #self.initial_pars = sc.objdict({k:v[0] for k,v in self.calib_pars.items()})
-        #self.par_bounds   = sc.objdict({k:np.array([v[1], v[2]]) for k,v in self.calib_pars.items()})
         self.before = self.run_sim(calib_pars=self.initial_pars, label='Before calibration', return_sim=True)
-        #self.after  = self.run_sim(calib_pars=self.best_pars,    label='After calibration',  return_sim=True)
+        self.after  = self.run_sim(calib_pars=self.best_pars,    label='After calibration',  return_sim=True)
         self.parse_study()
 
         # Tidy up
         self.calibrated = True
-        if not self.run_args.keep_db:
-            self.remove_db()
+        #if not self.run_args.keep_db:
+        #    self.remove_db()
         if verbose:
             self.summarize()
 
@@ -1045,7 +1079,7 @@ class Calibration(Analyzer):
 
     def parse_study(self):
         '''Parse the study into a data frame -- called automatically '''
-        best = self.best_pars
+        best = self.best_pars_flat
 
         print('Making results structure...')
         results = []

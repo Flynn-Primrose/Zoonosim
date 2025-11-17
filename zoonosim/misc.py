@@ -13,6 +13,7 @@ import collections as co
 from pathlib import Path
 from . import version as znv
 from . import defaults as znd
+from .options import options as zno
 
 #%% Convenience imports from Sciris
 
@@ -713,11 +714,11 @@ def warn(msg, category=None, verbose=None, die=None):
     ''' Helper function to handle warnings -- not for the user '''
 
     # Handle inputs
-    warnopt = znd.warnings if not die else 'error'
+    warnopt = zno.warnings if not die else 'error'
     if category is None:
         category = RuntimeWarning
     if verbose is None:
-        verbose = znd.verbose
+        verbose = zno.verbose
 
     # Handle the different options
     if warnopt in ['error', 'errors']: # Include alias since hard to remember

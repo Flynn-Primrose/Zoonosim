@@ -32,4 +32,4 @@ calib = zn.Calibration(sim, calib_pars, n_trials=5, die=True)
 
 if __name__ == "__main__":
     calib.calibrate()
-#calib.plot()
+    calib.plot_trend()
