@@ -28,8 +28,8 @@ calib_pars = dict(
     )
 )
 
-calib = zn.Calibration(sim, calib_pars, n_trials=5, die=True)
+calib = zn.Calibration(sim, calib_pars, n_trials=3, die=True)
 
 if __name__ == "__main__":
     calib.calibrate()
-    calib.plot_trend()
+    #calib.plot_trend()

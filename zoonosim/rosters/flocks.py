@@ -451,8 +451,8 @@ class Flocks(Subroster):
             self.infection_log.append(entry)
 
         # Calculate how long before this flock can infect other flocks
-        self.dur_exp2inf[inds] = np.maximum(znu.sample(**durpars['exp2inf'], size=n_infections), 0) # Ensure that this is not negative
-        self.dur_inf2out[inds] = np.maximum(znu.sample(**durpars['inf2out'], size=n_infections), 0)
+        self.dur_exp2inf[inds] = np.maximum(znu.sample(**durpars['exp2inf'], size=n_infections), 0.1) # Ensure that this is positive
+        self.dur_inf2out[inds] = np.maximum(znu.sample(**durpars['inf2out'], size=n_infections), 0.1) # Ensure that this is positive
         self.date_exposed[inds] = self.t
 
         #Update water rate, symptomatic rate, and mortality rate.

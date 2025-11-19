@@ -867,7 +867,7 @@ class Calibration(Analyzer):
         super().__init__(label=label) # Initialize the Analyzer object
 
         import multiprocessing as mp # Import here since it's also slow
-
+        op = import_optuna()        # Import here since it's also slow
         # Handle run arguments
         if n_trials  is None: n_trials  = 20
         if n_workers is None: n_workers = mp.cpu_count()
@@ -875,6 +875,7 @@ class Calibration(Analyzer):
         if db_name   is None: db_name   = f'{name}.db'
         if keep_db   is None: keep_db   = False
         if storage   is None: storage   = f'sqlite:///{db_name}'
+        #if storage   is None: storage   = op.storages.journal.JournalFileBackend(db_name) # Use JournalStorage for better concurrency
         if total_trials is not None: n_trials = total_trials/n_workers
         self.run_args   = sc.objdict(n_trials=int(n_trials), n_workers=int(n_workers), name=name, db_name=db_name, keep_db=keep_db, storage=storage)
 
@@ -953,6 +954,7 @@ class Calibration(Analyzer):
         else:
             op.logging.set_verbosity(op.logging.ERROR)
         try:
+
             study = op.load_study(storage=self.run_args.storage, study_name=self.run_args.name)
             output = study.optimize(self.run_trial, n_trials=self.run_args.n_trials)
         except Exception as E:
@@ -996,9 +998,14 @@ class Calibration(Analyzer):
         Remove the database file if keep_db is false and the path exists.
         '''
         if os.path.exists(self.run_args.db_name):
-            os.remove(self.run_args.db_name)
-            if self.verbose:
-                print(f'Removed existing calibration {self.run_args.db_name}')
+            try:
+                os.remove(self.run_args.db_name)
+                if self.verbose:
+                    print(f'Removed existing calibration {self.run_args.db_name}')
+            except Exception as E:
+                warnmsg = f'Could not remove existing calibration database {self.run_args.db_name}: {str(E)}'
+                znm.warn(warnmsg)
+
         return
 
 
@@ -1050,8 +1057,8 @@ class Calibration(Analyzer):
 
         # Tidy up
         self.calibrated = True
-        #if not self.run_args.keep_db:
-        #    self.remove_db()
+        if not self.run_args.keep_db:
+            self.remove_db()
         if verbose:
             self.summarize()
 
