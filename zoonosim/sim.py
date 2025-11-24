@@ -38,8 +38,8 @@ class Sim(znb.BaseSim):
         simfile  (str):    the filename for this simulation, if it's saved
         popfile  (str):    if supplied, load the population from this file
         agents   (varies): if supplied, use these pre-generated agents (as an agents object) instead of loading or generating new ones
-        version  (str):    if supplied, use default parameters from this version of Covasim instead of the latest
-        kwargs   (dict):   additional parameters; passed to ``cv.make_pars()``
+        version  (str):    if supplied, use default parameters from this version of Zoonosim instead of the latest
+        kwargs   (dict):   additional parameters; passed to ``zn.make_pars()``
 
     **Examples**::
 

@@ -166,7 +166,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
         'sev2die': dict(dist='lognormal_int', par1=10.0, par2=5.0), # Duration from critical symptoms to death, 18.8 days total
 
         # Duration: quarantine
-        'quar': 7 ,
+        'quar': 7,
 
         # Duration: diagnosis
         'diag': 14
