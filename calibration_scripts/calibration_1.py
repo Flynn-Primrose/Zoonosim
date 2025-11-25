@@ -8,22 +8,22 @@ new_pars = dict(
     dur = dict(
         human = {
             # Duration: disease progression
-            'exp2inf': dict(dist='lognormal_int', par1=3.0, par2=1.5), # Duration from exposed to infectious
-            'inf2sym': dict(dist='lognormal_int', par1=1.5, par2=0.5), # Duration from infectious to symptomatic
+            'exp2inf': dict(dist='lognormal_int', par1=2.0, par2=1.0), # Duration from exposed to infectious
+            'inf2sym': dict(dist='lognormal_int', par1=2.0, par2=1.0), # Duration from infectious to symptomatic
             'sym2sev': dict(dist='lognormal_int', par1=5.0, par2=2.0), # Duration from symptomatic to severe symptoms
             # Duration: Recovery
-            'asym2rec': dict(dist='lognormal_int', par1=8.0,  par2=2.0), # Duration for asymptomatic people to recover
-            'mild2rec': dict(dist='lognormal_int', par1=8.0,  par2=2.0), # Duration for people with mild symptoms to recover
-            'sev2rec': dict(dist='lognormal_int', par1=14.0, par2=6.0), # Duration for people with severe symptoms to recover
-            'sev2die': dict(dist='lognormal_int', par1=10.0, par2=5.0), # Duration from critical symptoms to death, 18.8 days tot   
+            'asym2rec': dict(dist='lognormal_int', par1=9.0,  par2=4.0), # Duration for asymptomatic people to recover
+            'mild2rec': dict(dist='lognormal_int', par1=9.0,  par2=4.0), # Duration for people with mild symptoms to recover
+            'sev2rec': dict(dist='lognormal_int', par1=9.0, par2=4.0), # Duration for people with severe symptoms to recover
+            'sev2die': dict(dist='lognormal_int', par1=9.0, par2=4.0), # Duration from critical symptoms to death
             # Duration: quarantine
-            'quar': 7,   
+            'quar': 14,   
             # Duration: diagnosis
             'diag': 14
         },
         flock = {
             # Duration: disease progression
-            'exp2inf': dict(dist='lognormal_int', par1=1.5, par2=0.5), # Duration from exposed to infectious. 
+            'exp2inf': dict(dist='lognormal_int', par1=2.0, par2=1.0), # Duration from exposed to infectious. 
             'inf2out': dict(dist='lognormal_int', par1=2.0, par2=1.0), # Duration from infectious to recovery/removal. 
             'susp2res': dict(dist='lognormal_int', par1=5.0, par2=1.0), # Duration from suspicion to a definitive test result. 
             # Duration: Quarantine
@@ -31,8 +31,8 @@ new_pars = dict(
         },
         barn = {
             'contamination': dict(dist='lognormal_int', par1=14, par2=5.0), # Duration of contamination.
-            'composting': dict(dist='lognormal_int', par1=7.0, par2=1.5), # Duration of composting. 
-            'cleaning': dict(dist='lognormal_int', par1=7.0, par2=1.5), # Duration of cleaning process. 
+            'composting': dict(dist='lognormal_int', par1=7.0, par2=1.0), # Duration of composting. 
+            'cleaning': dict(dist='lognormal_int', par1=7.0, par2=1.0), # Duration of cleaning process. 
         },
         water = {
             'contamination': dict(dist='lognormal_int', par1=14, par2=5.0), # Duration of contamination.
@@ -40,24 +40,24 @@ new_pars = dict(
     ),
     prognoses = dict(
         human = zn.parameters.relative_human_prognoses(dict(
-            age_cutoffs   = np.array([0,       10,      20,      30,      40,      50,      60,      70,      80,      90,]),     # Age cutoffs (lower limits)
-            sus_ORs       = np.array([0.25,    0.50,    0.75,    1.0,     1.25,    1.50,    1.75,    2.0,     2.25,    2.50]),    # Odds ratios for relative susceptibility 
-            trans_ORs     = np.array([0.10,    0.10,    0.10,    0.10,    0.10,    0.10,    0.10,    0.10,    0.10,    0.10]),    # Odds ratios for relative transmissibility
-            comorbidities = np.array([1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00]),    # Comorbidities by age -- set to 1 by default since already included in disease progression rates
-            symp_probs    = np.array([0.50,    0.55,    0.60,    0.65,    0.70,    0.75,    0.80,    0.85,    0.90,    0.90]),    # Overall probability of developing symptoms 
-            severe_probs  = np.array([0.01,    0.01,    0.05,    0.05,    0.05,    0.07,    0.09,    0.1,     0.2,     0.2]),     # Overall probability of developing severe symptoms
-            death_probs   = np.array([0.001,   0.001,   0.005,   0.007,   0.009,   0.01,    0.01,   0.05,     0.07,    0.09]),    # Overall probability of dying
+            age_cutoffs   = np.array([0,       10,      20,      30,      40,      50,      60,      70,      80,     90,]),     # Age cutoffs (lower limits)
+            sus_ORs       = np.array([1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.0,     1.00,   1.00]),    # Odds ratios for relative susceptibility 
+            trans_ORs     = np.array([1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,   1.00]),    # Odds ratios for relative transmissibility
+            comorbidities = np.array([1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,   1.00]),    # Comorbidities by age -- set to 1 by default since already included in disease progression rates
+            symp_probs    = np.array([0.66,    0.66,    0.66,    0.66,    0.66,    0.66,    0.66,    0.66,    0.66,   0.66]),    # Overall probability of developing symptoms 
+            severe_probs  = np.array([0.33,    0.33,    0.33,    0.33,    0.33,    0.33,    0.33,    0.33,    0.33,   0.33]),     # Overall probability of developing severe symptoms
+            death_probs   = np.array([0.33,    0.33,    0.33,    0.33,    0.33,    0.33,    0.33,    0.33,    0.33,   0.33]),    # Overall probability of dying
         )),
         flock = dict(
             breeds = np.array(['duck', 'broiler', 'layer'], dtype=zn.default_str),
-            sus_ORs = np.array([2.00, 1.00, 0.75]),
+            sus_ORs = np.array([2.00, 1.00, 1.00]),
             trans_ORs = np.array([1.00, 1.00, 1.00]),
             baseline_symptomatic_rate = np.array([0.001, 0.001, 0.001]),
-            mean_symptomatic_rate_increase = np.array([0.001, 0.0005, 0.0001]),
+            mean_symptomatic_rate_increase = np.array([0.001, 0.0001, 0.0001]),
             baseline_mortality_rate = np.array([0.001, 0.001, 0.001]),
-            mean_mortality_rate_increase = np.array([0.005, 0.002, 0.002]),
+            mean_mortality_rate_increase = np.array([0.002, 0.002, 0.002]),
             baseline_water_rate = np.array([1.00, 1.00, 1.00]),
-            mean_water_rate_increase = np.array([1.50, 1.00, 0.75]),
+            mean_water_rate_increase = np.array([1.00, 1.00, 1.00]),
         )
     ),
     production_cycle = dict(
@@ -65,9 +65,9 @@ new_pars = dict(
         cycle_dur = [dict(dist = 'normal_pos', par1 = 600, par2 = 50),
                     dict(dist = 'normal_pos', par1 = 45, par2 = 5),
                     dict(dist = 'normal_pos', par1 = 150, par2=25)],
-        flock_size = [dict(dist = 'normal_pos', par1 = 1000, par2 = 100),
+        flock_size = [dict(dist = 'normal_pos', par1 = 20000, par2 = 1000),
                     dict(dist = 'normal_pos', par1 = 20000, par2 = 1000),
-                    dict(dist = 'normal_pos', par1 = 10000, par2 = 500)]
+                    dict(dist = 'normal_pos', par1 = 20000, par2 = 1000)]
     ),
     wild = dict(
         human = dict(
