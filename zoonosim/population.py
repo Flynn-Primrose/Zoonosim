@@ -32,6 +32,8 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
         agents (Agents): an instance of the Agents class containing the agents and their contacts
     '''
 
+    skip_layers = kwargs.pop('skip_layers', None) # Layers to skip when creating contacts
+
         # If a agents object or popdict is supplied, use it
     if sim.agents and not reset:
         sim.agents.initialize(sim_pars=sim.pars)
@@ -63,7 +65,7 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
     barn = make_barns(sim.pars, popdict['barn_uids'], popdict['barn2flock'], popdict['barn2breed'])
     water = make_water(sim.pars, popdict['water_uids'])
 
-    contacts = make_contacts(popdict['contactdict'])
+    contacts = make_contacts(popdict['contactdict'], skip_layers=skip_layers)
 
     agents = Agents(sim.pars, 
                     uid = popdict['uid'],
@@ -285,22 +287,36 @@ def make_water(sim_pars, uid):
     
     return water
 
-def make_contacts(contactdict):
+def make_contacts(contactdict, skip_layers=None):
     
-    fb_layer = make_fb_contacts(contactdict) # Flock-barn contacts
-    bw_layer = make_bw_contacts(contactdict) # Barn-water contacts
-    fw_layer = make_fw_contacts(contactdict) # Flock-water contacts
-    hb_layer = make_hb_contacts(contactdict) # Human-barn contacts
-    hf_layer = make_hf_contacts(contactdict) # Human-flock contacts
-    hh_layer = make_hh_contacts(contactdict) # Human-human contacts
+    '''
+    Create contacts for the simulation.
 
-    return Contacts(fb = fb_layer,
-                    bw = bw_layer,
-                    fw = fw_layer,
-                    hb = hb_layer,
-                    hf = hf_layer,
-                    hh = hh_layer,
-                    )
+    Args:
+        contactdict     (dict) : dictionary containing the contacts between agents
+        skip_layers   (list) : list of layer names to skip when creating contacts
+    '''
+    data = {}
+    if 'fb' not in skip_layers:
+        fb_layer = make_fb_contacts(contactdict) # Flock-barn contacts
+        data['fb'] = fb_layer
+    if 'bw' not in skip_layers:
+        bw_layer = make_bw_contacts(contactdict) # Barn-water contacts
+        data['bw'] = bw_layer
+    if 'fw' not in skip_layers:
+        fw_layer = make_fw_contacts(contactdict) # Flock-water contacts
+        data['fw'] = fw_layer
+    if 'hb' not in skip_layers:
+        hb_layer = make_hb_contacts(contactdict) # Human-barn contacts
+        data['hb'] = hb_layer
+    if 'hf' not in skip_layers:
+        hf_layer = make_hf_contacts(contactdict) # Human-flock contacts
+        data['hf'] = hf_layer
+    if 'hh' not in skip_layers:
+        hh_layer = make_hh_contacts(contactdict) # Human-human contacts
+        data['hh'] = hh_layer
+
+    return Contacts(data=data)
 
 def make_fb_contacts(contactdict):
     '''
@@ -323,7 +339,7 @@ def make_fb_contacts(contactdict):
             fb_p1.append(flock)
             fb_p2.append(farm_contacts['flock2barn'][flock]) # Get the barn for this flock
 
-    beta = np.repeat(0.25, len(fb_p1)) # NOTE: Dummy values
+    beta = np.repeat(1.00, len(fb_p1)) # NOTE: Dummy values
 
     fb_layer = Layer(p1 = fb_p1,
                      p2 = fb_p2,
@@ -354,7 +370,7 @@ def make_bw_contacts(contactdict):
             bw_p1.append(barn)
             bw_p2.append(farm_contacts['barn2water'][barn]) # Get the water source for this barn
 
-    beta = np.repeat(0.25, len(bw_p1)) # NOTE: Dummy values
+    beta = np.repeat(1.00, len(bw_p1)) # NOTE: Dummy values
 
     bw_layer = Layer(p1 = bw_p1,
                      p2 = bw_p2,
@@ -385,7 +401,7 @@ def make_fw_contacts(contactdict):
             fw_p1.append(flock) # Get the barn for this flock
             fw_p2.append(farm_contacts['barn2water'][farm_contacts['flock2barn'][flock]]) # Get the water source for this flock
 
-    beta = np.repeat(0.25, len(fw_p1)) # NOTE: Dummy values
+    beta = np.repeat(1.00, len(fw_p1)) # NOTE: Dummy values
 
     fw_layer = Layer(p1 = fw_p1,
                      p2 = fw_p2,
@@ -418,7 +434,7 @@ def make_hb_contacts(contactdict):
                 hb_p2.append(barn) # Get the barn for this human
                 # NOTE: This assumes that humans have contact with all barns on the farm
 
-    beta = np.repeat(0.25, len(hb_p1)) # NOTE: Dummy values
+    beta = np.repeat(1.00, len(hb_p1)) # NOTE: Dummy values
 
     hb_layer = Layer(p1 = hb_p1,
                      p2 = hb_p2,
@@ -485,7 +501,7 @@ def make_hh_contacts(contactdict):
                     hh_p2.append(human2) # Get the barn for this human
                     # NOTE: This assumes that humans have contact with all humans on the farm
 
-    beta = np.repeat(0.25, len(hh_p1)) # NOTE: Dummy values
+    beta = np.repeat(1.00, len(hh_p1)) # NOTE: Dummy values
 
     hh_layer = Layer(p1 = hh_p1,
                      p2 = hh_p2,

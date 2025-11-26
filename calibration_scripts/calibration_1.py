@@ -3,6 +3,7 @@ import numpy as np
 
 # Define new parameters for the simulation
 new_pars = dict(
+    n_farms = 1000,
     start_day = '2022-01-01',
     end_day = '2025-12-31',
     dur = dict(
@@ -96,18 +97,11 @@ new_pars = dict(
 )
 
 # Create Agents 
-def alt_make_agents():
-    return
 
-def alt_make_popdict():
-    return
-
-def alt_make_contacts():
-    return
 
 # Create Simulation
-sim = zn.Sim(datafile="zoonosim/data/H5N1_cases_in_QC_poultry.csv", label = "Calibration1", pars=new_pars, agents = alt_make_agents())
-
+sim = zn.Sim(datafile="zoonosim/data/H5N1_cases_in_QC_poultry.csv", label = "Calibration1", pars=new_pars)
+sim.initialize(skip_layers=['hh'])
 # Define calibration parameters
 calib_pars = dict(    
     beta = dict(
