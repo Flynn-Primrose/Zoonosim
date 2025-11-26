@@ -872,7 +872,7 @@ class Calibration(Analyzer):
         if n_trials  is None: n_trials  = 20
         if n_workers is None: n_workers = mp.cpu_count()
         if name      is None: name      = 'zoonosim_calibration'
-        if db_name   is None: db_name   = f'{name}.db'
+        if db_name   is None: db_name   = f'./studies/{name}.db'
         if keep_db   is None: keep_db   = False
         #if storage   is None: storage   = f'sqlite:///{db_name}'
         if storage   is None: storage   = op.storages.JournalStorage(op.storages.journal.JournalFileBackend(db_name, op.storages.journal.JournalFileOpenLock(db_name))) # Use JournalStorage for better concurrency

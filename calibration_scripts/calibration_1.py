@@ -116,7 +116,7 @@ calib_pars = dict(
     )
 )
 
-calib = zn.Calibration(sim, calib_pars, name = "Calibration1", n_trials=25, die=True, keep_db=True)
+calib = zn.Calibration(sim, calib_pars, name = "Calibration1", n_trials=10, die=True, keep_db=True)
 
 if __name__ == "__main__":
     calib.calibrate()

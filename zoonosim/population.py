@@ -296,6 +296,10 @@ def make_contacts(contactdict, skip_layers=None):
         contactdict     (dict) : dictionary containing the contacts between agents
         skip_layers   (list) : list of layer names to skip when creating contacts
     '''
+
+    if skip_layers is None:
+        skip_layers = []
+
     data = {}
     if 'fb' not in skip_layers:
         fb_layer = make_fb_contacts(contactdict) # Flock-barn contacts

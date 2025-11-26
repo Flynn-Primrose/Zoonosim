@@ -1,13 +1,6 @@
 import zoonosim as zn
 
-# import optuna as op
-
-# storage = 'sqlite:///zoonosim_calibration.db'
-
-# study = op.load_study(storage=storage, study_name='zoonosim_calibration')
-
-# study_dataframe = study.trials_dataframe()
-# study_dataframe.to_csv('calibration_study_results.csv', index=False)
+zn.options.options.set(verbose = 0)
 
 new_pars = dict(
     start_day = '2022-01-01',
