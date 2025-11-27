@@ -985,7 +985,8 @@ class Calibration(Analyzer):
                             
                                 Alternatively, to run without multiprocessing, set n_workers = 1.
                                 '''
-                    raise RuntimeError(errormsg) from E
+                        raise RuntimeError(errormsg) from E
+                    else: print(f"Error: {E}")
                 else: # For all other runtime errors, raise the original exception
                     raise E
         else: # Special case: just run one

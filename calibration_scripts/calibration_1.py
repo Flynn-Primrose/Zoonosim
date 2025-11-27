@@ -3,7 +3,7 @@ import numpy as np
 
 # Define new parameters for the simulation
 new_pars = dict(
-    n_farms = 1000,
+    n_farms = 175,
     start_day = '2022-01-01',
     end_day = '2025-12-31',
     dur = dict(
@@ -63,12 +63,12 @@ new_pars = dict(
     ),
     production_cycle = dict(
         breeds = np.array(['duck', 'broiler', 'layer'], dtype=zn.default_str),
-        cycle_dur = [dict(dist = 'normal_pos', par1 = 600, par2 = 50),
+        cycle_dur = [dict(dist = 'normal_pos', par1 = 75, par2 = 10),
                     dict(dist = 'normal_pos', par1 = 45, par2 = 5),
-                    dict(dist = 'normal_pos', par1 = 150, par2=25)],
-        flock_size = [dict(dist = 'normal_pos', par1 = 20000, par2 = 1000),
+                    dict(dist = 'normal_pos', par1 = 500, par2=100)],
+        flock_size = [dict(dist = 'normal_pos', par1 = 500, par2 = 100),
                     dict(dist = 'normal_pos', par1 = 20000, par2 = 1000),
-                    dict(dist = 'normal_pos', par1 = 20000, par2 = 1000)]
+                    dict(dist = 'normal_pos', par1 = 2000, par2 = 100)]
     ),
     wild = dict(
         human = dict(
@@ -96,11 +96,11 @@ new_pars = dict(
     ),
 )
 
-# Create Agents 
+zn.options.options.set(verbose=0)
 
 
 # Create Simulation
-sim = zn.Sim(datafile="zoonosim/data/H5N1_cases_in_QC_poultry.csv", label = "Calibration1", pars=new_pars)
+sim = zn.Sim(datafile="zoonosim/data/H5N1_cases_in_QC_poultry.csv", label = "Calibration8", pars=new_pars)
 sim.initialize(skip_layers=['hh'])
 # Define calibration parameters
 calib_pars = dict(    
@@ -116,7 +116,7 @@ calib_pars = dict(
     )
 )
 
-calib = zn.Calibration(sim, calib_pars, name = "Calibration1", n_trials=10, die=True, keep_db=True)
+calib = zn.Calibration(sim, calib_pars, name = "Calibration8", n_trials=100, die=True, keep_db=True)
 
 if __name__ == "__main__":
     calib.calibrate()

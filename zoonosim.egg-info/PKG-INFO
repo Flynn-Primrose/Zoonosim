@@ -39,7 +39,8 @@ In terms of operating the software, the most important component is the "pars" o
   - vestigial parameter left over from the dynamic rescaling functionality present in parent versions of the software
   - Some of the older parts of code expect this to exist but it must be set to False since dynamic rescaling is not supported
 - initial_conditions
-  - A dictionary, the keys are the agent types and the values are the number of initial infections among that type of agent
+  - A dictionary, the keys are the agent types and the values are the number of initial infections among that type of agent.
+  - initial infections are distributed randomly across all agents of the given type.
 - start_day
   - initial day of the simulation
   - in the form yyyy-mm-dd
@@ -87,9 +88,6 @@ In terms of operating the software, the most important component is the "pars" o
 - quar_factor
   - Quarantine multiplier on transmissibility and susceptibility
   - set by reset_layer_pars
-- quar_period
-  - how long quarantine lasts for
-  - currently the same for all agents types but eventually this should be refactored into a dict with a separate vale for each type
 - n_variants
   - the number of circulating variants
 - beta
@@ -101,39 +99,7 @@ In terms of operating the software, the most important component is the "pars" o
     - transmissibility of the disease for barns
   - water
     - transmissibility of the disease for water
-- wild
-  - A dictionary containing the parameters for the wild (default) variant of the disease
-  - human
-    - rel_beta
-      - the transmissibility of this variant relative to beta.human
-    - rel_symp_prob
-      - the probability an infected human will display symptoms
-    - rel_severe_prob
-      - the probability a symptomatic human will develop severe symptoms
-    - rel_death_prob
-      - the probability a human with severe symptoms will perish as a result
-    - rel_asymp_factor
-      - the transmissibility of asymptomatic cases relative to symptomatic ones
-  - flock
-    - rel_beta
-      - the transmissibility of this variant relative to beta.flock
-    - rel_symp_prob
-      - the probability an infected (bird or flock?) will experience symptoms
-      - I'm not sure if this actually gets used
-  - rel_severe_prob
-    - I'm not sure if this parameter actually gets used
-  - rel_death_prob
-    - I'm not sure if this parameter actually gets used
-  - barn
-    - rel_beta
-      - the transmissibility of this variant relative to beta.barn
-    - rel_contamination_dur
-      - The relative duration of contamination for this variant (relative to what?)
-  - water
-    - rel_beta
-      - the transmissibility of this variant relative to beta.water
-  - rel_contamination_dur
-    - the relative duration of contamination for this variant (relative to what?)
+
 - transmission_pars
   - human
     - beta_dist
@@ -235,6 +201,10 @@ In terms of operating the software, the most important component is the "pars" o
       - duration for severely symptomatic cases to recover
     - sev2die
       - duration from severely symptomatic to death
+    - quar
+      - duration of quarantine for humans
+    - diag
+      - duration of a diagnosis for humans
   - flock
     - exp2inf
       - duration from exposure to infectious
@@ -242,6 +212,8 @@ In terms of operating the software, the most important component is the "pars" o
       - duration from infectious to recovery/removal
     - susp2res
       - duration from suspicion of infection to a definitive test result
+    - quar
+      - duration of quarantine for flocks
   - barn
     - contamination
       - how long contaminations last
@@ -330,6 +302,38 @@ In terms of operating the software, the most important component is the "pars" o
   - parameters for vaccines. populated during initialization
 - vaccine_map
   - reverse mapping from number to vaccine key. populated automatically
+- wild
+  - A dictionary containing the parameters for the wild (default) variant of the disease
+  - human
+    - rel_beta
+      - the transmissibility of this variant relative to beta.human
+    - rel_symp_prob
+      - the probability an infected human will display symptoms
+    - rel_severe_prob
+      - the probability a symptomatic human will develop severe symptoms
+    - rel_death_prob
+      - the probability a human with severe symptoms will perish as a result
+    - rel_asymp_factor
+      - the transmissibility of asymptomatic cases relative to symptomatic ones
+  - flock
+    - rel_beta
+      - the transmissibility of this variant relative to beta.flock
+    - rel_symp_delta
+      - The change in the expected difference in baseline symptomatic rate vs infected symptomatic rate, relative to the wild variant
+    - rel_death_delta
+      - The change in the expected difference in baseline mortality rate vs infected mortality rate, relative to the wild variant
+    - rel_water_delta
+      - The change in the expected difference in baseline water consumption vs infected water consumption, relative to the wild variant
+  - barn
+    - rel_beta
+      - the transmissibility of this variant relative to beta.barn
+    - rel_contamination_dur
+      - The relative duration of contamination for this variant compared to the wild variant (should be set to 1 for the wild variant)
+  - water
+    - rel_beta
+      - the transmissibility of this variant relative to beta.water
+  - rel_contamination_dur
+    - the relative duration of contamination for this variant compared to the wild variant (should be set to 1 for the wild variant)
 - variants
   - an array of additional variants to include in the simulation
 - variant_map
