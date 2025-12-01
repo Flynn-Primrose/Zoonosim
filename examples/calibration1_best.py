@@ -108,7 +108,7 @@ best_pars = dict(
     ),
 )
 
-best_sim = zn.Sim(datafile="zoonosim/data/H5N1_cases_in_QC_poultry.csv", label = "Calibration8_best", pars=best_pars)
+best_sim = zn.Sim(datafile="zoonosim/data/H5N1_cases_in_QC_poultry.csv", label = "Calibration8_best", pars=best_pars, recursive = True)
 
 msim = zn.MultiSim(best_sim, n_runs = 25, verbose = 0)  # Wrap the simulation in a MultiSim object.
 

@@ -288,9 +288,9 @@ def reset_layer_pars(pars, layer_keys=None, force=False):
     '''
 
     layer_defaults = dict(
-        beta_layer = dict(fb=1.0, bw=1.0, fw = 1.0, hb = 1.0, hf = 1.0, hh = 1.0), # Transmissibility per layer -- set to one by default
-        dynam_layer = dict(fb=0.0, bw=0.0, fw = 0.0, hb = 0.0, hf = 0.0, hh = 0.0), # Dynamic layer -- set to zero by default
-        quar_factor = dict(fb=0.0, bw=0.0, fw = 0.0, hb = 0.0, hf = 0.0, hh = 0.0), # Quarantine factor -- set to zero by default
+        beta_layer = dict(fb=1.0, bw=1.0, fw = 1.0, hb = 1.0, hf = 1.0, hh = 1.0, dw = 1.0), # Transmissibility per layer -- set to one by default
+        dynam_layer = dict(fb=0.0, bw=0.0, fw = 0.0, hb = 0.0, hf = 0.0, hh = 0.0, dw = 0.0), # Dynamic layer -- set to zero by default
+        quar_factor = dict(fb=0.0, bw=0.0, fw = 0.0, hb = 0.0, hf = 0.0, hh = 0.0, dw = 0.0), # Quarantine factor -- set to zero by default
     )
 
     default_val = 1.0 # Default value for parameters that are not specified
