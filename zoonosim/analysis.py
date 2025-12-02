@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from . import interventions as zni
 from . import misc as znm
 from . import plotting as znplt
-from . import options as zno
+from .settings import options
 from . import run as znr
 
 
@@ -331,7 +331,7 @@ class biography(Analyzer):
         axis_args = sc.mergedicts(dict(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.25, hspace=0.4), axis_args)
         plot_args = sc.mergedicts(dict(lw=2, alpha=0.5, marker='o'), plot_args)
 
-        with zno.options.with_style(**kwargs):
+        with options.with_style(**kwargs):
             fig, axs = plt.subplots(nrows=1, ncols=1, **fig_args)
             plt.subplots_adjust(**axis_args)
             colors = sc.vectocolor(len(props_to_plot))
@@ -619,7 +619,7 @@ class Fit(Analyzer):
         n_rows = 4
 
         # Plot
-        with zno.options.with_style(**kwargs):
+        with options.with_style(**kwargs):
             if fig is None:
                 fig = pl.figure(**fig_args)
             pl.subplots_adjust(**axis_args)

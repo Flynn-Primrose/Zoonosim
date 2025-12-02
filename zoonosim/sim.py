@@ -7,7 +7,7 @@ Defines the Sim class, zoonosims core class.
 import numpy as np
 import sciris as sc
 
-from . import options as zno
+from .settings import options
 
 from . import utils as znu
 from . import misc as znm
@@ -1357,7 +1357,7 @@ class Sim(znb.BaseSim):
         summary = self.compute_summary(full=full, t=t, update=False, output=True)
 
         # Construct the output string
-        if sep is None: sep = zno.options.sep # Default separator
+        if sep is None: sep = options.sep # Default separator
         labelstr = f' "{self.label}"' if self.label else ''
         string = f'Simulation{labelstr} summary:\n'
         for key in self.result_keys():

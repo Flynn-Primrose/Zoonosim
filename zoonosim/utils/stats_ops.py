@@ -1,21 +1,20 @@
 import numba as nb # For faster computations
 import numpy as np # For numerics
 from .. import defaults as znd # For default settings
-from .. import options as zno
+from ..settings import options
 
 # Set dtypes -- note, these cannot be changed after import since Numba functions are precompiled
 nbbool  = nb.bool_
 nbint   = znd.nbint
 nbfloat = znd.nbfloat
 
-#safe_opts = [1, '1', 'safe'] # TODO: Move this to config
-#full_opts = [2, '2', 'full'] # TODO: Move this to config
-safe_parallel = zno.options.numba_parallel in znd.safe_opts + znd.full_opts
-rand_parallel = zno.options.numba_parallel in znd.full_opts
-if zno.options.numba_parallel not in [0, 1, 2, '0', '1', '2', 'none', 'safe', 'full']:
-    errormsg = f'Numba parallel must be "none", "safe", or "full", not "{zno.options.numba_parallel}"'
+
+safe_parallel = options.numba_parallel in znd.safe_opts + znd.full_opts
+rand_parallel = options.numba_parallel in znd.full_opts
+if options.numba_parallel not in [0, 1, 2, '0', '1', '2', 'none', 'safe', 'full']:
+    errormsg = f'Numba parallel must be "none", "safe", or "full", not "{options.numba_parallel}"'
     raise ValueError(errormsg)
-cache = zno.options.numba_cache # Turning this off can help switching parallelization options
+cache = options.numba_cache # Turning this off can help switching parallelization options
 
 __all__ = ['n_binomial', 'binomial_filter', 'binomial_arr', 'n_multinomial',
             'poisson', 'n_poisson', 'n_neg_binomial', 'choose', 'choose_r', 'choose_w']
