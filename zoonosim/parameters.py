@@ -5,7 +5,7 @@ Set the parameters for Zoonosim.
 import numpy as np
 import sciris as sc
 from . import defaults as znd
-from . import options as zno
+from .settings import options
 
 __all__ = ['make_pars']
 
@@ -54,7 +54,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['end_day']    = None         # End day of the simulation
     pars['n_days']     = 150           # Number of days to run, if end_day isn't specified
     pars['rand_seed']  = None            # Random seed, if None, don't reset
-    pars['verbose']    = zno.options.verbose  # Whether or not to display information during the run -- options are 0 (silent), 0.1 (some; default), 1 (default), 2 (everything)
+    pars['verbose']    = options.verbose  # Whether or not to display information during the run -- options are 0 (silent), 0.1 (some; default), 1 (default), 2 (everything)
 
 
     # Testing par dictionaries. Note: This is used to toggle symptoms and bkg ILI, since we only need symptoms and bkg ILI when we need testing. 

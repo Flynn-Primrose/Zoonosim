@@ -12,7 +12,7 @@ from . import misc as znm
 from . import base as znb
 from . import sim as zns
 from . import plotting as znpl
-from . import options as zno
+from .settings import options
 
 import os, traceback, time
 
@@ -30,7 +30,7 @@ def make_metapars():
         noisepar  = 'beta',
         rand_seed = 1,
         quantiles = {'low':0.1, 'high':0.9},
-        verbose   = zno.options.verbose,
+        verbose   = options.verbose,
     )
     return metapars
 
@@ -485,7 +485,7 @@ class MultiSim(znb.FlexPretty):
             # Initialize
             fig          = kwargs.pop('fig', None)
             orig_show    = kwargs.get('do_show', None)
-            orig_close   = zno.options.close
+            orig_close   = options.close
             orig_setylim = kwargs.get('setylim', True)
             kwargs['legend_args'] = sc.mergedicts({'show_legend':True}, kwargs.get('legend_args')) # Only plot the legend the first time
 
@@ -534,12 +534,12 @@ class MultiSim(znb.FlexPretty):
                     merged_show_args  = show_args
                     kwargs['do_show'] = orig_show
                     kwargs['setylim'] = orig_setylim
-                    zno.options.set(close=orig_close) # Reset original closing settings
+                    options.set(close=orig_close) # Reset original closing settings
                 else:
                     merged_show_args  = False # Only show things like data the last time it's plotting
                     kwargs['do_show'] = False # On top of that, don't show the plot at all unless it's the last time
                     kwargs['setylim'] = False # Don't set the y limits until we have all the data
-                    zno.options.set(close=False) # Do not close figures if we're in the middle of plotting
+                    options.set(close=False) # Do not close figures if we're in the middle of plotting
 
                 # Optionally set the label for the first max_sims sims
                 if color_by_sim is True and s<max_sims:
