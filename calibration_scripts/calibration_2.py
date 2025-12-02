@@ -9,8 +9,8 @@ new_pars = dict(
     dur = dict(
         human = {
             # Duration: disease progression
-            'exp2inf': dict(dist='lognormal_int', par1=2.0, par2=1.0), # Duration from exposed to infectious
-            'inf2sym': dict(dist='lognormal_int', par1=2.0, par2=1.0), # Duration from infectious to symptomatic
+            'exp2inf': dict(dist='lognormal_int', par1=5.0, par2=2.0), # Duration from exposed to infectious
+            'inf2sym': dict(dist='lognormal_int', par1=5.0, par2=2.0), # Duration from infectious to symptomatic
             'sym2sev': dict(dist='lognormal_int', par1=5.0, par2=2.0), # Duration from symptomatic to severe symptoms
             # Duration: Recovery
             'asym2rec': dict(dist='lognormal_int', par1=9.0,  par2=4.0), # Duration for asymptomatic people to recover
@@ -51,7 +51,7 @@ new_pars = dict(
         )),
         flock = dict(
             breeds = np.array(['duck', 'broiler', 'layer'], dtype=zn.default_str),
-            sus_ORs = np.array([2.00, 1.00, 1.00]),
+            sus_ORs = np.array([5.00, 1.00, 1.00]),
             trans_ORs = np.array([1.00, 1.00, 1.00]),
             baseline_symptomatic_rate = np.array([0.001, 0.001, 0.001]),
             mean_symptomatic_rate_increase = np.array([0.001, 0.0001, 0.0001]),
@@ -96,7 +96,8 @@ new_pars = dict(
     ),
 )
 
-zn.options.options.set(verbose=0)
+zn.options.set(verbose=0)
+zn.options.set(numba_parallel='safe')
 
 
 # Create Simulation

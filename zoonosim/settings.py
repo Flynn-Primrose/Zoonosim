@@ -49,15 +49,15 @@ class Options(sc.objdict):
     '''
     Set plotting options for Zoonosim. Options are set using ``zn.options(key=value)``,
 
-    Use ``cv.options.set('defaults')`` to reset all values to default, or ``cv.options.set(dpi='default')``
-    to reset one parameter to default. See ``cv.options.help(detailed=True)`` for
+    Use ``zn.options.set('defaults')`` to reset all values to default, or ``zn.options.set(dpi='default')``
+    to reset one parameter to default. See ``zn.options.help(detailed=True)`` for
     more information.
 
-    Options can also be saved and loaded using ``cv.options.save()`` and ``cv.options.load()``.
-    See ``zn.options.context()`` and ``cv.options.with_style()`` to set options
+    Options can also be saved and loaded using ``zn.options.save()`` and ``zn.options.load()``.
+    See ``zn.options.context()`` and ``zn.options.with_style()`` to set options
     temporarily.
 
-    Common options are (see also ``cv.options.help(detailed=True)``):
+    Common options are (see also ``zn.options.help(detailed=True)``):
 
         - verbose:        default verbosity for simulations to use
         - style:          the plotting style to use
