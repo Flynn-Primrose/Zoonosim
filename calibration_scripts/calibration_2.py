@@ -3,7 +3,7 @@ import numpy as np
 
 # Define new parameters for the simulation
 new_pars = dict(
-    n_farms = 175,
+    n_farms = 200,
     start_day = '2022-01-01',
     end_day = '2025-12-31',
     dur = dict(
@@ -101,7 +101,7 @@ zn.options.set(numba_parallel='safe')
 
 
 # Create Simulation
-sim = zn.Sim(datafile="zoonosim/data/H5N1_cases_in_QC_poultry.csv", label = "Calibration2_1", pars=new_pars)
+sim = zn.Sim(datafile="zoonosim/data/H5N1_cases_in_QC_poultry.csv", label = "Calibration2_5", pars=new_pars)
 sim.initialize(skip_layers=['hh'])
 # Define calibration parameters
 calib_pars = dict(    
@@ -117,7 +117,7 @@ calib_pars = dict(
     )
 )
 
-calib = zn.Calibration(sim, calib_pars, name = "Calibration2_1", n_trials=100, die=True, keep_db=True)
+calib = zn.Calibration(sim, calib_pars, name = "Calibration2_5", n_trials=100, die=True, keep_db=True)
 
 if __name__ == "__main__":
     calib.calibrate()
