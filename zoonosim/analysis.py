@@ -704,6 +704,8 @@ def import_optuna():
         raise ModuleNotFoundError(errormsg)
     return op
 
+
+# The following 5 functions should be migrated to utils.pars_ops.py at some point. (In progress.)
 def compare_pars(dict_new, dict_orig):
     """
     Compare two dictionaries recursively.

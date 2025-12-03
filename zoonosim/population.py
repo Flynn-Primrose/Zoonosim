@@ -215,6 +215,7 @@ def make_popdict(sim, **kwargs):
 
         contactdict[farm]['barn2water'] = {barn :contactdict[farm]['water'] for barn in contactdict[farm]['barns']} # Map barns to water sources for this farm
 
+        contactdict[farm]['flock2breed'] = {flock : flock2breed[flock] for flock in contactdict[farm]['flocks']} # Map flocks to breeds for this farm
 
         flock2barn.update(contactdict[farm]['flock2barn']) # Map flocks to barns for all farms
         barn2water.update(contactdict[farm]['barn2water']) # Map barns to water sources for all farms
@@ -319,6 +320,9 @@ def make_contacts(contactdict, skip_layers=None):
     if 'hh' not in skip_layers:
         hh_layer = make_hh_contacts(contactdict) # Human-human contacts
         data['hh'] = hh_layer
+    if 'dw' not in skip_layers:
+        dw_layer = make_dw_contacts(contactdict) # Duck-water contacts
+        data['dw'] = dw_layer
 
     return Contacts(data=data)
 
@@ -514,3 +518,35 @@ def make_hh_contacts(contactdict):
                     )
 
     return hh_layer
+
+def make_dw_contacts(contactdict):
+    '''
+    Create duck-water contacts for the simulation.
+
+    Args:
+        sim_pars        (Sim)  : the simulation object; population parameters are taken from the sim object
+        contactdict     (dict) : dictionary containing the contacts between agents
+
+    Returns:
+        dw_layer: a Layer object containing the dog-water contacts
+    '''
+
+    dw_p1 = []
+
+    dw_p2 = []
+
+    for farm, farm_contacts in contactdict.items():
+        for flock in farm_contacts['flocks']:
+            if farm_contacts['flock2breed'][flock] == 'duck':
+                dw_p1.append(flock) # Get the barn for this flock
+                dw_p2.append(farm_contacts['barn2water'][farm_contacts['flock2barn'][flock]]) # Get the water source for this flock
+
+    beta = np.repeat(1.00, len(dw_p1)) # NOTE: Dummy values
+
+    dw_layer = Layer(p1 = dw_p1,
+                     p2 = dw_p2,
+                     beta = beta,
+                     label = 'duck-water contacts'
+                    )
+
+    return dw_layer
