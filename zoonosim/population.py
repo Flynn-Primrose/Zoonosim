@@ -528,7 +528,7 @@ def make_dw_contacts(contactdict):
         contactdict     (dict) : dictionary containing the contacts between agents
 
     Returns:
-        dw_layer: a Layer object containing the dog-water contacts
+        dw_layer: a Layer object containing the duck-water contacts
     '''
 
     dw_p1 = []
@@ -541,7 +541,7 @@ def make_dw_contacts(contactdict):
                 dw_p1.append(flock) # Get the barn for this flock
                 dw_p2.append(farm_contacts['barn2water'][farm_contacts['flock2barn'][flock]]) # Get the water source for this flock
 
-    beta = np.repeat(1.00, len(dw_p1)) # NOTE: Dummy values
+    beta = np.repeat(5.00, len(dw_p1)) # NOTE: Dummy values
 
     dw_layer = Layer(p1 = dw_p1,
                      p2 = dw_p2,
