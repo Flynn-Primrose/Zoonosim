@@ -1,11 +1,11 @@
 import zoonosim as zn
 import numpy as np
 
-project_name = "Calibration3_1"
+project_name = "Calibration3_4"
 
 # Define new parameters for the simulation
 new_pars = dict(
-    n_farms = 175,
+    n_farms = 100,
     start_day = '2022-01-01',
     end_day = '2025-12-31',
     beta = dict(
@@ -18,7 +18,15 @@ new_pars = dict(
         human = 0.0,
         flock = 0.0,
         barn = 0.5,
-        water = 0.5,
+        water = 0.1,
+    ),
+        beta_layer = dict(
+        fb = 1.0, 
+        bw = 1.0, 
+        fw = 1.0, 
+        hb = 1.0,  
+        hf = 1.0,   
+        dw = 1.0, 
     ),
     dur = dict(
         human = {
@@ -116,10 +124,15 @@ zn.options.set(numba_parallel='safe')
 
 # Create Simulation
 sim = zn.Sim(datafile="zoonosim/data/H5N1_cases_in_QC_poultry.csv", label = project_name, pars=new_pars)
-sim.initialize(skip_layers=['hh'])
 sim.export_pars(f"saved_pars/{project_name}.json")
 # Define calibration parameters
-calib_pars = dict(    
+calib_pars = dict(
+        beta = dict(
+        human = [1.0, 0.0, 5.0],
+        flock = [1.0, 0.0, 5.0],
+        barn = [1.0, 0.0, 5.0],
+        water = [1.0, 0.0, 5.0],
+    ),   
     beta_layer = dict(
         fb = [1.0, 0.0, 5.0], 
         bw = [1.0, 0.0, 5.0], 

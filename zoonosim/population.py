@@ -32,7 +32,8 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
         agents (Agents): an instance of the Agents class containing the agents and their contacts
     '''
 
-    skip_layers = kwargs.pop('skip_layers', None) # Layers to skip when creating contacts
+    #skip_layers = kwargs.pop('skip_layers', None) # Layers to skip when creating contacts
+    skip_layers = ['hh'] # hacky fix for now.
 
         # If a agents object or popdict is supplied, use it
     if sim.agents and not reset:
