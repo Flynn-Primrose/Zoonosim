@@ -65,7 +65,6 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
     flock = make_flocks(sim.pars, popdict['flock_uids'], popdict['flock2barn'], popdict['breed_index'])
     barn = make_barns(sim.pars, popdict['barn_uids'], popdict['barn2flock'], popdict['barn2breed'])
     water = make_water(sim.pars, popdict['water_uids'])
-
     contacts = make_contacts(sim.pars, popdict['contactdict'], skip_layers=skip_layers)
 
     agents = Agents(sim.pars, 
