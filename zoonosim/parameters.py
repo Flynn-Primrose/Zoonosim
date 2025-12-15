@@ -77,9 +77,9 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
 
     # Network parameters, generally initialized after the population has been constructed
     #pars['contacts']        = None  # The number of contacts per layer; set by reset_layer_pars() below
-    pars['dynam_layer']     = None  # Which layers are dynamic; set by reset_layer_pars() below
-    pars['beta_layer']      = None  # Transmissibility per layer; set by reset_layer_pars() below
-    pars['quar_factor']     = None  # Quarantine multiplier on transmissibility and susceptibility; set by reset_layer_pars() below
+    pars['dynam_layer']     = dict(fb=0.0, bw=0.0, fw = 0.0, hb = 0.0, hf = 0.0, hh = 0.0, dw = 0.0)  # Which layers are dynamic; set by reset_layer_pars() below
+    pars['beta_layer']      = dict(fb=1.0, bw=1.0, fw = 1.0, hb = 1.0, hf = 1.0, hh = 1.0, dw = 1.0)  # Transmissibility per layer; set by reset_layer_pars() below
+    pars['quar_factor']     =  dict(fb=0.0, bw=0.0, fw = 0.0, hb = 0.0, hf = 0.0, hh = 0.0, dw = 0.0)  # Quarantine multiplier on transmissibility and susceptibility; set by reset_layer_pars() below
 
 
     # Parameters that control settings and defaults for multi-variant runs
