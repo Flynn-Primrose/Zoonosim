@@ -1,7 +1,8 @@
 '''
 Utilities for working with nested parameter dictionaries.
 '''
-
+import numpy as np
+from .. import defaults as znd
 
 def compare_pars(dict_new, dict_orig):
     """
@@ -50,8 +51,39 @@ def pars_sampler(trial, calib_pars, par_samplers, past_keys=None):
         past_keys = []
     for key, value in calib_pars.items():
         if key == 'prognoses':
-            errormsg = 'Calibration of prognoses parameters is not supported'
-            raise ValueError(errormsg)
+            sampled_pars[key] = {}
+            # errormsg = 'Calibration of prognoses parameters is not supported'
+            # raise ValueError(errormsg)
+            for agent_type, agent_prog in value.items():
+                    matches = [(k, v) for k, v in agent_prog.items() if isinstance(v, np.ndarray)]
+                    if len(matches) == 0:
+                        raise KeyError("No numpy array found in prognosis calibration dictionary")
+                    if len(matches) > 1:
+                        raise ValueError("More than one numpy array found in prognosis calibration dictionary")
+                    strat_key, strat_array = matches[0] # this key value pair should contain the stratification information for the remaining prognosis parameters
+                    prog_pars = {strat_key: strat_array}
+                    for subkey, subval in agent_prog.items():
+                        if subkey == strat_key:
+                            continue
+                        par_vector = np.array(strat_array.shape[0], dtype=znd.default_float)
+                        for i in range(strat_array.shape[0]):
+                            par_name = f'{key}.{agent_type}.{subkey}.{strat_array[i]}'
+                            best, low, high = (arr[i] for arr in subval)
+                            if par_name in par_samplers:
+                                if not isinstance(par_samplers[par_name], str):
+                                    errormsg = f'Parameter sampler for "{par_name}" must be a string representing an Optuna Trial method'
+                                    raise ValueError(errormsg)
+                                try:
+                                    sampler_fn = getattr(trial, par_samplers[par_name])
+                                except Exception as E:
+                                    errormsg = 'The requested sampler function is not found: ensure it is a valid attribute of an Optuna Trial object'
+                                    raise AttributeError(errormsg) from E
+                            else:
+                                sampler_fn = trial.suggest_float
+                            par_vector[i] = sampler_fn(".".join(past_keys + [par_name]), low, high)
+                        prog_pars[subkey] = par_vector
+                    sampled_pars[key][agent_type] = prog_pars
+            continue
         if isinstance(value, list) and len(value) == 3:
             best, low, high = value
             if key in par_samplers: # If a custom sampler is used, get it now
@@ -91,6 +123,9 @@ def pars_parser(calib_pars):
             sub_best, sub_bounds = pars_parser(value) # Recurse into sub-dictionaries
             initial_pars[key] = sub_best
             par_bounds[key] = sub_bounds
+        elif isinstance(value, np.ndarray):
+            initial_pars[key] = value
+            par_bounds[key] = value
         else:
             errormsg = f'Parameter "{key}" must be a list of [best, low, high] or a dictionary for nested parameters'
             raise ValueError(errormsg)
@@ -117,3 +152,33 @@ def unflatten_dict(flat_dict):
         d[keys[-1]] = value
     return nested_dict
 
+def unflatten_progs(init_pars, flat_progs):
+    '''
+    A helper function to unflatten a dictionary of prognosis parameters with dot-separated keys into a nested dictionary.
+
+    Args:
+        flat_progs (dict): the flattened prognosis parameters dictionary
+
+    Returns:
+        A nested prognosis parameters dictionary
+    '''
+    prognoses = {}
+    return prognoses
+
+def unflatten_pars(init_pars, flat_pars):
+    '''
+    A helper function to unflatten a dictionary of parameters with dot-separated keys into a nested dictionary.
+
+    Args:
+        flat_pars (dict): the flattened parameters dictionary
+
+    Returns:
+        A nested parameters dictionary
+    '''
+    final_pars = {}
+    flat_prognoses = {k: v for k, v in flat_pars.items() if k.startswith('prognoses.')}
+    flat_other = {k: v for k, v in flat_pars.items() if not k.startswith('prognoses.')}
+    if flat_prognoses:
+        final_pars['prognoses'] = unflatten_progs(init_pars.get('prognoses', {}), flat_prognoses)
+    final_pars.update(unflatten_dict(flat_other))
+    return final_pars
