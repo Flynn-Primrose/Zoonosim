@@ -162,7 +162,51 @@ def unflatten_progs(init_pars, flat_progs):
     Returns:
         A nested prognosis parameters dictionary
     '''
+    # First we need to discover what agent types are present in the flat_progs and retrieve the correct stratification array for each one.
+    agent_types = []
+    for flat_key in flat_progs.keys():
+        keys = flat_key.split('.')
+        if len(keys) != 4 or keys[0] != 'prognoses':
+            errormsg = f'Invalid prognosis parameter key format: "{flat_key}". Expected format: "prognoses.<agent_type>.<par_name>.<strat_value>"'
+            raise ValueError(errormsg)
+        if keys[1] not in agent_types:
+            agent_types.append(keys[1])
+    strat_vectors = {}
+    for agent_type in agent_types:
+        agent_strat_keys = []
+        for flat_key in flat_progs.keys():
+            keys = flat_key.split('.')
+            if keys[0] == 'prognoses' and keys[1] == agent_type:
+                strat_key = keys[3]
+                if strat_key not in agent_strat_keys:
+                    agent_strat_keys.append(strat_key)
+        for par_name, par_array in init_pars.get(agent_type, {}).items():
+            if all(strat in par_array for strat in agent_strat_keys):
+                strat_vectors[agent_type] = par_array
+                break
+        if agent_type not in strat_vectors:
+            errormsg = f'Could not find stratification array for agent type "{agent_type}" in init_pars'
+            raise ValueError(errormsg)
+    # AI generated below here
     prognoses = {}
+    for flat_key, value in flat_progs.items():
+        keys = flat_key.split('.')
+        if keys[0] != 'prognoses':
+            continue
+        agent_type = keys[1]
+        par_name = keys[2]
+        strat_value = keys[3]
+        if agent_type not in prognoses:
+            prognoses[agent_type] = {}
+        if par_name not in prognoses[agent_type]:
+            prognoses[agent_type][par_name] = np.empty_like(strat_vectors[agent_type], dtype=znd.default_float)
+        # Find index of strat_value in the stratification array
+        try:
+            index = np.where(strat_vectors[agent_type] == strat_value)[0][0]
+        except IndexError:
+            errormsg = f'Stratification value "{strat_value}" not found in prognosis for agent type "{agent_type}"'
+            raise ValueError(errormsg)
+        prognoses[agent_type][par_name][index] = value
     return prognoses
 
 def unflatten_pars(init_pars, flat_pars):
