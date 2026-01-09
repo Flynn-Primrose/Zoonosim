@@ -1047,14 +1047,15 @@ class Calibration(Analyzer):
         self.make_study()
         self.run_workers()
         self.study = op.load_study(storage=self.run_args.storage, study_name=self.run_args.name)
-        self.best_pars_flat = sc.objdict(self.study.best_params)
-        self.best_pars = sc.objdict(znu.unflatten_dict(self.study.best_params))
+
         self.elapsed = sc.toc(t0, output=True)
 
         # Compare the results
         initial_pars, par_bounds = znu.pars_parser(self.calib_pars)
         self.initial_pars  = sc.objdict(initial_pars)
         self.par_bounds    = sc.objdict(par_bounds)
+        self.best_pars_flat = sc.objdict(self.study.best_params)
+        self.best_pars = sc.objdict(znu.unflatten_pars(initial_pars, self.study.best_params))
         self.before = self.run_sim(calib_pars=self.initial_pars, label='Before calibration', return_sim=True)
         self.after  = self.run_sim(calib_pars=self.best_pars,    label='After calibration',  return_sim=True)
         self.parse_study()

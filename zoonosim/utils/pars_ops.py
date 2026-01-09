@@ -2,6 +2,7 @@
 Utilities for working with nested parameter dictionaries.
 '''
 import numpy as np
+import sciris as sc
 from .. import defaults as znd
 
 def compare_pars(dict_new, dict_orig):
@@ -65,7 +66,7 @@ def pars_sampler(trial, calib_pars, par_samplers, past_keys=None):
                     for subkey, subval in agent_prog.items():
                         if subkey == strat_key:
                             continue
-                        par_vector = np.array(strat_array.shape[0], dtype=znd.default_float)
+                        par_vector = np.ndarray(strat_array.shape[0], dtype=znd.default_float)
                         for i in range(strat_array.shape[0]):
                             par_name = f'{key}.{agent_type}.{subkey}.{strat_array[i]}'
                             best, low, high = (arr[i] for arr in subval)
@@ -226,3 +227,39 @@ def unflatten_pars(init_pars, flat_pars):
         final_pars['prognoses'] = unflatten_progs(init_pars.get('prognoses', {}), flat_prognoses)
     final_pars.update(unflatten_dict(flat_other))
     return final_pars
+
+def mergenested(dict1, dict2, die=False, verbose=False, _path=None):
+    """
+    Adapted from sciris.mergenested() to allow for vectorized values in dictionaries.
+    
+    Merge different nested dictionaries
+
+    See sc.makenested() for full documentation.
+
+    Adapted from https://stackoverflow.com/questions/7204805/dictionaries-of-dictionaries-merge
+    """
+    if _path is None: _path = []
+    if _path:
+        a = dict1 # If we're being recursive, work in place
+    else:
+        a = sc.dcp(dict1) # Otherwise, make a copy
+    b = dict2 # Don't need to make a copy
+
+    for key in b:
+        keypath = ".".join(_path + [str(key)])
+        if verbose:
+            print(f'Working on {keypath}')
+        if key in a:
+            if isinstance(a[key], dict) and isinstance(b[key], dict):
+                mergenested(dict1=a[key], dict2=b[key], _path=_path+[str(key)], die=die, verbose=verbose)
+            else:
+                errormsg = f'Warning! Conflict at {keypath}: {a[key]} vs. {b[key]}'
+                if die: # pragma: no cover
+                    raise ValueError(errormsg)
+                else:
+                    a[key] = b[key]
+                    if verbose:
+                        print(errormsg)
+        else:
+            a[key] = b[key]
+    return a
