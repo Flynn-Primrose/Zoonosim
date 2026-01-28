@@ -9,12 +9,12 @@ zoonosim/human_behaviour.py
 zoonosim/immunity.py
 zoonosim/interventions.py
 zoonosim/misc.py
-zoonosim/options.py
 zoonosim/parameters.py
 zoonosim/plotting.py
 zoonosim/population.py
 zoonosim/requirements.py
 zoonosim/run.py
+zoonosim/settings.py
 zoonosim/sim.py
 zoonosim/version.py
 zoonosim/watches.py
@@ -43,5 +43,6 @@ zoonosim/testing/seek.py
 zoonosim/utils/__init__.py
 zoonosim/utils/array_ops.py
 zoonosim/utils/calc_ops.py
+zoonosim/utils/pars_ops.py
 zoonosim/utils/sample_ops.py
 zoonosim/utils/stats_ops.py

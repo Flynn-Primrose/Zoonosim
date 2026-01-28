@@ -2,7 +2,7 @@ import zoonosim as zn
 import numpy as np
 import pandas as pd
 
-project_name = "Calibration4_1"
+project_name = "Calibration_single_breed_2"
 
 # Define new parameters for the simulation
 new_pars = dict(
@@ -10,10 +10,10 @@ new_pars = dict(
     start_day = '2022-01-01',
     end_day = '2025-12-31',
     beta = dict(
-        human = 1.0,
-        flock = 1.0,
-        barn = 1.0,
-        water = 1.0,
+        human = 0.01,
+        flock = 5.0,
+        barn = 4.5,
+        water = 4.5,
     ),
     n_imports = dict(
         human=None,  # Number of imported human cases per day; None = disabled
@@ -85,8 +85,8 @@ new_pars = dict(
     ),
     production_cycle = dict(
         breeds = np.array(['poultry'], dtype=zn.default_str),
-        cycle_dur = [dict(dist = 'normal_pos', par1 = 75, par2 = 10)],
-        flock_size = [dict(dist = 'normal_pos', par1 = 2000, par2 = 100)]
+        cycle_dur = [dict(dist = 'normal_pos', par1 = 100, par2 = 25)],
+        flock_size = [dict(dist = 'normal_pos', par1 = 20000, par2 = 10000)]
     ),
     wild = dict(
         human = dict(
@@ -127,19 +127,19 @@ sim = zn.Sim(datafile=data, label = project_name, pars=new_pars)
 sim.export_pars(f"saved_pars/{project_name}.json")
 # Define calibration parameters
 calib_pars = dict(
-        beta = dict(
-        human = [1.0, 0.0, 5.0],
-        flock = [1.0, 0.0, 5.0],
-        barn = [1.0, 0.0, 5.0],
-        water = [1.0, 0.0, 5.0],
-    ),   
+    #     beta = dict(
+    #     human = [1.0, 0.0, 5.0],
+    #     flock = [1.0, 0.0, 5.0],
+    #     barn = [1.0, 0.0, 5.0],
+    #     water = [1.0, 0.0, 5.0],
+    # ),   
     n_imports = dict(
-        barn = dict(max_import_rate = [0.5, 0.0, 2.0]),
-        water = dict(max_import_rate = [0.5, 0.0, 2.0]),
+        barn = dict(max_import_rate = [0.5, 0.0, 2.0], peak_day = [270, 200, 350]),
+        water = dict(max_import_rate = [0.5, 0.0, 2.0], peak_day = [270, 200, 350]),
     ),
 )
 
-calib = zn.Calibration(sim, calib_pars, name = project_name, n_trials=100, die=True, keep_db=True)
+calib = zn.Calibration(sim, calib_pars, name = project_name, n_trials=150, die=True, keep_db=True)
 
 if __name__ == "__main__":
     calib.calibrate()
