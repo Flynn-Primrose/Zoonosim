@@ -2,7 +2,7 @@ import zoonosim as zn
 import numpy as np
 import json
 
-project_name = 'Calibration3_3'
+project_name = 'Calibration_single_breed_2'
 
 pars_filename = f"saved_pars/{project_name}.json"
 
@@ -34,7 +34,7 @@ best_pars = dict(
 
 project_sim.update_pars(best_pars, recursive=True)
 
-project_msim = zn.MultiSim(project_sim, n_runs = 50, verbose = 0)
+project_msim = zn.MultiSim(project_sim, n_runs = 1000, verbose = 0)
 
 if __name__ == "__main__":
     project_msim.run()                    # Run the simulations.
