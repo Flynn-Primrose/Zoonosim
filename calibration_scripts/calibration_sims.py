@@ -24,19 +24,11 @@ project_sim = zn.Sim(pars = project_pars, label = project_name, datafile="zoonos
 project_sim.initialize()
 best_pars = dict(
     rand_seed = 42,
-    # beta = dict(
-    #     human = 0.25,
-    #     flock = 1.94,
-    #     barn = 2.92,
-    #     water = 3.24
-    # ),
-    beta_layer = dict(
-        fb = 4.72, 
-        bw = 0.77, 
-        fw = 0.09, 
-        hb = 2.19,  
-        hf = 2.30,   
-        dw = 0.73, 
+    n_imports = dict(
+        human = None,
+        flock = None,
+        barn = dict(peak_day = 250, max_import_rate = 0.9),
+        water = dict(peak_day = 250, max_import_rate = 1.3),
     )
 )
 
@@ -50,6 +42,7 @@ if __name__ == "__main__":
     project_msim.combine()                # Combine the results from all simulations.
     project_msim.summarize()              # Summarize the combined results.
     project_msim.plot()                   # Plot the results.
-    project_msim.plot_result(key = 'cum_duck_flock_infectious')            # Plot detailed results.
-    project_msim.plot_result(key = 'cum_layer_flock_infectious')                # Plot detailed results.
-    project_msim.plot_result(key = 'cum_broiler_flock_infectious')                # Plot detailed results.
+    project_msim.plot_result(key = 'cum_poultry_flock_infectious')                # Plot detailed results.
+    #project_msim.plot_result(key = 'cum_duck_flock_infectious')            # Plot detailed results.
+    #project_msim.plot_result(key = 'cum_layer_flock_infectious')                # Plot detailed results.
+    #project_msim.plot_result(key = 'cum_broiler_flock_infectious')                # Plot detailed results.
