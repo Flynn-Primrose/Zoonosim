@@ -2,7 +2,7 @@ import zoonosim as zn
 import numpy as np
 import pandas as pd
 
-project_name = "Calibration_single_breed_2"
+project_name = "Calibration_single_breed_ON"
 
 # Define new parameters for the simulation
 new_pars = dict(
@@ -120,26 +120,26 @@ zn.options.set(numba_parallel='safe')
 
 data = pd.read_csv("zoonosim/data/CFIA_cumulative_timeseries.csv")
 data['date'] = pd.to_datetime(data['date'])
-data = data.rename(columns={"cum_QC_poultry_infectious":"cum_poultry_flock_infectious"})
+data = data.rename(columns={"cum_ON_poultry_infectious":"cum_poultry_flock_infectious"})
 
 # Create Simulation
 sim = zn.Sim(datafile=data, label = project_name, pars=new_pars)
 sim.export_pars(f"saved_pars/{project_name}.json")
 # Define calibration parameters
 calib_pars = dict(
-    #     beta = dict(
-    #     human = [1.0, 0.0, 5.0],
-    #     flock = [1.0, 0.0, 5.0],
-    #     barn = [1.0, 0.0, 5.0],
-    #     water = [1.0, 0.0, 5.0],
-    # ),   
+        beta = dict(
+        human = [1.0, 0.0, 5.0],
+        flock = [1.0, 0.0, 5.0],
+        barn = [1.0, 0.0, 5.0],
+        water = [1.0, 0.0, 5.0],
+    ),   
     n_imports = dict(
         barn = dict(max_import_rate = [0.5, 0.0, 2.0], peak_day = [270, 200, 350]),
         water = dict(max_import_rate = [0.5, 0.0, 2.0], peak_day = [270, 200, 350]),
     ),
 )
 
-calib = zn.Calibration(sim, calib_pars, name = project_name, n_trials=150, die=True, keep_db=True)
+calib = zn.Calibration(sim, calib_pars, name = project_name, n_trials=100, die=True, keep_db=True)
 
 if __name__ == "__main__":
     calib.calibrate()

@@ -2,7 +2,7 @@ import zoonosim as zn
 import numpy as np
 import json
 
-project_name = 'Calibration_single_breed_2'
+project_name = 'Calibration_single_breed_ON'
 
 pars_filename = f"saved_pars/{project_name}.json"
 
@@ -27,18 +27,18 @@ best_pars = dict(
     n_imports = dict(
         human = None,
         flock = None,
-        barn = dict(peak_day = 250, max_import_rate = 0.9),
-        water = dict(peak_day = 250, max_import_rate = 1.3),
+        barn = dict(peak_day = 350, max_import_rate = 0.2),
+        water = dict(peak_day = 350, max_import_rate = 1.3),
     )
 )
 
 project_sim.update_pars(best_pars, recursive=True)
 
-project_msim = zn.MultiSim(project_sim, n_runs = 1000, verbose = 0)
+project_msim = zn.MultiSim(project_sim, n_runs = 500, verbose = 0.1)
 
 if __name__ == "__main__":
     project_msim.run()                    # Run the simulations.
-    project_msim.save(f'msims/{project_name}_best.msim')  # Save the multi-simulation object.
+    project_msim.save(f'msims/{project_name}_peak_at_250.msim')  # Save the multi-simulation object.
     project_msim.combine()                # Combine the results from all simulations.
     project_msim.summarize()              # Summarize the combined results.
     project_msim.plot()                   # Plot the results.
