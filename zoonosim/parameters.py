@@ -91,6 +91,12 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['beta']['barn'] = 0.2 # The transmissibility of the disease for barns. This is a dummy variable!
     pars['beta']['water'] = 0.2 # The transmissibility of the disease for water. This is a dummy variable!
 
+    # Parameters that control flock composition and dynamics
+    pars['flock_breeds'] = ['duck', 'layer', 'broiler']
+    pars['flock_breed_freqs'] = [0.1, 0.2, 0.7]
+    pars['suspicious_mortality_rate'] = 0.003
+    pars['suspicious_symptomatic_rate'] = 0.001
+    pars['suspicious_consumption_rate'] = 1.33
 
 
 

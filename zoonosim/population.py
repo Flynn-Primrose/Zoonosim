@@ -250,7 +250,8 @@ def make_flocks(sim_pars, uid, flock2barn, breed_index):
     headcount = np.empty(len(uid), dtype=znd.default_float)
     barn = np.empty(len(uid), dtype=znd.default_int)
     for index in range(len(uid)):
-        breed[index] = znd.default_flock_breeds[breed_index[index]] # Get the breed for this flock
+        breed[index] = sim_pars['flock_breeds'][breed_index[index]] # Get the breed for this flock
+        #breed[index] = znd.default_flock_breeds[breed_index[index]] # Get the breed for this flock
         barn[index] = flock2barn[uid[index]]
 
     this_breed, freq = np.unique(breed_index, return_counts=True)

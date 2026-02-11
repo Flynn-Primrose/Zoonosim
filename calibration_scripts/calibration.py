@@ -28,6 +28,8 @@ new_pars = dict(
         hb = 1.0,  
         hf = 1.0,   
     ),
+    flock_breeds = np.array(['poultry'], dtype=zn.default_str),
+    flock_breed_freqs = np.array([1.0]),
     dur = dict(
         human = {
             # Duration: disease progression
@@ -128,10 +130,10 @@ sim.export_pars(f"saved_pars/{project_name}.json")
 # Define calibration parameters
 calib_pars = dict(
         beta = dict(
-        human = [1.0, 0.0, 5.0],
-        flock = [1.0, 0.0, 5.0],
-        barn = [1.0, 0.0, 5.0],
-        water = [1.0, 0.0, 5.0],
+        human = [0.5, 0.0, 1.0],
+        flock = [0.5, 0.0, 1.0],
+        barn = [0.5, 0.0, 1.0],
+        water = [0.5, 0.0, 1.0],
     ),   
     n_imports = dict(
         barn = dict(max_import_rate = [0.5, 0.0, 2.0], peak_day = [270, 200, 350]),

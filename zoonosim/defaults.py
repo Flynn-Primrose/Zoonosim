@@ -177,6 +177,29 @@ smartwatch_plots = sc.odict({
                     'cum_Q_w'],
 })
 
+seasonality_plots = sc.odict({
+    'incidence':[
+        'new_water_contaminated',
+        'new_barn_contaminated',
+    ],
+    'water_vs_suspected':[
+        'n_water_contaminated',
+        'n_flock_suspected',
+    ],
+    'water_vs_infectious':[
+        'n_water_contaminated',
+        'n_flock_infectious',
+    ],
+    'barn_vs_suspected':[
+        'n_barn_contaminated',
+        'n_flock_suspected',
+    ],
+    'barn_vs_infectious':[
+        'n_barn_contaminated',
+        'n_flock_infectious',
+    ],
+})
+
 
 def get_default_plots(which='default', kind='sim', sim=None):
     '''
@@ -282,6 +305,9 @@ def get_default_plots(which='default', kind='sim', sim=None):
 
     elif which == 'smartwatch': # pragma: no cover
         plots = sc.dcp(smartwatch_plots)
+
+    elif which == 'seasonality': # pragma: no cover
+        plots = sc.dcp(seasonality_plots)
 
     # Show an overview plus variants
     elif 'overview' in which and 'variant' in which: # pragma: no cover
@@ -434,11 +460,11 @@ default_pop_pars = {
 
 #default_flock_breeds = ['duck', 'layer', 'broiler'] # Breeds of flocks present. Must match those in default_flock_prognoses.
 #default_flock_breed_freqs = [0.1, 0.2, 0.7] # frequency of the different breed types
-default_flock_breeds = ['poultry']
-default_flock_breed_freqs = [1.0]
-default_suspicious_mortality_rate = 0.003 # mortality rate that triggers a flock to be considered suspicious
-default_suspicious_symptomatic_rate = 0.001 # symptomatic rate that triggers a flock to be considered suspicious
-default_suspicious_consumption_rate = 1.33 # water rate that triggers a flock to be considered suspicious (L/bird/day)
+# default_flock_breeds = ['poultry']
+# default_flock_breed_freqs = [1.0]
+# default_suspicious_mortality_rate = 0.003 # mortality rate that triggers a flock to be considered suspicious
+# default_suspicious_symptomatic_rate = 0.001 # symptomatic rate that triggers a flock to be considered suspicious
+# default_suspicious_consumption_rate = 1.33 # water rate that triggers a flock to be considered suspicious (L/bird/day)
 
 # Parameters that can vary by variant
 # TODO: Refactor to include sub pars for each species type.
