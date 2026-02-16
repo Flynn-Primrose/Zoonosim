@@ -179,7 +179,7 @@ class Flocks(Subroster):
         ''' Initialize flows to be zero '''
         self.flows = {key:0 for key in znd.new_flock_flows}
         self.flows_breed = {}
-        for breed in znd.default_flock_breeds:
+        for breed in self.pars['flock_breeds']:
             for key in znd.new_flock_flows:
                 self.flows_breed[(breed, key)] = 0
         self.flows_variant = {}
@@ -290,15 +290,15 @@ class Flocks(Subroster):
         actual_mortality_rate = self.daily_dead_headcount[unsuspected_inds] / self.headcount[unsuspected_inds]
         actual_water_rate = self.water_consumption[unsuspected_inds] / self.headcount[unsuspected_inds]
 
-        suspicious_symptomatic_inds = np.where(actual_symptomatic_rate > znd.default_suspicious_symptomatic_rate)[0]
-        suspicious_mortality_inds = np.where(actual_mortality_rate > znd.default_suspicious_mortality_rate)[0]
-        suspicious_water_inds = np.where(actual_water_rate > znd.default_suspicious_consumption_rate)[0]
+        suspicious_symptomatic_inds = np.where(actual_symptomatic_rate > self.pars['suspicious_symptomatic_rate'])[0]
+        suspicious_mortality_inds = np.where(actual_mortality_rate > self.pars['suspicious_mortality_rate'])[0]
+        suspicious_water_inds = np.where(actual_water_rate > self.pars['suspicious_consumption_rate'])[0]
         suspicious_inds = np.unique(np.concatenate((suspicious_symptomatic_inds, suspicious_mortality_inds, suspicious_water_inds)))
         if len(suspicious_inds) == 0:
             return 0
         new_suspicious_inds = unsuspected_inds[suspicious_inds]
 
-        for breed in znd.default_flock_breeds: # Update flows by breed
+        for breed in self.pars['flock_breeds']: # Update flows by breed
             breed_inds = znu.itrue(self.check_breed(new_suspicious_inds, breed), new_suspicious_inds)
             n_breed_inds = len(breed_inds)
             self.flows_breed[(breed, 'new_suspected')] += n_breed_inds
@@ -327,7 +327,7 @@ class Flocks(Subroster):
         self.date_infectious[inds] = self.t
         self.update_event_log(inds, 'infectious')
 
-        for breed in znd.default_flock_breeds: # Update flows by breed
+        for breed in self.pars['flock_breeds']: # Update flows by breed
             breed_inds = znu.itrue(self.check_breed(inds, breed), inds)
             n_breed_inds = len(breed_inds)
             self.flows_breed[(breed, 'new_infectious')] += n_breed_inds
@@ -359,7 +359,7 @@ class Flocks(Subroster):
 
         if len(quarantined_inds):
             self.update_event_log(quarantined_inds, 'quarantined')
-            for breed in znd.default_flock_breeds: # Update flows by breed
+            for breed in self.pars['flock_breeds']: # Update flows by breed
                 breed_inds = znu.itrue(self.check_breed(quarantined_inds, breed), quarantined_inds)
                 n_breed_inds = len(breed_inds)
                 self.flows_breed[(breed, 'new_quarantined')] += n_breed_inds
@@ -438,7 +438,7 @@ class Flocks(Subroster):
         self.exposed_headcount[inds] = initial_exposed
         self.exposed_variant[inds] = variant
         self.exposed_by_variant[variant, inds] = True
-        for breed in znd.default_flock_breeds: # Update flows by breed
+        for breed in self.pars['flock_breeds']: # Update flows by breed
             breed_inds = znu.itrue(self.check_breed(inds, breed), inds)
             n_breed_inds = len(breed_inds)
             self.flows_breed[(breed, 'new_exposed')] += n_breed_inds

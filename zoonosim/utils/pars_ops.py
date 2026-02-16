@@ -1,7 +1,9 @@
 '''
 Utilities for working with nested parameter dictionaries.
 '''
-
+import numpy as np
+import sciris as sc
+from .. import defaults as znd
 
 def compare_pars(dict_new, dict_orig):
     """
@@ -50,8 +52,39 @@ def pars_sampler(trial, calib_pars, par_samplers, past_keys=None):
         past_keys = []
     for key, value in calib_pars.items():
         if key == 'prognoses':
-            errormsg = 'Calibration of prognoses parameters is not supported'
-            raise ValueError(errormsg)
+            sampled_pars[key] = {}
+            # errormsg = 'Calibration of prognoses parameters is not supported'
+            # raise ValueError(errormsg)
+            for agent_type, agent_prog in value.items():
+                    matches = [(k, v) for k, v in agent_prog.items() if isinstance(v, np.ndarray)]
+                    if len(matches) == 0:
+                        raise KeyError("No numpy array found in prognosis calibration dictionary")
+                    if len(matches) > 1:
+                        raise ValueError("More than one numpy array found in prognosis calibration dictionary")
+                    strat_key, strat_array = matches[0] # this key value pair should contain the stratification information for the remaining prognosis parameters
+                    prog_pars = {strat_key: strat_array}
+                    for subkey, subval in agent_prog.items():
+                        if subkey == strat_key:
+                            continue
+                        par_vector = np.ndarray(strat_array.shape[0], dtype=znd.default_float)
+                        for i in range(strat_array.shape[0]):
+                            par_name = f'{key}.{agent_type}.{subkey}.{strat_array[i]}'
+                            best, low, high = (arr[i] for arr in subval)
+                            if par_name in par_samplers:
+                                if not isinstance(par_samplers[par_name], str):
+                                    errormsg = f'Parameter sampler for "{par_name}" must be a string representing an Optuna Trial method'
+                                    raise ValueError(errormsg)
+                                try:
+                                    sampler_fn = getattr(trial, par_samplers[par_name])
+                                except Exception as E:
+                                    errormsg = 'The requested sampler function is not found: ensure it is a valid attribute of an Optuna Trial object'
+                                    raise AttributeError(errormsg) from E
+                            else:
+                                sampler_fn = trial.suggest_float
+                            par_vector[i] = sampler_fn(".".join(past_keys + [par_name]), low, high)
+                        prog_pars[subkey] = par_vector
+                    sampled_pars[key][agent_type] = prog_pars
+            continue
         if isinstance(value, list) and len(value) == 3:
             best, low, high = value
             if key in par_samplers: # If a custom sampler is used, get it now
@@ -91,6 +124,9 @@ def pars_parser(calib_pars):
             sub_best, sub_bounds = pars_parser(value) # Recurse into sub-dictionaries
             initial_pars[key] = sub_best
             par_bounds[key] = sub_bounds
+        elif isinstance(value, np.ndarray):
+            initial_pars[key] = value
+            par_bounds[key] = value
         else:
             errormsg = f'Parameter "{key}" must be a list of [best, low, high] or a dictionary for nested parameters'
             raise ValueError(errormsg)
@@ -117,3 +153,113 @@ def unflatten_dict(flat_dict):
         d[keys[-1]] = value
     return nested_dict
 
+def unflatten_progs(init_pars, flat_progs):
+    '''
+    A helper function to unflatten a dictionary of prognosis parameters with dot-separated keys into a nested dictionary.
+
+    Args:
+        flat_progs (dict): the flattened prognosis parameters dictionary
+
+    Returns:
+        A nested prognosis parameters dictionary
+    '''
+    # First we need to discover what agent types are present in the flat_progs and retrieve the correct stratification array for each one.
+    agent_types = []
+    for flat_key in flat_progs.keys():
+        keys = flat_key.split('.')
+        if len(keys) != 4 or keys[0] != 'prognoses':
+            errormsg = f'Invalid prognosis parameter key format: "{flat_key}". Expected format: "prognoses.<agent_type>.<par_name>.<strat_value>"'
+            raise ValueError(errormsg)
+        if keys[1] not in agent_types:
+            agent_types.append(keys[1])
+    strat_vectors = {}
+    for agent_type in agent_types:
+        agent_strat_keys = []
+        for flat_key in flat_progs.keys():
+            keys = flat_key.split('.')
+            if keys[0] == 'prognoses' and keys[1] == agent_type:
+                strat_key = keys[3]
+                if strat_key not in agent_strat_keys:
+                    agent_strat_keys.append(strat_key)
+        for par_name, par_array in init_pars.get(agent_type, {}).items():
+            if all(strat in par_array for strat in agent_strat_keys):
+                strat_vectors[agent_type] = par_array
+                break
+        if agent_type not in strat_vectors:
+            errormsg = f'Could not find stratification array for agent type "{agent_type}" in init_pars'
+            raise ValueError(errormsg)
+    # AI generated below here
+    prognoses = {}
+    for flat_key, value in flat_progs.items():
+        keys = flat_key.split('.')
+        if keys[0] != 'prognoses':
+            continue
+        agent_type = keys[1]
+        par_name = keys[2]
+        strat_value = keys[3]
+        if agent_type not in prognoses:
+            prognoses[agent_type] = {}
+        if par_name not in prognoses[agent_type]:
+            prognoses[agent_type][par_name] = np.empty_like(strat_vectors[agent_type], dtype=znd.default_float)
+        # Find index of strat_value in the stratification array
+        try:
+            index = np.where(strat_vectors[agent_type] == strat_value)[0][0]
+        except IndexError:
+            errormsg = f'Stratification value "{strat_value}" not found in prognosis for agent type "{agent_type}"'
+            raise ValueError(errormsg)
+        prognoses[agent_type][par_name][index] = value
+    return prognoses
+
+def unflatten_pars(init_pars, flat_pars):
+    '''
+    A helper function to unflatten a dictionary of parameters with dot-separated keys into a nested dictionary.
+
+    Args:
+        flat_pars (dict): the flattened parameters dictionary
+
+    Returns:
+        A nested parameters dictionary
+    '''
+    final_pars = {}
+    flat_prognoses = {k: v for k, v in flat_pars.items() if k.startswith('prognoses.')}
+    flat_other = {k: v for k, v in flat_pars.items() if not k.startswith('prognoses.')}
+    if flat_prognoses:
+        final_pars['prognoses'] = unflatten_progs(init_pars.get('prognoses', {}), flat_prognoses)
+    final_pars.update(unflatten_dict(flat_other))
+    return final_pars
+
+def mergenested(dict1, dict2, die=False, verbose=False, _path=None):
+    """
+    Adapted from sciris.mergenested() to allow for vectorized values in dictionaries.
+    
+    Merge different nested dictionaries
+
+    See sc.makenested() for full documentation.
+
+    Adapted from https://stackoverflow.com/questions/7204805/dictionaries-of-dictionaries-merge
+    """
+    if _path is None: _path = []
+    if _path:
+        a = dict1 # If we're being recursive, work in place
+    else:
+        a = sc.dcp(dict1) # Otherwise, make a copy
+    b = dict2 # Don't need to make a copy
+
+    for key in b:
+        keypath = ".".join(_path + [str(key)])
+        if verbose:
+            print(f'Working on {keypath}')
+        if key in a:
+            if isinstance(a[key], dict) and isinstance(b[key], dict):
+                mergenested(dict1=a[key], dict2=b[key], _path=_path+[str(key)], die=die, verbose=verbose)
+            else:
+                errormsg = f'Warning! Conflict at {keypath}: {a[key]} vs. {b[key]}'
+                if die: # pragma: no cover
+                    raise ValueError(errormsg)
+                else:
+                    a[key] = b[key]
+                    if verbose:
+                        print(errormsg)
+        else:
+            a[key] = b[key]
+    return a

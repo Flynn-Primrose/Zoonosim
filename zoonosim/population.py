@@ -33,7 +33,7 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
     '''
 
     #skip_layers = kwargs.pop('skip_layers', None) # Layers to skip when creating contacts
-    skip_layers = ['hh'] # hacky fix for now.
+    skip_layers = ['hh', 'dw'] # hacky fix for now.
 
         # If a agents object or popdict is supplied, use it
     if sim.agents and not reset:
@@ -250,7 +250,8 @@ def make_flocks(sim_pars, uid, flock2barn, breed_index):
     headcount = np.empty(len(uid), dtype=znd.default_float)
     barn = np.empty(len(uid), dtype=znd.default_int)
     for index in range(len(uid)):
-        breed[index] = znd.default_flock_breeds[breed_index[index]] # Get the breed for this flock
+        breed[index] = sim_pars['flock_breeds'][breed_index[index]] # Get the breed for this flock
+        #breed[index] = znd.default_flock_breeds[breed_index[index]] # Get the breed for this flock
         barn[index] = flock2barn[uid[index]]
 
     this_breed, freq = np.unique(breed_index, return_counts=True)

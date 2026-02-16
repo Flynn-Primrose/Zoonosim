@@ -184,7 +184,7 @@ class ParsObj(FlexPretty):
             if not recursive:
                 self.pars.update(pars)
             else:
-                self.pars = sc.mergenested(self.pars, pars)
+                self.pars = znu.mergenested(self.pars, pars)
         return
     
 def set_metadata(obj, frame = 4, **kwargs):

@@ -1,7 +1,8 @@
 import zoonosim as zn
 import numpy as np
+import pandas as pd
 
-project_name = "Calibration3_4"
+project_name = "Calibration_single_breed_ON"
 
 # Define new parameters for the simulation
 new_pars = dict(
@@ -9,25 +10,26 @@ new_pars = dict(
     start_day = '2022-01-01',
     end_day = '2025-12-31',
     beta = dict(
-        human = 1.0,
-        flock = 1.0,
-        barn = 1.0,
-        water = 1.0,
+        human = 0.01,
+        flock = 5.0,
+        barn = 4.5,
+        water = 4.5,
     ),
     n_imports = dict(
-        human = 0.0,
-        flock = 0.0,
-        barn = 0.5,
-        water = 0.1,
-    ),
-        beta_layer = dict(
+        human=None,  # Number of imported human cases per day; None = disabled
+        flock=None,  # Number of imported flock cases per day; None = disabled
+        barn=dict(import_pattern='seasonal', max_import_rate=0.2, peak_day=300),  # Number of imported barn contaminations per day; None = disabled
+        water=dict(import_pattern='seasonal', max_import_rate=0.2, peak_day=300),  # Number of imported water contaminations per day; None = disabled
+    ), 
+    beta_layer = dict(
         fb = 1.0, 
         bw = 1.0, 
         fw = 1.0, 
         hb = 1.0,  
         hf = 1.0,   
-        dw = 1.0, 
     ),
+    flock_breeds = np.array(['poultry'], dtype=zn.default_str),
+    flock_breed_freqs = np.array([1.0]),
     dur = dict(
         human = {
             # Duration: disease progression
@@ -72,25 +74,21 @@ new_pars = dict(
             death_probs   = np.array([0.33,    0.33,    0.33,    0.33,    0.33,    0.33,    0.33,    0.33,    0.33,   0.33]),    # Overall probability of dying
         )),
         flock = dict(
-            breeds = np.array(['duck', 'broiler', 'layer'], dtype=zn.default_str),
-            sus_ORs = np.array([1.00, 1.00, 1.00]),
-            trans_ORs = np.array([1.00, 1.00, 1.00]),
-            baseline_symptomatic_rate = np.array([0.001, 0.001, 0.001]),
-            mean_symptomatic_rate_increase = np.array([0.001, 0.0001, 0.0001]),
-            baseline_mortality_rate = np.array([0.001, 0.001, 0.001]),
-            mean_mortality_rate_increase = np.array([0.002, 0.002, 0.002]),
-            baseline_water_rate = np.array([1.00, 1.00, 1.00]),
+            breeds = np.array(['poultry'], dtype=zn.default_str),
+            sus_ORs = np.array([1.00]),
+            trans_ORs = np.array([1.00]),
+            baseline_symptomatic_rate = np.array([0.001]),
+            mean_symptomatic_rate_increase = np.array([0.001]),
+            baseline_mortality_rate = np.array([0.001]),
+            mean_mortality_rate_increase = np.array([0.002]),
+            baseline_water_rate = np.array([1.00]),
             mean_water_rate_increase = np.array([1.00, 1.00, 1.00]),
         )
     ),
     production_cycle = dict(
-        breeds = np.array(['duck', 'broiler', 'layer'], dtype=zn.default_str),
-        cycle_dur = [dict(dist = 'normal_pos', par1 = 75, par2 = 10),
-                    dict(dist = 'normal_pos', par1 = 45, par2 = 5),
-                    dict(dist = 'normal_pos', par1 = 500, par2=100)],
-        flock_size = [dict(dist = 'normal_pos', par1 = 500, par2 = 100),
-                    dict(dist = 'normal_pos', par1 = 20000, par2 = 1000),
-                    dict(dist = 'normal_pos', par1 = 2000, par2 = 100)]
+        breeds = np.array(['poultry'], dtype=zn.default_str),
+        cycle_dur = [dict(dist = 'normal_pos', par1 = 100, par2 = 25)],
+        flock_size = [dict(dist = 'normal_pos', par1 = 20000, par2 = 10000)]
     ),
     wild = dict(
         human = dict(
@@ -122,25 +120,25 @@ zn.options.set(verbose=0)
 zn.options.set(numba_parallel='safe')
 
 
+data = pd.read_csv("zoonosim/data/CFIA_cumulative_timeseries.csv")
+data['date'] = pd.to_datetime(data['date'])
+data = data.rename(columns={"cum_ON_poultry_infectious":"cum_poultry_flock_infectious"})
+
 # Create Simulation
-sim = zn.Sim(datafile="zoonosim/data/H5N1_cases_in_QC_poultry.csv", label = project_name, pars=new_pars)
+sim = zn.Sim(datafile=data, label = project_name, pars=new_pars)
 sim.export_pars(f"saved_pars/{project_name}.json")
 # Define calibration parameters
 calib_pars = dict(
         beta = dict(
-        human = [1.0, 0.0, 5.0],
-        flock = [1.0, 0.0, 5.0],
-        barn = [1.0, 0.0, 5.0],
-        water = [1.0, 0.0, 5.0],
+        human = [0.5, 0.0, 1.0],
+        flock = [0.5, 0.0, 1.0],
+        barn = [0.5, 0.0, 1.0],
+        water = [0.5, 0.0, 1.0],
     ),   
-    beta_layer = dict(
-        fb = [1.0, 0.0, 5.0], 
-        bw = [1.0, 0.0, 5.0], 
-        fw = [1.0, 0.0, 5.0], 
-        hb = [1.0, 0.0, 5.0],  
-        hf = [1.0, 0.0, 5.0],   
-        dw = [1.0, 0.0, 5.0], 
-    )
+    n_imports = dict(
+        barn = dict(max_import_rate = [0.5, 0.0, 2.0], peak_day = [270, 200, 350]),
+        water = dict(max_import_rate = [0.5, 0.0, 2.0], peak_day = [270, 200, 350]),
+    ),
 )
 
 calib = zn.Calibration(sim, calib_pars, name = project_name, n_trials=100, die=True, keep_db=True)

@@ -91,6 +91,12 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['beta']['barn'] = 0.2 # The transmissibility of the disease for barns. This is a dummy variable!
     pars['beta']['water'] = 0.2 # The transmissibility of the disease for water. This is a dummy variable!
 
+    # Parameters that control flock composition and dynamics
+    pars['flock_breeds'] = ['duck', 'layer', 'broiler']
+    pars['flock_breed_freqs'] = [0.1, 0.2, 0.7]
+    pars['suspicious_mortality_rate'] = 0.003
+    pars['suspicious_symptomatic_rate'] = 0.001
+    pars['suspicious_consumption_rate'] = 1.33
 
 
 
@@ -117,19 +123,19 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     }
 
     # Number of imported cases per day for each agent type
+    # Import options are:
+    #   None = disabled
+    #   {'import_pattern': 'uniform', 'import_rate': X}  # Constant number of imports per day
+    #   {'import_pattern': 'seasonal', 'max_import_rate': A, 'peak_day': B}  # Seasonal import pattern with specified amplitude and baseline
     pars['n_imports']  = {
-        'human': 0,
-        'flock': 0,
-        'barn' : 0.1,
-        'water': 0.1,
+        'human': None,  # Number of imported human cases per day; None = disabled
+        'flock': None,  # Number of imported flock cases per day; None = disabled
+        'barn' : {'import_pattern': 'seasonal', 'max_import_rate': 0.2, 'peak_day': 300},  # Number of imported barn contaminations per day; None = disabled
+        'water': {'import_pattern': 'seasonal', 'max_import_rate': 0.2, 'peak_day': 300}  # Number of imported water contaminations per day; None = disabled
     } 
-
-
-
 
     # Parameters used to calculate immunity
     pars['immunity_pars'] = {}
-
     pars['immunity_pars']['human'] = {
         'use_waning': True, # Whether or not to use waning immunity; set to True for humans by default
         'nab_init':dict(dist='normal', par1=0, par2=2),  # Parameters for the distribution of the initial level of log2(nab) following natural infection, taken from fig1b of https://doi.org/10.1101/2021.03.09.21252641
