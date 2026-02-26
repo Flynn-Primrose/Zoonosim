@@ -190,7 +190,7 @@ def make_popdict(sim, **kwargs):
     barn_index = 0
     flock_index = 0
     water_index = znu.choose_r(n_water, n_farms) # Randomly assign water sources to farms
-    breed_index = znu.n_multinomial(znd.default_flock_breed_freqs, len(popdict['flock_uids']))# Assign each flock a breed
+    breed_index = znu.n_multinomial(sim['flock_breed_freqs'], len(popdict['flock_uids']))# Assign each flock a breed
     flock2breed = dict(zip(popdict['flock_uids'], breed_index))
     flock2barn = {} # Dictionary to hold the mapping of flocks to barns
     barn2water = {} # Dictionary to hold the mapping of barns to water sources

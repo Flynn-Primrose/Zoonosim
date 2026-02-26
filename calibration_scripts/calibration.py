@@ -2,7 +2,7 @@ import zoonosim as zn
 import numpy as np
 import pandas as pd
 
-project_name = "Calibration_single_breed_ON"
+project_name = "Calibration_single_breed_QC"
 
 # Define new parameters for the simulation
 new_pars = dict(
@@ -120,9 +120,9 @@ zn.options.set(verbose=0)
 zn.options.set(numba_parallel='safe')
 
 
-data = pd.read_csv("zoonosim/data/CFIA_cumulative_timeseries.csv")
+data = pd.read_csv("zoonosim/data/CFIA_daily_timeseries.csv")
 data['date'] = pd.to_datetime(data['date'])
-data = data.rename(columns={"cum_ON_poultry_infectious":"cum_poultry_flock_infectious"})
+data = data.rename(columns={"Quebec":"new_poultry_flock_infectious"})
 
 # Create Simulation
 sim = zn.Sim(datafile=data, label = project_name, pars=new_pars)
