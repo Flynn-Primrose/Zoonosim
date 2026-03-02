@@ -1,5 +1,5 @@
 '''
-Defines the subroster and metaroster for barn objects.
+Defines the subroster and metaroster for personal protective equipment 
 '''
 
 import numpy as np
@@ -9,10 +9,10 @@ from .. import utils as znu
 from .. import defaults as znd
 from .rosters import Subroster
 
-__all__ = ['Barns', 'BarnMeta']
+__all__ = ['PPE', 'PPEMeta']
 
-class BarnMeta(sc.prettyobj):
-    ''' Defines all keys that are used by barns '''
+class PPEMeta(sc.prettyobj):
+    ''' Defines all keys that are used by PPE '''
 
     def __init__(self):
         
@@ -20,15 +20,12 @@ class BarnMeta(sc.prettyobj):
             'uid', # int
             'temperature',
             'humidity',
-            'flock', # uid of the flock residing here
-            'repopulations' # Number of times this barn has been repopulated
+            'human', # uid of the human agent assigned to this equipment
         ]
 
         self.states = [
             'uncontaminated', # bool; whether the barn is contaminated
             'contaminated', # bool; whether the barn is contaminated
-            'composting', # bool; whether the barn is currently composting
-            'cleaning', # bool; whether the barn is currently cleaning
         ]
 
         # self.biosec_states = [
@@ -47,19 +44,12 @@ class BarnMeta(sc.prettyobj):
 
         # Set the dates various events took place: these are floats per agent
         self.state_dates = [f'date_{state}' for state in self.states] # Convert each state into a date
-            
-        self.production_dates = [
-            'date_cycle_end', # Date of the end of the production cycle
-            'date_repopulate'
-        ]
 
-        self.dates = self.state_dates + self.production_dates
+        self.dates = self.state_dates
 
         # Duration of different states: these are floats per Barn.
         self.durs = [
             'dur_contamination', # Duration of contamination
-            'dur_composting', # Duration of composting process
-            'dur_cleaning', # Duration of the cleaning process
         ]
 
         self.all_recordable_states = self.agent + self.states + self.variant_states + self.dates + self.durs
@@ -77,8 +67,7 @@ class BarnMeta(sc.prettyobj):
 
         return
     
-
-class Barns(Subroster):
+class PPE(Subroster):
     '''
     A class to perform all the operations on the agents -- usually not invoked directly.
 
@@ -109,31 +98,23 @@ class Barns(Subroster):
         # Other initialization
         self.t = 0 # Keep current simulation time
         self._lock = False # Prevent further modification of keys
-        self.meta = BarnMeta() # Store list of keys and dtypes
+        self.meta = PPEMeta() # Store list of keys and dtypes
   
         self.event_log = []
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
 
-        pop_size = self.pars['pop_size_by_type']['barn']
+        pop_size = self.pars['pop_size_by_type']['PPE']
 
         # Set person properties -- all floats except for UID
         for key in self.meta.agent:
-            if key in ['uid', 'flock', 'repopulations']:
-                self[key] = np.zeros(pop_size, dtype=znd.default_int) # NOTE: The uid values are passed in kwargs by make_barn()
-            elif key in ['green', 'yellow', 'orange']:
-                val = key in ['green']
-                self[key] = np.full(pop_size, val, dtype=znd.default_bool) # NOTE: The flock values are passed in kwargs by make_barn()
+            if key in ['uid', 'human']:
+                self[key] = np.zeros(pop_size, dtype=znd.default_int) # NOTE: The uid values are passed in kwargs by make_PPE()
             else:
                 self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
 
         # Set states
         for key in self.meta.states:
             val = (key in ['uncontaminated']) # Default value is True for susceptible and naive, False otherwise
-            self[key] = np.full(pop_size, val, dtype=bool)
-
-        # Set biosec states
-        for key in self.meta.biosec_states:
-            val = (key in ['green']) # Default value is True for susceptible and naive, False otherwise
             self[key] = np.full(pop_size, val, dtype=bool)
 
         # Set variant states, which store info about which variant a person is exposed to
@@ -172,9 +153,9 @@ class Barns(Subroster):
 
     def init_flows(self):
         ''' Initialize flows to be zero '''
-        self.flows = {key:0 for key in znd.new_barn_flows}
+        self.flows = {key:0 for key in znd.new_PPE_flows}
         self.flows_variant = {}
-        for key in znd.new_barn_flows_by_variant:
+        for key in znd.new_PPE_flows_by_variant:
             self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=znd.default_float)
 
         return
@@ -197,10 +178,7 @@ class Barns(Subroster):
 
         # Perform updates
         self.init_flows()
-
-        self.flows['new_cleaned'] = self.check_cleaned()
         self.flows['new_uncontaminated'] = self.check_uncontaminated()
-        self.flows['new_composted'] = self.check_composted()
         return
 
 
@@ -231,7 +209,7 @@ class Barns(Subroster):
 
     
     def check_uncontaminated(self):
-        ''' Check which barns get uncontaminated this timestep '''
+        ''' Check which PPE get uncontaminated this timestep '''
         inds = self.check_inds(~self.contaminated, self.date_uncontaminated) # ~self.contaminated is the same as self.uncontaminated
         if len(inds) > 0:
             self.uncontaminated[inds] = True
@@ -242,32 +220,7 @@ class Barns(Subroster):
 
             self.update_event_log(inds, 'uncontaminated')
         return len(inds)
-    
-    def check_cleaned(self):
-        ''' Check which barns get cleaned this timestep '''
-        inds = self.check_inds(~self.cleaning, self.date_cleaning)# ~self.cleaning because self.date_cleaning denotes the date when cleaning ends, not when it starts
-        if len(inds) > 0:
-            self.cleaning[inds] = False
-            self.uncontaminated[inds] = True
-            self.contaminated[inds] = False
-            self.contaminated_variant[inds] = np.nan
-            self.contaminated_by_variant[:, inds] = False
-            self.date_repopulate[inds] = self.date_cleaning[inds] + 1
-            self.date_cleaning[inds] = np.nan
-            self.update_event_log(inds, 'cleaning_finished')
-        return len(inds)
-    
-    def check_composted(self):
-        ''' Check which barns finish composting this timestep '''
-        inds = self.check_inds(~self.composting, self.date_composting)# ~self.composting because self.date_composting denotes the date when composting ends, not when it starts
-        if len(inds) > 0:
-            self.composting[inds] = False
-            self.cleaning[inds] = True
-            self.date_cleaning[inds] = self.date_composting[inds] + znu.sample(**self.pars['dur']['barn']['cleaning'], size=len(inds))
-            self.date_composting[inds] = np.nan
-            self.update_event_log(inds, 'composting_finished')
-            self.update_event_log(inds, 'cleaning_started')
-        return len(inds)
+
 
 
     #%% Methods to make events occur (infection and diagnosis)
@@ -293,14 +246,14 @@ class Barns(Subroster):
 
         # Deal with variant parameters
         variant_keys = ['rel_dur_contamination']
-        contamination_pars = {k:self.pars['variant_pars']['wild']['barn'][k] for k in variant_keys}
+        contamination_pars = {k:self.pars['variant_pars']['wild']['PPE'][k] for k in variant_keys}
         variant_label = self.pars['variant_map'][variant]
         if variant:
             for k in variant_keys:
-                contamination_pars[k] *= self.pars['variant_pars'][variant_label]['barn'][k]
+                contamination_pars[k] *= self.pars['variant_pars'][variant_label]['PPE'][k]
 
         n_infections = len(inds)
-        durpars      = self.pars['dur']['barn']
+        durpars      = self.pars['dur']['PPE']
 
 
         # Update states, variant info, and flows
@@ -326,18 +279,18 @@ class Barns(Subroster):
     
     def story(self, uid, *args):
         '''
-        Print out a short history of events in the life of the specified barn.
+        Print out a short history of events in the life of the specified PPE.
 
         Args:
-            uid (int/list): the barn or barns whose story is to be regaled
-            args (list): these flocks will tell their stories too
+            uid (int/list): the PPE whose story is to be regaled
+            args (list): these PPE will tell their stories too
 
         **Example**::
 
             sim = zn.Sim()
             sim.run()
-            sim.agents.barn.story(12)
-            sim.agents.barn.story(795)
+            sim.agents.ppe.story(12)
+            sim.agents.ppe.story(795)
         '''
 
         def label_lkey(lkey):
@@ -357,23 +310,17 @@ class Barns(Subroster):
 
         for uid in uids:
             uid_ind = np.where(self.uid == uid)[0]
-            flock = self.flock[uid_ind]
-            repops = self.repopulations[uid_ind]
+            flock = self.human[uid_ind]
 
 
-            intro = f'\nThis is the story of {uid}, a barn housing flock {flock}. It has repopulated {repops} times.'
+            intro = f'\nThis is the story of {uid}, a PPE assigned to human {flock}.'
             print(f'{intro}')
 
             events = []
 
             event_dict = {
-                'cleaning_started': 'started the cleaning process',
-                'cleaning_finished': 'completed the cleaning process',
-                'composting_started': 'started the composting process',
-                'composting_finished': 'finished the composting process',
+                'contaminated': 'became contaminated',
                 'uncontaminated': 'naturally lost its contamination',
-                'cycle_end': 'finished its production cycle',
-                'cycle_start':'repopulated and began its production cycle',
             }
 
             for event in self.event_log:

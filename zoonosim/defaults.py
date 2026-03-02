@@ -458,13 +458,6 @@ default_pop_pars = {
     'avg_water_per_farm': 1.0,
 }
 
-#default_flock_breeds = ['duck', 'layer', 'broiler'] # Breeds of flocks present. Must match those in default_flock_prognoses.
-#default_flock_breed_freqs = [0.1, 0.2, 0.7] # frequency of the different breed types
-# default_flock_breeds = ['poultry']
-# default_flock_breed_freqs = [1.0]
-# default_suspicious_mortality_rate = 0.003 # mortality rate that triggers a flock to be considered suspicious
-# default_suspicious_symptomatic_rate = 0.001 # symptomatic rate that triggers a flock to be considered suspicious
-# default_suspicious_consumption_rate = 1.33 # water rate that triggers a flock to be considered suspicious (L/bird/day)
 
 # Parameters that can vary by variant
 # TODO: Refactor to include sub pars for each species type.
@@ -484,6 +477,11 @@ default_human_prognoses = dict(
     severe_probs  = np.array([0.01,    0.01,    0.05,    0.05,    0.05,    0.07,    0.09,    0.1,     0.2,     0.2]), # Overall probability of developing severe symptoms
     death_probs   = np.array([0.001,   0.001,   0.005,   0.007,   0.009,   0.01,    0.01,   0.05,     0.07,    0.09]), # Overall probability of dying
         )
+
+default_ppe_prognoses = dict(
+    sus_ORs = 1.00,
+    trans_ORs = 1.00
+)
 
 default_flock_prognoses = dict(
     breeds = np.array(['duck', 'broiler', 'layer'], dtype=default_str),

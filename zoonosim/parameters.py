@@ -30,7 +30,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars = {}
 
     # Population pars
-    pars['agent_types'] = ['human', 'flock', 'barn', 'water'] # Every type of agent in the model
+    pars['agent_types'] = ['human', 'ppe', 'flock', 'barn', 'water'] # Every type of agent in the model
     pars['n_farms'] = 25 # Number of farms in the simulation. This is used to generate the rest of the population
     pars['pop_size'] = None # The total number of agents in the simulation. This should be equal to the sum of the population sizes of all agent types.
     pars['pop_size_by_type'] = {}
@@ -44,6 +44,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
 
     pars['initial_conditions'] = {
         'human': 0, # Number of initial humans exposed
+        'ppe': 0,
         'flock': 0, # Number of initial flocks exposed
         'barn': 0, # Number of initial contaminated barns
         'water': 0 # Number of initial contaminated water
@@ -87,6 +88,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
 
     pars['beta'] = {} # The transmissibility of the disease for each agent type.
     pars['beta']['human'] = 0.3 # The transmissibility of the disease for humans. This is a dummy variable!
+    pars['beta']['ppe'] = 0.2 # The transmissibility of the disease for ppe. This is a dummy variable!
     pars['beta']['flock'] = 0.7 # The transmissibility of the disease for flocks. This is a dummy variable!
     pars['beta']['barn'] = 0.2 # The transmissibility of the disease for barns. This is a dummy variable!
     pars['beta']['water'] = 0.2 # The transmissibility of the disease for water. This is a dummy variable!
@@ -110,6 +112,10 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
         'viral_levels':dict(min_vl=0.75, max_vl=2) # Specifies the range within which viral load should be scaled so it can contribute to relative transmissibility
     }
 
+    pars['transmission_pars']['ppe'] = {
+        'beta_dist': dict(dist='neg_binomial', par1=1.0, par2=0.45, step=0.01), # NOTE: Dummy variables
+    }
+
     pars['transmission_pars']['flock'] = {
         'beta_dist': dict(dist='neg_binomial', par1=1.0, par2=0.45, step=0.01), # NOTE: Dummy variables
     }
@@ -130,6 +136,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['n_imports']  = {
         'human': None,  # Number of imported human cases per day; None = disabled
         'flock': None,  # Number of imported flock cases per day; None = disabled
+        'ppe': None, # Number of imported PPE cases per day; None = disabled 
         'barn' : {'import_pattern': 'seasonal', 'max_import_rate': 0.2, 'peak_day': 300},  # Number of imported barn contaminations per day; None = disabled
         'water': {'import_pattern': 'seasonal', 'max_import_rate': 0.2, 'peak_day': 300}  # Number of imported water contaminations per day; None = disabled
     } 
@@ -147,6 +154,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
         'immunity':None, # Matrix of immunity and cross-immunity factors, set by init_immunity() in immunity.py
         'trans_redux':0.59 # Reduction in transmission for breakthrough infection
     }
+    pars['immunity_pars']['ppe'] = {'use_waning': False}
     pars['immunity_pars']['flock'] = {'use_waning': False} # No waning immunity for flock agents
     pars['immunity_pars']['barn'] = {'use_waning': False} # No waning immunity for barn agents
     pars['immunity_pars']['water'] = {'use_waning': False} # No waning immunity for water agents
@@ -178,6 +186,10 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
         'diag': 14
     }
 
+    pars['dur']['ppe'] = {
+        'contamination': dict(dist='lognormal_int', par1=14, par2=5.0), # Duration of contamination. NOTE: This data is just a guess, and should be replaced with real data
+    }
+
     pars['dur']['flock'] = {
         # Duration: disease progression
         'exp2inf': dict(dist='lognormal_int', par1=1.5, par2=0.5), # Duration from exposed to infectious. NOTE: This data is just a guess, and should be replaced with real data
@@ -202,6 +214,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     # Prognoses
     pars['prognoses'] = {}
     pars['prognoses']['human'] = relative_human_prognoses(znd.default_human_prognoses)
+    pars['prognoses']['ppe'] = relative_ppe_prognoses(znd.default_ppe_prognoses)
     pars['prognoses']['flock'] = relative_flock_prognoses(znd.default_flock_prognoses)
     pars['prognoses']['barn'] = relative_barn_prognoses(znd.default_barn_prognoses)
     pars['prognoses']['water'] = relative_water_prognoses(znd.default_water_prognoses)
@@ -237,6 +250,10 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
             rel_death_prob = 0.01,
             rel_asymp_fact = 0.5
 
+        ),
+        ppe = dict(
+            rel_beta = 1.0,
+            rel_dur_contamination = 1.0
         ),
         flock = dict(
             rel_beta = 1.0,
@@ -335,29 +352,37 @@ def relative_human_prognoses(prognoses):
     out['severe_probs'] /= out['symp_probs']   # Conditional probability of symptoms becoming severe, given symptomatic
     return out
 
+def relative_ppe_prognoses(prognoses):
+    '''
+    Convenience function to revert absolute PPE prognoses into relative (conditional)
+    ones. Internally, Zoonosim uses relative prognoses.
+    '''
+    out = sc.dcp(prognoses)
+    return(out)
+
 def relative_flock_prognoses(prognoses):
-        '''
+    '''
     Convenience function to revert absolute flock prognoses into relative (conditional)
     ones. Internally, Zoonosim uses relative prognoses.
     '''
-        out = sc.dcp(prognoses)
-        return(out)
+    out = sc.dcp(prognoses)
+    return(out)
 
 def relative_barn_prognoses(prognoses):
-        '''
+    '''
     Convenience function to revert absolute flock prognoses into relative (conditional)
     ones. Internally, Zoonosim uses relative prognoses.
     '''
-        out = sc.dcp(prognoses)
-        return(out)
+    out = sc.dcp(prognoses)
+    return(out)
 
 def relative_water_prognoses(prognoses):
-        '''
+    '''
     Convenience function to revert absolute flock prognoses into relative (conditional)
     ones. Internally, Zoonosim uses relative prognoses.
     '''
-        out = sc.dcp(prognoses)
-        return(out)
+    out = sc.dcp(prognoses)
+    return(out)
 
 def absolute_human_prognoses(prognoses):
     '''
@@ -438,6 +463,10 @@ def get_variant_pars(default=False, variant=None):
                 rel_death_prob  = 1.0, # Default values
                 rel_asymp_fact  = 1.0
             ),
+            ppe = dict(
+                rel_beta       = 1.0, 
+                rel_dur_contamination = 1.0
+            ),
             flock = dict(
                 rel_beta        = 1.0, # Default values
                 rel_gamma      = 1.0, # Default values
@@ -447,12 +476,10 @@ def get_variant_pars(default=False, variant=None):
             ),
             barn = dict(
                 rel_beta        = 1.0, # Default values
-                # rel_gamma      = 1.0, # Default values, not used for barns
                 rel_dur_contamination = 1.0, # Default values
             ),
             water = dict(
                 rel_beta        = 1.0, # Default values
-                # rel_gamma      = 1.0, # Default values, not used for water
                 rel_dur_contamination = 1.0, # Default values
             ),
         ),
@@ -460,11 +487,14 @@ def get_variant_pars(default=False, variant=None):
         LPAI = dict(
             human = dict(
                 rel_beta        = 1.0, # guessed values
-                # rel_gamma      = 1.0, # guessed value, not used for humans
                 rel_symp_prob   = 0.1, # guess but LPAI is less severe than HPAI
                 rel_severe_prob = 0.25, # guess but LPAI is less severe than HPAI
                 rel_death_prob  = 0.25, # guess but LPAI is less severe than HPAI
                 rel_asymp_fact  = 0.5
+            ),
+            ppe = dict(
+                rel_beta        = 1.0,
+                rel_dur_contamination = 0.5
             ),
             flock = dict(
                 rel_beta        = 1.0, # guessed values
@@ -474,12 +504,10 @@ def get_variant_pars(default=False, variant=None):
             ),
             barn = dict(
                 rel_beta        = 1.0, # guessed values
-                # rel_gamma      = 1.0, # guessed values, not used for barns
                 rel_dur_contamination = 0.5, # guess but LPAI is less severe than HPAI
             ),
             water = dict(
                 rel_beta        = 1.0, # guessed values
-                # rel_gamma      = 1.0, # guessed values, not used for water
                 rel_dur_contamination = 0.5, # guess but LPAI is less severe than HPAI
             ),
         ),

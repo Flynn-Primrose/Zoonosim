@@ -11,6 +11,7 @@ from .. import defaults as znd
 from .contacts import Contacts
 from .rosters import Roster
 from .humans import Humans
+from .ppe import PPE
 from .flocks import Flocks
 from .barns import Barns
 from .waters import Water
@@ -28,8 +29,6 @@ class AgentsMeta(sc.prettyobj):
             'uid', #Int - unique ID for the agent
             'fid', #Int - farm ID, if applicable
             'agent_type', #string? the type of agent, must be one of pars['agent_types']
-            #'rel_trans', # float - relative transmissibility of the agent
-            #'rel_sus', # float - relative susceptibility of the agent
         ]
 
         self.states = [ # all boolean
@@ -107,6 +106,12 @@ class Agents(Roster):
             self.human = human
         else:
             raise ValueError("human must be an instance of Humans class")
+        
+        ppe = kwargs.pop('human', None)
+        if isinstance(ppe, PPE):
+            self.ppe = ppe
+        else:
+            raise ValueError("ppe must be an instance of the PPE class")
             
         flock = kwargs.pop('flock', None)
         if isinstance(flock, Flocks):
@@ -184,6 +189,7 @@ class Agents(Roster):
         self.validate(sim_pars=sim_pars) # First, check that essential-to-match parameters match
         self.set_pars(sim_pars) # Replace the saved parameters with this simulation's
         self.human.initialize(self.pars) # Initialize the human subroster
+        self.ppe.initialize(self.pars) # Initialize the ppe subroster
         self.flock.initialize(self.pars) # Initialize the flock subroster
         self.barn.initialize(self.pars) # Initialize the barn subroster
         self.water.initialize(self.pars) # Initialize the water subroster
@@ -199,6 +205,7 @@ class Agents(Roster):
         self.t = t
         self.is_exp = self.true('exposed') # For storing the interim values since used in every subsequent calculation
         self.human.update_states_pre(t)
+        self.ppe.update_states_pre(t)
         self.flock.update_states_pre(t)
         self.barn.update_states_pre(t)
         self.water.update_states_pre(t)
@@ -218,6 +225,7 @@ class Agents(Roster):
 
         # Update the states of the subrosters
         self.human.update_states_post()
+        self.ppe.update_states_post()
         self.flock.update_states_post()
         self.barn.update_states_post()
         self.water.update_states_post()
@@ -360,6 +368,10 @@ class Agents(Roster):
     def get_human_rel_sus(self):
         return self.human.rel_sus
     
+    def get_ppe_rel_sus(self):
+        #TODO: Discuss this with Caroline. Maybe introduce different levels of biosec?
+        return np.repeat([1.0], len(self.ppe))
+    
     def get_flock_rel_sus(self):
         return self.flock.rel_sus
     
@@ -373,6 +385,7 @@ class Agents(Roster):
     
     def get_rel_sus(self):
         human_rel_sus = self.get_human_rel_sus()
+        ppe_rel_sus = self.get_ppe_rel_sus()
         flock_rel_sus = self.get_flock_rel_sus()
         barn_rel_sus = self.get_barn_rel_sus()
         water_rel_sus = self.get_water_rel_sus()
@@ -380,6 +393,9 @@ class Agents(Roster):
     
     def get_human_rel_trans(self):
         return self.human.rel_trans
+    
+    def get_ppe_rel_trans(self):
+        return np.repeat([1.0], len(self.ppe)) 
     
     def get_flock_rel_trans(self):
         return self.flock.rel_trans
@@ -394,6 +410,7 @@ class Agents(Roster):
     
     def get_rel_trans(self):
         human_rel_trans = self.get_human_rel_trans()
+        ppe_rel_trans = self.get_ppe_rel_trans()
         flock_rel_trans = self.get_flock_rel_trans()
         barn_rel_trans = self.get_barn_rel_trans()
         water_rel_trans = self.get_water_rel_trans()
@@ -420,6 +437,8 @@ class Agents(Roster):
         human_inds = np.where(np.isin(self.human.uid, self.uid[inds]))
         #human_inds = np.array([i for i, uid in enumerate(self.human.uid) if uid in set(self.uid[inds])]) # Supposedly faster if self.uid[inds] is large
 
+        ppe_inds = np.where(np.isin(self.ppe.uid), self.uid[inds])
+
         flock_inds = np.where(np.isin(self.flock.uid, self.uid[inds])) 
         #flock_inds = np.array([i fo i,uid in enumerate(self.flock.uid) if uid in set(self.uid[inds])])
 
@@ -430,6 +449,7 @@ class Agents(Roster):
         #barn_inds = np.array([i fo i,uid in enumerate(self.barn.uid) if uid in set(self.uid[inds])])
 
         self.human.infect(human_inds, hosp_max, source, layer, variant)
+        self.ppe.infect(ppe_inds, source, layer, variant)
         self.flock.infect(flock_inds, source, layer, variant)
         self.barn.infect(barn_inds, source, layer, variant)
         self.water.infect(water_inds, source, layer, variant)
