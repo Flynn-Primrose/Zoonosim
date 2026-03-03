@@ -31,10 +31,16 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
 
     # Population pars
     pars['agent_types'] = ['human', 'ppe', 'flock', 'barn', 'water'] # Every type of agent in the model
-    pars['n_farms'] = 25 # Number of farms in the simulation. This is used to generate the rest of the population
+    pars['n_farms'] = 100 # Number of farms in the simulation. This is used to generate the rest of the population
     pars['pop_size'] = None # The total number of agents in the simulation. This should be equal to the sum of the population sizes of all agent types.
     pars['pop_size_by_type'] = {}
     
+    # Parameters specifically for generating the population and contacts
+    pars['pop_pars'] = dict(
+        avg_barns_per_farm = 5.0,
+        avg_humans_per_barn = 1.5,
+        avg_water_per_farm = 0.75
+    )
 
     for type in pars['agent_types']:
         pars['pop_size_by_type'][type] = None # This will be set after the population has been created
@@ -93,12 +99,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['beta']['barn'] = 0.2 # The transmissibility of the disease for barns. This is a dummy variable!
     pars['beta']['water'] = 0.2 # The transmissibility of the disease for water. This is a dummy variable!
 
-    # Parameters that control flock composition and dynamics
-    pars['flock_breeds'] = ['duck', 'layer', 'broiler']
-    pars['flock_breed_freqs'] = [0.1, 0.2, 0.7]
-    pars['suspicious_mortality_rate'] = 0.003
-    pars['suspicious_symptomatic_rate'] = 0.001
-    pars['suspicious_consumption_rate'] = 1.33
+
 
 
 
@@ -219,7 +220,20 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['prognoses']['barn'] = relative_barn_prognoses(znd.default_barn_prognoses)
     pars['prognoses']['water'] = relative_water_prognoses(znd.default_water_prognoses)
 
-    pars['production_cycle'] = znd.default_production_cycle
+    # Parameters related to poultry dynamics and production cycles
+    pars['poultry_pars'] = dict(
+    breeds = np.array(['duck', 'broiler', 'layer'], dtype=znd.default_str),
+    breed_freqs = [0.1, 0.2, 0.7],
+    mortality_suspicion_threshold = [0.01, 0.01, 0.01], # I.E a deviation from the expected mortality rate of 0.01*expected_value will trigger suspicion
+    symptomatic_suspicion_threshold = [0.01, 0.01, 0.01], # I.E a deviation from the expected symptomatic rate of 0.01*expected_value will trigger suspicion
+    consumption_suspicion_threshold = [0.01, 0.01, 0.01], # I.E a deviation from the expected rate of water consumption of 0.01*expected_value will trigger suspicion
+    cycle_dur = [dict(dist = 'normal_pos', par1 = 600, par2 = 50),
+                 dict(dist = 'normal_pos', par1 = 45, par2 = 5),
+                 dict(dist = 'normal_pos', par1 = 150, par2=25)],
+    flock_size = [dict(dist = 'normal_pos', par1 = 1000, par2 = 100),
+                dict(dist = 'normal_pos', par1 = 20000, par2 = 1000),
+                dict(dist = 'normal_pos', par1 = 10000, par2 = 500)]
+)
     
     # Background ILI parameters
     pars['bkg_ILI'] = znd.default_bkg_ILI # Weekly background ILI rates, used to infect human agents with ILI

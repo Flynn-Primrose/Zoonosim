@@ -26,14 +26,11 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
         sim             (Sim)  : the simulation object; population parameters are taken from the sim object
         popdict         (any)  : either None, pop.popdict, popfile, or Agents object
         reset           (bool) : whether to force population creation even if self.popdict/self.agents exists
-        kwargs          (dict) : passed to make_randpop() or make_synthpop()
+        kwargs          (dict) : passed to make_popdict()
 
     Returns:
         agents (Agents): an instance of the Agents class containing the agents and their contacts
     '''
-
-    #skip_layers = kwargs.pop('skip_layers', None) # Layers to skip when creating contacts
-    skip_layers = ['hh', 'dw'] # hacky fix for now.
 
         # If a agents object or popdict is supplied, use it
     if sim.agents and not reset:
@@ -65,7 +62,7 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
     flock = make_flocks(sim.pars, popdict['flock_uids'], popdict['flock2barn'], popdict['breed_index'])
     barn = make_barns(sim.pars, popdict['barn_uids'], popdict['barn2flock'], popdict['barn2breed'])
     water = make_water(sim.pars, popdict['water_uids'])
-    contacts = make_contacts(sim.pars, popdict['contactdict'], skip_layers=skip_layers)
+    contacts = make_contacts(sim.pars, popdict['contactdict'])
 
     agents = Agents(sim.pars, 
                     uid = popdict['uid'],
@@ -141,14 +138,20 @@ def make_popdict(sim, **kwargs):
     contactdict = {}
 
     # Set pop_pars, these are required parameters for creating the population. For the most part they
-    # define the means of the distributions used to create the population. The default values are set in defaults.py
+    # define the means of the distributions used to create the population.
     # and can be overridden by passing them in as kwargs.
-    # The default values are currently just dummy values and should be changed to reflect the actual population parameters.
     if 'pop_pars' in kwargs:
         pop_pars = kwargs['pop_pars']
     else:
-        pop_pars = znd.default_pop_pars
+        pop_pars = sim.pars['pop_pars']
 
+    # Set poultry_pars, these are parameters used for creating the poultry flocks.
+    # Specifically we will need the frequency of each breed type
+    # Can be overridden by passing them as kwargs.
+    if 'poultry_pars' in kwargs:
+        poultry_pars = kwargs['poultry_pars']
+    else:
+        poultry_pars = sim.pars['poultry_pars']
 
     # Farms
     n_farms = sim.pars['n_farms']
@@ -164,10 +167,14 @@ def make_popdict(sim, **kwargs):
 
     # Create workers
     n_humans_by_farm = np.zeros(n_farms, dtype=znd.default_int) # Number of workers per farm
+    n_ppe_by_farm = np.zeros(n_farms, dtype = znd.default_int) # Number of PPE per farm
     for farm in range(n_farms):
         #n_occupied_barns_by_farm[farm] = sum(znu.n_binomial(pop_pars['avg_barn_occupancy'], n_barns_by_farm[farm])) # Number of occupied barns per farm
         n_humans_by_farm[farm] = int(sum(znu.n_binomial(pop_pars['avg_humans_per_barn'], n_barns_by_farm[farm]))) # Number of workers per barn
+        n_ppe_by_farm[farm] = n_humans_by_farm[farm] # Every farm will have the same number of ppe as humans
     n_humans = sum(n_humans_by_farm) # Total number of workers in the simulation
+    
+    n_ppe = n_humans # We assume one ppe per human
 
     # Create flocks
     n_flocks_by_farm = n_barns_by_farm # 
@@ -175,57 +182,71 @@ def make_popdict(sim, **kwargs):
 
 
 
-    n_agents = n_humans + n_barns + n_flocks + n_water
+    n_agents = n_humans + n_ppe + n_barns + n_flocks + n_water
 
     popdict['uid'] = np.arange(n_agents, dtype=znd.default_int) # Create a list of unique IDs for each agent
     popdict['fid'] = np.zeros(n_agents, dtype=znd.default_int) # Create a list of farm IDs for each agent
-    popdict['agent_type'] = np.repeat(['human', 'barn', 'flock', 'water'], [n_humans, n_barns, n_flocks, n_water]) # Create a list of agent types
+    popdict['agent_type'] = np.repeat(['human', 'ppe', 'barn', 'flock', 'water'], [n_humans, n_humans, n_barns, n_flocks, n_water]) # Create a list of agent types
     
     popdict['human_uids'] = popdict['uid'][popdict['agent_type'] == 'human']
+    popdict['ppe_uids'] = popdict['uid'][popdict['agent_type'] == 'ppe']
     popdict['barn_uids'] = popdict['uid'][popdict['agent_type'] == 'barn']
     popdict['flock_uids'] = popdict['uid'][popdict['agent_type'] == 'flock']
     popdict['water_uids'] = popdict['uid'][popdict['agent_type'] == 'water']
 
     human_index = 0
+    ppe_index = 0
     barn_index = 0
     flock_index = 0
     water_index = znu.choose_r(n_water, n_farms) # Randomly assign water sources to farms
-    breed_index = znu.n_multinomial(znd.default_flock_breed_freqs, len(popdict['flock_uids']))# Assign each flock a breed
+    breed_index = znu.n_multinomial(poultry_pars['breed_freqs'], len(popdict['flock_uids']))# Assign each flock a breed
     flock2breed = dict(zip(popdict['flock_uids'], breed_index))
     flock2barn = {} # Dictionary to hold the mapping of flocks to barns
+    human2ppe = {}
     barn2water = {} # Dictionary to hold the mapping of barns to water sources
 
  
     for farm in range(n_farms):
         contactdict[farm] = {
             'humans':popdict['human_uids'][human_index:(human_index + n_humans_by_farm[farm])],
+            'ppe':popdict['ppe_uids'][ppe_index:(ppe_index + n_ppe_by_farm[farm])],
             'barns':popdict['barn_uids'][barn_index:(barn_index + n_barns_by_farm[farm])],
             'flocks':popdict['flock_uids'][flock_index:(flock_index + n_flocks_by_farm[farm])],
             'water':popdict['water_uids'][water_index[farm]],
         }
-        present_uids = np.concatenate((contactdict[farm]['humans'], contactdict[farm]['barns'], contactdict[farm]['flocks'])) # Combine all uids for this farm excluding water sources as they are shared among multiple farms
+        present_uids = np.concatenate((contactdict[farm]['humans'], contactdict[farm]['ppe'], contactdict[farm]['barns'], contactdict[farm]['flocks'])) # Combine all uids for this farm excluding water sources as they are shared among multiple farms
         present_inds = np.isin(popdict['uid'], present_uids) # Get the indices of the agents in this farm
         popdict['fid'][present_inds] =  farm_ids[farm] # Assign the farm ID to the agents in this farm
         human_index += n_humans_by_farm[farm]
+        ppe_index += n_ppe_by_farm[farm]
         barn_index += n_barns_by_farm[farm]
         flock_index += n_flocks_by_farm[farm]
 
         #occupied_barns = znu.choose(n_barns_by_farm[farm], n_occupied_barns_by_farm[farm])
         contactdict[farm]['flock2barn'] = dict(zip(contactdict[farm]['flocks'], contactdict[farm]['barns']))# Map flocks to barns for this farm
 
+        contactdict[farm]['human2ppe'] = dict(zip(contactdict[farm]['humans'], contactdict[farm]['ppe']))# Map people to their ppe
+
         contactdict[farm]['barn2water'] = {barn :contactdict[farm]['water'] for barn in contactdict[farm]['barns']} # Map barns to water sources for this farm
 
         contactdict[farm]['flock2breed'] = {flock : flock2breed[flock] for flock in contactdict[farm]['flocks']} # Map flocks to breeds for this farm
 
         flock2barn.update(contactdict[farm]['flock2barn']) # Map flocks to barns for all farms
+        human2ppe.update(contactdict[farm]['human2ppe']) # map humans to ppe for all farms
         barn2water.update(contactdict[farm]['barn2water']) # Map barns to water sources for all farms
     
     popdict['contactdict'] = contactdict # Add the contact dictionary to the population dictionary
     popdict['breed_index'] = breed_index
     popdict['barn2water'] = barn2water # Add the barn to water mapping to the population dictionary
+
     popdict['flock2barn'] = flock2barn # Add the flock to barn mapping to the population dictionary
     barn2flock = {v: k for k, v in flock2barn.items()}
     popdict['barn2flock'] = barn2flock
+
+    popdict['human2ppe'] = human2ppe
+    ppe2human = {v: k for k, v in human2ppe.items()}
+    popdict['ppe2human'] = ppe2human
+    
     popdict['barn2breed'] = {k: flock2breed[v] for k, v in barn2flock.items()}
     return popdict
 
@@ -242,6 +263,10 @@ def make_humans(sim_pars, uid):
     else: humans = Humans(sim_pars, strict = False, uid = uid, age = age, sex = sex)
 
     return humans
+
+def make_ppe(sim_pars, uid, ppe2human):
+    #TODO: create the ppe agents
+    return
 
 def make_flocks(sim_pars, uid, flock2barn, breed_index):
     prod_pars = sim_pars['production_cycle']

@@ -69,7 +69,7 @@ class Sim(znb.BaseSim):
         self.complete      = False    # Whether a simulation has completed running
         self.results_ready = False    # Whether or not results are ready
         self._default_ver  = version  # Default version of parameters used
-        self._legacy_trans = None     # Whether to use the legacy transmission calculation method (slower; for reproducing earlier results)
+        # self._legacy_trans = None     # Whether to use the legacy transmission calculation method (slower; for reproducing earlier results)
         self._orig_pars    = None     # Store original parameters to optionally restore at the end of the simulation
 
         
@@ -489,7 +489,7 @@ class Sim(znb.BaseSim):
             init_infections (bool): whether to initialize infections (default false when called directly)
             reset           (bool): whether to regenerate the people even if they already exist
             verbose         (int):  detail to print
-            kwargs          (dict): passed to cv.make_people()
+            kwargs          (dict): passed to cv.make_agents()
         '''
 
         # Handle inputs
@@ -503,7 +503,7 @@ class Sim(znb.BaseSim):
                 resetstr = ' (resetting agents)' if reset else ' (warning: not resetting sim.agents)'
             print(f'Initializing sim{resetstr} with {self["n_farms"]:0n} farms for {self["n_days"]} days')
 
-        if self.popfile and self.popdict is None: # If there's a popdict, we initialize it via cvpop.make_people()
+        if self.popfile and self.popdict is None: # If there's a popdict, we initialize it via znpop.make_agents()
             self.load_population(init_agents=False)
         
         # Actually make the people

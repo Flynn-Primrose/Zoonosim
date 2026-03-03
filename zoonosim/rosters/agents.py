@@ -107,7 +107,7 @@ class Agents(Roster):
         else:
             raise ValueError("human must be an instance of Humans class")
         
-        ppe = kwargs.pop('human', None)
+        ppe = kwargs.pop('ppe', None)
         if isinstance(ppe, PPE):
             self.ppe = ppe
         else:

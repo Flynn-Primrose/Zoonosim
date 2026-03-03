@@ -451,18 +451,11 @@ def get_default_colors(agent_type):
     return c
 
 
-default_pop_pars = {
-    'avg_barns_per_farm': 3.0,
-    'avg_humans_per_barn': 2.0,
-    'avg_flock_size': 1000.0,
-    'avg_water_per_farm': 1.0,
-}
-
-
 # Parameters that can vary by variant
 # TODO: Refactor to include sub pars for each species type.
 variant_pars = [
     'human',
+    'ppe',
     'flock',
     'barn',
     'water'
@@ -503,16 +496,6 @@ default_barn_prognoses = dict(
 default_water_prognoses = dict(
     sus_ORs = 1.00,
     trans_ORs = 1.00
-)
-
-default_production_cycle = dict(
-    breeds = np.array(['duck', 'broiler', 'layer'], dtype=default_str),
-    cycle_dur = [dict(dist = 'normal_pos', par1 = 600, par2 = 50),
-                 dict(dist = 'normal_pos', par1 = 45, par2 = 5),
-                 dict(dist = 'normal_pos', par1 = 150, par2=25)],
-    flock_size = [dict(dist = 'normal_pos', par1 = 1000, par2 = 100),
-                dict(dist = 'normal_pos', par1 = 20000, par2 = 1000),
-                dict(dist = 'normal_pos', par1 = 10000, par2 = 500)]
 )
 
 # ILI default parameters
