@@ -10,6 +10,7 @@ from . import utils as znu
 
 from .rosters.agents import Agents
 from .rosters.humans import Humans
+from .rosters.ppe import PPE
 from .rosters.flocks import Flocks
 from .rosters.barns import Barns
 from .rosters.waters import Water
@@ -48,6 +49,7 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
         'pop_size': len(popdict['uid']),
         'pop_size_by_type': {
             'human': len(popdict['human_uids']),
+            'ppe': len(popdict['ppe_uids']),
             'barn': len(popdict['barn_uids']),
             'flock': len(popdict['flock_uids']),
             'water': len(popdict['water_uids']),
@@ -58,7 +60,8 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
     sim.popdict = popdict # Store the population dictionary in the simulation object
 
 
-    human = make_humans(sim.pars, popdict['human_uids'])
+    human = make_humans(sim.pars, popdict['human_uids'], popdict['human2ppe'])
+    ppe = make_ppe(sim.pars, popdict['ppe_uids'], popdict['ppe2human'])
     flock = make_flocks(sim.pars, popdict['flock_uids'], popdict['flock2barn'], popdict['breed_index'])
     barn = make_barns(sim.pars, popdict['barn_uids'], popdict['barn2flock'], popdict['barn2breed'])
     water = make_water(sim.pars, popdict['water_uids'])
@@ -69,6 +72,7 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
                     fid = popdict['fid'], 
                     agent_type = popdict['agent_type'], 
                     human = human,
+                    ppe = ppe,
                     flock = flock,
                     barn = barn,
                     water = water,
@@ -172,8 +176,7 @@ def make_popdict(sim, **kwargs):
         #n_occupied_barns_by_farm[farm] = sum(znu.n_binomial(pop_pars['avg_barn_occupancy'], n_barns_by_farm[farm])) # Number of occupied barns per farm
         n_humans_by_farm[farm] = int(sum(znu.n_binomial(pop_pars['avg_humans_per_barn'], n_barns_by_farm[farm]))) # Number of workers per barn
         n_ppe_by_farm[farm] = n_humans_by_farm[farm] # Every farm will have the same number of ppe as humans
-    n_humans = sum(n_humans_by_farm) # Total number of workers in the simulation
-    
+    n_humans = sum(n_humans_by_farm) + pop_pars['number_of_transients'] # Total number of workers in the simulation
     n_ppe = n_humans # We assume one ppe per human
 
     # Create flocks
@@ -234,6 +237,14 @@ def make_popdict(sim, **kwargs):
         flock2barn.update(contactdict[farm]['flock2barn']) # Map flocks to barns for all farms
         human2ppe.update(contactdict[farm]['human2ppe']) # map humans to ppe for all farms
         barn2water.update(contactdict[farm]['barn2water']) # Map barns to water sources for all farms
+
+    transient_humans = popdict['human_uids'][human_index:]
+    transient_ppe = popdict['ppe_uids'][ppe_index:]
+    transient_human2ppe = dict(zip(transient_humans, transient_ppe))
+    transient_ppe2human = {v: k for k, v in transient_human2ppe.items()}
+
+    popdict['transient_human2ppe'] = transient_human2ppe
+    popdict['transient_ppe2human'] = transient_ppe2human
     
     popdict['contactdict'] = contactdict # Add the contact dictionary to the population dictionary
     popdict['breed_index'] = breed_index
@@ -250,23 +261,24 @@ def make_popdict(sim, **kwargs):
     popdict['barn2breed'] = {k: flock2breed[v] for k, v in barn2flock.items()}
     return popdict
 
-def make_humans(sim_pars, uid):
+def make_humans(sim_pars, uid, human2ppe):
     sex = znu.n_binomial(0.5, len(uid))
     age  = np.maximum(18, znu.n_poisson(40, len(uid))) # NOTE: Dummy values (assume average worker age of 40)
-
+    ppe = human2ppe[uid]
     if sim_pars['enable_smartwatches']: # If smartwatches are enabled we randomly assign them to 25% of the human population
         n_true = int(len(uid)*sim_pars['smartwatch_pars']['participation_rate']) # Number of humans with smartwatches
         n_false = len(uid) - n_true
         has_watch = np.array([True]*n_true + [False]*n_false)
         np.random.shuffle(has_watch)
-        humans = Humans(sim_pars, strict = False, uid = uid, age = age, sex = sex, has_watch = has_watch)
-    else: humans = Humans(sim_pars, strict = False, uid = uid, age = age, sex = sex)
+        humans = Humans(sim_pars, strict = False, uid = uid, age = age, sex = sex, ppe = ppe, has_watch = has_watch)
+    else: humans = Humans(sim_pars, strict = False, uid = uid, age = age, sex = sex, ppe = ppe)
 
     return humans
 
 def make_ppe(sim_pars, uid, ppe2human):
-    #TODO: create the ppe agents
-    return
+    human = ppe2human[uid]
+    ppe = PPE(sim_pars, strict = False, uid=uid, human=human)
+    return ppe
 
 def make_flocks(sim_pars, uid, flock2barn, breed_index):
     prod_pars = sim_pars['production_cycle']
@@ -274,10 +286,12 @@ def make_flocks(sim_pars, uid, flock2barn, breed_index):
     breed = np.empty(len(uid), dtype = object)
     headcount = np.empty(len(uid), dtype=znd.default_float)
     barn = np.empty(len(uid), dtype=znd.default_int)
-    for index in range(len(uid)):
-        breed[index] = sim_pars['flock_breeds'][breed_index[index]] # Get the breed for this flock
-        #breed[index] = znd.default_flock_breeds[breed_index[index]] # Get the breed for this flock
-        barn[index] = flock2barn[uid[index]]
+    # for index in range(len(uid)):
+    #     breed[index] = sim_pars['flock_breeds'][breed_index[index]] # Get the breed for this flock
+    #     #breed[index] = znd.default_flock_breeds[breed_index[index]] # Get the breed for this flock
+    #     barn[index] = flock2barn[uid[index]]
+    breed = sim_pars['flock_breeds'][breed_index]
+    barn = flock2barn[uid]
 
     this_breed, freq = np.unique(breed_index, return_counts=True)
     breed_dict = dict(zip(this_breed, freq))

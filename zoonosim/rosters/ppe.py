@@ -18,8 +18,8 @@ class PPEMeta(sc.prettyobj):
         
         self.agent = [
             'uid', # int
-            'temperature',
-            'humidity',
+            #'temperature',
+            #'humidity',
             'human', # uid of the human agent assigned to this equipment
         ]
 

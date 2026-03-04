@@ -39,7 +39,8 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['pop_pars'] = dict(
         avg_barns_per_farm = 5.0,
         avg_humans_per_barn = 1.5,
-        avg_water_per_farm = 0.75
+        avg_water_per_farm = 0.75,
+        number_of_transients = 10
     )
 
     for type in pars['agent_types']:

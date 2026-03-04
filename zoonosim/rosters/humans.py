@@ -33,7 +33,7 @@ class HumanMeta(sc.prettyobj):
             'viral_load',       # Float
             'rescaled_vl',      # Float
             'watch_fpr',        # Float
-
+            'ppe',              # Int, uid of the ppe assigned to this human
             'n_infections',     # Int
             'n_breakthroughs',  # Int
             'cons_days_in_quar',    # Int
