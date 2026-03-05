@@ -40,7 +40,8 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
         avg_barns_per_farm = 5.0,
         avg_humans_per_barn = 1.5,
         avg_water_per_farm = 0.75,
-        number_of_transients = 10
+        number_of_transients = 10,
+        visits_per_day = 3, # Number of farms each transient visits in a day
     )
 
     for type in pars['agent_types']:
