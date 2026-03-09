@@ -313,12 +313,19 @@ def reset_layer_pars(pars, layer_keys=None, force=False):
     (i.e. if the contact layers in the population do not match the parameters). More
     commonly, however, mismatches need to be fixed explicitly.
 
-    NOTE:   fb = Flock-Barn
-            bw = Barn-Water
-            fw = Flock-Water
-            hb = Human-Barn
-            hf = Human-Flock
+    NOTE:   hp = Human-PPE
             hh = Human-Human
+            hf = Human-Flock
+            hb = Human-Barn
+            hw = Human-Water
+            pp = PPE-PPE
+            pf = PPE-Flock
+            pb = PPE-Barn
+            pw = PPE-Water
+            fb = Flock-Barn
+            fw = Flock-Water
+            bw = Barn-Water
+            transient = Transient contacts
 
     Args:
         pars (dict): the parameters dictionary
@@ -327,9 +334,9 @@ def reset_layer_pars(pars, layer_keys=None, force=False):
     '''
 
     layer_defaults = dict(
-        beta_layer = dict(fb=1.0, bw=1.0, fw = 1.0, hb = 1.0, hf = 1.0, hh = 1.0, dw = 1.0), # Transmissibility per layer -- set to one by default
-        dynam_layer = dict(fb=0.0, bw=0.0, fw = 0.0, hb = 0.0, hf = 0.0, hh = 0.0, dw = 0.0), # Dynamic layer -- set to zero by default
-        quar_factor = dict(fb=0.0, bw=0.0, fw = 0.0, hb = 0.0, hf = 0.0, hh = 0.0, dw = 0.0), # Quarantine factor -- set to zero by default
+        beta_layer = dict(hp = 1.0, hh = 1.0, hf = 1.0, hb = 1.0, hw = 1.0, pp = 1.0, pf = 1.0, pb = 1.0, pw = 1.0, fb = 1.0, fw = 1.0, bw = 1.0, transient = 1.0), # Transmissibility per layer -- set to one by default
+        dynam_layer = dict(hp = 0.0, hh = 0.0, hf = 0.0, hb = 0.0, hw = 0.0, pp = 0.0, pf = 0.0, pb = 0.0, pw = 0.0, fb = 0.0, fw = 0.0, bw = 0.0, transient = 1.0), # Dynamic layer -- Only the transient layer is dynamic by default
+        quar_factor = dict(hp = 0.0, hh = 0.0, hf = 0.0, hb = 0.0, hw = 0.0, pp = 0.0, pf = 0.0, pb = 0.0, pw = 0.0, fb = 0.0, fw = 0.0, bw = 0.0, transient = 0.0), # Quarantine factor -- set to zero by default
     )
 
     default_val = 1.0 # Default value for parameters that are not specified

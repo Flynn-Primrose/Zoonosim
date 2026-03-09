@@ -169,8 +169,6 @@ class PPE(Subroster):
 
 
 
-
-
     def update_states_pre(self, t):
         ''' Perform all state updates at the current timestep '''
 
