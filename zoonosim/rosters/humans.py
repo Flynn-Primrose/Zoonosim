@@ -152,12 +152,13 @@ class Humans(Subroster):
     **Examples**::
     '''
 
-    def __init__(self, pars, strict=True, **kwargs):
+    def __init__(self, pars, schedule_ppe_quarantine=None, strict=True, **kwargs):
 
         # Handle pars and population size
         self.set_pars(pars)
         self.version = znv.__version__ # Store version info
 
+        self.schedule_ppe_quarantine = schedule_ppe_quarantine # Store the function for scheduling quarantine of PPE wearers, if applicable
         # Other initialization
         self.t = 0 # Keep current simulation time
         self._lock = False # Prevent further modification of keys
@@ -882,8 +883,14 @@ class Humans(Subroster):
             period (int): quarantine duration (defaults to ``pars['dur']['human']['quar']``)
         '''
 
+        
+
         start_date = self.t if start_date is None else int(start_date)
         period = self.pars['dur']['human']['quar'] if period is None else int(period)
+
+        ppe_uids = self.ppe[inds]
+        self.schedule_ppe_quarantine(ppe_uids, start_date=start_date, period=period)
+
         for ind in inds:
             self._pending_quarantine[start_date].append((ind, start_date + period))
         return

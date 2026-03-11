@@ -592,6 +592,14 @@ smartwatch_flows = {'alerted': 'smartwatch alerts',
 new_smartwatch_flows = [f'new_{key}' for key in smartwatch_flows.keys()]
 cum_smartwatch_flows = [f'cum_{key}' for key in smartwatch_flows.keys()]
 
+ppe_flows = {
+    'contaminated': 'contaminated PPE items',
+    'uncontaminated': 'uncontaminated PPE items',
+    'quarantined': 'PPE items quarantined',
+}
+new_ppe_flows = [f'new_{key}' for key in ppe_flows.keys()]
+cum_ppe_flows = [f'cum_{key}' for key in ppe_flows.keys()]
+
 flock_flows = {
     'exposed':     'exposed flocks',
     'infectious':   'infectious flocks',
@@ -627,6 +635,13 @@ human_flows_by_variant = {
 }
 new_human_flows_by_variant = [f'new_{key}' for key in human_flows_by_variant.keys()]
 cum_human_flows_by_variant = [f'cum_{key}' for key in human_flows_by_variant.keys()]
+
+ppe_flows_by_variant = {
+    'contaminated_by_varient': 'contaminated PPE by variant'
+}
+new_ppe_flows_by_variant = [f'new_{key}' for key in ppe_flows_by_variant.keys()]
+cum_ppe_flows_by_variant = [f'cum_{key}' for key in ppe_flows_by_variant.keys()]
+
 
 flock_flows_by_variant = {
     'exposed_by_variant':     'exposed flocks by variant',

@@ -17,7 +17,9 @@ class WaterMeta(sc.prettyobj):
         
         self.agent = [
             'uid', # int
-            'temperature'
+            'temperature',
+            'rel_trans',        # Float
+            'rel_sus',          # Float
         ]
 
         self.states = [
@@ -140,10 +142,20 @@ class Water(Subroster):
         ''' Perform initializations '''
         self.validate(roster_pars=agents_pars) # First, check that essential-to-match parameters match
         self.set_pars(agents_pars) # Replace the saved parameters with this simulation's
+        self.set_rel_sus() # Set the relative susceptibility of each waterbody based on the parameters
+        self.set_rel_trans() # Set the relative transmissibility of each waterbody based on the parameters
         self.initialized = True
         return
 
-
+    def set_rel_sus(self):
+        ''' Set the relative susceptibility of each waterbody based on the parameters '''
+        self.rel_sus = np.full(len(self), self.pars['prognoses']['water'], dtype=znd.default_float)
+        return
+    
+    def set_rel_trans(self):
+        ''' Set the relative transmissibility of each waterbody based on the parameters '''
+        self.rel_trans = np.full(len(self), self.pars['prognoses']['water'], dtype=znd.default_float)
+        return
 
     def update_states_pre(self, t):
         ''' Perform all state updates at the current timestep '''

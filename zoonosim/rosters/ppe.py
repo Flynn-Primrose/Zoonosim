@@ -4,6 +4,7 @@ Defines the subroster and metaroster for personal protective equipment
 
 import numpy as np
 import sciris as sc
+from collections import defaultdict
 from .. import version as znv
 from .. import utils as znu
 from .. import defaults as znd
@@ -20,12 +21,16 @@ class PPEMeta(sc.prettyobj):
             'uid', # int
             #'temperature',
             #'humidity',
+            'rel_trans',        # Float
+            'rel_sus',          # Float
             'human', # uid of the human agent assigned to this equipment
+            'cons_days_in_quar',    # Int
         ]
 
         self.states = [
             'uncontaminated', # bool; whether the barn is contaminated
             'contaminated', # bool; whether the barn is contaminated
+            'quarantined', # bool; whether the barn is under quarantine
         ]
 
         # self.biosec_states = [
@@ -46,10 +51,12 @@ class PPEMeta(sc.prettyobj):
         self.state_dates = [f'date_{state}' for state in self.states] # Convert each state into a date
 
         self.dates = self.state_dates
+        self.dates.append('date_end_quarantine')
 
         # Duration of different states: these are floats per Barn.
         self.durs = [
             'dur_contamination', # Duration of contamination
+            'dur_quarantine', # Duration of quarantine
         ]
 
         self.all_recordable_states = self.agent + self.states + self.variant_states + self.dates + self.durs
@@ -146,7 +153,7 @@ class PPE(Subroster):
             else:
                 self[key] = value
 
-        # self._pending_quarantine = defaultdict(list)  # Internal cache to record people that need to be quarantined on each timestep {t:(person, quarantine_end_day)}
+        self._pending_quarantine = defaultdict(list)  # Internal cache to record ppe that needs to be quarantined on each timestep {t:(person, quarantine_end_day)}
 
         return
 
@@ -164,10 +171,20 @@ class PPE(Subroster):
         ''' Perform initializations '''
         self.validate(roster_pars=agents_pars) # First, check that essential-to-match parameters match
         self.set_pars(agents_pars) # Replace the saved parameters with this simulation's
+        self.set_rel_sus() # Set the relative susceptibility of each PPE based on the parameters
+        self.set_rel_trans() # Set the relative transmissibility of each PPE based on the parameters
         self.initialized = True
         return
 
-
+    def set_rel_sus(self):
+        ''' Set the relative susceptibility of each PPE based on the parameters '''
+        self.rel_sus = np.full(len(self), self.pars['prognoses']['ppe'], dtype=znd.default_float)
+        return
+    
+    def set_rel_trans(self):
+        ''' Set the relative transmissibility of each PPE based on the parameters '''
+        self.rel_trans = np.full(len(self), self.pars['prognoses']['ppe'], dtype=znd.default_float)
+        return
 
     def update_states_pre(self, t):
         ''' Perform all state updates at the current timestep '''
@@ -183,6 +200,7 @@ class PPE(Subroster):
     def update_states_post(self):
         ''' Perform post-timestep updates '''
 
+        self.flows['new_quarantined'] += self.check_quar()
 
         return
 
@@ -218,6 +236,32 @@ class PPE(Subroster):
 
             self.update_event_log(inds, 'uncontaminated')
         return len(inds)
+
+    def check_quar(self):
+        ''' Update quarantine state '''
+
+        n_quarantined = 0 # Number of people entering quarantine
+        for ind,end_day in self._pending_quarantine[self.t]:
+            if self.quarantined[ind]: # Update when quarantine should be finished (in case schedule_quarantine is called on someone already in quarantine)
+                self.date_end_quarantine[ind] = max(self.date_end_quarantine[ind], end_day) # Extend quarantine if required
+            elif not (self.dead[ind] or self.recovered[ind] or self.diagnosed[ind]): # Unclear whether recovered should be included here # elif not (self.dead[ind] or self.diagnosed[ind]):
+                self.quarantined[ind] = True
+                self.date_quarantined[ind] = self.t
+                self.date_end_quarantine[ind] = end_day
+                n_quarantined += 1
+                self.update_event_log(ind, 'quarantined')
+
+        # If someone on quarantine has reached the end of their quarantine, release them
+        end_inds = self.check_inds(~self.quarantined, self.date_end_quarantine, filter_inds=None) # Note the double-negative here (~)
+        self.quarantined[end_inds] = False # Release from quarantine
+        self.update_event_log(end_inds, 'released from quarantine')
+
+        # Update the counter for consecutive days in quarantine
+        self.cons_days_in_quar[self.quarantined] += 1
+        self.cons_days_in_quar[~self.quarantined] = 0
+
+        return n_quarantined
+    
 
 
 
@@ -274,6 +318,32 @@ class PPE(Subroster):
 
 
         return n_infections # For incrementing counters
+    
+    def schedule_quarantine(self, uids, start_date=None, period=None):
+        '''
+        Schedule a quarantine. Typically not called by the user directly except
+        via a custom intervention; see the contact_tracing() intervention instead.
+
+        This function will create a request to quarantine a person on the start_date for
+        a period of time. Whether they are on an existing quarantine that gets extended, or
+        whether they are no longer eligible for quarantine, will be checked when the start_date
+        is reached.
+
+        Args:
+            uids (int/list): UIDs of who to quarantine, specified by check_quar()
+            start_date (int): day to begin quarantine (defaults to the current day, `sim.t`)
+            period (int): quarantine duration (defaults to ``pars['dur']['ppe']['quar']``)
+        '''
+
+        
+
+        start_date = self.t if start_date is None else int(start_date)
+        period = self.pars['dur']['ppe']['quar'] if period is None else int(period)
+
+        for uid in uids:
+            ind = np.where(self.uid == uid)[0]
+            self._pending_quarantine[start_date].append((ind, start_date + period))
+        return
     
     def story(self, uid, *args):
         '''

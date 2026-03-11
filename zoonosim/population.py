@@ -5,6 +5,8 @@ Defines functions for creating agents
 import numpy as np # Needed for a few things not provided by pl
 import sciris as sc
 
+from zoonosim.population import make_ppe
+
 from . import defaults as znd
 from . import utils as znu
 
@@ -61,9 +63,8 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
     sim.pars.update(new_pars) # Update the simulation parameters with the new population size
     sim.popdict = popdict # Store the population dictionary in the simulation object
 
-
-    human = make_humans(sim.pars, popdict['human_uids'], popdict['human2ppe'])
     ppe = make_ppe(sim.pars, popdict['ppe_uids'], popdict['ppe2human'])
+    human = make_humans(sim.pars, popdict['human_uids'], popdict['human2ppe'], ppe.schedule_quarantine) # We pass the ppe quarantine function to the human roster so that when a human is quarantined, their assigned ppe can also be quarantined
     flock = make_flocks(sim.pars, popdict['flock_uids'], popdict['flock2barn'], popdict['breed_index'])
     barn = make_barns(sim.pars, popdict['barn_uids'], popdict['barn2flock'], popdict['barn2breed'])
     water = make_water(sim.pars, popdict['water_uids'])
@@ -265,7 +266,7 @@ def make_popdict(sim, **kwargs):
     popdict['barn2breed'] = {k: flock2breed[v] for k, v in barn2flock.items()}
     return popdict
 
-def make_humans(sim_pars, uid, human2ppe):
+def make_humans(sim_pars, uid, human2ppe, schedule_ppe_quarantine=None):
     sex = znu.n_binomial(0.5, len(uid))
     age  = np.maximum(18, znu.n_poisson(40, len(uid))) # NOTE: Dummy values (assume average worker age of 40)
     ppe = human2ppe[uid]
@@ -274,8 +275,8 @@ def make_humans(sim_pars, uid, human2ppe):
         n_false = len(uid) - n_true
         has_watch = np.array([True]*n_true + [False]*n_false)
         np.random.shuffle(has_watch)
-        humans = Humans(sim_pars, strict = False, uid = uid, age = age, sex = sex, ppe = ppe, has_watch = has_watch)
-    else: humans = Humans(sim_pars, strict = False, uid = uid, age = age, sex = sex, ppe = ppe)
+        humans = Humans(sim_pars, schedule_ppe_quarantine=schedule_ppe_quarantine, strict = False, uid = uid, age = age, sex = sex, ppe = ppe, has_watch = has_watch)
+    else: humans = Humans(sim_pars, schedule_ppe_quarantine=schedule_ppe_quarantine, strict = False, uid = uid, age = age, sex = sex, ppe = ppe)
 
     return humans
 

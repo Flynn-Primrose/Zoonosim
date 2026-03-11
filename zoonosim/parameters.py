@@ -191,6 +191,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
 
     pars['dur']['ppe'] = {
         'contamination': dict(dist='lognormal_int', par1=14, par2=5.0), # Duration of contamination. NOTE: This data is just a guess, and should be replaced with real data
+        'quar': 7, # Duration of quarantine after suspected exposure. NOTE: This should generally be the same as the human quarantine duration.
     }
 
     pars['dur']['flock'] = {

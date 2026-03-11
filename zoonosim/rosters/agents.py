@@ -321,6 +321,24 @@ class Agents(Roster):
         infection_levels[non_zero_headcount_inds] = self.flock.infectious_headcount[non_zero_headcount_inds]/self.flock.headcount[non_zero_headcount_inds]
 
         return infection_levels
+    
+    def update_ppe_biosecurity_levels(self):
+        '''
+        Update the biosecurity levels of the PPE subroster. 
+        '''
+        return np.ones(len(self.ppe), dtype=znd.default_float) # Placeholder for now
+    
+    def update_barn_biosecurity_levels(self):
+        '''
+        Update the biosecurity levels of the barn subroster. 
+        '''
+        return np.ones(len(self.barn), dtype=znd.default_float) # Placeholder for now
+    
+    def update_water_biosecurity_levels(self):
+        '''
+        Update the biosecurity levels of the water subroster. 
+        '''
+        return np.ones(len(self.water), dtype=znd.default_float) # Placeholder for now
 
     def update_states_from_subrosters(self):
         susceptible_human_uids = np.array(self.human['uid'][znu.true(self.human['susceptible'])])
@@ -328,6 +346,11 @@ class Agents(Roster):
         infectious_human_uids = np.array(self.human['uid'][znu.true(self.human['infectious'])])
         symptomatic_human_uids = np.array(self.human['uid'][znu.true(self.human['symptomatic'])])
         quarantined_human_uids = np.array(self.human['uid'][znu.true(self.human['quarantined'])])
+
+        susceptible_ppe_uids = np.array(self.ppe['uid'][znu.false(self.ppe['contaminated'])])
+        exposed_ppe_uids = np.array(self.ppe['uid'][znu.true(self.ppe['contaminated'])])
+        infectious_ppe_uids = np.array(self.ppe['uid'][znu.true(self.ppe['contaminated'])])
+        quarantined_ppe_uids = np.array(self.ppe['uid'][znu.true(self.ppe['quarantined'])])
 
         susceptible_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['susceptible'])])
         exposed_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['exposed'])])
@@ -342,12 +365,12 @@ class Agents(Roster):
         exposed_water_uids = np.array(self.water['uid'][znu.true(self.water['contaminated'])])
         infectious_water_uids = np.array(self.water['uid'][znu.true(self.water['contaminated'])])
 
-        susceptible_uids = np.concatenate((susceptible_human_uids, susceptible_flock_uids, susceptible_barn_uids, susceptible_water_uids))
-        exposed_uids = np.concatenate((exposed_human_uids, exposed_flock_uids, exposed_barn_uids, exposed_water_uids))
-        infectious_uids = np.concatenate((infectious_human_uids, infectious_flock_uids, infectious_barn_uids, infectious_water_uids))
+        susceptible_uids = np.concatenate((susceptible_human_uids, susceptible_ppe_uids, susceptible_flock_uids, susceptible_barn_uids, susceptible_water_uids))
+        exposed_uids = np.concatenate((exposed_human_uids, exposed_ppe_uids, exposed_flock_uids, exposed_barn_uids, exposed_water_uids))
+        infectious_uids = np.concatenate((infectious_human_uids, infectious_ppe_uids, infectious_flock_uids, infectious_barn_uids, infectious_water_uids))
 
         symptomatic_uids = symptomatic_human_uids
-        quarantined_uids = np.concatenate((quarantined_human_uids, quarantined_flock_uids))
+        quarantined_uids = np.concatenate((quarantined_human_uids, quarantined_ppe_uids, quarantined_flock_uids))
 
         self.susceptible = np.isin(self['uid'], susceptible_uids)
         self.exposed = np.isin(self['uid'], exposed_uids)
@@ -355,6 +378,7 @@ class Agents(Roster):
         self.symptomatic = np.isin(self['uid'], symptomatic_uids)
         self.quarantined = np.isin(self['uid'], quarantined_uids)
         self.infectious_variant = np.concatenate((self.human.infectious_variant,
+                                                  self.ppe.contaminated_variant,
                                                   self.flock.infectious_variant,
                                                   self.barn.contaminated_variant,
                                                   self.water.contaminated_variant))
@@ -369,19 +393,19 @@ class Agents(Roster):
         return self.human.rel_sus
     
     def get_ppe_rel_sus(self):
-        #TODO: Discuss this with Caroline. Maybe introduce different levels of biosec?
-        return np.repeat([1.0], len(self.ppe))
+        
+        return self.ppe.rel_sus
     
     def get_flock_rel_sus(self):
         return self.flock.rel_sus
     
     def get_barn_rel_sus(self):
-        #TODO: This should depend on the temperature and humidity of the barn
-        return np.repeat([1.0], len(self.barn))
+
+        return self.barn.rel_sus
     
     def get_water_rel_sus(self):
         #TODO: This should depend on the temperature of the water
-        return np.repeat([1.0], len(self.water))
+        return self.water.rel_sus
     
     def get_rel_sus(self):
         human_rel_sus = self.get_human_rel_sus()
@@ -389,24 +413,22 @@ class Agents(Roster):
         flock_rel_sus = self.get_flock_rel_sus()
         barn_rel_sus = self.get_barn_rel_sus()
         water_rel_sus = self.get_water_rel_sus()
-        return np.concatenate((human_rel_sus, flock_rel_sus, barn_rel_sus, water_rel_sus))
+        return np.concatenate((human_rel_sus, ppe_rel_sus, flock_rel_sus, barn_rel_sus, water_rel_sus))
     
     def get_human_rel_trans(self):
         return self.human.rel_trans
     
     def get_ppe_rel_trans(self):
-        return np.repeat([1.0], len(self.ppe)) 
+        return self.ppe.rel_trans 
     
     def get_flock_rel_trans(self):
         return self.flock.rel_trans
     
     def get_barn_rel_trans(self):
-        #TODO: This should depend on the temperature and humidity of the barn
-        return np.repeat([1.0], len(self.barn))
+        return self.barn.rel_trans
     
     def get_water_rel_trans(self):
-        #TODO: This should depend on the temperature of the water
-        return np.repeat([1.0], len(self.water))
+        return self.water.rel_trans
     
     def get_rel_trans(self):
         human_rel_trans = self.get_human_rel_trans()
@@ -414,7 +436,7 @@ class Agents(Roster):
         flock_rel_trans = self.get_flock_rel_trans()
         barn_rel_trans = self.get_barn_rel_trans()
         water_rel_trans = self.get_water_rel_trans()
-        return np.concatenate((human_rel_trans, flock_rel_trans, barn_rel_trans, water_rel_trans))
+        return np.concatenate((human_rel_trans, ppe_rel_trans, flock_rel_trans, barn_rel_trans, water_rel_trans))
 
 
     #%% Methods to make events occur (infection and diagnosis)

@@ -621,12 +621,14 @@ class Sim(znb.BaseSim):
             verbose = self['verbose']
         
         human_pop_size = self.pars['pop_size_by_type']['human']
+        ppe_pop_size = self.pars['pop_size_by_type']['ppe']
         flock_pop_size = self.pars['pop_size_by_type']['flock']
         barn_pop_size = self.pars['pop_size_by_type']['barn']
         water_pop_size = self.pars['pop_size_by_type']['water']
 
 
         requested_human_exposures = self.pars['initial_conditions']['human']
+        requested_ppe_exposures = self.pars['initial_conditions']['ppe']
         requested_flock_exposures = self.pars['initial_conditions']['flock']
         requested_barn_contaminations = self.pars['initial_conditions']['barn']
         requested_water_contaminations = self.pars['initial_conditions']['water']
@@ -640,6 +642,14 @@ class Sim(znb.BaseSim):
                 else:
                     errormsg = (f'requested number of exposed humans ({requested_human_exposures}) '
                     f'is greater than the human population size ({human_pop_size})')
+                    ValueError(errormsg)
+            if requested_ppe_exposures > 0:
+                if ppe_pop_size >= requested_ppe_exposures:
+                    inds = znu.choose(ppe_pop_size, requested_ppe_exposures)
+                    self.agents.infect_type('ppe', inds, update=False)
+                else:
+                    errormsg = (f'requested number of exposed ppe ({requested_ppe_exposures}) '
+                    f'is greater than the ppe population size ({ppe_pop_size})')
                     ValueError(errormsg)
             if requested_flock_exposures > 0:
                 if flock_pop_size >= requested_flock_exposures:
@@ -768,24 +778,21 @@ class Sim(znb.BaseSim):
         # Compute viral loads in humans
         human_viral_load = self.agents.update_human_viral_loads(t=t)
 
+        # Compute modifiers for PPE
+        ppe_biosec = self.agents.update_ppe_biosecurity_levels()
 
         # Compute infection levels in flocks
         flock_infection_levels = self.agents.update_flock_infection_levels()
 
         
         # Compute modifiers for barns
-        # In principle the relative transmission and susceptibility of barns should vary based on temperature and humidity
-        # For now, I'm just setting them to 1
-        barn_modifiers = np.repeat(1.0, len(agents.barn)) # TODO: Implement barn modifiers based on temperature and humidity
+        barn_biosec = self.agents.update_barn_biosecurity_levels()
 
         # Compute modifiers for water
-        # In principle the relative transmission and susceptibility of water should vary based on temperature. 
-        # For now, I'm just setting them to 1
-        water_modifiers = np.repeat(1.0, len(agents.water)) # TODO: Implement water modifiers based on temperature
+        water_biosec = self.agents.update_water_biosecurity_levels()
 
         # Set modifiers for all agent types
-        # NOTE: Currently barn and water have no modifiers, I'm setting them to 1.0 for now.
-        misc_modifiers = np.concatenate((human_viral_load, flock_infection_levels, barn_modifiers, water_modifiers)) 
+        misc_modifiers = np.concatenate((human_viral_load, ppe_biosec, flock_infection_levels, barn_biosec, water_biosec)) 
 
 
                 # Toggle testing. Background ILI and symptoms are only simulated for testing, so they are enclosed here too.
@@ -804,7 +811,7 @@ class Sim(znb.BaseSim):
                 self.agents.human.date_diagnosed[testobj.date_positive == t] = t  # Update date_diagnosed with people who received at least one positive test today
                 
                 self.results['new_diagnoses_custom'][t] += sum(testobj.date_positive == t)
-                self.results['cum_diagnoses_custom'][t] += sum(self.results['new_diagnoses_custom'][:t])
+                # self.results['cum_diagnoses_custom'][t] += sum(self.results['new_diagnoses_custom'][:t]) # This should be automatically handled by the cumulative result object, so no need to manually update it here.
 
         # Apply interventions
         for i,intervention in enumerate(self['interventions']):
@@ -836,8 +843,9 @@ class Sim(znb.BaseSim):
 
             # The 'wild' variant defines the baseline for all these values
             asymp_factor = np.repeat([self['variant_pars']['wild']['human']['rel_asymp_fact'], 1.0], 
-                                  [len(agents.human), (len(agents.flock) + len(agents.barn) + len(agents.water))])
+                                  [len(agents.human), (len(agents.ppe) + len(agents.flock) + len(agents.barn) + len(agents.water))])
             human_rel_beta = self['variant_pars']['wild']['human']['rel_beta']
+            ppe_rel_beta   = self['variant_pars']['wild']['ppe']['rel_beta']
             flock_rel_beta = self['variant_pars']['wild']['flock']['rel_beta']
             barn_rel_beta  = self['variant_pars']['wild']['barn']['rel_beta']
             water_rel_beta = self['variant_pars']['wild']['human']['rel_beta']
@@ -845,8 +853,9 @@ class Sim(znb.BaseSim):
             if variant:
                 variant_label = self.pars['variant_map'][variant]
                 asymp_factor *= np.repeat([self['variant_pars'][variant_label]['human']['rel_asymp_fact'], 1.0], 
-                                  [len(agents.human), (len(agents.flock) + len(agents.barn) + len(agents.water))])
+                                  [len(agents.human), (len(agents.ppe) + len(agents.flock) + len(agents.barn) + len(agents.water))])
                 human_rel_beta *= self['variant_pars'][variant_label]['human']['rel_beta']
+                ppe_rel_beta   *= self['variant_pars'][variant_label]['ppe']['rel_beta']
                 flock_rel_beta *= self['variant_pars'][variant_label]['flock']['rel_beta']
                 barn_rel_beta  *= self['variant_pars'][variant_label]['barn']['rel_beta']
                 water_rel_beta *= self['variant_pars'][variant_label]['human']['rel_beta']
@@ -854,11 +863,11 @@ class Sim(znb.BaseSim):
 
 
             beta = np.repeat([znd.default_float(self['beta']['human']*human_rel_beta),
+                              znd.default_float(self['beta']['ppe']*ppe_rel_beta),
                               znd.default_float(self['beta']['flock']*flock_rel_beta), 
                               znd.default_float(self['beta']['barn']*barn_rel_beta), 
                               znd.default_float(self['beta']['water']*water_rel_beta)], 
-                              [len(agents.human), len(agents.flock), len(agents.barn), len(agents.water)])
-            
+                              [len(agents.human), len(agents.ppe), len(agents.flock), len(agents.barn), len(agents.water)])
 
             for lkey, layer in contacts.items():
                 p1 = layer['p1']
