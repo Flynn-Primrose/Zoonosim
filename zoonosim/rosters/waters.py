@@ -149,12 +149,12 @@ class Water(Subroster):
 
     def set_rel_sus(self):
         ''' Set the relative susceptibility of each waterbody based on the parameters '''
-        self.rel_sus = np.full(len(self), self.pars['prognoses']['water'], dtype=znd.default_float)
+        self.rel_sus = np.full(len(self), self.pars['prognoses']['water']['sus_ORs'], dtype=znd.default_float)
         return
     
     def set_rel_trans(self):
         ''' Set the relative transmissibility of each waterbody based on the parameters '''
-        self.rel_trans = np.full(len(self), self.pars['prognoses']['water'], dtype=znd.default_float)
+        self.rel_trans = np.full(len(self), self.pars['prognoses']['water']['trans_ORs'], dtype=znd.default_float)
         return
 
     def update_states_pre(self, t):

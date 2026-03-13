@@ -317,7 +317,7 @@ class Sim(znb.BaseSim):
         for key,label in znd.flock_flows.items():
             self.results[f'new_flock_{key}'] = init_res(f'Number of new {label}', color=flock_dcols[key])
 
-        for breed in self['flock_breeds']:
+        for breed in self['poultry_pars']['breeds']:
             for key,label in znd.flock_flows.items():
                 self.results[f'cum_{breed}_flock_{key}'] = init_res(f'Cumulative {label} ({breed})', color=breed_dcols[breed])
 
@@ -366,7 +366,7 @@ class Sim(znb.BaseSim):
         # self.results['frac_human_vaccinated'] =  init_res('Calculate the fraction vaccinated', scale=True)
 
         # Derived breed results
-        for breed in self['flock_breeds']:
+        for breed in self['poultry_pars']['breeds']:
             for key,label in znd.flock_flows.items():
                 self.results[f'n_{breed}_flock_{key}'] = init_res(f'Number of {label} ({breed})', color=breed_dcols[breed])
 

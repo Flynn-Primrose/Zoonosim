@@ -179,7 +179,7 @@ class Flocks(Subroster):
         ''' Initialize flows to be zero '''
         self.flows = {key:0 for key in znd.new_flock_flows}
         self.flows_breed = {}
-        for breed in self.pars['flock_breeds']:
+        for breed in self.pars['poultry_pars']['breeds']:
             for key in znd.new_flock_flows:
                 self.flows_breed[(breed, key)] = 0
         self.flows_variant = {}
@@ -298,7 +298,7 @@ class Flocks(Subroster):
             return 0
         new_suspicious_inds = unsuspected_inds[suspicious_inds]
 
-        for breed in self.pars['flock_breeds']: # Update flows by breed
+        for breed in self.pars['poultry_pars']['breeds']: # Update flows by breed
             breed_inds = znu.itrue(self.check_breed(new_suspicious_inds, breed), new_suspicious_inds)
             n_breed_inds = len(breed_inds)
             self.flows_breed[(breed, 'new_suspected')] += n_breed_inds
@@ -327,7 +327,7 @@ class Flocks(Subroster):
         self.date_infectious[inds] = self.t
         self.update_event_log(inds, 'infectious')
 
-        for breed in self.pars['flock_breeds']: # Update flows by breed
+        for breed in self.pars['poultry_pars']['breeds']: # Update flows by breed
             breed_inds = znu.itrue(self.check_breed(inds, breed), inds)
             n_breed_inds = len(breed_inds)
             self.flows_breed[(breed, 'new_infectious')] += n_breed_inds
@@ -359,7 +359,7 @@ class Flocks(Subroster):
 
         if len(quarantined_inds):
             self.update_event_log(quarantined_inds, 'quarantined')
-            for breed in self.pars['flock_breeds']: # Update flows by breed
+            for breed in self.pars['poultry_pars']['breeds']: # Update flows by breed
                 breed_inds = znu.itrue(self.check_breed(quarantined_inds, breed), quarantined_inds)
                 n_breed_inds = len(breed_inds)
                 self.flows_breed[(breed, 'new_quarantined')] += n_breed_inds
@@ -438,7 +438,7 @@ class Flocks(Subroster):
         self.exposed_headcount[inds] = initial_exposed
         self.exposed_variant[inds] = variant
         self.exposed_by_variant[variant, inds] = True
-        for breed in self.pars['flock_breeds']: # Update flows by breed
+        for breed in self.pars['poultry_pars']['breeds']: # Update flows by breed
             breed_inds = znu.itrue(self.check_breed(inds, breed), inds)
             n_breed_inds = len(breed_inds)
             self.flows_breed[(breed, 'new_exposed')] += n_breed_inds

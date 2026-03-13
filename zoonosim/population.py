@@ -5,8 +5,6 @@ Defines functions for creating agents
 import numpy as np # Needed for a few things not provided by pl
 import sciris as sc
 
-from zoonosim.population import make_ppe
-
 from . import defaults as znd
 from . import utils as znu
 
@@ -269,7 +267,9 @@ def make_popdict(sim, **kwargs):
 def make_humans(sim_pars, uid, human2ppe, schedule_ppe_quarantine=None):
     sex = znu.n_binomial(0.5, len(uid))
     age  = np.maximum(18, znu.n_poisson(40, len(uid))) # NOTE: Dummy values (assume average worker age of 40)
-    ppe = human2ppe[uid]
+    ppe = np.empty(len(uid), dtype=znd.default_int)
+    for index in range(len(uid)):
+        ppe[index] = human2ppe[uid[index]]
     if sim_pars['enable_smartwatches']: # If smartwatches are enabled we randomly assign them to 25% of the human population
         n_true = int(len(uid)*sim_pars['smartwatch_pars']['participation_rate']) # Number of humans with smartwatches
         n_false = len(uid) - n_true
@@ -281,22 +281,24 @@ def make_humans(sim_pars, uid, human2ppe, schedule_ppe_quarantine=None):
     return humans
 
 def make_ppe(sim_pars, uid, ppe2human):
-    human = ppe2human[uid]
+    human = np.empty(len(uid), dtype=znd.default_int)
+    for index in range(len(uid)):
+        human[index] = ppe2human[uid[index]]
     ppe = PPE(sim_pars, strict = False, uid=uid, human=human)
     return ppe
 
 def make_flocks(sim_pars, uid, flock2barn, breed_index):
-    prod_pars = sim_pars['production_cycle']
+    prod_pars = sim_pars['poultry_pars']
 
     breed = np.empty(len(uid), dtype = object)
     headcount = np.empty(len(uid), dtype=znd.default_float)
     barn = np.empty(len(uid), dtype=znd.default_int)
-    # for index in range(len(uid)):
-    #     breed[index] = sim_pars['flock_breeds'][breed_index[index]] # Get the breed for this flock
-    #     #breed[index] = znd.default_flock_breeds[breed_index[index]] # Get the breed for this flock
-    #     barn[index] = flock2barn[uid[index]]
-    breed = sim_pars['flock_breeds'][breed_index]
-    barn = flock2barn[uid]
+    for index in range(len(uid)):
+        breed[index] = prod_pars['breeds'][breed_index[index]] # Get the breed for this flock
+        #breed[index] = znd.default_flock_breeds[breed_index[index]] # Get the breed for this flock
+        barn[index] = flock2barn[uid[index]]
+    # breed = sim_pars['flock_breeds'][breed_index]
+    # barn = flock2barn[uid]
 
     this_breed, freq = np.unique(breed_index, return_counts=True)
     breed_dict = dict(zip(this_breed, freq))
@@ -312,14 +314,14 @@ def make_barns(sim_pars, uid, barn2flock, barn2breed):
     flock = np.empty(len(uid), dtype=znd.default_int)
     breed_index = np.empty(len(uid), dtype=znd.default_int)
     date_cycle_end = np.empty(len(uid), dtype=znd.default_float)
-    # for index in range(len(uid)):
-    #     flock[index] = barn2flock[uid[index]]
-    #     breed_index[index] = barn2breed[uid[index]]
-    flock = barn2flock[uid]
-    breed_index = barn2breed[uid]
+    for index in range(len(uid)):
+        flock[index] = barn2flock[uid[index]]
+        breed_index[index] = barn2breed[uid[index]]
+    # flock = barn2flock[uid]
+    # breed_index = barn2breed[uid]
 
 
-    prod_pars = sim_pars['production_cycle']
+    prod_pars = sim_pars['poultry_pars']
     breed, freq = np.unique(list(barn2breed.values()), return_counts=True)
     breed_dict = dict(zip(breed, freq))
     for breed, freq in breed_dict.items():
@@ -351,7 +353,7 @@ def make_contacts(sim_pars, popdict, skip_layers=None):
 
     data = {}
     if 'hp' not in skip_layers:
-        hp_layer = make_hp_contacts(popdict, sim_pars['hp_layer']['hp']) # Human-PPE contacts (includes both workers and transients)
+        hp_layer = make_hp_contacts(popdict, sim_pars['beta_layer']['hp']) # Human-PPE contacts (includes both workers and transients)
         data['hp'] = hp_layer
     if 'hh' not in skip_layers:
         hh_layer = make_hh_contacts(popdict, sim_pars['beta_layer']['hh']) # Human-human contacts
@@ -367,16 +369,16 @@ def make_contacts(sim_pars, popdict, skip_layers=None):
         data['hw'] = hw_layer
 
     if 'pp' not in skip_layers:
-        pp_layer = make_pp_contacts(hh_layer, popdict, sim_pars['beta_layers']['pp']) # PPE-PPE contacts
+        pp_layer = make_pp_contacts(hh_layer, popdict, sim_pars['beta_layer']['pp']) # PPE-PPE contacts
         data['pp'] = pp_layer
     if 'pf' not in skip_layers:
-        pf_layer = make_pf_contacts(hf_layer, popdict, sim_pars['beta_layers']['pf']) # PPE-flock contacts
+        pf_layer = make_pf_contacts(hf_layer, popdict, sim_pars['beta_layer']['pf']) # PPE-flock contacts
         data['pf'] = pf_layer
     if 'pb' not in skip_layers:
-        pb_layer = make_pb_contacts(hb_layer, popdict, sim_pars['beta_layers']['pb']) # PPE-barn contacts
+        pb_layer = make_pb_contacts(hb_layer, popdict, sim_pars['beta_layer']['pb']) # PPE-barn contacts
         data['pb'] = pb_layer
     if 'pw' not in skip_layers:
-        pw_layer = make_pw_contacts(hw_layer, popdict, sim_pars['beta_layers']['pw']) # PPE-water contacts
+        pw_layer = make_pw_contacts(hw_layer, popdict, sim_pars['beta_layer']['pw']) # PPE-water contacts
         data['pw'] = pw_layer
     
     if 'fb' not in skip_layers:
@@ -407,7 +409,8 @@ def make_hp_contacts(popdict, beta):
         hp_layer (Layer): A layer object containing all human-ppe contacts
     '''
     hp_1 = popdict['human_uids']
-    hp_2 = popdict['human2ppe'][popdict['human_uids']]
+    #hp_2 = popdict['human2ppe'][popdict['human_uids']]
+    hp_2 = np.vectorize(popdict['human2ppe'].get)(popdict['human_uids']) # This is a more efficient way to get the ppe for each human than looping through them
     hp_beta = np.repeat(beta, len(hp_1))
     hp_layer = Layer(p1 = hp_1,
                      p2 = hp_2,
@@ -442,7 +445,6 @@ def make_hh_contacts(popdict, beta):
                     # NOTE: This assumes that humans have contact with all humans on the farm
 
     hh_beta = np.repeat(beta, len(hh_p1)) 
-
     hh_layer = Layer(p1 = hh_p1,
                      p2 = hh_p2,
                      beta = hh_beta,
@@ -538,10 +540,9 @@ def make_hw_contacts(popdict, beta):
 
     for farm, farm_contacts in farmdict.items():
         for human in farm_contacts['humans']:
-            for water in farm_contacts['water']:
-                hw_1.append(human)
-                hw_2.append(water)
-                # NOTE: This assumes all humans on a farm come into contact with all water sources on that farm
+            hw_1.append(human)
+            hw_2.append(farm_contacts['water']) # Get the water source for this human
+            # NOTE: This assumes all humans on a farm come into contact with all water sources on that farm
     
     hw_beta = np.repeat(beta, len(hw_1))
     hw_layer = Layer(p1 = hw_1,
@@ -561,8 +562,8 @@ def make_pp_contacts(hh_layer, popdict, beta):
     Returns:
         pp_layer    (Layer):
     '''
-    pp_1 = hh_layer['p1'][popdict['human2ppe']]
-    pp_2 = hh_layer['p2'][popdict['human2ppe']]
+    pp_1 = np.vectorize(popdict['human2ppe'].get)(hh_layer['p1']) # This is a more efficient way to get the ppe for each human than looping through them
+    pp_2 = np.vectorize(popdict['human2ppe'].get)(hh_layer['p2']) # This is a more efficient way to get the ppe for each human than looping through them
     pp_beta = np.repeat(beta, len(pp_1))
     pp_layer = Layer(p1 = pp_1,
                      p2 = pp_2,
@@ -583,7 +584,8 @@ def make_pf_contacts(hf_layer, popdict, beta):
         pf_layer    (Layer):
     '''
 
-    pf_1 = hf_layer['p1'][popdict['human2ppe']]
+    # pf_1 = hf_layer['p1'][popdict['human2ppe']]
+    pf_1 = np.vectorize(popdict['human2ppe'].get)(hf_layer['p1']) # This is a more efficient way to get the ppe for each human than looping through them
     pf_2 = hf_layer['p2']
     pf_beta = np.repeat(beta, len(pf_1))
     pf_layer = Layer(p1 = pf_1,
@@ -603,7 +605,8 @@ def make_pb_contacts(hb_layer, popdict, beta):
     Returns:
         pb_layer    (Layer):
     '''
-    pb_1 = hb_layer['p1'][popdict['human2ppe']]
+    # pb_1 = hb_layer['p1'][popdict['human2ppe']]
+    pb_1 = np.vectorize(popdict['human2ppe'].get)(hb_layer['p1']) # This is a more efficient way to get the ppe for each human than looping through them
     pb_2 = hb_layer['p2']
     pb_beta = np.repeat(beta, len(pb_1))
     pb_layer = Layer(p1 = pb_1,
@@ -623,7 +626,8 @@ def make_pw_contacts(hw_layer, popdict, beta):
     Returns:
         pb_layer    (Layer):
     '''
-    pw_1 = hw_layer['p1'][popdict['human2ppe']]
+    # pw_1 = hw_layer['p1'][popdict['human2ppe']]
+    pw_1 = np.vectorize(popdict['human2ppe'].get)(hw_layer['p1']) # This is a more efficient way to get the ppe for each human than looping through them
     pw_2 = hw_layer['p2']
     pw_beta = np.repeat(beta, len(pw_1))
     pw_layer = Layer(p1 = pw_1,
@@ -736,8 +740,8 @@ class transient_Layer(Layer):
     '''
     A subclass of Layer to represent transient contacts. The key difference is the override of update() that allows the contacts to change at each timestep.
     '''
-    def __init__(self, *args, label, popdict):
-        super().__init__(*args, label=label)
+    def __init__(self, p1, p2, beta, label, popdict):
+        super().__init__(p1=p1, p2=p2, beta=beta, label=label)
         self.popdict = popdict
 
     def update(self):
@@ -745,27 +749,27 @@ class transient_Layer(Layer):
         Update the contacts for this layer.
         '''
 
-        p1 = []
-        p2 = []
+        p1 = np.array([], dtype=znd.default_int)
+        p2 = np.array([], dtype=znd.default_int)
 
         for transient in self.popdict['transient_humans']:
-            farms = np.random.choice(self.popdict['farmdict'].keys(), self.popdict['visits_per_day']) # Randomly assign 'visits_per_day' farms to this transient
+            farms = np.random.choice(list(self.popdict['farmdict'].keys()), self.popdict['visits_per_day']) # Randomly assign 'visits_per_day' farms to this transient
             for farm in farms:
                 humans = self.popdict['farmdict'][farm]['humans']
                 flocks = self.popdict['farmdict'][farm]['flocks']
                 barns = self.popdict['farmdict'][farm]['barns']
                 water = self.popdict['farmdict'][farm]['water']
-                transient_p1 = [transient] * (len(humans) + len(flocks) + len(barns) + len(water))
-                transient_p2 = np.concatenate((humans, flocks, barns, water))
-                ppe_p1 = self.popdict['human2ppe'][transient_p1]
-                ppe_p2 = np.concatenate(([self.popdict['human2ppe'][human] for human in humans], flocks, barns, water))
-                p1.extend(transient_p1)
-                p2.extend(transient_p2)
-                p1.extend(ppe_p1)
-                p2.extend(ppe_p2)
-        self.p1 = np.array(p1)
-        self.p2 = np.array(p2)
-        self.beta = np.repeat(self.beta[0], len(self.p1)) # Assuming the same beta for all transient contacts, we just repeat the first value to match the new length of p1 and p2
+                transient_p1 = np.repeat(transient, len(humans) + len(flocks) + len(barns) + 1) # The +1 is for the water source.
+                transient_p2 = np.concatenate((humans, flocks, barns, [water]))
+                ppe_p1 = [self.popdict['human2ppe'][transient] for transient in transient_p1]
+                ppe_p2 = np.concatenate(([self.popdict['human2ppe'][human] for human in humans], flocks, barns, [water]))
+                p1 = np.concatenate((p1, transient_p1), dtype=transient_p1.dtype)
+                p2 = np.concatenate((p2, transient_p2), dtype=transient_p2.dtype)
+                p1 = np.concatenate((p1, ppe_p1), dtype=ppe_p1.dtype)
+                p2 = np.concatenate((p2, ppe_p2), dtype=ppe_p2.dtype)
+        self.p1 = p1
+        self.p2 = p2
+        self.beta = np.repeat(self.beta, len(self.p1)) # Assuming the same beta for all transient contacts, we just repeat the first value to match the new length of p1 and p2
         return
 
 def make_transient_contacts(popdict, beta):
@@ -780,7 +784,30 @@ def make_transient_contacts(popdict, beta):
         transient_layer: a transient_Layer object containing the transient contacts
     '''
 
-    transient_layer = transient_Layer(p1 = [], p2 = [], beta = beta, label = 'transient contacts', popdict = popdict)
+    p1 = np.array([], dtype=znd.default_int)
+    p2 = np.array([], dtype=znd.default_int)
+
+    for transient in popdict['transient_humans']:
+        farms = np.random.choice(list(popdict['farmdict'].keys()), popdict['visits_per_day']) # Randomly assign 'visits_per_day' farms to this transient
+        for farm in farms:
+            humans = popdict['farmdict'][farm]['humans']
+            flocks = popdict['farmdict'][farm]['flocks']
+            barns = popdict['farmdict'][farm]['barns']
+            water = popdict['farmdict'][farm]['water']
+            print(len(humans) + len(flocks) + len(barns) + 1)
+            transient_p1 = np.repeat(transient, len(humans) + len(flocks) + len(barns) + 1) # The +1 is for the water source.
+            print(transient_p1)
+            transient_p2 = np.concatenate((humans, flocks, barns, [water]))
+            ppe_p1 = np.array([popdict['human2ppe'][transient] for transient in transient_p1])
+            ppe_p2 = np.concatenate(([popdict['human2ppe'][human] for human in humans], flocks, barns, [water]))
+            #p1.append(transient_p1)
+            p1 = np.concatenate((p1, transient_p1), dtype=transient_p1.dtype)
+            print(p1)
+            p2 = np.concatenate((p2, transient_p2), dtype=transient_p2.dtype)
+            p1 = np.concatenate((p1, ppe_p1), dtype=ppe_p1.dtype)
+            p2 = np.concatenate((p2, ppe_p2), dtype=ppe_p2.dtype)
+    transient_beta = np.repeat(beta, len(p1)) # Assuming the same beta for all transient contacts, we just repeat the first value to match the new length of p1 and p2
+    transient_layer = transient_Layer(p1, p2, transient_beta, label = 'transient contacts', popdict = popdict)
 
     return transient_layer
 

@@ -65,7 +65,7 @@ class BarnMeta(sc.prettyobj):
         ]
 
         self.all_recordable_states = self.agent + self.states + self.variant_states + self.dates + self.durs
-        self.all_states = self.agent + self.states + self.biosec_states + self.variant_states + self.by_variant_states + self.dates + self.durs
+        self.all_states = self.agent + self.states + self.variant_states + self.by_variant_states + self.dates + self.durs
 
         # Validate
         self.state_types = ['agent', 'states', 'variant_states', 'by_variant_states']
@@ -134,9 +134,9 @@ class Barns(Subroster):
             self[key] = np.full(pop_size, val, dtype=bool)
 
         # Set biosec states
-        for key in self.meta.biosec_states:
-            val = (key in ['green']) # Default value is True for susceptible and naive, False otherwise
-            self[key] = np.full(pop_size, val, dtype=bool)
+        # for key in self.meta.biosec_states:
+        #     val = (key in ['green']) # Default value is True for susceptible and naive, False otherwise
+        #     self[key] = np.full(pop_size, val, dtype=bool)
 
         # Set variant states, which store info about which variant a person is exposed to
         for key in self.meta.variant_states:
@@ -192,12 +192,12 @@ class Barns(Subroster):
 
     def set_rel_sus(self):
         ''' Set the relative susceptibility of each barn based on the parameters '''
-        self.rel_sus = np.full(len(self), self.pars['prognoses']['barn'], dtype=znd.default_float)
+        self.rel_sus = np.full(len(self), self.pars['prognoses']['barn']['sus_ORs'], dtype=znd.default_float)
         return
     
     def set_rel_trans(self):
         ''' Set the relative transmissibility of each barn based on the parameters '''
-        self.rel_trans = np.full(len(self), self.pars['prognoses']['barn'], dtype=znd.default_float)
+        self.rel_trans = np.full(len(self), self.pars['prognoses']['barn']['trans_ORs'], dtype=znd.default_float)
         return
 
     def update_states_pre(self, t):

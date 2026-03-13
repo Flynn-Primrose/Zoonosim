@@ -60,7 +60,7 @@ class PPEMeta(sc.prettyobj):
         ]
 
         self.all_recordable_states = self.agent + self.states + self.variant_states + self.dates + self.durs
-        self.all_states = self.agent + self.states + self.biosec_states + self.variant_states + self.by_variant_states + self.dates + self.durs
+        self.all_states = self.agent + self.states + self.variant_states + self.by_variant_states + self.dates + self.durs
 
         # Validate
         self.state_types = ['agent', 'states', 'variant_states', 'by_variant_states']
@@ -110,7 +110,7 @@ class PPE(Subroster):
         self.event_log = []
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
 
-        pop_size = self.pars['pop_size_by_type']['PPE']
+        pop_size = self.pars['pop_size_by_type']['ppe'] # Get the population size for this subroster
 
         # Set person properties -- all floats except for UID
         for key in self.meta.agent:
@@ -160,9 +160,9 @@ class PPE(Subroster):
 
     def init_flows(self):
         ''' Initialize flows to be zero '''
-        self.flows = {key:0 for key in znd.new_PPE_flows}
+        self.flows = {key:0 for key in znd.new_ppe_flows}
         self.flows_variant = {}
-        for key in znd.new_PPE_flows_by_variant:
+        for key in znd.new_ppe_flows_by_variant:
             self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=znd.default_float)
 
         return
@@ -178,12 +178,12 @@ class PPE(Subroster):
 
     def set_rel_sus(self):
         ''' Set the relative susceptibility of each PPE based on the parameters '''
-        self.rel_sus = np.full(len(self), self.pars['prognoses']['ppe'], dtype=znd.default_float)
+        self.rel_sus = np.full(len(self), self.pars['prognoses']['ppe']['sus_ORs'], dtype=znd.default_float)
         return
     
     def set_rel_trans(self):
         ''' Set the relative transmissibility of each PPE based on the parameters '''
-        self.rel_trans = np.full(len(self), self.pars['prognoses']['ppe'], dtype=znd.default_float)
+        self.rel_trans = np.full(len(self), self.pars['prognoses']['ppe']['trans_ORs'], dtype=znd.default_float)
         return
 
     def update_states_pre(self, t):
