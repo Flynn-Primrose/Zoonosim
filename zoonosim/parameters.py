@@ -226,9 +226,9 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['poultry_pars'] = dict(
     breeds = np.array(['duck', 'broiler', 'layer'], dtype=znd.default_str),
     breed_freqs = [0.1, 0.2, 0.7],
-    mortality_suspicion_threshold = [0.01, 0.01, 0.01], # I.E a deviation from the expected mortality rate of 0.01*expected_value will trigger suspicion
-    symptomatic_suspicion_threshold = [0.01, 0.01, 0.01], # I.E a deviation from the expected symptomatic rate of 0.01*expected_value will trigger suspicion
-    consumption_suspicion_threshold = [0.01, 0.01, 0.01], # I.E a deviation from the expected rate of water consumption of 0.01*expected_value will trigger suspicion
+    mortality_suspicion_threshold = [0.1, 0.1, 0.1], # I.E a deviation from the expected mortality rate of 0.01*expected_value will trigger suspicion
+    symptomatic_suspicion_threshold = [0.1, 0.1, 0.1], # I.E a deviation from the expected symptomatic rate of 0.01*expected_value will trigger suspicion
+    consumption_suspicion_threshold = [0.1, 0.1, 0.1], # I.E a deviation from the expected rate of water consumption of 0.01*expected_value will trigger suspicion
     cycle_dur = [dict(dist = 'normal_pos', par1 = 600, par2 = 50),
                  dict(dist = 'normal_pos', par1 = 45, par2 = 5),
                  dict(dist = 'normal_pos', par1 = 150, par2=25)],

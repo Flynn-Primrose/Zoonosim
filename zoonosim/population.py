@@ -794,15 +794,12 @@ def make_transient_contacts(popdict, beta):
             flocks = popdict['farmdict'][farm]['flocks']
             barns = popdict['farmdict'][farm]['barns']
             water = popdict['farmdict'][farm]['water']
-            print(len(humans) + len(flocks) + len(barns) + 1)
             transient_p1 = np.repeat(transient, len(humans) + len(flocks) + len(barns) + 1) # The +1 is for the water source.
-            print(transient_p1)
             transient_p2 = np.concatenate((humans, flocks, barns, [water]))
             ppe_p1 = np.array([popdict['human2ppe'][transient] for transient in transient_p1])
             ppe_p2 = np.concatenate(([popdict['human2ppe'][human] for human in humans], flocks, barns, [water]))
             #p1.append(transient_p1)
             p1 = np.concatenate((p1, transient_p1), dtype=transient_p1.dtype)
-            print(p1)
             p2 = np.concatenate((p2, transient_p2), dtype=transient_p2.dtype)
             p1 = np.concatenate((p1, ppe_p1), dtype=ppe_p1.dtype)
             p2 = np.concatenate((p2, ppe_p2), dtype=ppe_p2.dtype)

@@ -234,10 +234,10 @@ class Flocks(Subroster):
 
         # Perform updates
         self.init_flows()
+        self.update_water_consumption() # Update the headcounts and water consumption of the flocks
         self.flows['new_infectious'] = self.check_infectious() # For flocks that are exposed and not infectious, check if they begin being infectious
         self.flows['new_suspected'] = self.check_suspected()
         self.flows['new_quarantined'] = self.check_quarantined() # 
-        self.update_water_consumption() # Update the headcounts and water consumption of the flocks
         return
 
 
@@ -286,13 +286,31 @@ class Flocks(Subroster):
         unsuspected_inds = np.where((self.suspected == False) & (self.headcount>0))[0]
         if len(unsuspected_inds) == 0:
             return 0
-        actual_symptomatic_rate = self.symptomatic_headcount[unsuspected_inds] / self.headcount[unsuspected_inds]
-        actual_mortality_rate = self.daily_dead_headcount[unsuspected_inds] / self.headcount[unsuspected_inds]
-        actual_water_rate = self.water_consumption[unsuspected_inds] / self.headcount[unsuspected_inds]
+        # actual_symptomatic_rate = self.symptomatic_headcount[unsuspected_inds] / self.headcount[unsuspected_inds]
+        # actual_mortality_rate = self.daily_dead_headcount[unsuspected_inds] / self.headcount[unsuspected_inds]
+        # actual_water_rate = self.water_consumption[unsuspected_inds] / self.headcount[unsuspected_inds]
+        expected_symptomatic_headcount = self.headcount[unsuspected_inds] * self.baseline_symptomatic_rate[unsuspected_inds]
+        symptomatic_deviation = np.abs(self.symptomatic_headcount[unsuspected_inds] - expected_symptomatic_headcount) / np.maximum(expected_symptomatic_headcount, 1) # Avoid division by zero
+        expected_mortality_headcount = self.headcount[unsuspected_inds] * self.baseline_mortality_rate[unsuspected_inds]
+        mortality_deviation = np.abs(self.daily_dead_headcount[unsuspected_inds] - expected_mortality_headcount) / np.maximum(expected_mortality_headcount, 1) # Avoid division by zero
+        expected_water_consumption = self.headcount[unsuspected_inds] * self.baseline_water_rate[unsuspected_inds]
+        water_deviation = np.abs(self.water_consumption[unsuspected_inds] - expected_water_consumption) / np.maximum(expected_water_consumption, 1) # Avoid division by zero
 
-        suspicious_symptomatic_inds = np.where(actual_symptomatic_rate > self.pars['suspicious_symptomatic_rate'])[0]
-        suspicious_mortality_inds = np.where(actual_mortality_rate > self.pars['suspicious_mortality_rate'])[0]
-        suspicious_water_inds = np.where(actual_water_rate > self.pars['suspicious_consumption_rate'])[0]
+        breed_to_index = {breed: index for index, breed in enumerate(self.pars['poultry_pars']['breeds'])}
+        breed_index = np.array([breed_to_index[this_breed] for this_breed in self.breed[unsuspected_inds]])
+
+        # symptomatic_suspicion_thresholds = self.pars['poultry_pars']['symptomatic_suspicion_threshold'][breed_index] # Get the suspicion threshold for each flock based on its breed
+        symptomatic_suspicion_thresholds = np.array([self.pars['poultry_pars']['symptomatic_suspicion_threshold'][index] for index in breed_index]) # Get the suspicion threshold for each flock based on its breed
+
+        #mortality_suspician_thresholds = self.pars['poultry_pars']['mortality_suspicion_threshold'][breed_index]
+        mortality_suspician_thresholds = np.array([self.pars['poultry_pars']['mortality_suspicion_threshold'][index] for index in breed_index])
+
+        #water_suspicion_thresholds = self.pars['poultry_pars']['consumption_suspicion_threshold'][breed_index]
+        water_suspicion_thresholds = np.array([self.pars['poultry_pars']['consumption_suspicion_threshold'][index] for index in breed_index])
+
+        suspicious_symptomatic_inds = np.where(symptomatic_deviation > symptomatic_suspicion_thresholds)[0]
+        suspicious_mortality_inds = np.where(mortality_deviation > mortality_suspician_thresholds)[0]
+        suspicious_water_inds = np.where(water_deviation > water_suspicion_thresholds)[0]
         suspicious_inds = np.unique(np.concatenate((suspicious_symptomatic_inds, suspicious_mortality_inds, suspicious_water_inds)))
         if len(suspicious_inds) == 0:
             return 0

@@ -403,6 +403,11 @@ def get_default_colors(agent_type):
             c.infections_by_variant = '#8dd3c7' # 
             c.symptomatic_by_variant = '#ffffb3' # 
             c.severe_by_variant = '#bebada' # 
+        case 'ppe':
+            c.contaminated = '#e41a1c' # 
+            c.uncontaminated = '#377eb8' # 
+            c.quarantined = '#4daf4a' #
+            c.contaminated_by_variant = '#984ea3' #
         case 'flock':
             c.susceptible = '#66c2a5' # 
             c.exposed = '#fc8d62' # 
@@ -515,6 +520,12 @@ human_stocks = {
     'dead':         'Number of dead humans',
 }
 
+ppe_stocks = {
+    'contaminated': 'Number of contaminated PPE items',
+    'uncontaminated': 'Number of uncontaminated PPE items',
+    'quarantined': 'Number of PPE items quarantined',
+}
+
 flock_stocks = {
     'susceptible': 'Number of susceptible flocks',
     'exposed':     'Number of exposed flocks',
@@ -542,6 +553,10 @@ human_stocks_by_variant = {
     'infectious_by_variant': 'Number infectious humans by variant',
     'symptomatic_by_variant': 'Number symptomatic humans by variant',
     'severe_by_variant':      'Number severe humans by variant',
+}
+
+ppe_stocks_by_variant = {
+    'contaminated_by_variant': 'Number contaminated PPE items by variant',
 }
 
 flock_stocks_by_variant = {
@@ -637,7 +652,7 @@ new_human_flows_by_variant = [f'new_{key}' for key in human_flows_by_variant.key
 cum_human_flows_by_variant = [f'cum_{key}' for key in human_flows_by_variant.keys()]
 
 ppe_flows_by_variant = {
-    'contaminated_by_varient': 'contaminated PPE by variant'
+    'contaminated_by_variant': 'contaminated PPE by variant'
 }
 new_ppe_flows_by_variant = [f'new_{key}' for key in ppe_flows_by_variant.keys()]
 cum_ppe_flows_by_variant = [f'cum_{key}' for key in ppe_flows_by_variant.keys()]

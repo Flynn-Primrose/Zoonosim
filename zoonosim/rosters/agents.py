@@ -459,7 +459,7 @@ class Agents(Roster):
         human_inds = np.where(np.isin(self.human.uid, self.uid[inds]))
         #human_inds = np.array([i for i, uid in enumerate(self.human.uid) if uid in set(self.uid[inds])]) # Supposedly faster if self.uid[inds] is large
 
-        ppe_inds = np.where(np.isin(self.ppe.uid), self.uid[inds])
+        ppe_inds = np.where(np.isin(self.ppe.uid, self.uid[inds]))
 
         flock_inds = np.where(np.isin(self.flock.uid, self.uid[inds])) 
         #flock_inds = np.array([i fo i,uid in enumerate(self.flock.uid) if uid in set(self.uid[inds])])
@@ -484,7 +484,7 @@ class Agents(Roster):
         '''
         Check for farms that are scheduled to be repopulated and reincarnate the resident flock with proper initial conditions.
         '''
-        prod_pars = self.pars['production_cycle'] 
+        prod_pars = self.pars['poultry_pars'] 
         progs = self.pars['prognoses']['flock']
         barn_inds = np.where(self.barn.date_repopulate <= t)[0]
         if barn_inds.size > 0:
