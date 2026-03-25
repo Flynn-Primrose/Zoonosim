@@ -755,7 +755,7 @@ class Sim(znb.BaseSim):
             elif self['n_imports']['barn']['import_pattern'] == 'seasonal':
                 # Seasonal importation based on a sine wave
                 day_of_year = (self.datevec[t].timetuple().tm_yday - 1)  # Day of year (0-364)
-                n_barn_imports = self['n_imports']['barn']['max_import_rate'] * (1 + np.cos(2 * np.pi * (day_of_year - self['n_imports']['barn']['peak_day']) / 365)) / 2
+                n_barn_imports = znu.poisson(self['n_imports']['barn']['max_import_rate'] * (1 + np.cos(2 * np.pi * (day_of_year - self['n_imports']['barn']['peak_day']) / 365)) / 2)
                 if n_barn_imports>0:
                     barn_inds = znu.choose(max_n=len(self.agents.barn), n=n_barn_imports)
                     self.agents.infect_type('barn', barn_inds)
@@ -772,7 +772,7 @@ class Sim(znb.BaseSim):
             elif self['n_imports']['water']['import_pattern'] == 'seasonal':
                 # Seasonal importation based on a sine wave
                 day_of_year = (self.datevec[t].timetuple().tm_yday - 1)  # Day of year (0-364)
-                n_water_imports = self['n_imports']['water']['max_import_rate'] * (1 + np.cos(2 * np.pi * (day_of_year - self['n_imports']['water']['peak_day']) / 365)) / 2
+                n_water_imports = znu.poisson(self['n_imports']['water']['max_import_rate'] * (1 + np.cos(2 * np.pi * (day_of_year - self['n_imports']['water']['peak_day']) / 365)) / 2)
                 if n_water_imports>0:
                     water_inds = znu.choose(max_n = len(self.agents.water), n=n_water_imports)
                     self.agents.infect_type('water', water_inds)

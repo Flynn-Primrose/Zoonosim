@@ -17,6 +17,12 @@ In terms of operating the software, the most important component is the "pars" o
 - pop_size
   - The total number of agents (of all types) in the simulation.
   - This value is typically set automatically when the population is generated
+- pop_pars
+  - avg_barns_per farm
+  - avg_humans_per_barn
+  - avg_water_per_farm
+  - number_of_transients
+  - visits_per_day
 - pop_size_by_type
   - A dictionary, the keys are the agent types and the values are number of agents of that specific type
   - Typically set automatically when the population is created
@@ -105,6 +111,8 @@ In terms of operating the software, the most important component is the "pars" o
         - high_cap
     - enable_vl
       - Boolean. whether or not to use custom viral load calculations. False means the native calculations get used.
+  - ppe
+    - beta_dist
   - flock
     - beta_dist
       - same as for humans, but for flocks
@@ -115,8 +123,9 @@ In terms of operating the software, the most important component is the "pars" o
     - beta_dist
       - same as for humans, but for water
 - n_imports
-  - The average number of new cases that are introduced each day, for each agent type. There is no need for this to be an integer as it's an average value
+  - All agent types accept either a uniform average or a seasonal pattern with max rate and day of peak imports
   - human
+  - ppe
   - flock
   - barn
   - water
@@ -159,6 +168,9 @@ In terms of operating the software, the most important component is the "pars" o
       - set automatically upon initialization
     - trans_redux
       - reduction in transmission for breakthrough infections
+  - ppe
+    - use_waning
+    - Must be false as waning is not supported for ppe
   - flock
     - use_waning
     - must be False as waning is not supported for flocks
@@ -193,6 +205,9 @@ In terms of operating the software, the most important component is the "pars" o
       - duration of quarantine for humans
     - diag
       - duration of a diagnosis for humans
+  - ppe
+    - contamination
+    - quar
   - flock
     - exp2inf
       - duration from exposure to infectious
@@ -228,6 +243,9 @@ In terms of operating the software, the most important component is the "pars" o
       - relative probability of developing severe symptoms for each age group
     - death_probs
       - relative probability of mortality for each age group
+  - ppe
+    - sus_ORs
+    - trans_ORs
   - flock
     - breeds
       - an array of strings corresponding to the different breeds being simulated
@@ -257,10 +275,18 @@ In terms of operating the software, the most important component is the "pars" o
       - the relative susceptibility of water
     - trans_ORs
       - the relative transmissibility of water
-- production_cycle
+- poultry_pars
   - parameters governing the production cycle of poultry flocks
   - breeds
     - an array of strings corresponding to the breed being simulated
+  - breed_freqs
+    - the relative frequency of each type of breed
+  - mortality_suspicion_threshold
+    - A list of what deviation (expressed as a decimal number) from the expected mortality would trigger suspicion
+  - symptomatic_suspicion_threshold
+    - A list of what deviation (expressed as a decimal number) from the expected symptomatic rate would trigger suspicion
+  - consumption_suspicion_threshold
+    - A list of what deviation (expressed as a decimal number) from the expected water consumption rate would trigger suspicion
   - cycle_dur
     - an array of distribution dictionaries for the cycle duration of each breed
   - flock_size
