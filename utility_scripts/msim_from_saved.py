@@ -32,5 +32,8 @@ if __name__ == "__main__":
     msim.save(f'msims/{sim_label}.msim')  # Save the multi-simulation object.
     msim.combine()                # Combine the results from all simulations.
     msim.summarize()              # Summarize the combined results.
+    msim.plot('flock')
     msim.plot()                   # Plot the results.
+    msim.plot('human')
+    msim.plot('ppe')
 

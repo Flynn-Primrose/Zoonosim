@@ -68,6 +68,24 @@ human_plots = sc.odict({
     ],
 })
 
+ppe_plots = sc.odict({
+    'Total counts': [
+        'n_ppe_contaminated',
+        # 'n_ppe_uncontaminated',
+        'n_ppe_quarantined',
+    ],
+    # 'Cumulative counts': [
+    #     'cum_ppe_contaminated',
+    #     'cum_ppe_uncontaminated',
+    #     'cum_ppe_quarantined',
+    # ],
+    'Daily counts': [
+        'new_ppe_contaminated',
+        # 'new_ppe_uncontaminated',
+        'new_ppe_quarantined',
+    ],
+})
+
 flock_plots = sc.odict({
     'Total counts': [
         'n_flock_infectious',
@@ -293,6 +311,9 @@ def get_default_plots(which='default', kind='sim', sim=None):
 
     elif which == 'human': # pragma: no cover
         plots = sc.dcp(human_plots)
+    
+    elif which == 'ppe': # pragma: no cover
+        plots = sc.dcp(ppe_plots)
 
     elif which == 'flock': # pragma: no cover
         plots = sc.dcp(flock_plots)

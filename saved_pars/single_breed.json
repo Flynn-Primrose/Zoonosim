@@ -6,7 +6,7 @@
     "barn",
     "water"
   ],
-  "n_farms": 100,
+  "n_farms": 50,
   "pop_size": null,
   "pop_size_by_type": {
     "human": null,
@@ -109,19 +109,19 @@
     "transient": 1.0
   },
   "beta_layer": {
-    "hp": 1.0,
-    "hh": 1.0,
-    "hf": 1.0,
-    "hb": 1.0,
-    "hw": 1.0,
-    "pp": 1.0,
+    "hp": 0.5,
+    "hh": 0.25,
+    "hf": 0.25,
+    "hb": 0.25,
+    "hw": 0.25,
+    "pp": 0.75,
     "pf": 1.0,
     "pb": 1.0,
     "pw": 1.0,
-    "fb": 1.0,
-    "fw": 1.0,
-    "bw": 1.0,
-    "transient": 1.0
+    "fb": 0.5,
+    "fw": 0.5,
+    "bw": 0.5,
+    "transient": 0.5
   },
   "quar_factor": {
     "hp": 0.0,
@@ -140,7 +140,7 @@
   },
   "n_variants": 1,
   "beta": {
-    "human": 0.0001,
+    "human": 0.001,
     "ppe": 0.001,
     "flock": 0.6,
     "barn": 0.2,
@@ -461,20 +461,18 @@
         0.001
       ],
       "mean_symptomatic_rate_increase": [
-        0.001
+        0.01
       ],
       "baseline_mortality_rate": [
         0.001
       ],
       "mean_mortality_rate_increase": [
-        0.002
+        0.01
       ],
       "baseline_water_rate": [
         1.0
       ],
       "mean_water_rate_increase": [
-        1.0,
-        1.0,
         1.0
       ]
     },
@@ -503,13 +501,13 @@
       1.0
     ],
     "mortality_suspicion_threshold": [
-      0.1
+      0.0012
     ],
     "symptomatic_suspicion_threshold": [
-      0.1
+      0.0001
     ],
     "consumption_suspicion_threshold": [
-      0.1
+      0.001
     ],
     "cycle_dur": [
       {

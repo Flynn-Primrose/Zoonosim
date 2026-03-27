@@ -2,7 +2,7 @@ import zoonosim as zn
 import numpy as np
 
 new_pars = dict(
-    n_farms = 100,
+    n_farms = 50,
     start_day = '2022-01-01',
     end_day = '2025-12-31',
     pop_pars = dict(
@@ -13,7 +13,7 @@ new_pars = dict(
         visits_per_day = 3, # Number of farms each transient visits in a day
     ),
     beta = dict(
-        human = 0.0001,
+        human = 0.001,
         ppe = 0.001,
         flock = 0.6,
         barn = 0.2,
@@ -27,19 +27,19 @@ new_pars = dict(
         water=dict(import_pattern='seasonal', max_import_rate=0.2, peak_day=300),  # Number of imported water contaminations per day; None = disabled
     ), 
     beta_layer = dict(
-                hp = 1.0, 
-                hh = 1.0, 
-                hf = 1.0, 
-                hb = 1.0, 
-                hw = 1.0, 
-                pp = 1.0, 
+                hp = 0.5, 
+                hh = 0.25, 
+                hf = 0.25, 
+                hb = 0.25, 
+                hw = 0.25, 
+                pp = 0.75, 
                 pf = 1.0, 
                 pb = 1.0, 
                 pw = 1.0, 
-                fb = 1.0, 
-                fw = 1.0, 
-                bw = 1.0, 
-                transient = 1.0 
+                fb = 0.5, 
+                fw = 0.5, 
+                bw = 0.5, 
+                transient = 0.5 
                 ),
     dur = dict(
         human = {
@@ -97,11 +97,11 @@ new_pars = dict(
             sus_ORs = np.array([1.00]),
             trans_ORs = np.array([1.00]),
             baseline_symptomatic_rate = np.array([0.001]),
-            mean_symptomatic_rate_increase = np.array([0.001]),
+            mean_symptomatic_rate_increase = np.array([0.01]),
             baseline_mortality_rate = np.array([0.001]),
-            mean_mortality_rate_increase = np.array([0.002]),
+            mean_mortality_rate_increase = np.array([0.01]),
             baseline_water_rate = np.array([1.00]),
-            mean_water_rate_increase = np.array([1.00, 1.00, 1.00]),
+            mean_water_rate_increase = np.array([1.00]),
         ),
         barn = dict(
             sus_ORs = np.array([1.00]),
@@ -115,9 +115,9 @@ new_pars = dict(
     poultry_pars = dict(
         breeds = np.array(['poultry'], dtype=zn.default_str),
         breed_freqs = np.array([1.0]),
-        mortality_suspicion_threshold = [0.1], # I.E a deviation from the expected mortality rate of 0.01*expected_value will trigger suspicion
-        symptomatic_suspicion_threshold = [0.1,], # I.E a deviation from the expected symptomatic rate of 0.01*expected_value will trigger suspicion
-        consumption_suspicion_threshold = [0.1], # I.E a deviation from the expected rate of water consumption of 0.01*expected_value will trigger suspicion
+        mortality_suspicion_threshold = [0.0012], # I.E a deviation from the expected mortality rate of 0.01*expected_value will trigger suspicion
+        symptomatic_suspicion_threshold = [0.0001], # I.E a deviation from the expected symptomatic rate of 0.01*expected_value will trigger suspicion
+        consumption_suspicion_threshold = [0.001], # I.E a deviation from the expected rate of water consumption of 0.01*expected_value will trigger suspicion
         cycle_dur = [dict(dist = 'normal_pos', par1 = 100, par2 = 25)],
         flock_size = [dict(dist = 'normal_pos', par1 = 20000, par2 = 10000)]
     ),
