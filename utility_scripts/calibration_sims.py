@@ -31,6 +31,7 @@ best_pars = dict(
     rand_seed = 42,
     n_imports = dict(
         human = None,
+        ppe = None,
         flock = None,
         barn = dict(peak_day = 350, max_import_rate = 0.2),
         water = dict(peak_day = 350, max_import_rate = 1.3),

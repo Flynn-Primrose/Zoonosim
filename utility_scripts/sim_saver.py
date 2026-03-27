@@ -5,12 +5,19 @@ new_pars = dict(
     n_farms = 100,
     start_day = '2022-01-01',
     end_day = '2025-12-31',
+    pop_pars = dict(
+        avg_barns_per_farm = 5.0,
+        avg_humans_per_barn = 1.5,
+        avg_water_per_farm = 0.75,
+        number_of_transients = 3,
+        visits_per_day = 3, # Number of farms each transient visits in a day
+    ),
     beta = dict(
-        human = 1.0,
-        ppe = 1.0,
-        flock = 1.0,
-        barn = 1.0,
-        water = 1.0,
+        human = 0.0001,
+        ppe = 0.001,
+        flock = 0.6,
+        barn = 0.2,
+        water = 0.2,
     ),
     n_imports = dict(
         human=None,  # Number of imported human cases per day; None = disabled
@@ -51,7 +58,7 @@ new_pars = dict(
             'diag': 14
         },
         ppe = {
-            'contamination': dict(dist='lognormal_int', par1=7.0, par2=2.0), # Duration of PPE contamination
+            'contamination': dict(dist='lognormal_int', par1=2.0, par2=1.0), # Duration of PPE contamination
             'quar': 14, # Duration of PPE quarantine (should match human quarantine duration since PPE is quarantined when associated human case is quarantined)
         },
         flock = {
@@ -75,7 +82,7 @@ new_pars = dict(
         human = zn.parameters.relative_human_prognoses(dict(
             age_cutoffs   = np.array([0,       10,      20,      30,      40,      50,      60,      70,      80,     90,]),     # Age cutoffs (lower limits)
             sus_ORs       = np.array([1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.0,     1.00,   1.00]),    # Odds ratios for relative susceptibility 
-            trans_ORs     = np.array([1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,   1.00]),    # Odds ratios for relative transmissibility
+            trans_ORs     = np.array([0.01,    0.01,    0.01,    0.01,    0.01,    0.01,    0.01,    0.01,    0.01,   0.01]),    # Odds ratios for relative transmissibility
             comorbidities = np.array([1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,   1.00]),    # Comorbidities by age -- set to 1 by default since already included in disease progression rates
             symp_probs    = np.array([0.66,    0.66,    0.66,    0.66,    0.66,    0.66,    0.66,    0.66,    0.66,   0.66]),    # Overall probability of developing symptoms 
             severe_probs  = np.array([0.33,    0.33,    0.33,    0.33,    0.33,    0.33,    0.33,    0.33,    0.33,   0.33]),     # Overall probability of developing severe symptoms

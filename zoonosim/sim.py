@@ -306,39 +306,39 @@ class Sim(znb.BaseSim):
 
         # Flows and cumulative flows
 
-        for key,label in znd.human_flows.items():
-            self.results[f'cum_human_{key}'] = init_res(f'Cumulative {label}', color=human_dcols[key])  # Cumulative variables -- e.g. "Cumulative infections"
+        # for key,label in znd.human_flows.items():
+        #     self.results[f'cum_human_{key}'] = init_res(f'Cumulative {label}', color=human_dcols[key])  # Cumulative variables -- e.g. "Cumulative infections"
 
         for key,label in znd.human_flows.items():
             self.results[f'new_human_{key}'] = init_res(f'Number of new {label}', color=human_dcols[key]) # Flow variables -- e.g. "Number of new infections"
 
-        for key,label in znd.ppe_flows.items():
-            self.results[f'cum_ppe_{key}'] = init_res(f'Cumulative {label}', color=ppe_dcols[key])  # Cumulative variables -- e.g. "Cumulative contaminated PPE"
+        # for key,label in znd.ppe_flows.items():
+        #     self.results[f'cum_ppe_{key}'] = init_res(f'Cumulative {label}', color=ppe_dcols[key])  # Cumulative variables -- e.g. "Cumulative contaminated PPE"
         
         for key,label in znd.ppe_flows.items():
             self.results[f'new_ppe_{key}'] = init_res(f'Number of new {label}', color=ppe_dcols[key]) # Flow variables -- e.g. "Number of new contaminated PPE"
 
-        for key,label in znd.flock_flows.items():
-            self.results[f'cum_flock_{key}'] = init_res(f'Cumulative {label}', color=flock_dcols[key])
+        # for key,label in znd.flock_flows.items():
+        #     self.results[f'cum_flock_{key}'] = init_res(f'Cumulative {label}', color=flock_dcols[key])
 
         for key,label in znd.flock_flows.items():
             self.results[f'new_flock_{key}'] = init_res(f'Number of new {label}', color=flock_dcols[key])
 
         for breed in self['poultry_pars']['breeds']:
-            for key,label in znd.flock_flows.items():
-                self.results[f'cum_{breed}_flock_{key}'] = init_res(f'Cumulative {label} ({breed})', color=breed_dcols[breed])
+            # for key,label in znd.flock_flows.items():
+            #     self.results[f'cum_{breed}_flock_{key}'] = init_res(f'Cumulative {label} ({breed})', color=breed_dcols[breed])
 
             for key,label in znd.flock_flows.items():
                 self.results[f'new_{breed}_flock_{key}'] = init_res(f'Number of new {label} ({breed})', color=breed_dcols[breed])
 
-        for key,label in znd.barn_flows.items():
-            self.results[f'cum_barn_{key}'] = init_res(f'Cumulative {label}', color=barn_dcols[key])
+        # for key,label in znd.barn_flows.items():
+        #     self.results[f'cum_barn_{key}'] = init_res(f'Cumulative {label}', color=barn_dcols[key])
 
         for key,label in znd.barn_flows.items():
             self.results[f'new_barn_{key}'] = init_res(f'Number of new {label}', color=barn_dcols[key])
 
-        for key,label in znd.water_flows.items():
-            self.results[f'cum_water_{key}'] = init_res(f'Cumulative {label}', color=water_dcols[key])
+        # for key,label in znd.water_flows.items():
+        #     self.results[f'cum_water_{key}'] = init_res(f'Cumulative {label}', color=water_dcols[key])
 
         for key,label in znd.water_flows.items():
             self.results[f'new_water_{key}'] = init_res(f'Number of new {label}', color=water_dcols[key])
@@ -349,9 +349,6 @@ class Sim(znb.BaseSim):
             self.results[f'n_human_{key}'] = init_res(label, color=human_dcols[key])
 
         for key,label in znd.ppe_stocks.items():
-            self.results[f'n_ppe_{key}'] = init_res(label, color=ppe_dcols[key])
-
-        for key,label in znd.ppe_stocks_by_variant.items():
             self.results[f'n_ppe_{key}'] = init_res(label, color=ppe_dcols[key])
 
         for key,label in znd.flock_stocks.items():
@@ -372,11 +369,11 @@ class Sim(znb.BaseSim):
         self.results['n_water_imports'] = init_res('Number of imported water infections', scale = True)
 
         # Derived human results
-        self.results['n_human_alive']         =  init_res('Number of people still alive', scale=True)
-        self.results['n_human_naive']         =  init_res('Number of people naive', scale=True)
-        self.results['n_human_removed']       =  init_res('Calculate the number removed: recovered + dead', scale=True)
-        self.results['human_prevalence']      =  init_res('Calculate the prevalence', scale=True)
-        self.results['human_incidence']       =  init_res('Calculate the incidence', scale=True)
+        # self.results['n_human_alive']         =  init_res('Number of people still alive', scale=True)
+        # self.results['n_human_naive']         =  init_res('Number of people naive', scale=True)
+        # self.results['n_human_removed']       =  init_res('Calculate the number removed: recovered + dead', scale=True)
+        # self.results['human_prevalence']      =  init_res('Calculate the prevalence', scale=True)
+        # self.results['human_incidence']       =  init_res('Calculate the incidence', scale=True)
         # self.results['frac_human_vaccinated'] =  init_res('Calculate the fraction vaccinated', scale=True)
 
         # Derived breed results
@@ -391,7 +388,7 @@ class Sim(znb.BaseSim):
 
         # Testing
         self.results['new_tests']                     = init_res('Number of new tests administered', color=misc_dcols.misc1) # This is specific for tests UNRELATED to the custom testing module
-        self.results['cum_tests']                     = init_res('Cumulative tests administered', color=misc_dcols.misc2) # This is specific for tests UNRELATED to the custom testing module
+        # self.results['cum_tests']                     = init_res('Cumulative tests administered', color=misc_dcols.misc2) # This is specific for tests UNRELATED to the custom testing module
         if self.pars['enable_testobjs']:
             self.results['new_PCR_tests']                 = init_res('Number of new PCR tests administered', color=misc_dcols.misc1)
             self.results['cum_PCR_tests']                 = init_res('Cumulative PCR tests administered', color=misc_dcols.misc2)
@@ -413,20 +410,20 @@ class Sim(znb.BaseSim):
         self.results['variant'] = {}
         #self.results['variant']['prevalence_by_variant'] = init_res('Prevalence by variant', scale=False, n_variants=nv)
         #self.results['variant']['incidence_by_variant']  = init_res('Incidence by variant', scale=False, n_variants=nv)
-        for key,label in znd.human_flows_by_variant.items():
-            self.results['variant'][f'cum_human_{key}'] = init_res(f'Cumulative {label}', color=human_dcols[key], n_variants=nv)  # Cumulative variables -- e.g. "Cumulative infections"
+        # for key,label in znd.human_flows_by_variant.items():
+        #     self.results['variant'][f'cum_human_{key}'] = init_res(f'Cumulative {label}', color=human_dcols[key], n_variants=nv)  # Cumulative variables -- e.g. "Cumulative infections"
 
-        for key,label in znd.ppe_flows_by_variant.items():
-            self.results['variant'][f'cum_ppe_{key}'] = init_res(f'Cumulative {label}', color=ppe_dcols[key], n_variants=nv)  # Cumulative variables -- e.g. "Cumulative contaminated PPE"
+        # for key,label in znd.ppe_flows_by_variant.items():
+        #     self.results['variant'][f'cum_ppe_{key}'] = init_res(f'Cumulative {label}', color=ppe_dcols[key], n_variants=nv)  # Cumulative variables -- e.g. "Cumulative contaminated PPE"
 
-        for key,label in znd.flock_flows_by_variant.items():
-            self.results['variant'][f'cum_flock_{key}'] = init_res(f'Cumulative {label}', color=flock_dcols[key], n_variants=nv )
+        # for key,label in znd.flock_flows_by_variant.items():
+        #     self.results['variant'][f'cum_flock_{key}'] = init_res(f'Cumulative {label}', color=flock_dcols[key], n_variants=nv )
 
-        for key,label in znd.barn_flows_by_variant.items():
-            self.results['variant'][f'cum_barn_{key}'] = init_res(f'Cumulative {label}', color=barn_dcols[key], n_variants=nv )
+        # for key,label in znd.barn_flows_by_variant.items():
+        #     self.results['variant'][f'cum_barn_{key}'] = init_res(f'Cumulative {label}', color=barn_dcols[key], n_variants=nv )
 
-        for key,label in znd.water_flows_by_variant.items():
-            self.results['variant'][f'cum_water_{key}'] = init_res(f'Cumulative {label}', color=water_dcols[key], n_variants=nv )
+        # for key,label in znd.water_flows_by_variant.items():
+        #     self.results['variant'][f'cum_water_{key}'] = init_res(f'Cumulative {label}', color=water_dcols[key], n_variants=nv )
 
 
 
@@ -446,20 +443,20 @@ class Sim(znb.BaseSim):
             self.results['variant'][f'new_water_{key}'] = init_res(f'Number of new {label}', color=water_dcols[key], n_variants=nv)
 
 
-        for key,label in znd.human_stocks_by_variant.items():
-            self.results['variant'][f'n_human_{key}'] = init_res(label, color=human_dcols[key], n_variants=nv)
+        # for key,label in znd.human_stocks_by_variant.items():
+        #     self.results['variant'][f'n_human_{key}'] = init_res(label, color=human_dcols[key], n_variants=nv)
 
-        for key,label in znd.ppe_stocks_by_variant.items():
-            self.results['variant'][f'n_ppe_{key}'] = init_res(label, color=ppe_dcols[key], n_variants=nv)
+        # for key,label in znd.ppe_stocks_by_variant.items():
+        #     self.results['variant'][f'n_ppe_{key}'] = init_res(label, color=ppe_dcols[key], n_variants=nv)
 
-        for key,label in znd.flock_stocks_by_variant.items():
-            self.results['variant'][f'n_flock_{key}'] = init_res(label, color=flock_dcols[key], n_variants=nv)
+        # for key,label in znd.flock_stocks_by_variant.items():
+        #     self.results['variant'][f'n_flock_{key}'] = init_res(label, color=flock_dcols[key], n_variants=nv)
 
-        for key,label in znd.barn_stocks_by_variant.items():
-            self.results['variant'][f'n_barn_{key}'] = init_res(label, color=barn_dcols[key], n_variants=nv)
+        # for key,label in znd.barn_stocks_by_variant.items():
+        #     self.results['variant'][f'n_barn_{key}'] = init_res(label, color=barn_dcols[key], n_variants=nv)
 
-        for key,label in znd.water_stocks_by_variant.items():
-            self.results['variant'][f'n_water_{key}'] = init_res(label, color=water_dcols[key], n_variants=nv)
+        # for key,label in znd.water_stocks_by_variant.items():
+        #     self.results['variant'][f'n_water_{key}'] = init_res(label, color=water_dcols[key], n_variants=nv)
 
         # Populate the rest of the results
 
@@ -939,34 +936,37 @@ class Sim(znb.BaseSim):
         for key in znd.water_stocks:
             self.results[f'n_water_{key}'][t] = agents.water.count(key)
 
-        # Update stocks_by_variant: Human
-        for key in znd.human_stocks_by_variant:
-            for variant in range(nv):
-                self.results['variant'][f'n_human_{key}'][variant, t] = agents.human.count_by_variant(key, variant)
+        # # Update stocks_by_variant: Human
+        # for key in znd.human_stocks_by_variant:
+        #     for variant in range(nv):
+        #         self.results['variant'][f'n_human_{key}'][variant, t] = agents.human.count_by_variant(key, variant)
         
-        # Update stocks_by_variant: PPE
-        for key in znd.ppe_stocks_by_variant:
-            for variant in range(nv):
-                self.results['variant'][f'n_ppe_{key}'][variant, t] = agents.ppe.count_by_variant(key, variant)
+        # # Update stocks_by_variant: PPE
+        # for key in znd.ppe_stocks_by_variant:
+        #     for variant in range(nv):
+        #         self.results['variant'][f'n_ppe_{key}'][variant, t] = agents.ppe.count_by_variant(key, variant)
 
-        # Update stocks_by_variant: Flock
-        for key in znd.flock_stocks_by_variant:
-            for variant in range(nv):
-                self.results['variant'][f'n_flock_{key}'][variant, t] = agents.flock.count_by_variant(key, variant)
+        # # Update stocks_by_variant: Flock
+        # for key in znd.flock_stocks_by_variant:
+        #     for variant in range(nv):
+        #         self.results['variant'][f'n_flock_{key}'][variant, t] = agents.flock.count_by_variant(key, variant)
 
-        # Update stocks_by_variant: Barn
-        for key in znd.barn_stocks_by_variant:
-            for variant in range(nv):
-                self.results['variant'][f'n_barn_{key}'][variant, t] = agents.barn.count_by_variant(key, variant)
+        # # Update stocks_by_variant: Barn
+        # for key in znd.barn_stocks_by_variant:
+        #     for variant in range(nv):
+        #         self.results['variant'][f'n_barn_{key}'][variant, t] = agents.barn.count_by_variant(key, variant)
         
-        # Update stocks_by_variant: Water
-        for key in znd.water_stocks_by_variant:
-            for variant in range(nv):
-                self.results['variant'][f'n_water_{key}'][variant, t] = agents.water.count_by_variant(key, variant)
+        # # Update stocks_by_variant: Water
+        # for key in znd.water_stocks_by_variant:
+        #     for variant in range(nv):
+        #         self.results['variant'][f'n_water_{key}'][variant, t] = agents.water.count_by_variant(key, variant)
         
         # Update counts for this time step: Human flows
         for key in znd.human_flows:
             self.results[f'new_human_{key}'][t] = agents.human.flows[f'new_{key}']
+
+        for key in znd.ppe_flows:
+            self.results[f'new_ppe_{key}'][t] = agents.ppe.flows[f'new_{key}']
         
         if self.pars['enable_smartwatches']:
             for key in znd.smartwatch_flows:
@@ -990,6 +990,11 @@ class Sim(znb.BaseSim):
         for key in znd.human_flows_by_variant:
             for variant in range(nv):
                 self.results['variant'][f'new_human_{key}'][variant, t] = agents.human.flows_variant[f'new_{key}'][variant]
+
+        # Update counts for this time step: PPE flows by variant
+        for key in znd.ppe_flows_by_variant:
+            for variant in range(nv):
+                self.results['variant'][f'new_ppe_{key}'][variant, t] = agents.ppe.flows_variant[f'new_{key}'][variant]
         
         # Update counts for this time step: Flock flows by variant
         for key in znd.flock_flows_by_variant:
@@ -1142,40 +1147,40 @@ class Sim(znb.BaseSim):
             # otherwise the scale factor will be applied multiple times
             raise AlreadyRunError('Simulation has already been finalized')
         
-        # Calculate cumulative results for smartwatches
-        if self.pars['enable_smartwatches']:
-            for key in znd.smartwatch_flows.keys():
-                self.results[f'cum_{key}'][:] = np.cumsum(self.results[f'new_{key}'][:], axis=0)
+        # # Calculate cumulative results for smartwatches
+        # if self.pars['enable_smartwatches']:
+        #     for key in znd.smartwatch_flows.keys():
+        #         self.results[f'cum_{key}'][:] = np.cumsum(self.results[f'new_{key}'][:], axis=0)
 
-        # Calculate cumulative results: Human
-        for key in znd.human_flows:
-            self.results[f'cum_human_{key}'][:] = np.cumsum(self.results[f'new_human_{key}'][:], axis=0)
-        for key in znd.human_flows_by_variant:
-            for variant in range(self['n_variants']):
-                self.results['variant'][f'cum_human_{key}'][variant, :] = np.cumsum(self.results['variant'][f'new_human_{key}'][variant, :], axis=0)
+        # # Calculate cumulative results: Human
+        # for key in znd.human_flows:
+        #     self.results[f'cum_human_{key}'][:] = np.cumsum(self.results[f'new_human_{key}'][:], axis=0)
+        # for key in znd.human_flows_by_variant:
+        #     for variant in range(self['n_variants']):
+        #         self.results['variant'][f'cum_human_{key}'][variant, :] = np.cumsum(self.results['variant'][f'new_human_{key}'][variant, :], axis=0)
         
-        # Calculate cumulative results: Flock
-        for key in znd.flock_flows:
-            self.results[f'cum_flock_{key}'][:] = np.cumsum(self.results[f'new_flock_{key}'][:], axis=0)
-            for breed in self['poultry_pars']['breeds']:
-                self.results[f'cum_{breed}_flock_{key}'][:] = np.cumsum(self.results[f'new_{breed}_flock_{key}'][:], axis=0)
-        for key in znd.flock_flows_by_variant:
-            for variant in range(self['n_variants']):
-                self.results['variant'][f'cum_flock_{key}'][variant, :] = np.cumsum(self.results['variant'][f'new_flock_{key}'][variant, :], axis=0)
+        # # Calculate cumulative results: Flock
+        # for key in znd.flock_flows:
+        #     self.results[f'cum_flock_{key}'][:] = np.cumsum(self.results[f'new_flock_{key}'][:], axis=0)
+        #     for breed in self['poultry_pars']['breeds']:
+        #         self.results[f'cum_{breed}_flock_{key}'][:] = np.cumsum(self.results[f'new_{breed}_flock_{key}'][:], axis=0)
+        # for key in znd.flock_flows_by_variant:
+        #     for variant in range(self['n_variants']):
+        #         self.results['variant'][f'cum_flock_{key}'][variant, :] = np.cumsum(self.results['variant'][f'new_flock_{key}'][variant, :], axis=0)
         
-        # Calculate cumulative results: Barn
-        for key in znd.barn_flows:
-            self.results[f'cum_barn_{key}'][:] = np.cumsum(self.results[f'new_barn_{key}'][:], axis=0)
-        for key in znd.barn_flows_by_variant:
-            for variant in range(self['n_variants']):
-                self.results['variant'][f'cum_barn_{key}'][variant, :] = np.cumsum(self.results['variant'][f'new_barn_{key}'][variant, :], axis=0)
+        # # Calculate cumulative results: Barn
+        # for key in znd.barn_flows:
+        #     self.results[f'cum_barn_{key}'][:] = np.cumsum(self.results[f'new_barn_{key}'][:], axis=0)
+        # for key in znd.barn_flows_by_variant:
+        #     for variant in range(self['n_variants']):
+        #         self.results['variant'][f'cum_barn_{key}'][variant, :] = np.cumsum(self.results['variant'][f'new_barn_{key}'][variant, :], axis=0)
         
-        # Calculate cumulative results: Water
-        for key in znd.water_flows:
-            self.results[f'cum_water_{key}'][:] = np.cumsum(self.results[f'new_water_{key}'][:], axis=0)
-        for key in znd.water_flows_by_variant:
-            for variant in range(self['n_variants']):
-                self.results['variant'][f'cum_water_{key}'][variant, :] = np.cumsum(self.results['variant'][f'new_water_{key}'][variant, :], axis=0)
+        # # Calculate cumulative results: Water
+        # for key in znd.water_flows:
+        #     self.results[f'cum_water_{key}'][:] = np.cumsum(self.results[f'new_water_{key}'][:], axis=0)
+        # for key in znd.water_flows_by_variant:
+        #     for variant in range(self['n_variants']):
+        #         self.results['variant'][f'cum_water_{key}'][variant, :] = np.cumsum(self.results['variant'][f'new_water_{key}'][variant, :], axis=0)
 
 
         # Finalize interventions and analyzers
@@ -1225,13 +1230,13 @@ class Sim(znb.BaseSim):
         Incidence is the number of new infections per day divided by the susceptible
         population. Also calculates the number of people alive and the number removed.
         '''
-        res = self.results
-        count_recov = 1-self['immunity_pars']['human']['use_waning'] # If waning is on, don't count recovered people as removed
-        self.results['n_human_alive'][:]         = self['pop_size_by_type']['human'] - res['cum_human_dead'][:] # Number of people still alive
-        self.results['n_human_naive'][:]         = self['pop_size_by_type']['human'] - res['cum_human_dead'][:] - res['n_human_recovered'][:] - res['n_human_exposed'][:] # Number of people naive
-        self.results['n_human_removed'][:]       = count_recov*res['cum_human_recovered'][:] + res['cum_human_dead'][:] # Calculate the number removed: recovered + dead
-        self.results['human_prevalence'][:]      = res['n_human_exposed'][:]/res['n_human_alive'][:] # Calculate the prevalence
-        self.results['human_incidence'][:]       = res['new_human_infections'][:]/res['n_human_susceptible'][:] # Calculate the incidence
+        # res = self.results
+        # count_recov = 1-self['immunity_pars']['human']['use_waning'] # If waning is on, don't count recovered people as removed
+        # self.results['n_human_alive'][:]         = self['pop_size_by_type']['human'] - res['cum_human_dead'][:] # Number of people still alive
+        # self.results['n_human_naive'][:]         = self['pop_size_by_type']['human'] - res['cum_human_dead'][:] - res['n_human_recovered'][:] - res['n_human_exposed'][:] # Number of people naive
+        # self.results['n_human_removed'][:]       = count_recov*res['cum_human_recovered'][:] + res['cum_human_dead'][:] # Calculate the number removed: recovered + dead
+        # self.results['human_prevalence'][:]      = res['n_human_exposed'][:]/res['n_human_alive'][:] # Calculate the prevalence
+        # self.results['human_incidence'][:]       = res['new_human_infections'][:]/res['n_human_susceptible'][:] # Calculate the incidence
         # self.results['frac_human_vaccinated'][:] = res['n_human_vaccinated'][:]/res['n_human_alive'][:] # Calculate the fraction vaccinated
 
         # self.results['variant']['incidence_by_variant'][:] = np.einsum('ji,i->ji',res['variant']['new_infections_by_variant'][:], 1/res['n_susceptible'][:]) # Calculate the incidence

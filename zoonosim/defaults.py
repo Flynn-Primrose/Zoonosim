@@ -30,10 +30,11 @@ full_opts = [2, '2', 'full']
 
 # Define the 'overview plots', i.e. the most useful set of plots to explore different aspects of a simulation
 overview_plots = [
-    'cum_human_infections',
-    'cum_flock_infectious',
-    'cum_barn_contaminated',
-    'cum_water_contaminated',
+    'n_human_infections',
+    'n_ppe_contaminated',
+    'n_flock_infectious',
+    'n_barn_contaminated',
+    'n_water_contaminated',
 ]
 
 overview_variant_plots = sc.odict({
@@ -51,13 +52,13 @@ human_plots = sc.odict({
         'n_human_severe',
         'n_human_dead',
     ],
-    'Cumulative counts': [
-        'cum_human_infections',
-        'cum_human_exposed',
-        'cum_human_symptomatic',
-        'cum_human_severe',
-        'cum_human_dead',
-    ],
+    # 'Cumulative counts': [
+    #     'cum_human_infections',
+    #     'cum_human_exposed',
+    #     'cum_human_symptomatic',
+    #     'cum_human_severe',
+    #     'cum_human_dead',
+    # ],
     'Daily counts': [
         'new_human_infections',
         'new_human_exposed',
@@ -74,12 +75,12 @@ flock_plots = sc.odict({
         'n_flock_suspected',
         'n_flock_quarantined',
     ],
-    'Cumulative counts': [
-        'cum_flock_infectious',
-        'cum_flock_exposed',
-        'cum_flock_suspected',
-        'cum_flock_quarantined',
-    ],
+    # 'Cumulative counts': [
+    #     'cum_flock_infectious',
+    #     'cum_flock_exposed',
+    #     'cum_flock_suspected',
+    #     'cum_flock_quarantined',
+    # ],
     'Daily counts': [
         'new_flock_infectious',
         'new_flock_exposed',
@@ -118,12 +119,12 @@ barn_plots = sc.odict({
         'n_barn_composting',
         'n_barn_cleaning',
     ],
-    'Cumulative counts': [
-        'cum_barn_contaminated',
-        'cum_barn_uncontaminated',
-        'cum_barn_composted',
-        'cum_barn_cleaned',
-    ],
+    # 'Cumulative counts': [
+    #     'cum_barn_contaminated',
+    #     'cum_barn_uncontaminated',
+    #     'cum_barn_composted',
+    #     'cum_barn_cleaned',
+    # ],
     'Daily counts': [
         'new_barn_contaminated',
         'new_barn_uncontaminated',
@@ -137,10 +138,10 @@ water_plots = sc.odict({
         'n_water_contaminated',
         'n_water_uncontaminated',
     ],
-    'Cumulative counts': [
-        'cum_water_contaminated',
-        'cum_water_uncontaminated',
-    ],
+    # 'Cumulative counts': [
+    #     'cum_water_contaminated',
+    #     'cum_water_uncontaminated',
+    # ],
     'Daily counts': [
         'new_water_contaminated',
         'new_water_uncontaminated',
@@ -234,47 +235,52 @@ def get_default_plots(which='default', kind='sim', sim=None):
             plots = sc.odict({
                 'Total counts': [
                     'n_human_infectious',
+                    'n_ppe_contaminated',
                     'n_flock_infectious',
                     'n_barn_contaminated',
                     'n_water_contaminated',
                 ],
-                'Cumulative counts': [
-                    'cum_human_infections',
-                    'cum_flock_infectious',
-                    'cum_barn_contaminated',
-                    'cum_water_contaminated',
-                ],
+                # 'Cumulative counts': [
+                #     'cum_human_infections',
+                #     'cum_ppe_contaminated',
+                #     'cum_flock_infectious',
+                #     'cum_barn_contaminated',
+                #     'cum_water_contaminated',
+                # ],
                 'Daily counts': [
                     'new_human_infections',
+                    'new_ppe_contaminated',
                     'new_flock_infectious',
                     'new_barn_contaminated',
                     'new_water_contaminated',
                 ],
-                'Health outcomes': [
-                    'cum_human_infectious',
-                    'cum_human_symptomatic',
-                    'cum_human_severe',
-                    'cum_human_dead',
-                ],
+                # 'Health outcomes': [
+                #     'cum_human_infectious',
+                #     'cum_human_symptomatic',
+                #     'cum_human_severe',
+                #     'cum_human_dead',
+                # ],
             })
 
         else: # pragma: no cover
             plots = sc.odict({
-                'Cumulative infections': [
-                    'cum_human_infections',
-                    'cum_flock_infectious',
-                    'cum_barn_contaminated',
-                    'cum_water_contaminated',
-                ],
+                # 'Cumulative infections': [
+                #     'cum_human_infections',
+                #     'cum_ppe_contaminated',
+                #     'cum_flock_infectious',
+                #     'cum_barn_contaminated',
+                #     'cum_water_contaminated',
+                # ],
                 'New infections per day': [
                     'new_human_infections',
+                    'new_ppe_contaminated',
                     'new_flock_infectious',
                     'new_barn_contaminated',
                     'new_water_contaminated',
                 ],
-                'Cumulative deaths': [
-                    'cum_human_dead',
-                ],
+                # 'Cumulative deaths': [
+                #     'cum_human_dead',
+                # ],
             })
 
     # Show an overview
@@ -337,14 +343,16 @@ def get_default_plots(which='default', kind='sim', sim=None):
 
         else: # pragma: no cover
             plots = sc.odict({
-                    'Cumulative infections by variant': [
-                        'cum_human_infections_by_variant',
-                        'cum_flock_infectious_by_variant',
-                        'cum_barn_contaminated_by_variant',
-                        'cum_water_contaminated_by_variant',
-                    ],
+                    # 'Cumulative infections by variant': [
+                    #     'cum_human_infections_by_variant',
+                    #     'cum_ppe_contaminated_by_variant',
+                    #     'cum_flock_infectious_by_variant',
+                    #     'cum_barn_contaminated_by_variant',
+                    #     'cum_water_contaminated_by_variant',
+                    # ],
                     'New infections by variant': [
                         'new_human_infections_by_variant',
+                        'new_ppe_contaminated_by_variant',
                         'new_flock_infectious_by_variant',
                         'new_barn_contaminated_by_variant',
                         'new_water_contaminated_by_variant',

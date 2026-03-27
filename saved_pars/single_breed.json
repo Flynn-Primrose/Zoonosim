@@ -19,7 +19,7 @@
     "avg_barns_per_farm": 5.0,
     "avg_humans_per_barn": 1.5,
     "avg_water_per_farm": 0.75,
-    "number_of_transients": 10,
+    "number_of_transients": 3,
     "visits_per_day": 3
   },
   "pop_scale": 1.0,
@@ -140,11 +140,11 @@
   },
   "n_variants": 1,
   "beta": {
-    "human": 1.0,
-    "ppe": 1.0,
-    "flock": 1.0,
-    "barn": 1.0,
-    "water": 1.0
+    "human": 0.0001,
+    "ppe": 0.001,
+    "flock": 0.6,
+    "barn": 0.2,
+    "water": 0.2
   },
   "transmission_pars": {
     "human": {
@@ -304,8 +304,8 @@
     "ppe": {
       "contamination": {
         "dist": "lognormal_int",
-        "par1": 7.0,
-        "par2": 2.0
+        "par1": 2.0,
+        "par2": 1.0
       },
       "quar": 14
     },
@@ -379,16 +379,16 @@
         1.0
       ],
       "trans_ORs": [
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0
+        0.01,
+        0.01,
+        0.01,
+        0.01,
+        0.01,
+        0.01,
+        0.01,
+        0.01,
+        0.01,
+        0.01
       ],
       "comorbidities": [
         1.0,
