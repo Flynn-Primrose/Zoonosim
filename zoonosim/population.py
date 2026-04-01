@@ -62,7 +62,7 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
     sim.popdict = popdict # Store the population dictionary in the simulation object
 
     ppe = make_ppe(sim.pars, popdict['ppe_uids'], popdict['ppe2human'])
-    human = make_humans(sim.pars, popdict['human_uids'], popdict['human2ppe'], ppe.schedule_quarantine) # We pass the ppe quarantine function to the human roster so that when a human is quarantined, their assigned ppe can also be quarantined
+    human = make_humans(sim.pars, popdict['human_uids'], popdict['transient_uids'], popdict['human2ppe'], ppe.schedule_quarantine) # We pass the ppe quarantine function to the human roster so that when a human is quarantined, their assigned ppe can also be quarantined
     flock = make_flocks(sim.pars, popdict['flock_uids'], popdict['flock2barn'], popdict['breed_index'])
     barn = make_barns(sim.pars, popdict['barn_uids'], popdict['barn2flock'], popdict['barn2breed'])
     water = make_water(sim.pars, popdict['water_uids'])
@@ -264,17 +264,33 @@ def make_popdict(sim, **kwargs):
     popdict['barn2breed'] = {k: flock2breed[v] for k, v in barn2flock.items()}
     return popdict
 
-def make_humans(sim_pars, uid, human2ppe, schedule_ppe_quarantine=None):
+def make_humans(sim_pars, uid, transient_uid, human2ppe, schedule_ppe_quarantine=None):
+    permenent_uids = np.setdiff1d(uid, transient_uid) # Get the permanent human uids by taking the set difference of all human uids and transient human uids
     sex = znu.n_binomial(0.5, len(uid))
     age  = np.maximum(18, znu.n_poisson(40, len(uid))) # NOTE: Dummy values (assume average worker age of 40)
     ppe = np.empty(len(uid), dtype=znd.default_int)
     for index in range(len(uid)):
         ppe[index] = human2ppe[uid[index]]
     if sim_pars['enable_smartwatches']: # If smartwatches are enabled we randomly assign them to 25% of the human population
-        n_true = int(len(uid)*sim_pars['smartwatch_pars']['participation_rate']) # Number of humans with smartwatches
-        n_false = len(uid) - n_true
-        has_watch = np.array([True]*n_true + [False]*n_false)
-        np.random.shuffle(has_watch)
+        if sim_pars['smartwatch_pars']['who'] == 'all':
+            n_true = int(len(uid)*sim_pars['smartwatch_pars']['participation_rate']) # Number of humans with smartwatches
+            n_false = len(uid) - n_true
+            has_watch = np.array([True]*n_true + [False]*n_false)
+            np.random.shuffle(has_watch)
+        elif sim_pars['smartwatch_pars']['who'] == 'permanent':
+            n_true = int(len(permenent_uids)*sim_pars['smartwatch_pars']['participation_rate']) # Number of permanent humans with smartwatches
+            n_false = len(permenent_uids) - n_true
+            has_watch_perm = np.array([True]*n_true + [False]*n_false)
+            np.random.shuffle(has_watch_perm)
+            has_watch = np.zeros(len(uid), dtype=bool)
+            has_watch[np.isin(uid, permenent_uids)] = has_watch_perm
+        elif sim_pars['smartwatch_pars']['who'] == 'transient':
+            n_true = int(len(transient_uid)*sim_pars['smartwatch_pars']['participation_rate']) # Number of transient humans with smartwatches
+            n_false = len(transient_uid) - n_true
+            has_watch_transient = np.array([True]*n_true + [False]*n_false)
+            np.random.shuffle(has_watch_transient)
+            has_watch = np.zeros(len(uid), dtype=bool)
+            has_watch[np.isin(uid, transient_uid)] = has_watch_transient
         humans = Humans(sim_pars, schedule_ppe_quarantine=schedule_ppe_quarantine, strict = False, uid = uid, age = age, sex = sex, ppe = ppe, has_watch = has_watch)
     else: humans = Humans(sim_pars, schedule_ppe_quarantine=schedule_ppe_quarantine, strict = False, uid = uid, age = age, sex = sex, ppe = ppe)
 

@@ -73,6 +73,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
 
     pars['enable_smartwatches'] = False
     pars['smartwatch_pars'] = {
+        'who'                       : 'all', # Must be one of 'all', 'permanent', 'transient'; controls who receives smartwatches
         'mean_fpr'                  :   0.08, # mean false positive rate
         'use_variable_fpr'          : True, # Whether to use a variable false positive rate
         'day_i'                     : np.arange(-21, 22, 1), #
