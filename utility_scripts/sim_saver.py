@@ -26,20 +26,62 @@ new_pars = dict(
         barn=dict(import_pattern='seasonal', max_import_rate=0.2, peak_day=300),  # Number of imported barn contaminations per day; None = disabled
         water=dict(import_pattern='seasonal', max_import_rate=0.2, peak_day=300),  # Number of imported water contaminations per day; None = disabled
     ), 
+    enable_smartwatches = False,
+    smartwatch_pars = dict(
+        who                       = 'all', # Must be one of 'all', 'permanent', 'transient'; controls who receives smartwatches
+        mean_fpr                  =   0.08, # mean false positive rate
+        use_variable_fpr          = True, # Whether to use a variable false positive rate
+        day_i                     = np.arange(-21, 22, 1), #
+        loc                       = 3.25, # Day of max probability of alert, relative to the day of symptom onset.
+        alpha                     = 1, # Scales the probability of receiving an alert
+        usage_rate                = 1, # Out of people who have smartwatches, the amount who use download the alerting app and stick with it.
+        compliance_rate           =   0.05, # probability of quarantining if a smartwatch detects symptoms (only used if testobjs are not available)
+        participation_rate        =   0.3,  # proportion of the population that has a smartwatch
+    ),
+    dynam_layer = dict(
+                hp = 0.0, 
+                hh = 0.0, 
+                hf = 0.0, 
+                hb = 0.0, 
+                hw = 0.0, 
+                pp = 0.0, 
+                pf = 0.0, 
+                pb = 0.0, 
+                pw = 0.0, 
+                fb = 0.0, 
+                fw = 0.0, 
+                bw = 0.0, 
+                transient = 1.0
+                ),
     beta_layer = dict(
-                hp = 0.5, 
-                hh = 0.25, 
-                hf = 0.25, 
-                hb = 0.25, 
-                hw = 0.25, 
-                pp = 0.75, 
+                hp = 1.0, 
+                hh = 1.0, 
+                hf = 1.0, 
+                hb = 1.0, 
+                hw = 1.0, 
+                pp = 1.0, 
                 pf = 1.0, 
                 pb = 1.0, 
                 pw = 1.0, 
-                fb = 0.5, 
-                fw = 0.5, 
-                bw = 0.5, 
-                transient = 0.5 
+                fb = 1.0, 
+                fw = 1.0, 
+                bw = 1.0, 
+                transient = 1.0 
+                ),
+    quar_layer = dict(
+                hp = 0.0, 
+                hh = 0.0, 
+                hf = 0.0, 
+                hb = 0.0, 
+                hw = 0.0, 
+                pp = 0.0, 
+                pf = 0.0, 
+                pb = 0.0, 
+                pw = 0.0, 
+                fb = 0.0, 
+                fw = 0.0, 
+                bw = 0.0, 
+                transient = 0.0
                 ),
     dur = dict(
         human = {

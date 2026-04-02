@@ -49,6 +49,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
 
     pars['pop_scale'] = 1.0 # Scale factor for the population size. We don't use this functionality so this will always be 1.0. It is included for compatibility with modules inherited from Covasim/Pathosim.
     pars['rescale'] = False # We will never use rescaling, so this is always False. It is included for compatibility with modules inherited from Covasim/Pathosim.
+    pars['record_all_events'] = True # Whether or not to record all events in the sim. If false, only transmision events are recorded. We set this to true by default since we have so few agents, but it can be set to false to save memory if desired.
 
     pars['initial_conditions'] = {
         'human': 0, # Number of initial humans exposed

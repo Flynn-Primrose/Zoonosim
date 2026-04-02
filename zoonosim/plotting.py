@@ -677,3 +677,40 @@ def plot_people(people, bins=None, width=1.0, alpha=0.6, fig_args=None, axis_arg
     return handle_show_return(fig=fig, do_show=do_show)
 
 
+def plot_transmission_vectors(target_type, sim=None, fig_args=None, axis_args=None, plot_args=None, style_args=None, do_show=None, fig=None):
+    ''' Plot the transmission vectors for a given target type -- see Sim.plot_transmission_vectors() for documentation '''
+
+        # Set defaults
+    color     = [0.1,0.1,0.1] # ? Color for something -- not sure yet
+    zorder    = 10 # So plots appear on top of gridlines
+
+    # Handle inputs
+    fig_args  = sc.mergedicts(dict(figsize=(8,5)), fig_args)
+    axis_args = sc.mergedicts(dict(left=0.1, right=0.95, bottom=0.1, top=0.95), axis_args)
+    plot_args  = sc.mergedicts(dict(lw=1.5, alpha=0.6, c=color, zorder=10), plot_args)
+    style_args = sc.mergedicts(style_args)
+
+    # Gather results
+    if sim is None:
+        errormsg = 'Must supply a sim to plot transmission vectors'
+        raise ValueError(errormsg)
+    
+    transmission_counts = []
+    for source_type in sim['agent_types']:
+        count = sim.results[f'transmissions_{source_type}_to_{target_type}'][0]
+        transmission_counts.append(count)
+
+    with options.with_style(style_args):
+
+        # Create the figure
+        if fig is None:
+            fig = pl.figure(**fig_args)
+        pl.subplots_adjust(**axis_args)
+
+        # Plot age histogram
+        pl.bar(sim['agent_types'], transmission_counts, color=color, zorder=zorder)
+        pl.xlabel('transmission source')
+        pl.ylabel('Number of transmissions')
+        pl.title(f'Transmission vectors for {target_type}')
+
+    return handle_show_return(fig=fig, do_show=do_show)

@@ -76,6 +76,7 @@ class Water(Subroster):
         self._lock = False # Prevent further modification of keys
         self.meta = WaterMeta() # Store list of keys and dtypes
         # self.init_contacts() # Initialize the contacts
+        self.record_all_events = self.pars['record_all_events'] # Whether or not to record all events in the sim. If false, only transmision events are recorded. We set this to true by default since we have so few agents, but it can be set to false to save memory if desired.
         self.event_log = [] # Record non-infection related events
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
 
@@ -182,6 +183,8 @@ class Water(Subroster):
             target_inds: array of indices of flocks that experienced a recordable event
             event (str): The specific event in question
         '''
+        if self.record_all_events == False:
+            return
 
         if target_inds is None:
             return
@@ -285,10 +288,14 @@ class Water(Subroster):
 
         def label_lkey(lkey):
             ''' Friendly name for common layer keys '''
-            if lkey.lower() == 'bw':
-                llabel = 'barn-water contacts'
+            if lkey.lower() == 'hw':
+                llabel = 'human-water contacts'
+            elif lkey.lower() == 'pw':
+                llabel = 'ppe-water contacts'
             elif lkey.lower() == 'fw':
                 llabel = 'flock-water contacts'
+            elif lkey.lower() == 'bw':
+                llabel = 'barn-water contacts'
             else:
                 llabel = f'"{lkey}"'
             return llabel

@@ -106,7 +106,7 @@ class PPE(Subroster):
         self.t = 0 # Keep current simulation time
         self._lock = False # Prevent further modification of keys
         self.meta = PPEMeta() # Store list of keys and dtypes
-  
+        self.record_all_events = self.pars['record_all_events'] # Whether or not to record all events in the sim. If false, only transmision events are recorded. We set this to true by default since we have so few agents, but it can be set to false to save memory if desired.
         self.event_log = []
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
 
@@ -212,6 +212,8 @@ class PPE(Subroster):
             target_inds: array of indices of flocks that experienced a recordable event
             event (str): The specific event in question
         '''
+        if self.record_all_events == False:
+             return
 
         if target_inds is None:
             return
@@ -363,12 +365,16 @@ class PPE(Subroster):
 
         def label_lkey(lkey):
             ''' Friendly name for common layer keys '''
-            if lkey.lower() == 'fb':
-                llabel = 'flock-barn contacts'
-            if lkey.lower() == 'bw':
-                llabel = 'barn-water contacts'
-            elif lkey.lower() == 'hb':
-                llabel = 'human-barn contacts'
+            if lkey.lower() == 'hp':
+                llabel = 'human-ppe contacts'
+            elif lkey.lower() == 'pp':
+                llabel = 'ppe-ppe contacts'
+            elif lkey.lower() == 'pf':
+                llabel = 'ppe-flock contacts'
+            elif lkey.lower() == 'pb':
+                llabel = 'ppe-barn contacts'
+            elif lkey.lower() == 'pw':
+                llabel = 'ppe-water contacts'
             else:
                 llabel = f'"{lkey}"'
             return llabel
