@@ -181,6 +181,16 @@ class MultiSim(znb.FlexPretty):
 
         return self
 
+    def finalize(self, **kwargs):
+        '''
+        Finalize the sims, which is necessary if you set auto_finalize=False in run().
+        '''
+
+        for sim in self.sims:
+            sim.finalize(**kwargs)
+        return
+
+
 
     def _has_orig_sim(self):
         ''' Helper method for determining if an original base sim is present '''
@@ -576,6 +586,21 @@ class MultiSim(znb.FlexPretty):
                 else:
                     kwargs['setylim'] = False
                 fig = sim.plot_result(key=key, fig=fig, color=colors[s], label=labels[s], *args, **kwargs)
+        return znpl.handle_show_return(fig=fig)
+
+    def plot_transmission_vectors(self, target_type, *args, **kwargs):
+        ''' Convenience method for plotting transmission vectors -- arguments passed to sim.plot_transmission_vectors() 
+        
+        Args:
+            target_type (str): the type of target to plot transmission vectors for; must be one of 'human', 'ppe', 'flock', 'barn', or 'water'
+            args, kwargs: passed to sim.plot_transmission_vectors()
+        '''
+        if self.which in ['combined', 'reduced']:
+            fig = self.base_sim.plot_transmission_vectors(target_type=target_type, *args, **kwargs)
+        else:
+            fig = None
+            for s,sim in enumerate(self.sims):
+                fig = sim.plot_transmission_vectors(target_type=target_type, fig=fig, *args, **kwargs)
         return znpl.handle_show_return(fig=fig)
 
 

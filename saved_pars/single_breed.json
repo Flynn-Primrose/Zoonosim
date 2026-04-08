@@ -24,6 +24,7 @@
   },
   "pop_scale": 1.0,
   "rescale": false,
+  "record_all_events": false,
   "initial_conditions": {
     "human": 0,
     "ppe": 0,
@@ -40,6 +41,7 @@
   "testobjs": null,
   "enable_smartwatches": false,
   "smartwatch_pars": {
+    "who": "all",
     "mean_fpr": 0.08,
     "use_variable_fpr": true,
     "day_i": [
@@ -109,19 +111,19 @@
     "transient": 1.0
   },
   "beta_layer": {
-    "hp": 0.5,
-    "hh": 0.25,
-    "hf": 0.25,
-    "hb": 0.25,
-    "hw": 0.25,
-    "pp": 0.75,
+    "hp": 1.0,
+    "hh": 1.0,
+    "hf": 1.0,
+    "hb": 1.0,
+    "hw": 1.0,
+    "pp": 0.1,
     "pf": 1.0,
     "pb": 1.0,
     "pw": 1.0,
-    "fb": 0.5,
-    "fw": 0.5,
-    "bw": 0.5,
-    "transient": 0.5
+    "fb": 1.0,
+    "fw": 1.0,
+    "bw": 1.0,
+    "transient": 1.0
   },
   "quar_factor": {
     "hp": 0.0,

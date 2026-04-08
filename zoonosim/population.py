@@ -240,15 +240,14 @@ def make_popdict(sim, **kwargs):
         human2ppe.update(farmdict[farm]['human2ppe']) # map humans to ppe for all farms
         barn2water.update(farmdict[farm]['barn2water']) # Map barns to water sources for all farms
 
-    transient_humans = popdict['human_uids'][human_index:]
+    transient_uids = popdict['human_uids'][human_index:]
     transient_ppe = popdict['ppe_uids'][ppe_index:]
-    transient_human2ppe = dict(zip(transient_humans, transient_ppe))
+    transient_human2ppe = dict(zip(transient_uids, transient_ppe))
 
     human2ppe.update(transient_human2ppe)
 
-    popdict['transient_humans'] = transient_humans
+    popdict['transient_uids'] = transient_uids
 
-    
     popdict['farmdict'] = farmdict # Add the contact dictionary to the population dictionary
     popdict['breed_index'] = breed_index
     popdict['barn2water'] = barn2water # Add the barn to water mapping to the population dictionary
@@ -803,7 +802,7 @@ def make_transient_contacts(popdict, beta):
     p1 = np.array([], dtype=znd.default_int)
     p2 = np.array([], dtype=znd.default_int)
 
-    for transient in popdict['transient_humans']:
+    for transient in popdict['transient_uids']:
         farms = np.random.choice(list(popdict['farmdict'].keys()), popdict['visits_per_day']) # Randomly assign 'visits_per_day' farms to this transient
         for farm in farms:
             humans = popdict['farmdict'][farm]['humans']

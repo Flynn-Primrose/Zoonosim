@@ -677,7 +677,7 @@ def plot_people(people, bins=None, width=1.0, alpha=0.6, fig_args=None, axis_arg
     return handle_show_return(fig=fig, do_show=do_show)
 
 
-def plot_transmission_vectors(target_type, sim=None, fig_args=None, axis_args=None, plot_args=None, style_args=None, do_show=None, fig=None):
+def plot_transmission_vectors(target_type, date=None, sim=None, fig_args=None, axis_args=None, plot_args=None, style_args=None, do_show=None, fig=None):
     ''' Plot the transmission vectors for a given target type -- see Sim.plot_transmission_vectors() for documentation '''
 
         # Set defaults
@@ -697,7 +697,7 @@ def plot_transmission_vectors(target_type, sim=None, fig_args=None, axis_args=No
     
     transmission_counts = []
     for source_type in sim['agent_types']:
-        count = sim.results[f'transmissions_{source_type}_to_{target_type}'][0]
+        count = sim.results[f'transmissions_{source_type}_to_{target_type}'][date] if date is not None else sim.results[f'transmissions_{source_type}_to_{target_type}'][-1]
         transmission_counts.append(count)
 
     with options.with_style(style_args):
