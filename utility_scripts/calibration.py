@@ -2,19 +2,28 @@ import zoonosim as zn
 import numpy as np
 import pandas as pd
 
-project_name = "Calibration_single_breed_ON"
+project_name = "Calibration_single_breed_AOQ"
 
 # Define new parameters for the simulation
 new_pars = dict(
-    n_farms = 100,
+    rand_seed = 42,
+    n_farms = 50,
     start_day = '2022-01-01',
     end_day = '2025-12-31',
+    record_all_events = False, # Whether to record all events in the simulation (True) or just transmission events.
+    pop_pars = dict(
+        avg_barns_per_farm = 5.0,
+        avg_humans_per_barn = 1.5,
+        avg_water_per_farm = 0.75,
+        number_of_transients = 3,
+        visits_per_day = 3, # Number of farms each transient visits in a day
+    ),
     beta = dict(
-        human = 0.01,
-        ppe = 0.01,
-        flock = 0.75,
-        barn = 0.75,
-        water = 0.75,
+        human = 0.001,
+        ppe = 0.001,
+        flock = 0.6,
+        barn = 0.2,
+        water = 0.2,
     ),
     n_imports = dict(
         human=None,  # Number of imported human cases per day; None = disabled
@@ -23,13 +32,40 @@ new_pars = dict(
         barn=dict(import_pattern='seasonal', max_import_rate=0.2, peak_day=300),  # Number of imported barn contaminations per day; None = disabled
         water=dict(import_pattern='seasonal', max_import_rate=0.2, peak_day=300),  # Number of imported water contaminations per day; None = disabled
     ), 
+    enable_smartwatches = False,
+    smartwatch_pars = dict(
+        who                       = 'all', # Must be one of 'all', 'permanent', 'transient'; controls who receives smartwatches
+        mean_fpr                  =   0.08, # mean false positive rate
+        use_variable_fpr          = True, # Whether to use a variable false positive rate
+        day_i                     = np.arange(-21, 22, 1), #
+        loc                       = 3.25, # Day of max probability of alert, relative to the day of symptom onset.
+        alpha                     = 1, # Scales the probability of receiving an alert
+        usage_rate                = 1, # Out of people who have smartwatches, the amount who use download the alerting app and stick with it.
+        compliance_rate           =   0.05, # probability of quarantining if a smartwatch detects symptoms (only used if testobjs are not available)
+        participation_rate        =   0.3,  # proportion of the population that has a smartwatch
+    ),
+    dynam_layer = dict(
+                hp = 0.0, 
+                hh = 0.0, 
+                hf = 0.0, 
+                hb = 0.0, 
+                hw = 0.0, 
+                pp = 0.0, 
+                pf = 0.0, 
+                pb = 0.0, 
+                pw = 0.0, 
+                fb = 0.0, 
+                fw = 0.0, 
+                bw = 0.0, 
+                transient = 1.0
+                ),
     beta_layer = dict(
                 hp = 1.0, 
                 hh = 1.0, 
                 hf = 1.0, 
                 hb = 1.0, 
                 hw = 1.0, 
-                pp = 1.0, 
+                pp = 0.1, 
                 pf = 1.0, 
                 pb = 1.0, 
                 pw = 1.0, 
@@ -37,6 +73,21 @@ new_pars = dict(
                 fw = 1.0, 
                 bw = 1.0, 
                 transient = 1.0 
+                ),
+    quar_factor = dict(
+                hp = 0.0, 
+                hh = 0.0, 
+                hf = 0.0, 
+                hb = 0.0, 
+                hw = 0.0, 
+                pp = 0.0, 
+                pf = 0.0, 
+                pb = 0.0, 
+                pw = 0.0, 
+                fb = 0.0, 
+                fw = 0.0, 
+                bw = 0.0, 
+                transient = 0.0
                 ),
     dur = dict(
         human = {
@@ -55,7 +106,7 @@ new_pars = dict(
             'diag': 14
         },
         ppe = {
-            'contamination': dict(dist='lognormal_int', par1=7.0, par2=2.0), # Duration of PPE contamination
+            'contamination': dict(dist='lognormal_int', par1=2.0, par2=1.0), # Duration of PPE contamination
             'quar': 14, # Duration of PPE quarantine (should match human quarantine duration since PPE is quarantined when associated human case is quarantined)
         },
         flock = {
@@ -79,7 +130,7 @@ new_pars = dict(
         human = zn.parameters.relative_human_prognoses(dict(
             age_cutoffs   = np.array([0,       10,      20,      30,      40,      50,      60,      70,      80,     90,]),     # Age cutoffs (lower limits)
             sus_ORs       = np.array([1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.0,     1.00,   1.00]),    # Odds ratios for relative susceptibility 
-            trans_ORs     = np.array([1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,   1.00]),    # Odds ratios for relative transmissibility
+            trans_ORs     = np.array([0.01,    0.01,    0.01,    0.01,    0.01,    0.01,    0.01,    0.01,    0.01,   0.01]),    # Odds ratios for relative transmissibility
             comorbidities = np.array([1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,    1.00,   1.00]),    # Comorbidities by age -- set to 1 by default since already included in disease progression rates
             symp_probs    = np.array([0.66,    0.66,    0.66,    0.66,    0.66,    0.66,    0.66,    0.66,    0.66,   0.66]),    # Overall probability of developing symptoms 
             severe_probs  = np.array([0.33,    0.33,    0.33,    0.33,    0.33,    0.33,    0.33,    0.33,    0.33,   0.33]),     # Overall probability of developing severe symptoms
@@ -94,19 +145,27 @@ new_pars = dict(
             sus_ORs = np.array([1.00]),
             trans_ORs = np.array([1.00]),
             baseline_symptomatic_rate = np.array([0.001]),
-            mean_symptomatic_rate_increase = np.array([0.001]),
+            mean_symptomatic_rate_increase = np.array([0.01]),
             baseline_mortality_rate = np.array([0.001]),
-            mean_mortality_rate_increase = np.array([0.002]),
+            mean_mortality_rate_increase = np.array([0.01]),
             baseline_water_rate = np.array([1.00]),
-            mean_water_rate_increase = np.array([1.00, 1.00, 1.00]),
+            mean_water_rate_increase = np.array([1.00]),
+        ),
+        barn = dict(
+            sus_ORs = np.array([1.00]),
+            trans_ORs = np.array([1.00]),
+        ),
+        water = dict(
+            sus_ORs = np.array([0.00]),
+            trans_ORs = np.array([1.00]),
         )
     ),
     poultry_pars = dict(
         breeds = np.array(['poultry'], dtype=zn.default_str),
         breed_freqs = np.array([1.0]),
-        mortality_suspicion_threshold = [0.1], # I.E a deviation from the expected mortality rate of 0.01*expected_value will trigger suspicion
-        symptomatic_suspicion_threshold = [0.1,], # I.E a deviation from the expected symptomatic rate of 0.01*expected_value will trigger suspicion
-        consumption_suspicion_threshold = [0.1], # I.E a deviation from the expected rate of water consumption of 0.01*expected_value will trigger suspicion
+        mortality_suspicion_threshold = [0.0012], # I.E a deviation from the expected mortality rate of 0.01*expected_value will trigger suspicion
+        symptomatic_suspicion_threshold = [0.0001], # I.E a deviation from the expected symptomatic rate of 0.01*expected_value will trigger suspicion
+        consumption_suspicion_threshold = [0.001], # I.E a deviation from the expected rate of water consumption of 0.01*expected_value will trigger suspicion
         cycle_dur = [dict(dist = 'normal_pos', par1 = 100, par2 = 25)],
         flock_size = [dict(dist = 'normal_pos', par1 = 20000, par2 = 10000)]
     ),
@@ -144,9 +203,11 @@ zn.options.set(verbose=0)
 zn.options.set(numba_parallel='safe')
 
 
-data = pd.read_csv("zoonosim/data/CFIA_cumulative_timeseries.csv")
+data = pd.read_csv("zoonosim/data/CFIA_monthly_incidence.csv")
 data['date'] = pd.to_datetime(data['date'])
-data = data.rename(columns={"cum_ON_poultry_infectious":"cum_poultry_flock_infectious"})
+data = data.rename(columns={"AOQ_adjusted_50":"monthly_new_poultry_flock_infectious"})
+data['monthly_new_human_infectious'] = np.repeat(0, len(data))
+data = data[["date", "monthly_new_human_infectious", "monthly_new_poultry_flock_infectious"]]
 
 # Create Simulation
 sim = zn.Sim(datafile=data, label = project_name, pars=new_pars)
@@ -154,18 +215,30 @@ sim.export_pars(f"saved_pars/{project_name}.json")
 # Define calibration parameters
 calib_pars = dict(
         beta = dict(
-        human = [0.5, 0.0, 1.0],
-        flock = [0.5, 0.0, 1.0],
-        barn = [0.5, 0.0, 1.0],
-        water = [0.5, 0.0, 1.0],
+        human = [0.2, 0.0, 0.5],
+        ppe = [0.2, 0.0, 0.5],
+        flock = [0.2, 0.0, 0.5],
+        barn = [0.2, 0.0, 0.5],
+        water = [0.2, 0.0, 0.5],
     ),   
-    n_imports = dict(
-        barn = dict(max_import_rate = [0.5, 0.0, 2.0], peak_day = [270, 200, 350]),
-        water = dict(max_import_rate = [0.5, 0.0, 2.0], peak_day = [270, 200, 350]),
-    ),
+    beta_layer = dict(
+                hp = [0.2, 0.0, 0.5], 
+                hh = [0.2, 0.0, 0.5], 
+                hf = [0.2, 0.0, 0.5], 
+                hb = [0.2, 0.0, 0.5], 
+                hw = [0.2, 0.0, 0.5], 
+                pp = [0.2, 0.0, 0.5], 
+                pf = [0.2, 0.0, 0.5], 
+                pb = [0.2, 0.0, 0.5], 
+                pw = [0.2, 0.0, 0.5], 
+                fb = [0.2, 0.0, 0.5], 
+                fw = [0.2, 0.0, 0.5], 
+                bw = [0.2, 0.0, 0.5], 
+                transient = [0.2, 0.0, 0.5] 
+                ),
 )
 
-calib = zn.Calibration(sim, calib_pars, name = project_name, n_trials=100, die=True, keep_db=True)
+calib = zn.Calibration(sim, calib_pars, name = project_name, n_trials=10, die=True, keep_db=True)
 
 if __name__ == "__main__":
     calib.calibrate()

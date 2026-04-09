@@ -15,6 +15,7 @@ from . import plotting as znplt
 from .settings import options
 from . import run as znr
 from . import utils as znu
+from . import defaults as znd
 
 
 __all__ = ['Analyzer', 'snapshot', 'biography', 'Fit' ,'Calibration' ]
@@ -449,7 +450,7 @@ class Fit(Analyzer):
 
         data_cols = self.data.columns
         if self.keys is None:
-            sim_keys = [k for k in self.sim_results.keys() if k.startswith('cum_')] # Default sim keys, only keep cumulative keys if no keys are supplied
+            sim_keys = [k for k in self.sim_results.keys() if k.startswith(znd.calibration_result_prefix)] # Default sim keys, only keep keys with the calibration prefix if no keys are supplied
             intersection = list(set(sim_keys).intersection(data_cols)) # Find keys in both the sim and data
             self.keys = [key for key in sim_keys if key in intersection] # Maintain key order
             if not len(self.keys): # pragma: no cover
@@ -922,7 +923,7 @@ class Calibration(Analyzer):
                 errormsg = f'The following parameters are not part of the sim, nor is a custom function specified to use them: {invalid_pars}'
                 raise ValueError(errormsg)
         try:
-            sim.run()
+            sim.run(auto_finalize=False, finalize_calibration_only=True) # Run the sim, but only finalize the minimum required to compute the fit, which can save time during calibration.
             sim.compute_fit(**self.fit_args)
             if return_sim:
                 return sim

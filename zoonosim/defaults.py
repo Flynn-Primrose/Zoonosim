@@ -536,6 +536,15 @@ default_water_prognoses = dict(
 default_bkg_ILI = 0.02 # percentage of the population that is infected with ILI at any given time
 default_Avian_to_ILI = False # whether to allow humans with avian influenza to be infected with ILI
 
+human_calibration_flows = {
+    'infectious': 'Number of infectious humans'
+}
+
+flock_calibration_flows = {
+    'infectious': 'Number of infectious flocks'
+}
+
+calibration_result_prefix = 'monthly_new_' # The expected prefix for results that are used for calibration; used in analysis.py to identify which results to use for calibration. 
 
 # tracked stocks and flows -- used in sim.py; value is the label suffix
 

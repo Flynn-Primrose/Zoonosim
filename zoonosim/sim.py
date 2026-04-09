@@ -3,7 +3,7 @@ Defines the Sim class, zoonosims core class.
 '''
 
 
-
+import pandas as pd
 import numpy as np
 import sciris as sc
 
@@ -1043,13 +1043,15 @@ class Sim(znb.BaseSim):
             if len(self.pars['testing']) == 0: 
                 print("Warning: Test objects enabled but no test object parameters, or already-built test objects, were supplied")
 
-    def run(self, do_plot=False, until=None, auto_finalize = True, restore_pars=True, reset_seed=True, verbose=None):
+    def run(self, do_plot=False, until=None, auto_finalize = True, finalize_calibration_only=False, restore_pars=True, reset_seed=True, verbose=None):
         '''
         Run the simulation.
 
         Args:
             do_plot (bool): whether to plot
             until (int/str): day or date to run until
+            auto_finalize (bool): whether to automatically finalize the simulation after running
+            finalize_calibration_only (bool): whether to only finalize the calibration-relevant results, which is useful for speeding up calibration runs by skipping the calculation of results that are not needed for the likelihood
             restore_pars (bool): whether to make a copy of the parameters before the run and restore it after, so runs are repeatable
             reset_seed (bool): whether to reset the random number stream immediately before run
             verbose (float): level of detail to print, e.g. -1 = one-line output, 0 = no output, 0.1 = print every 10th day, 1 = print every day
@@ -1116,10 +1118,68 @@ class Sim(znb.BaseSim):
         if self.complete:
             if auto_finalize:
                 self.finalize(verbose=verbose, restore_pars=restore_pars)
+            if finalize_calibration_only:
+                self.finalize_calibration_only(verbose=verbose, restore_pars=restore_pars)
             sc.printv(f'Run finished after {elapsed:0.2f} s.\n', 1, verbose)
         
 
         return self
+
+
+    def finalize_calibration_only(self, verbose=None, restore_pars=True):
+        ''' Compute final results for a calibration-only run, which is a run where the only purpose is to compute the likelihood for a given set of parameters, and the results are not needed. This is useful for speeding up calibration runs by skipping the calculation of results that are not needed for the likelihood. '''
+        if self.results_ready:
+            # Because the results are rescaled in-place, finalizing the sim cannot be run more than once or
+            # otherwise the scale factor will be applied multiple times
+            raise AlreadyRunError('Simulation has already been finalized')
+        
+        # We initiate some results after the run so that they don't take up memory during the run.
+        def init_res(*args, **kwargs):
+            ''' Initialize a single result object '''
+            output = znb.Result(*args, **kwargs, npts=self.npts)
+            return output
+        
+        human_dcols = znd.get_default_colors('human') # Get default human colors
+        # ppe_dcols = znd.get_default_colors('ppe') # Get default PPE colors
+        # flock_dcols = znd.get_default_colors('flock') # Get default flock colors
+        breed_dcols = znd.get_default_colors('breed') # Get default breed colors
+        # barn_dcols  = znd.get_default_colors('barn')  # Get default barn colors
+        # water_dcols = znd.get_default_colors('water') # Get default water colors
+    
+        date_series = pd.Series(pd.to_datetime(self.datevec))
+        end_of_month_inds = date_series.dt.is_month_end.values.nonzero()[0] # Get the indices of the end of each month
+
+        for key,label in znd.human_calibration_flows.items():
+            self.results[f'monthly_new_human_{key}'] = init_res(f'Number of {label} humans', color=human_dcols[key])  # Stock variables -- e.g. "Number of exposed humans per month"
+        for key,label in znd.flock_calibration_flows.items():
+            for breed in self['poultry_pars']['breeds']:
+                self.results[f'monthly_new_{breed}_flock_{key}'] = init_res(f'Number of {label} flocks ({breed})', color=breed_dcols[breed])  # Stock variables -- e.g. "Number of exposed flocks per month"
+        #calculate monthly results for humans
+        for key in znd.human_calibration_flows.keys():
+            self.results[f'monthly_new_human_{key}'][end_of_month_inds] = znm.monthly_from_daily(self.results[f'new_human_{key}'][:], self.datevec)
+        for key in znd.flock_calibration_flows.keys():
+            for breed in self['poultry_pars']['breeds']:
+                self.results[f'monthly_new_{breed}_flock_{key}'][end_of_month_inds] = znm.monthly_from_daily(self.results[f'new_{breed}_flock_{key}'][:], self.datevec)
+        self.finalize_interventions()
+        self.finalize_analyzers() 
+        # Final settings
+        self.results_ready = True # Set this first so self.summary() knows to print the results
+        self.t -= 1 # During the run, this keeps track of the next step; restore this be the final day of the sim
+        # Perform calculations on results
+        self.results = sc.objdict(self.results) # Convert results to a odicts/objdict to allow e.g. sim.results.diagnoses
+        if restore_pars and self._orig_pars:
+            preserved = ['analyzers', 'interventions', 'testing']
+            orig_pars_keys = list(self._orig_pars.keys()) # Get a list of keys so we can iterate over them
+            for key in orig_pars_keys:
+                if key not in preserved:
+                    self.pars[key] = self._orig_pars.pop(key) # Restore everything except for the analyzers, interventions, and testing
+        # Optionally print summary output
+        if verbose: # Verbose is any non-zero value
+            if verbose>0: # Verbose is any positive number
+                self.summarize() # Print medium-length summary of the sim
+            else:
+                self.brief() # Print brief summary of the sim
+        return    
 
 
     def finalize(self, verbose=None, restore_pars=True):
@@ -1146,6 +1206,8 @@ class Sim(znb.BaseSim):
         # misc_dcols = znd.get_default_colors('misc') # Get default misc colors
         # sw_dcols = znd.get_default_colors('smartwatch')
 
+        
+
         for key,label in znd.human_flows.items():
             self.results[f'cum_human_{key}'] = init_res(f'Cumulative {label}', color=human_dcols[key])  # Cumulative variables -- e.g. "Cumulative infections"
 
@@ -1164,6 +1226,8 @@ class Sim(znb.BaseSim):
 
         for key,label in znd.water_flows.items():
             self.results[f'cum_water_{key}'] = init_res(f'Cumulative {label}', color=water_dcols[key])
+
+
         
         # Calculate cumulative results for smartwatches
         if self.pars['enable_smartwatches']:
@@ -1570,7 +1634,7 @@ class Sim(znb.BaseSim):
         
     def compute_fit(self, *args, **kwargs):
         '''
-        Compute the fit between the model and the data. See cv.Fit() for more
+        Compute the fit between the model and the data. See zn.Fit() for more
         information.
 
         Args:
