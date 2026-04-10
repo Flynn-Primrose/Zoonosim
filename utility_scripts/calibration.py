@@ -2,11 +2,11 @@ import zoonosim as zn
 import numpy as np
 import pandas as pd
 
-project_name = "Calibration_single_breed_AOQ"
+project_name = "Calibration_single_breed_AOQ_2nd_iteration"
 
 # Define new parameters for the simulation
 new_pars = dict(
-    rand_seed = 42,
+    rand_seed = 81,
     n_farms = 50,
     start_day = '2022-01-01',
     end_day = '2025-12-31',
@@ -20,10 +20,10 @@ new_pars = dict(
     ),
     beta = dict(
         human = 0.001,
-        ppe = 0.001,
-        flock = 0.6,
-        barn = 0.2,
-        water = 0.2,
+        ppe = 0.2,
+        flock = 0.3,
+        barn = 0.1,
+        water = 0.1,
     ),
     n_imports = dict(
         human=None,  # Number of imported human cases per day; None = disabled
@@ -60,17 +60,17 @@ new_pars = dict(
                 transient = 1.0
                 ),
     beta_layer = dict(
-                hp = 1.0, 
+                hp = 0.4, 
                 hh = 1.0, 
-                hf = 1.0, 
-                hb = 1.0, 
+                hf = 0.4, 
+                hb = 0.1, 
                 hw = 1.0, 
                 pp = 0.1, 
-                pf = 1.0, 
-                pb = 1.0, 
-                pw = 1.0, 
-                fb = 1.0, 
-                fw = 1.0, 
+                pf = 0.4, 
+                pb = 0.3, 
+                pw = 0.1, 
+                fb = 0.4, 
+                fw = 0.1, 
                 bw = 1.0, 
                 transient = 1.0 
                 ),
@@ -215,30 +215,30 @@ sim.export_pars(f"saved_pars/{project_name}.json")
 # Define calibration parameters
 calib_pars = dict(
         beta = dict(
-        human = [0.2, 0.0, 0.5],
-        ppe = [0.2, 0.0, 0.5],
-        flock = [0.2, 0.0, 0.5],
-        barn = [0.2, 0.0, 0.5],
-        water = [0.2, 0.0, 0.5],
+        # human = [0.2, 0.0, 0.5],
+        # ppe = [0.2, 0.0, 0.5],
+        # flock = [0.2, 0.0, 0.5],
+        barn = [0.2, 0.0, 1.0],
+        water = [0.2, 0.0, 1.0],
     ),   
     beta_layer = dict(
-                hp = [0.2, 0.0, 0.5], 
-                hh = [0.2, 0.0, 0.5], 
-                hf = [0.2, 0.0, 0.5], 
-                hb = [0.2, 0.0, 0.5], 
-                hw = [0.2, 0.0, 0.5], 
-                pp = [0.2, 0.0, 0.5], 
-                pf = [0.2, 0.0, 0.5], 
-                pb = [0.2, 0.0, 0.5], 
-                pw = [0.2, 0.0, 0.5], 
-                fb = [0.2, 0.0, 0.5], 
-                fw = [0.2, 0.0, 0.5], 
-                bw = [0.2, 0.0, 0.5], 
-                transient = [0.2, 0.0, 0.5] 
+                # hp = [0.2, 0.0, 0.5], 
+                hh = [0.2, 0.0, 1.0], 
+                # hf = [0.2, 0.0, 0.5], 
+                # hb = [0.2, 0.0, 0.5], 
+                hw = [0.2, 0.0, 1.0], 
+                # pp = [0.2, 0.0, 0.5], 
+                # pf = [0.2, 0.0, 0.5], 
+                # pb = [0.2, 0.0, 0.5], 
+                # pw = [0.2, 0.0, 0.5], 
+                # fb = [0.2, 0.0, 0.5], 
+                # fw = [0.2, 0.0, 0.5], 
+                bw = [0.2, 0.0, 1.0], 
+                transient = [0.2, 0.0, 1.0] 
                 ),
 )
 
-calib = zn.Calibration(sim, calib_pars, name = project_name, n_trials=10, die=True, keep_db=True)
+calib = zn.Calibration(sim, calib_pars, name = project_name, n_trials=100, die=True, keep_db=True)
 
 if __name__ == "__main__":
     calib.calibrate()

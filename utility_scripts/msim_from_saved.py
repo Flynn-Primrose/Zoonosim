@@ -2,8 +2,8 @@ import zoonosim as zn
 import json
 import numpy as np
 
-saved_pars_filename = "saved_pars/single_breed.json"
-sim_label = "single_breed"
+saved_pars_filename = "saved_pars/Calibration_single_breed_AOQ_2nd_iteration.json"
+sim_label = "single_breed_AOQ_2nd_iteration"
 
 with open(saved_pars_filename, 'r') as file:
     saved_pars = json.load(file)
@@ -21,11 +21,21 @@ for key, value in saved_pars['poultry_pars'].items():
 
 saved_sim = zn.Sim(pars = saved_pars, label = sim_label)
 new_pars = dict(
-    rand_seed = 42,
+    rand_seed = 79,
+    beta = dict(
+        barn = 0.3, 
+        hw = 0.3,
+    ),
+    beta_layer = dict(
+        hh = 0.01, 
+        hw = 0.1,
+        bw = 0.1,
+        transient = 0.1 
+    ),
 )
 saved_sim.update_pars(new_pars, recursive=True)
 
-msim = zn.MultiSim(saved_sim, label=sim_label, n_runs=100, verbose=0)  # Wrap the simulation in a MultiSim object.
+msim = zn.MultiSim(saved_sim, label=sim_label, n_runs=1000, verbose=0.1)  # Wrap the simulation in a MultiSim object.
 
 if __name__ == "__main__":
     msim.run(keep_people = True, run_args=dict(auto_finalize=False))                    # Run the simulations.
