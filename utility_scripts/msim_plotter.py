@@ -66,8 +66,10 @@ import zoonosim as zn
 # on_350.plot('flock')
 # on_all.plot('flock')
 
-AOQ_2nd_iteration = zn.MultiSim.load("./msims/single_breed_AOQ_2nd_iteration.msim")
+AOQ_2nd_iteration = zn.MultiSim.load("./msims/single_breed_AOQ_2nd_iteration_high_human_beta.msim")
 # AOQ_2nd_iteration.combine()
 AOQ_2nd_iteration.reduce(use_mean=True)
 #print(AOQ_2nd_iteration.results['n_human_infectious'])
 AOQ_2nd_iteration.plot()
+AOQ_2nd_iteration.plot_transmission_vectors('flock')
+AOQ_2nd_iteration.plot_transmission_vectors('human')

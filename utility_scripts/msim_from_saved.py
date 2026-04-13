@@ -3,7 +3,7 @@ import json
 import numpy as np
 
 saved_pars_filename = "saved_pars/Calibration_single_breed_AOQ_2nd_iteration.json"
-sim_label = "single_breed_AOQ_2nd_iteration"
+sim_label = "single_breed_AOQ_2nd_iteration_zero_human_beta"
 
 with open(saved_pars_filename, 'r') as file:
     saved_pars = json.load(file)
@@ -23,6 +23,7 @@ saved_sim = zn.Sim(pars = saved_pars, label = sim_label)
 new_pars = dict(
     rand_seed = 79,
     beta = dict(
+        human = 0.0,
         barn = 0.3, 
         hw = 0.3,
     ),
@@ -35,7 +36,7 @@ new_pars = dict(
 )
 saved_sim.update_pars(new_pars, recursive=True)
 
-msim = zn.MultiSim(saved_sim, label=sim_label, n_runs=1000, verbose=0.1)  # Wrap the simulation in a MultiSim object.
+msim = zn.MultiSim(saved_sim, label=sim_label, n_runs=100, verbose=0.1)  # Wrap the simulation in a MultiSim object.
 
 if __name__ == "__main__":
     msim.run(keep_people = True, run_args=dict(auto_finalize=False))                    # Run the simulations.
