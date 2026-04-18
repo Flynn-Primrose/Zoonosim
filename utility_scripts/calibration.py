@@ -2,11 +2,11 @@ import zoonosim as zn
 import numpy as np
 import pandas as pd
 
-project_name = "Calibration_single_breed_AOQ_2nd_iteration"
+project_name = "Calibration_single_breed_AOQ_4th_iteration"
 
 # Define new parameters for the simulation
 new_pars = dict(
-    rand_seed = 81,
+    rand_seed = 92,
     n_farms = 50,
     start_day = '2022-01-01',
     end_day = '2025-12-31',
@@ -19,7 +19,7 @@ new_pars = dict(
         visits_per_day = 3, # Number of farms each transient visits in a day
     ),
     beta = dict(
-        human = 0.001,
+        human = 0.0,
         ppe = 0.2,
         flock = 0.3,
         barn = 0.1,
@@ -60,19 +60,19 @@ new_pars = dict(
                 transient = 1.0
                 ),
     beta_layer = dict(
-                hp = 0.4, 
-                hh = 1.0, 
-                hf = 0.4, 
+                hp = 0.1, 
+                hh = 0.1, 
+                hf = 0.1, 
                 hb = 0.1, 
-                hw = 1.0, 
+                hw = 0.1, 
                 pp = 0.1, 
-                pf = 0.4, 
-                pb = 0.3, 
+                pf = 0.1, 
+                pb = 0.1, 
                 pw = 0.1, 
-                fb = 0.4, 
+                fb = 0.1, 
                 fw = 0.1, 
-                bw = 1.0, 
-                transient = 1.0 
+                bw = 0.1, 
+                transient = 0.1  
                 ),
     quar_factor = dict(
                 hp = 0.0, 
@@ -201,6 +201,7 @@ new_pars = dict(
 
 zn.options.set(verbose=0)
 zn.options.set(numba_parallel='safe')
+zn.options.set(numba_cache=False)
 
 
 data = pd.read_csv("zoonosim/data/CFIA_monthly_incidence.csv")
@@ -215,30 +216,30 @@ sim.export_pars(f"saved_pars/{project_name}.json")
 # Define calibration parameters
 calib_pars = dict(
         beta = dict(
-        # human = [0.2, 0.0, 0.5],
-        # ppe = [0.2, 0.0, 0.5],
-        # flock = [0.2, 0.0, 0.5],
-        barn = [0.2, 0.0, 1.0],
-        water = [0.2, 0.0, 1.0],
+        human = [0.2, 0.0, 0.5],
+        ppe = [0.2, 0.0, 0.5],
+        flock = [0.2, 0.0, 0.5],
+        barn = [0.2, 0.0, 0.5],
+        water = [0.2, 0.0, 0.5],
     ),   
     beta_layer = dict(
-                # hp = [0.2, 0.0, 0.5], 
-                hh = [0.2, 0.0, 1.0], 
-                # hf = [0.2, 0.0, 0.5], 
-                # hb = [0.2, 0.0, 0.5], 
-                hw = [0.2, 0.0, 1.0], 
-                # pp = [0.2, 0.0, 0.5], 
-                # pf = [0.2, 0.0, 0.5], 
-                # pb = [0.2, 0.0, 0.5], 
-                # pw = [0.2, 0.0, 0.5], 
-                # fb = [0.2, 0.0, 0.5], 
-                # fw = [0.2, 0.0, 0.5], 
-                bw = [0.2, 0.0, 1.0], 
-                transient = [0.2, 0.0, 1.0] 
+                hp = [0.2, 0.0, 0.5], 
+                hh = [0.2, 0.0, 0.5], 
+                hf = [0.2, 0.0, 0.5], 
+                hb = [0.2, 0.0, 0.5], 
+                hw = [0.2, 0.0, 0.5], 
+                pp = [0.2, 0.0, 0.5], 
+                pf = [0.2, 0.0, 0.5], 
+                pb = [0.2, 0.0, 0.5], 
+                pw = [0.2, 0.0, 0.5], 
+                fb = [0.2, 0.0, 0.5], 
+                fw = [0.2, 0.0, 0.5], 
+                bw = [0.2, 0.0, 0.5], 
+                transient = [0.2, 0.0, 0.5] 
                 ),
 )
 
-calib = zn.Calibration(sim, calib_pars, name = project_name, n_trials=100, die=True, keep_db=True)
+calib = zn.Calibration(sim, calib_pars, name = project_name, n_reps = 10, total_trials=100, die=True, keep_db=True)
 
 if __name__ == "__main__":
     calib.calibrate()

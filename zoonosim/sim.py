@@ -1150,10 +1150,10 @@ class Sim(znb.BaseSim):
         end_of_month_inds = date_series.dt.is_month_end.values.nonzero()[0] # Get the indices of the end of each month
 
         for key,label in znd.human_calibration_flows.items():
-            self.results[f'monthly_new_human_{key}'] = init_res(f'Number of {label} humans', color=human_dcols[key])  # Stock variables -- e.g. "Number of exposed humans per month"
+            self.results[f'monthly_new_human_{key}'] = init_res(f'{label}', color=human_dcols[key])  # Stock variables -- e.g. "Number of exposed humans per month"
         for key,label in znd.flock_calibration_flows.items():
             for breed in self['poultry_pars']['breeds']:
-                self.results[f'monthly_new_{breed}_flock_{key}'] = init_res(f'Number of {label} flocks ({breed})', color=breed_dcols[breed])  # Stock variables -- e.g. "Number of exposed flocks per month"
+                self.results[f'monthly_new_{breed}_flock_{key}'] = init_res(f'{label} ({breed})', color=breed_dcols[breed])  # Stock variables -- e.g. "Number of exposed flocks per month"
         #calculate monthly results for humans
         for key in znd.human_calibration_flows.keys():
             self.results[f'monthly_new_human_{key}'][end_of_month_inds] = znm.monthly_from_daily(self.results[f'new_human_{key}'][:], self.datevec)
@@ -1190,6 +1190,8 @@ class Sim(znb.BaseSim):
             # otherwise the scale factor will be applied multiple times
             raise AlreadyRunError('Simulation has already been finalized')
         
+
+        self.finalize_calibration_only(verbose=verbose, restore_pars=restore_pars) # Compute the calibration-only results first
 
         # We initiate some results after the run so that they don't take up memory during the run.
         def init_res(*args, **kwargs):

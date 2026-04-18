@@ -1,75 +1,30 @@
 import zoonosim as zn
+import pandas as pd
+import numpy as np
 
-# qc_200 = zn.MultiSim.load("./msims/Calibration_single_breed_2_peak_at_200_w_data.msim")
-# qc_250 = zn.MultiSim.load("./msims/Calibration_single_breed_2_peak_at_250_w_data.msim")
-# qc_300 = zn.MultiSim.load("./msims/Calibration_single_breed_2_peak_at_300_w_data.msim")
-# qc_350 = zn.MultiSim.load("./msims/Calibration_single_breed_2_peak_at_350_w_data.msim")
-
-# on_200 = zn.MultiSim.load("./msims/Calibration_single_breed_ON_peak_at_200_w_data.msim")
-# on_250 = zn.MultiSim.load("./msims/Calibration_single_breed_ON_peak_at_250_w_data.msim")
-# on_300 = zn.MultiSim.load("./msims/Calibration_single_breed_ON_peak_at_300_w_data.msim")
-# on_350 = zn.MultiSim.load("./msims/Calibration_single_breed_ON_peak_at_350_w_data.msim")
-
-# qc_200.reduce()
-# qc_250.reduce()
-# qc_300.reduce()
-# qc_350.reduce()
-
-# qc_all = zn.MultiSim.merge([qc_200, qc_250, qc_300, qc_350])
-
-# on_200.reduce()
-# on_250.reduce()
-# on_300.reduce()
-# on_350.reduce()
-
-# on_all = zn.MultiSim.merge([on_200, on_250, on_300, on_350])
+AOQ_4th_iteration = zn.MultiSim.load("./msims/AOQ_4th_iteration_RHB.msim")
 
 
-# qc_200.plot('seasonality')
-# qc_250.plot('seasonality')
-# qc_300.plot('seasonality')
-# qc_350.plot('seasonality')
-# qc_all.plot('seasonality')
-
-# on_200.plot('seasonality')
-# on_250.plot('seasonality')
-# on_300.plot('seasonality')
-# on_350.plot('seasonality')
-# on_all.plot('seasonality')
+AOQ_4th_iteration.reduce(use_mean=True)
 
 
 
+# data = pd.read_csv("zoonosim/data/CFIA_monthly_incidence.csv")
+# data['date'] = pd.to_datetime(data['date'])
+# data = data.rename(columns={"AOQ_adjusted_50":"monthly_new_poultry_flock_infectious"})
+# data['monthly_new_human_infectious'] = np.repeat(0, len(data))
+# data = data[["date", "monthly_new_human_infectious", "monthly_new_poultry_flock_infectious"]]
 
+# AOQ_4th_iteration.base_sim.load_data(data)
 
-# qc_200.plot_result(key = 'cum_poultry_flock_infectious')
-# qc_250.plot_result(key = 'cum_poultry_flock_infectious')
-# qc_300.plot_result(key = 'cum_poultry_flock_infectious')
-# qc_350.plot_result(key = 'cum_poultry_flock_infectious')
-# qc_all.plot_result(key = 'cum_poultry_flock_infectious')
-
-# on_200.plot_result(key = 'cum_poultry_flock_infectious')
-# on_250.plot_result(key = 'cum_poultry_flock_infectious')
-# on_300.plot_result(key = 'cum_poultry_flock_infectious')
-# on_350.plot_result(key = 'cum_poultry_flock_infectious')
-# on_all.plot_result(key = 'cum_poultry_flock_infectious')
-
-
-# qc_200.plot('flock')
-# qc_250.plot('flock')
-# qc_300.plot('flock')
-# qc_350.plot('flock')
-# qc_all.plot('flock')
-
-# on_200.plot('flock')
-# on_250.plot('flock')
-# on_300.plot('flock')
-# on_350.plot('flock')
-# on_all.plot('flock')
-
-AOQ_2nd_iteration = zn.MultiSim.load("./msims/single_breed_AOQ_2nd_iteration_high_human_beta.msim")
-# AOQ_2nd_iteration.combine()
-AOQ_2nd_iteration.reduce(use_mean=True)
-#print(AOQ_2nd_iteration.results['n_human_infectious'])
-AOQ_2nd_iteration.plot()
-AOQ_2nd_iteration.plot_transmission_vectors('flock')
-AOQ_2nd_iteration.plot_transmission_vectors('human')
+AOQ_4th_iteration.plot()
+AOQ_4th_iteration.plot_result(key = 'monthly_new_human_infectious')
+AOQ_4th_iteration.plot_result(key = "monthly_new_poultry_flock_infectious")
+AOQ_4th_iteration.plot('human')
+AOQ_4th_iteration.plot_transmission_vectors('human')
+AOQ_4th_iteration.plot('ppe')
+AOQ_4th_iteration.plot_transmission_vectors('ppe')
+AOQ_4th_iteration.plot('flock')
+AOQ_4th_iteration.plot_transmission_vectors('flock')
+AOQ_4th_iteration.plot('barn')
+AOQ_4th_iteration.plot_transmission_vectors('barn')

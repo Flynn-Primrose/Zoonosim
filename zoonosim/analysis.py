@@ -866,13 +866,14 @@ class Calibration(Analyzer):
     '''
 
     def __init__(self, sim, calib_pars=None, fit_args=None, custom_fn=None, par_samplers=None,
-                 n_trials=None, n_workers=None, total_trials=None, name=None, db_name=None,
+                 n_reps=None, n_trials=None, n_workers=None, total_trials=None, name=None, db_name=None,
                  keep_db=None, storage=None, label=None, die=False, verbose=True):
         super().__init__(label=label) # Initialize the Analyzer object
 
         import multiprocessing as mp # Import here since it's also slow
         op = import_optuna()        # Import here since it's also slow
         # Handle run arguments
+        if n_reps    is None: n_reps    = 1 
         if n_trials  is None: n_trials  = 20
         if n_workers is None: n_workers = mp.cpu_count()
         if name      is None: name      = 'zoonosim_calibration'
@@ -881,7 +882,7 @@ class Calibration(Analyzer):
         #if storage   is None: storage   = f'sqlite:///{db_name}'
         if storage   is None: storage   = op.storages.JournalStorage(op.storages.journal.JournalFileBackend(db_name, op.storages.journal.JournalFileOpenLock(db_name))) # Use JournalStorage for better concurrency
         if total_trials is not None: n_trials = total_trials/n_workers
-        self.run_args   = sc.objdict(n_trials=int(n_trials), n_workers=int(n_workers), name=name, db_name=db_name, keep_db=keep_db, storage=storage)
+        self.run_args   = sc.objdict(n_reps = int(n_reps), n_trials=int(n_trials), n_workers=int(n_workers), name=name, db_name=db_name, keep_db=keep_db, storage=storage)
 
         self.run_args.setdefault('parallelizer', 'concurrent')
 
@@ -943,7 +944,10 @@ class Calibration(Analyzer):
         ''' Define the objective for Optuna '''
         try:
             pars = znu.pars_sampler(trial, self.calib_pars, self.par_samplers)
-            mismatch = self.run_sim(pars)
+            mismatch = 0
+            for rep in range(self.run_args.n_reps):
+                mismatch += self.run_sim(pars)
+            mismatch /= self.run_args.n_reps # Average across reps, if applicable
         except Exception as E:
             errormsg = f'Error during trial sampling or simulation run: {str(E)}'
             raise RuntimeError(errormsg) from E

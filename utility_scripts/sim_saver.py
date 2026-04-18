@@ -14,11 +14,11 @@ new_pars = dict(
         visits_per_day = 3, # Number of farms each transient visits in a day
     ),
     beta = dict(
-        human = 0.001,
-        ppe = 0.001,
-        flock = 0.6,
-        barn = 0.2,
-        water = 0.2,
+        human = 0.003,
+        ppe = 0.141,
+        flock = 0.219,
+        barn = 0.201,
+        water = 0.277,
     ),
     n_imports = dict(
         human=None,  # Number of imported human cases per day; None = disabled
@@ -55,19 +55,19 @@ new_pars = dict(
                 transient = 1.0
                 ),
     beta_layer = dict(
-                hp = 1.0, 
-                hh = 1.0, 
-                hf = 1.0, 
-                hb = 1.0, 
-                hw = 1.0, 
-                pp = 0.1, 
-                pf = 1.0, 
-                pb = 1.0, 
-                pw = 1.0, 
-                fb = 1.0, 
-                fw = 1.0, 
-                bw = 1.0, 
-                transient = 1.0 
+                hp = 0.491, 
+                hh = 0.374, 
+                hf = 0.095, 
+                hb = 0.474, 
+                hw = 0.001, 
+                pp = 0.198, 
+                pf = 0.121, 
+                pb = 0.376, 
+                pw = 0.356, 
+                fb = 0.499, 
+                fw = 0.022, 
+                bw = 0.260, 
+                transient = 0.004 
                 ),
     quar_factor = dict(
                 hp = 0.0, 
@@ -194,7 +194,7 @@ new_pars = dict(
     ),
 )
 
-new_pars_filename = "saved_pars/single_breed.json"
+new_pars_filename = "saved_pars/AOQ_4th_iteration_best.json"
 
-sim = zn.Sim(pars = new_pars, label = "single_breed")
+sim = zn.Sim(pars = new_pars, label = "AOQ_4th_iteration_best")
 sim.export_pars(new_pars_filename)
