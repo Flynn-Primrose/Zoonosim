@@ -528,10 +528,13 @@ default_flock_prognoses = dict(
     trans_ORs = np.array([1.00, 1.00, 1.00]),
     baseline_symptomatic_rate = np.array([0.001, 0.001, 0.001]),
     mean_symptomatic_rate_increase = np.array([0.001, 0.0005, 0.0001]),
+    sd_symptomatic_rate_increase = np.array([0.5, 0.5, 0.5]),
     baseline_mortality_rate = np.array([0.001, 0.001, 0.001]),
     mean_mortality_rate_increase = np.array([0.005, 0.002, 0.002]),
+    sd_mortality_rate_increase = np.array([0.5, 0.5, 0.5]),
     baseline_water_rate = np.array([1.00, 1.00, 1.00]),
     mean_water_rate_increase = np.array([1.50, 1.00, 0.75]),
+    sd_water_rate_increase = np.array([0.5, 0.5, 0.5]),
 )
 
 default_barn_prognoses = dict(

@@ -141,10 +141,13 @@ new_pars = dict(
             trans_ORs = np.array([1.00]),
             baseline_symptomatic_rate = np.array([0.001]),
             mean_symptomatic_rate_increase = np.array([0.01]),
+            sd_symptomatic_rate_increase = np.array([0.5]),
             baseline_mortality_rate = np.array([0.001]),
             mean_mortality_rate_increase = np.array([0.01]),
+            sd_mortality_rate_increase = np.array([0.5]),
             baseline_water_rate = np.array([1.00]),
             mean_water_rate_increase = np.array([1.00]),
+            sd_water_rate_increase = np.array([0.5]),
         ),
         barn = dict(
             sus_ORs = np.array([1.00]),
