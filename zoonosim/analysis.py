@@ -15,6 +15,7 @@ from . import plotting as znplt
 from .settings import options
 from . import run as znr
 from . import utils as znu
+from . import defaults as znd
 
 
 __all__ = ['Analyzer', 'snapshot', 'biography', 'Fit' ,'Calibration' ]
@@ -449,7 +450,7 @@ class Fit(Analyzer):
 
         data_cols = self.data.columns
         if self.keys is None:
-            sim_keys = [k for k in self.sim_results.keys() if k.startswith('cum_')] # Default sim keys, only keep cumulative keys if no keys are supplied
+            sim_keys = [k for k in self.sim_results.keys() if k.startswith(znd.calibration_result_prefix)] # Default sim keys, only keep keys with the calibration prefix if no keys are supplied
             intersection = list(set(sim_keys).intersection(data_cols)) # Find keys in both the sim and data
             self.keys = [key for key in sim_keys if key in intersection] # Maintain key order
             if not len(self.keys): # pragma: no cover
@@ -865,13 +866,14 @@ class Calibration(Analyzer):
     '''
 
     def __init__(self, sim, calib_pars=None, fit_args=None, custom_fn=None, par_samplers=None,
-                 n_trials=None, n_workers=None, total_trials=None, name=None, db_name=None,
+                 n_reps=None, n_trials=None, n_workers=None, total_trials=None, name=None, db_name=None,
                  keep_db=None, storage=None, label=None, die=False, verbose=True):
         super().__init__(label=label) # Initialize the Analyzer object
 
         import multiprocessing as mp # Import here since it's also slow
         op = import_optuna()        # Import here since it's also slow
         # Handle run arguments
+        if n_reps    is None: n_reps    = 1 
         if n_trials  is None: n_trials  = 20
         if n_workers is None: n_workers = mp.cpu_count()
         if name      is None: name      = 'zoonosim_calibration'
@@ -880,7 +882,7 @@ class Calibration(Analyzer):
         #if storage   is None: storage   = f'sqlite:///{db_name}'
         if storage   is None: storage   = op.storages.JournalStorage(op.storages.journal.JournalFileBackend(db_name, op.storages.journal.JournalFileOpenLock(db_name))) # Use JournalStorage for better concurrency
         if total_trials is not None: n_trials = total_trials/n_workers
-        self.run_args   = sc.objdict(n_trials=int(n_trials), n_workers=int(n_workers), name=name, db_name=db_name, keep_db=keep_db, storage=storage)
+        self.run_args   = sc.objdict(n_reps = int(n_reps), n_trials=int(n_trials), n_workers=int(n_workers), name=name, db_name=db_name, keep_db=keep_db, storage=storage)
 
         self.run_args.setdefault('parallelizer', 'concurrent')
 
@@ -922,7 +924,7 @@ class Calibration(Analyzer):
                 errormsg = f'The following parameters are not part of the sim, nor is a custom function specified to use them: {invalid_pars}'
                 raise ValueError(errormsg)
         try:
-            sim.run()
+            sim.run(auto_finalize=False, finalize_calibration_only=True) # Run the sim, but only finalize the minimum required to compute the fit, which can save time during calibration.
             sim.compute_fit(**self.fit_args)
             if return_sim:
                 return sim
@@ -942,7 +944,10 @@ class Calibration(Analyzer):
         ''' Define the objective for Optuna '''
         try:
             pars = znu.pars_sampler(trial, self.calib_pars, self.par_samplers)
-            mismatch = self.run_sim(pars)
+            mismatch = 0
+            for rep in range(self.run_args.n_reps):
+                mismatch += self.run_sim(pars)
+            mismatch /= self.run_args.n_reps # Average across reps, if applicable
         except Exception as E:
             errormsg = f'Error during trial sampling or simulation run: {str(E)}'
             raise RuntimeError(errormsg) from E

@@ -122,6 +122,7 @@ class Flocks(Subroster):
         self._lock = False # Prevent further modification of keys
         self.meta = FlocksMeta() # Store list of keys and dtypes
         self.contacts = None
+        self.record_all_events = self.pars['record_all_events'] # Whether or not to record all events in the sim. If false, only transmision events are recorded. We set this to true by default since we have so few agents, but it can be set to false to save memory if desired.
         self.event_log = [] # Record of events - keys for ['target', 'event_type', 'date']
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
         
@@ -179,7 +180,7 @@ class Flocks(Subroster):
         ''' Initialize flows to be zero '''
         self.flows = {key:0 for key in znd.new_flock_flows}
         self.flows_breed = {}
-        for breed in self.pars['flock_breeds']:
+        for breed in self.pars['poultry_pars']['breeds']:
             for key in znd.new_flock_flows:
                 self.flows_breed[(breed, key)] = 0
         self.flows_variant = {}
@@ -234,10 +235,10 @@ class Flocks(Subroster):
 
         # Perform updates
         self.init_flows()
+        self.update_water_consumption() # Update the headcounts and water consumption of the flocks
         self.flows['new_infectious'] = self.check_infectious() # For flocks that are exposed and not infectious, check if they begin being infectious
         self.flows['new_suspected'] = self.check_suspected()
         self.flows['new_quarantined'] = self.check_quarantined() # 
-        self.update_water_consumption() # Update the headcounts and water consumption of the flocks
         return
 
 
@@ -256,6 +257,9 @@ class Flocks(Subroster):
             target_inds: array of indices of flocks that experienced a recordable event
             event (str): The specific event in question
         '''
+
+        if self.record_all_events == False:
+             return
 
         if target_inds is None:
             return
@@ -286,19 +290,37 @@ class Flocks(Subroster):
         unsuspected_inds = np.where((self.suspected == False) & (self.headcount>0))[0]
         if len(unsuspected_inds) == 0:
             return 0
-        actual_symptomatic_rate = self.symptomatic_headcount[unsuspected_inds] / self.headcount[unsuspected_inds]
-        actual_mortality_rate = self.daily_dead_headcount[unsuspected_inds] / self.headcount[unsuspected_inds]
-        actual_water_rate = self.water_consumption[unsuspected_inds] / self.headcount[unsuspected_inds]
+        # actual_symptomatic_rate = self.symptomatic_headcount[unsuspected_inds] / self.headcount[unsuspected_inds]
+        # actual_mortality_rate = self.daily_dead_headcount[unsuspected_inds] / self.headcount[unsuspected_inds]
+        # actual_water_rate = self.water_consumption[unsuspected_inds] / self.headcount[unsuspected_inds]
+        expected_symptomatic_headcount = self.headcount[unsuspected_inds] * self.baseline_symptomatic_rate[unsuspected_inds]
+        symptomatic_deviation = np.abs(self.symptomatic_headcount[unsuspected_inds] - expected_symptomatic_headcount) / np.maximum(expected_symptomatic_headcount, 1) # Avoid division by zero
+        expected_mortality_headcount = self.headcount[unsuspected_inds] * self.baseline_mortality_rate[unsuspected_inds]
+        mortality_deviation = np.abs(self.daily_dead_headcount[unsuspected_inds] - expected_mortality_headcount) / np.maximum(expected_mortality_headcount, 1) # Avoid division by zero
+        expected_water_consumption = self.headcount[unsuspected_inds] * self.baseline_water_rate[unsuspected_inds]
+        water_deviation = np.abs(self.water_consumption[unsuspected_inds] - expected_water_consumption) / np.maximum(expected_water_consumption, 1) # Avoid division by zero
 
-        suspicious_symptomatic_inds = np.where(actual_symptomatic_rate > self.pars['suspicious_symptomatic_rate'])[0]
-        suspicious_mortality_inds = np.where(actual_mortality_rate > self.pars['suspicious_mortality_rate'])[0]
-        suspicious_water_inds = np.where(actual_water_rate > self.pars['suspicious_consumption_rate'])[0]
+        breed_to_index = {breed: index for index, breed in enumerate(self.pars['poultry_pars']['breeds'])}
+        breed_index = np.array([breed_to_index[this_breed] for this_breed in self.breed[unsuspected_inds]])
+
+        # symptomatic_suspicion_thresholds = self.pars['poultry_pars']['symptomatic_suspicion_threshold'][breed_index] # Get the suspicion threshold for each flock based on its breed
+        symptomatic_suspicion_thresholds = np.array([self.pars['poultry_pars']['symptomatic_suspicion_threshold'][index] for index in breed_index]) # Get the suspicion threshold for each flock based on its breed
+
+        #mortality_suspician_thresholds = self.pars['poultry_pars']['mortality_suspicion_threshold'][breed_index]
+        mortality_suspician_thresholds = np.array([self.pars['poultry_pars']['mortality_suspicion_threshold'][index] for index in breed_index])
+
+        #water_suspicion_thresholds = self.pars['poultry_pars']['consumption_suspicion_threshold'][breed_index]
+        water_suspicion_thresholds = np.array([self.pars['poultry_pars']['consumption_suspicion_threshold'][index] for index in breed_index])
+
+        suspicious_symptomatic_inds = np.where(symptomatic_deviation > symptomatic_suspicion_thresholds)[0]
+        suspicious_mortality_inds = np.where(mortality_deviation > mortality_suspician_thresholds)[0]
+        suspicious_water_inds = np.where(water_deviation > water_suspicion_thresholds)[0]
         suspicious_inds = np.unique(np.concatenate((suspicious_symptomatic_inds, suspicious_mortality_inds, suspicious_water_inds)))
         if len(suspicious_inds) == 0:
             return 0
         new_suspicious_inds = unsuspected_inds[suspicious_inds]
 
-        for breed in self.pars['flock_breeds']: # Update flows by breed
+        for breed in self.pars['poultry_pars']['breeds']: # Update flows by breed
             breed_inds = znu.itrue(self.check_breed(new_suspicious_inds, breed), new_suspicious_inds)
             n_breed_inds = len(breed_inds)
             self.flows_breed[(breed, 'new_suspected')] += n_breed_inds
@@ -327,7 +349,7 @@ class Flocks(Subroster):
         self.date_infectious[inds] = self.t
         self.update_event_log(inds, 'infectious')
 
-        for breed in self.pars['flock_breeds']: # Update flows by breed
+        for breed in self.pars['poultry_pars']['breeds']: # Update flows by breed
             breed_inds = znu.itrue(self.check_breed(inds, breed), inds)
             n_breed_inds = len(breed_inds)
             self.flows_breed[(breed, 'new_infectious')] += n_breed_inds
@@ -359,7 +381,7 @@ class Flocks(Subroster):
 
         if len(quarantined_inds):
             self.update_event_log(quarantined_inds, 'quarantined')
-            for breed in self.pars['flock_breeds']: # Update flows by breed
+            for breed in self.pars['poultry_pars']['breeds']: # Update flows by breed
                 breed_inds = znu.itrue(self.check_breed(quarantined_inds, breed), quarantined_inds)
                 n_breed_inds = len(breed_inds)
                 self.flows_breed[(breed, 'new_quarantined')] += n_breed_inds
@@ -438,7 +460,7 @@ class Flocks(Subroster):
         self.exposed_headcount[inds] = initial_exposed
         self.exposed_variant[inds] = variant
         self.exposed_by_variant[variant, inds] = True
-        for breed in self.pars['flock_breeds']: # Update flows by breed
+        for breed in self.pars['poultry_pars']['breeds']: # Update flows by breed
             breed_inds = znu.itrue(self.check_breed(inds, breed), inds)
             n_breed_inds = len(breed_inds)
             self.flows_breed[(breed, 'new_exposed')] += n_breed_inds
@@ -466,10 +488,9 @@ class Flocks(Subroster):
         breed, frequency = np.unique(breed_inds, return_counts=True)
         breed_freq = zip(breed, frequency)
         for breed, frequency in breed_freq:
-            # NOTE: I'm just guessing at the distribution of these parameters.
-            self.infected_symptomatic_rate[inds[breed_inds == breed]] = self.baseline_symptomatic_rate[inds[breed_inds == breed]] + np.maximum(znu.sample('lognormal', progs['mean_symptomatic_rate_increase'][breed], 1.0, size=frequency), 0)*infect_pars['rel_symp_delta']
-            self.infected_mortality_rate[inds[breed_inds == breed]] = self.baseline_mortality_rate[inds[breed_inds == breed]] + np.maximum(znu.sample('lognormal', progs['mean_mortality_rate_increase'][breed], 1.0, size=frequency), 0)*infect_pars['rel_death_delta']
-            self.infected_water_rate[inds[breed_inds == breed]] = self.baseline_water_rate[inds[breed_inds == breed]] + np.maximum(znu.sample('lognormal', progs['mean_water_rate_increase'][breed], 1.0, size=frequency), 0)*infect_pars['rel_water_delta']
+            self.infected_symptomatic_rate[inds[breed_inds == breed]] = self.baseline_symptomatic_rate[inds[breed_inds == breed]] + np.maximum(znu.sample(**progs['symptomatic_rate_increase'][breed], size=frequency), 0)*infect_pars['rel_symp_delta']
+            self.infected_mortality_rate[inds[breed_inds == breed]] = self.baseline_mortality_rate[inds[breed_inds == breed]] + np.maximum(znu.sample(**progs['mortality_rate_increase'[breed]], size=frequency), 0)*infect_pars['rel_death_delta']
+            self.infected_water_rate[inds[breed_inds == breed]] = self.baseline_water_rate[inds[breed_inds == breed]] + np.maximum(znu.sample(**progs['water_rate_increase'][breed], size=frequency), 0)*infect_pars['rel_water_delta']
 
 
         return n_infections # For incrementing counters
@@ -552,10 +573,12 @@ class Flocks(Subroster):
 
         def label_lkey(lkey):
             ''' Friendly name for common layer keys '''
-            if lkey.lower() == 'fb':
-                llabel = 'flock-barn contacts'
             if lkey.lower() == 'hf':
                 llabel = 'human-flock contacts'
+            elif lkey.lower() == 'pf':
+                llabel = 'ppe-flock contacts'
+            elif lkey.lower() == 'fb':
+                llabel = 'flock-barn contacts'
             elif lkey.lower() == 'fw':
                 llabel = 'flock-water contacts'
             else:

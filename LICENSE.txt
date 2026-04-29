@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2020 - 2023 Bill & Melinda Gates Foundation (Covasim) (MIT License)
+Copyright (c) 2020 - 2023 (present?) Bill & Melinda Gates Foundation via Institute for Disease Modeling (Covasim) (MIT License)
 
 Copyright (c) 2023 Philippe Teichmann, Nathan Duarte, McGill University (Pathosim)(MIT License)
 

@@ -739,3 +739,18 @@ def warn(msg, category=None, verbose=None, die=None):
 
     return
 
+def monthly_from_daily(daily, datevec):
+    '''
+    Convert daily data to monthly data. By default, assumes the first day of the series is January 1st of a non-leap year, but a different start date can be supplied.
+
+    Args:
+        daily (array): array of daily values
+        datevec (array): array of corresponding dates for the daily values
+    Returns:
+        monthly (array): array of monthly values
+    '''
+    daily_dataframe = pd.DataFrame({'date': datevec, 'daily': daily})
+    daily_dataframe['date'] = pd.to_datetime(daily_dataframe['date'])
+    monthly_dataframe = daily_dataframe.groupby(pd.Grouper(key='date', freq='ME')).sum().reset_index()
+
+    return monthly_dataframe['daily'].values

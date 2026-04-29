@@ -20,6 +20,8 @@ class BarnMeta(sc.prettyobj):
             'uid', # int
             'temperature',
             'humidity',
+            'rel_trans',        # Float
+            'rel_sus',          # Float
             'flock', # uid of the flock residing here
             'repopulations' # Number of times this barn has been repopulated
         ]
@@ -31,11 +33,11 @@ class BarnMeta(sc.prettyobj):
             'cleaning', # bool; whether the barn is currently cleaning
         ]
 
-        self.biosec_states = [
-            'green', # bool; standard biosecurity measures in place
-            'yellow', # bool; increased biosecurity measures in place (typically due to an outbreak at a different site within 10km)
-            'orange', # bool; emergency biosecurity measures in place (typically due to an outbreak at this site)
-        ]
+        # self.biosec_states = [
+        #     'green', # bool; standard biosecurity measures in place
+        #     'yellow', # bool; increased biosecurity measures in place (typically due to an outbreak at a different site within 10km)
+        #     'orange', # bool; emergency biosecurity measures in place (typically due to an outbreak at this site)
+        # ]
 
         self.variant_states = [
             'contaminated_variant'
@@ -63,7 +65,7 @@ class BarnMeta(sc.prettyobj):
         ]
 
         self.all_recordable_states = self.agent + self.states + self.variant_states + self.dates + self.durs
-        self.all_states = self.agent + self.states + self.biosec_states + self.variant_states + self.by_variant_states + self.dates + self.durs
+        self.all_states = self.agent + self.states + self.variant_states + self.by_variant_states + self.dates + self.durs
 
         # Validate
         self.state_types = ['agent', 'states', 'variant_states', 'by_variant_states']
@@ -110,7 +112,7 @@ class Barns(Subroster):
         self.t = 0 # Keep current simulation time
         self._lock = False # Prevent further modification of keys
         self.meta = BarnMeta() # Store list of keys and dtypes
-  
+        self.record_all_events = self.pars['record_all_events'] # Whether or not to record all events in the sim. If false, only transmision events are recorded. We set this to true by default since we have so few agents, but it can be set to false to save memory if desired.
         self.event_log = []
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
 
@@ -132,9 +134,9 @@ class Barns(Subroster):
             self[key] = np.full(pop_size, val, dtype=bool)
 
         # Set biosec states
-        for key in self.meta.biosec_states:
-            val = (key in ['green']) # Default value is True for susceptible and naive, False otherwise
-            self[key] = np.full(pop_size, val, dtype=bool)
+        # for key in self.meta.biosec_states:
+        #     val = (key in ['green']) # Default value is True for susceptible and naive, False otherwise
+        #     self[key] = np.full(pop_size, val, dtype=bool)
 
         # Set variant states, which store info about which variant a person is exposed to
         for key in self.meta.variant_states:
@@ -183,12 +185,20 @@ class Barns(Subroster):
         ''' Perform initializations '''
         self.validate(roster_pars=agents_pars) # First, check that essential-to-match parameters match
         self.set_pars(agents_pars) # Replace the saved parameters with this simulation's
+        self.set_rel_sus() # Set the relative susceptibility of each barn based on the parameters
+        self.set_rel_trans() # Set the relative transmissibility of each barn based on the parameters
         self.initialized = True
         return
 
-
-
-
+    def set_rel_sus(self):
+        ''' Set the relative susceptibility of each barn based on the parameters '''
+        self.rel_sus = np.full(len(self), self.pars['prognoses']['barn']['sus_ORs'], dtype=znd.default_float)
+        return
+    
+    def set_rel_trans(self):
+        ''' Set the relative transmissibility of each barn based on the parameters '''
+        self.rel_trans = np.full(len(self), self.pars['prognoses']['barn']['trans_ORs'], dtype=znd.default_float)
+        return
 
     def update_states_pre(self, t):
         ''' Perform all state updates at the current timestep '''
@@ -218,6 +228,9 @@ class Barns(Subroster):
             target_inds: array of indices of flocks that experienced a recordable event
             event (str): The specific event in question
         '''
+
+        if self.record_all_events == False:
+             return
 
         if target_inds is None:
             return
@@ -293,7 +306,7 @@ class Barns(Subroster):
 
         # Deal with variant parameters
         variant_keys = ['rel_dur_contamination']
-        contamination_pars = {k:self.pars['variant_pars']['wild']['water'][k] for k in variant_keys}
+        contamination_pars = {k:self.pars['variant_pars']['wild']['barn'][k] for k in variant_keys}
         variant_label = self.pars['variant_map'][variant]
         if variant:
             for k in variant_keys:
@@ -326,28 +339,30 @@ class Barns(Subroster):
     
     def story(self, uid, *args):
         '''
-        Print out a short history of events in the life of the specified flock.
+        Print out a short history of events in the life of the specified barn.
 
         Args:
-            uid (int/list): the flock or flocks whose story is to be regaled
+            uid (int/list): the barn or barns whose story is to be regaled
             args (list): these flocks will tell their stories too
 
         **Example**::
 
-            sim = cv.Sim()
+            sim = zn.Sim()
             sim.run()
-            sim.agents.flock.story(12)
-            sim.agents.flock.story(795)
+            sim.agents.barn.story(12)
+            sim.agents.barn.story(795)
         '''
 
         def label_lkey(lkey):
             ''' Friendly name for common layer keys '''
-            if lkey.lower() == 'fb':
-                llabel = 'flock-barn contacts'
-            if lkey.lower() == 'bw':
-                llabel = 'barn-water contacts'
-            elif lkey.lower() == 'hb':
+            if lkey.lower() == 'hb':
                 llabel = 'human-barn contacts'
+            elif lkey.lower() == 'pf':
+                llabel = 'ppe-flock contacts'
+            elif lkey.lower() == 'fb':
+                llabel = 'flock-barn contacts'
+            elif lkey.lower() == 'bw':
+                llabel = 'barn-water contacts'
             else:
                 llabel = f'"{lkey}"'
             return llabel

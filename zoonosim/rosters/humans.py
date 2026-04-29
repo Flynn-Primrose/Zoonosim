@@ -33,7 +33,7 @@ class HumanMeta(sc.prettyobj):
             'viral_load',       # Float
             'rescaled_vl',      # Float
             'watch_fpr',        # Float
-
+            'ppe',              # Int, uid of the ppe assigned to this human
             'n_infections',     # Int
             'n_breakthroughs',  # Int
             'cons_days_in_quar',    # Int
@@ -152,16 +152,18 @@ class Humans(Subroster):
     **Examples**::
     '''
 
-    def __init__(self, pars, strict=True, **kwargs):
+    def __init__(self, pars, schedule_ppe_quarantine=None, strict=True, **kwargs):
 
         # Handle pars and population size
         self.set_pars(pars)
         self.version = znv.__version__ # Store version info
 
+        self.schedule_ppe_quarantine = schedule_ppe_quarantine # Store the function for scheduling quarantine of PPE wearers, if applicable
         # Other initialization
         self.t = 0 # Keep current simulation time
         self._lock = False # Prevent further modification of keys
         self.meta = HumanMeta() # Store list of keys and dtypes
+        self.record_all_events = self.pars['record_all_events'] # Whether or not to record all events in the sim. If false, only transmision events are recorded. We set this to true by default since we have so few agents, but it can be set to false to save memory if desired.
         self.event_log = [] # Record of events that have occurred
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
         
@@ -393,6 +395,8 @@ class Humans(Subroster):
             target_inds: array of indices of flocks that experienced a recordable event
             event (str): The specific event in question
         '''
+        if self.record_all_events == False:
+            return
 
         if target_inds is None:
             return
@@ -882,8 +886,14 @@ class Humans(Subroster):
             period (int): quarantine duration (defaults to ``pars['dur']['human']['quar']``)
         '''
 
+        
+
         start_date = self.t if start_date is None else int(start_date)
         period = self.pars['dur']['human']['quar'] if period is None else int(period)
+
+        ppe_uids = self.ppe[inds]
+        self.schedule_ppe_quarantine(ppe_uids, start_date=start_date, period=period)
+
         for ind in inds:
             self._pending_quarantine[start_date].append((ind, start_date + period))
         return
@@ -906,12 +916,16 @@ class Humans(Subroster):
 
         def label_lkey(lkey):
             ''' Friendly name for common layer keys '''
-            if lkey.lower() == 'hb':
-                llabel = 'human-barn contacts'
-            if lkey.lower() == 'hf':
-                llabel = 'human-flock contacts'
+            if lkey.lower() == 'hp':
+                llabel = 'human-ppe contacts'
             elif lkey.lower() == 'hh':
                 llabel = 'human-human contacts'
+            elif lkey.lower() == 'hf':
+                llabel = 'human-flock contacts'
+            elif lkey.lower() == 'hb':
+                llabel = 'human-barn contacts'
+            elif lkey.lower() == 'hw':
+                llabel = 'human-water contacts'
             else:
                 llabel = f'"{lkey}"'
             return llabel

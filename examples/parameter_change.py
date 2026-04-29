@@ -109,6 +109,10 @@ new_param = {
             'severe_probs'  : np.array([0.1,     0.1,     0.2,     0.3,     0.4,     0.5,     0.6,     0.7,     0.8,     0.9]), # Overall probability of developing severe symptoms
             'death_probs'   : np.array([0.1,     0.1,     0.2,     0.3,     0.4,     0.5,     0.6,     0.7,     0.8,     0.9]), # Overall probability of dying
         },
+        'ppe': {
+            'sus_ORs'   : np.array([0.50]),
+            'trans_ORs' : np.array([0.50]),
+        },
         'flock': {
             'breeds'                           : np.array(['duck', 'broiler', 'layer'], dtype=zn.default_str),
             'sus_ORs'                          : np.array([2.00, 1.00, 0.75]),
@@ -129,8 +133,12 @@ new_param = {
             'trans_ORs' : 1.00
         }
     },
-    'production_cycle': {
+    'poultry_pars': {
             'breeds'      : np.array(['duck', 'broiler', 'layer'], dtype=zn.default_str),
+            'breed_freqs' : np.array([0.25, 0.50, 0.25]),
+            'mortality_suspicion_threshold' : [0.1, 0.1, 0.1], # I.E a deviation from the expected mortality rate of 0.01*expected_value will trigger suspicion
+            'symptomatic_suspicion_threshold' : [0.1, 0.1, 0.1], # I.E a deviation from the expected symptomatic rate of 0.01*expected_value will trigger suspicion
+            'consumption_suspicion_threshold' : [0.1, 0.1, 0.1], # I.E a deviation from the expected rate of water consumption of 0.01*expected_value will trigger suspicion
             'cycle_dur'   : [dict(dist = 'normal_pos', par1 = 175, par2 = 50),
                          dict(dist = 'normal_pos', par1 = 90, par2 = 25),
                          dict(dist = 'normal_pos', par1 = 175, par2=50)],

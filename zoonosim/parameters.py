@@ -30,20 +30,30 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars = {}
 
     # Population pars
-    pars['agent_types'] = ['human', 'flock', 'barn', 'water'] # Every type of agent in the model
-    pars['n_farms'] = 25 # Number of farms in the simulation. This is used to generate the rest of the population
+    pars['agent_types'] = ['human', 'ppe', 'flock', 'barn', 'water'] # Every type of agent in the model
+    pars['n_farms'] = 100 # Number of farms in the simulation. This is used to generate the rest of the population
     pars['pop_size'] = None # The total number of agents in the simulation. This should be equal to the sum of the population sizes of all agent types.
     pars['pop_size_by_type'] = {}
     
+    # Parameters specifically for generating the population and contacts
+    pars['pop_pars'] = dict(
+        avg_barns_per_farm = 5.0,
+        avg_humans_per_barn = 1.5,
+        avg_water_per_farm = 0.75,
+        number_of_transients = 10,
+        visits_per_day = 3, # Number of farms each transient visits in a day
+    )
 
     for type in pars['agent_types']:
         pars['pop_size_by_type'][type] = None # This will be set after the population has been created
 
     pars['pop_scale'] = 1.0 # Scale factor for the population size. We don't use this functionality so this will always be 1.0. It is included for compatibility with modules inherited from Covasim/Pathosim.
     pars['rescale'] = False # We will never use rescaling, so this is always False. It is included for compatibility with modules inherited from Covasim/Pathosim.
+    pars['record_all_events'] = True # Whether or not to record all events in the sim. If false, only transmision events are recorded. We set this to true by default since we have so few agents, but it can be set to false to save memory if desired.
 
     pars['initial_conditions'] = {
         'human': 0, # Number of initial humans exposed
+        'ppe': 0,
         'flock': 0, # Number of initial flocks exposed
         'barn': 0, # Number of initial contaminated barns
         'water': 0 # Number of initial contaminated water
@@ -64,6 +74,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
 
     pars['enable_smartwatches'] = False
     pars['smartwatch_pars'] = {
+        'who'                       : 'all', # Must be one of 'all', 'permanent', 'transient'; controls who receives smartwatches
         'mean_fpr'                  :   0.08, # mean false positive rate
         'use_variable_fpr'          : True, # Whether to use a variable false positive rate
         'day_i'                     : np.arange(-21, 22, 1), #
@@ -77,26 +88,21 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
 
     # Network parameters, generally initialized after the population has been constructed
     #pars['contacts']        = None  # The number of contacts per layer; set by reset_layer_pars() below
-    pars['dynam_layer']     = dict(fb=0.0, bw=0.0, fw = 0.0, hb = 0.0, hf = 0.0, hh = 0.0, dw = 0.0)  # Which layers are dynamic; set by reset_layer_pars() below
-    pars['beta_layer']      = dict(fb=1.0, bw=1.0, fw = 1.0, hb = 1.0, hf = 1.0, hh = 1.0, dw = 1.0)  # Transmissibility per layer; set by reset_layer_pars() below
-    pars['quar_factor']     =  dict(fb=0.0, bw=0.0, fw = 0.0, hb = 0.0, hf = 0.0, hh = 0.0, dw = 0.0)  # Quarantine multiplier on transmissibility and susceptibility; set by reset_layer_pars() below
-
+    pars['dynam_layer']     = dict(hp = 0.0, hh = 0.0, hf = 0.0, hb = 0.0, hw = 0.0, pp = 0.0, pf = 0.0, pb = 0.0, pw = 0.0, fb = 0.0, fw = 0.0, bw = 0.0, transient = 1.0)  # Which layers are dynamic; set by reset_layer_pars() below
+    pars['beta_layer']      = dict(hp = 1.0, hh = 1.0, hf = 1.0, hb = 1.0, hw = 1.0, pp = 1.0, pf = 1.0, pb = 1.0, pw = 1.0, fb = 1.0, fw = 1.0, bw = 1.0, transient = 1.0)  # Transmissibility per layer; set by reset_layer_pars() below
+    pars['quar_factor']     =  dict(hp = 0.0, hh = 0.0, hf = 0.0, hb = 0.0, hw = 0.0, pp = 0.0, pf = 0.0, pb = 0.0, pw = 0.0, fb = 0.0, fw = 0.0, bw = 0.0, transient = 0.0)  # Quarantine multiplier on transmissibility and susceptibility; set by reset_layer_pars() below
 
     # Parameters that control settings and defaults for multi-variant runs
     pars['n_variants'] = 1 # The number of variants circulating in the population
 
     pars['beta'] = {} # The transmissibility of the disease for each agent type.
     pars['beta']['human'] = 0.3 # The transmissibility of the disease for humans. This is a dummy variable!
+    pars['beta']['ppe'] = 0.2 # The transmissibility of the disease for ppe. This is a dummy variable!
     pars['beta']['flock'] = 0.7 # The transmissibility of the disease for flocks. This is a dummy variable!
     pars['beta']['barn'] = 0.2 # The transmissibility of the disease for barns. This is a dummy variable!
     pars['beta']['water'] = 0.2 # The transmissibility of the disease for water. This is a dummy variable!
 
-    # Parameters that control flock composition and dynamics
-    pars['flock_breeds'] = ['duck', 'layer', 'broiler']
-    pars['flock_breed_freqs'] = [0.1, 0.2, 0.7]
-    pars['suspicious_mortality_rate'] = 0.003
-    pars['suspicious_symptomatic_rate'] = 0.001
-    pars['suspicious_consumption_rate'] = 1.33
+
 
 
 
@@ -108,6 +114,10 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
         'viral_dist':dict(frac_time=0.3, load_ratio=2, high_cap=4), # Currently unused since we use Ritchie's viral load model
         'enable_vl':True, # Specifies whether we should use the updated viral load calculation; False = use native calculation
         'viral_levels':dict(min_vl=0.75, max_vl=2) # Specifies the range within which viral load should be scaled so it can contribute to relative transmissibility
+    }
+
+    pars['transmission_pars']['ppe'] = {
+        'beta_dist': dict(dist='neg_binomial', par1=1.0, par2=0.45, step=0.01), # NOTE: Dummy variables
     }
 
     pars['transmission_pars']['flock'] = {
@@ -130,6 +140,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['n_imports']  = {
         'human': None,  # Number of imported human cases per day; None = disabled
         'flock': None,  # Number of imported flock cases per day; None = disabled
+        'ppe': None, # Number of imported PPE cases per day; None = disabled 
         'barn' : {'import_pattern': 'seasonal', 'max_import_rate': 0.2, 'peak_day': 300},  # Number of imported barn contaminations per day; None = disabled
         'water': {'import_pattern': 'seasonal', 'max_import_rate': 0.2, 'peak_day': 300}  # Number of imported water contaminations per day; None = disabled
     } 
@@ -147,6 +158,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
         'immunity':None, # Matrix of immunity and cross-immunity factors, set by init_immunity() in immunity.py
         'trans_redux':0.59 # Reduction in transmission for breakthrough infection
     }
+    pars['immunity_pars']['ppe'] = {'use_waning': False}
     pars['immunity_pars']['flock'] = {'use_waning': False} # No waning immunity for flock agents
     pars['immunity_pars']['barn'] = {'use_waning': False} # No waning immunity for barn agents
     pars['immunity_pars']['water'] = {'use_waning': False} # No waning immunity for water agents
@@ -178,6 +190,11 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
         'diag': 14
     }
 
+    pars['dur']['ppe'] = {
+        'contamination': dict(dist='lognormal_int', par1=14, par2=5.0), # Duration of contamination. NOTE: This data is just a guess, and should be replaced with real data
+        'quar': 7, # Duration of quarantine after suspected exposure. NOTE: This should generally be the same as the human quarantine duration.
+    }
+
     pars['dur']['flock'] = {
         # Duration: disease progression
         'exp2inf': dict(dist='lognormal_int', par1=1.5, par2=0.5), # Duration from exposed to infectious. NOTE: This data is just a guess, and should be replaced with real data
@@ -202,11 +219,25 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     # Prognoses
     pars['prognoses'] = {}
     pars['prognoses']['human'] = relative_human_prognoses(znd.default_human_prognoses)
+    pars['prognoses']['ppe'] = relative_ppe_prognoses(znd.default_ppe_prognoses)
     pars['prognoses']['flock'] = relative_flock_prognoses(znd.default_flock_prognoses)
     pars['prognoses']['barn'] = relative_barn_prognoses(znd.default_barn_prognoses)
     pars['prognoses']['water'] = relative_water_prognoses(znd.default_water_prognoses)
 
-    pars['production_cycle'] = znd.default_production_cycle
+    # Parameters related to poultry dynamics and production cycles
+    pars['poultry_pars'] = dict(
+    breeds = np.array(['duck', 'broiler', 'layer'], dtype=znd.default_str),
+    breed_freqs = [0.1, 0.2, 0.7],
+    mortality_suspicion_threshold = [0.1, 0.1, 0.1], # I.E a deviation from the expected mortality rate of 0.01*expected_value will trigger suspicion
+    symptomatic_suspicion_threshold = [0.1, 0.1, 0.1], # I.E a deviation from the expected symptomatic rate of 0.01*expected_value will trigger suspicion
+    consumption_suspicion_threshold = [0.1, 0.1, 0.1], # I.E a deviation from the expected rate of water consumption of 0.01*expected_value will trigger suspicion
+    cycle_dur = [dict(dist = 'normal_pos', par1 = 600, par2 = 50),
+                 dict(dist = 'normal_pos', par1 = 45, par2 = 5),
+                 dict(dist = 'normal_pos', par1 = 150, par2=25)],
+    flock_size = [dict(dist = 'normal_pos', par1 = 1000, par2 = 100),
+                dict(dist = 'normal_pos', par1 = 20000, par2 = 1000),
+                dict(dist = 'normal_pos', par1 = 10000, par2 = 500)]
+)
     
     # Background ILI parameters
     pars['bkg_ILI'] = znd.default_bkg_ILI # Weekly background ILI rates, used to infect human agents with ILI
@@ -237,6 +268,10 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
             rel_death_prob = 0.01,
             rel_asymp_fact = 0.5
 
+        ),
+        ppe = dict(
+            rel_beta = 1.0,
+            rel_dur_contamination = 1.0
         ),
         flock = dict(
             rel_beta = 1.0,
@@ -280,12 +315,19 @@ def reset_layer_pars(pars, layer_keys=None, force=False):
     (i.e. if the contact layers in the population do not match the parameters). More
     commonly, however, mismatches need to be fixed explicitly.
 
-    NOTE:   fb = Flock-Barn
-            bw = Barn-Water
-            fw = Flock-Water
-            hb = Human-Barn
-            hf = Human-Flock
+    NOTE:   hp = Human-PPE
             hh = Human-Human
+            hf = Human-Flock
+            hb = Human-Barn
+            hw = Human-Water
+            pp = PPE-PPE
+            pf = PPE-Flock
+            pb = PPE-Barn
+            pw = PPE-Water
+            fb = Flock-Barn
+            fw = Flock-Water
+            bw = Barn-Water
+            transient = Transient contacts
 
     Args:
         pars (dict): the parameters dictionary
@@ -294,9 +336,9 @@ def reset_layer_pars(pars, layer_keys=None, force=False):
     '''
 
     layer_defaults = dict(
-        beta_layer = dict(fb=1.0, bw=1.0, fw = 1.0, hb = 1.0, hf = 1.0, hh = 1.0, dw = 1.0), # Transmissibility per layer -- set to one by default
-        dynam_layer = dict(fb=0.0, bw=0.0, fw = 0.0, hb = 0.0, hf = 0.0, hh = 0.0, dw = 0.0), # Dynamic layer -- set to zero by default
-        quar_factor = dict(fb=0.0, bw=0.0, fw = 0.0, hb = 0.0, hf = 0.0, hh = 0.0, dw = 0.0), # Quarantine factor -- set to zero by default
+        beta_layer = dict(hp = 1.0, hh = 1.0, hf = 1.0, hb = 1.0, hw = 1.0, pp = 1.0, pf = 1.0, pb = 1.0, pw = 1.0, fb = 1.0, fw = 1.0, bw = 1.0, transient = 1.0), # Transmissibility per layer -- set to one by default
+        dynam_layer = dict(hp = 0.0, hh = 0.0, hf = 0.0, hb = 0.0, hw = 0.0, pp = 0.0, pf = 0.0, pb = 0.0, pw = 0.0, fb = 0.0, fw = 0.0, bw = 0.0, transient = 1.0), # Dynamic layer -- Only the transient layer is dynamic by default
+        quar_factor = dict(hp = 0.0, hh = 0.0, hf = 0.0, hb = 0.0, hw = 0.0, pp = 0.0, pf = 0.0, pb = 0.0, pw = 0.0, fb = 0.0, fw = 0.0, bw = 0.0, transient = 0.0), # Quarantine factor -- set to zero by default
     )
 
     default_val = 1.0 # Default value for parameters that are not specified
@@ -335,29 +377,37 @@ def relative_human_prognoses(prognoses):
     out['severe_probs'] /= out['symp_probs']   # Conditional probability of symptoms becoming severe, given symptomatic
     return out
 
+def relative_ppe_prognoses(prognoses):
+    '''
+    Convenience function to revert absolute PPE prognoses into relative (conditional)
+    ones. Internally, Zoonosim uses relative prognoses.
+    '''
+    out = sc.dcp(prognoses)
+    return(out)
+
 def relative_flock_prognoses(prognoses):
-        '''
+    '''
     Convenience function to revert absolute flock prognoses into relative (conditional)
     ones. Internally, Zoonosim uses relative prognoses.
     '''
-        out = sc.dcp(prognoses)
-        return(out)
+    out = sc.dcp(prognoses)
+    return(out)
 
 def relative_barn_prognoses(prognoses):
-        '''
+    '''
     Convenience function to revert absolute flock prognoses into relative (conditional)
     ones. Internally, Zoonosim uses relative prognoses.
     '''
-        out = sc.dcp(prognoses)
-        return(out)
+    out = sc.dcp(prognoses)
+    return(out)
 
 def relative_water_prognoses(prognoses):
-        '''
+    '''
     Convenience function to revert absolute flock prognoses into relative (conditional)
     ones. Internally, Zoonosim uses relative prognoses.
     '''
-        out = sc.dcp(prognoses)
-        return(out)
+    out = sc.dcp(prognoses)
+    return(out)
 
 def absolute_human_prognoses(prognoses):
     '''
@@ -438,6 +488,10 @@ def get_variant_pars(default=False, variant=None):
                 rel_death_prob  = 1.0, # Default values
                 rel_asymp_fact  = 1.0
             ),
+            ppe = dict(
+                rel_beta       = 1.0, 
+                rel_dur_contamination = 1.0
+            ),
             flock = dict(
                 rel_beta        = 1.0, # Default values
                 rel_gamma      = 1.0, # Default values
@@ -447,12 +501,10 @@ def get_variant_pars(default=False, variant=None):
             ),
             barn = dict(
                 rel_beta        = 1.0, # Default values
-                # rel_gamma      = 1.0, # Default values, not used for barns
                 rel_dur_contamination = 1.0, # Default values
             ),
             water = dict(
                 rel_beta        = 1.0, # Default values
-                # rel_gamma      = 1.0, # Default values, not used for water
                 rel_dur_contamination = 1.0, # Default values
             ),
         ),
@@ -460,11 +512,14 @@ def get_variant_pars(default=False, variant=None):
         LPAI = dict(
             human = dict(
                 rel_beta        = 1.0, # guessed values
-                # rel_gamma      = 1.0, # guessed value, not used for humans
                 rel_symp_prob   = 0.1, # guess but LPAI is less severe than HPAI
                 rel_severe_prob = 0.25, # guess but LPAI is less severe than HPAI
                 rel_death_prob  = 0.25, # guess but LPAI is less severe than HPAI
                 rel_asymp_fact  = 0.5
+            ),
+            ppe = dict(
+                rel_beta        = 1.0,
+                rel_dur_contamination = 0.5
             ),
             flock = dict(
                 rel_beta        = 1.0, # guessed values
@@ -474,12 +529,10 @@ def get_variant_pars(default=False, variant=None):
             ),
             barn = dict(
                 rel_beta        = 1.0, # guessed values
-                # rel_gamma      = 1.0, # guessed values, not used for barns
                 rel_dur_contamination = 0.5, # guess but LPAI is less severe than HPAI
             ),
             water = dict(
                 rel_beta        = 1.0, # guessed values
-                # rel_gamma      = 1.0, # guessed values, not used for water
                 rel_dur_contamination = 0.5, # guess but LPAI is less severe than HPAI
             ),
         ),

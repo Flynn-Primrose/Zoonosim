@@ -11,6 +11,7 @@ from .. import defaults as znd
 from .contacts import Contacts
 from .rosters import Roster
 from .humans import Humans
+from .ppe import PPE
 from .flocks import Flocks
 from .barns import Barns
 from .waters import Water
@@ -28,8 +29,6 @@ class AgentsMeta(sc.prettyobj):
             'uid', #Int - unique ID for the agent
             'fid', #Int - farm ID, if applicable
             'agent_type', #string? the type of agent, must be one of pars['agent_types']
-            #'rel_trans', # float - relative transmissibility of the agent
-            #'rel_sus', # float - relative susceptibility of the agent
         ]
 
         self.states = [ # all boolean
@@ -107,6 +106,12 @@ class Agents(Roster):
             self.human = human
         else:
             raise ValueError("human must be an instance of Humans class")
+        
+        ppe = kwargs.pop('ppe', None)
+        if isinstance(ppe, PPE):
+            self.ppe = ppe
+        else:
+            raise ValueError("ppe must be an instance of the PPE class")
             
         flock = kwargs.pop('flock', None)
         if isinstance(flock, Flocks):
@@ -184,6 +189,7 @@ class Agents(Roster):
         self.validate(sim_pars=sim_pars) # First, check that essential-to-match parameters match
         self.set_pars(sim_pars) # Replace the saved parameters with this simulation's
         self.human.initialize(self.pars) # Initialize the human subroster
+        self.ppe.initialize(self.pars) # Initialize the ppe subroster
         self.flock.initialize(self.pars) # Initialize the flock subroster
         self.barn.initialize(self.pars) # Initialize the barn subroster
         self.water.initialize(self.pars) # Initialize the water subroster
@@ -199,6 +205,7 @@ class Agents(Roster):
         self.t = t
         self.is_exp = self.true('exposed') # For storing the interim values since used in every subsequent calculation
         self.human.update_states_pre(t)
+        self.ppe.update_states_pre(t)
         self.flock.update_states_pre(t)
         self.barn.update_states_pre(t)
         self.water.update_states_pre(t)
@@ -218,6 +225,7 @@ class Agents(Roster):
 
         # Update the states of the subrosters
         self.human.update_states_post()
+        self.ppe.update_states_post()
         self.flock.update_states_post()
         self.barn.update_states_post()
         self.water.update_states_post()
@@ -313,6 +321,24 @@ class Agents(Roster):
         infection_levels[non_zero_headcount_inds] = self.flock.infectious_headcount[non_zero_headcount_inds]/self.flock.headcount[non_zero_headcount_inds]
 
         return infection_levels
+    
+    def update_ppe_biosecurity_levels(self):
+        '''
+        Update the biosecurity levels of the PPE subroster. 
+        '''
+        return np.ones(len(self.ppe), dtype=znd.default_float) # Placeholder for now
+    
+    def update_barn_biosecurity_levels(self):
+        '''
+        Update the biosecurity levels of the barn subroster. 
+        '''
+        return np.ones(len(self.barn), dtype=znd.default_float) # Placeholder for now
+    
+    def update_water_biosecurity_levels(self):
+        '''
+        Update the biosecurity levels of the water subroster. 
+        '''
+        return np.ones(len(self.water), dtype=znd.default_float) # Placeholder for now
 
     def update_states_from_subrosters(self):
         susceptible_human_uids = np.array(self.human['uid'][znu.true(self.human['susceptible'])])
@@ -320,6 +346,11 @@ class Agents(Roster):
         infectious_human_uids = np.array(self.human['uid'][znu.true(self.human['infectious'])])
         symptomatic_human_uids = np.array(self.human['uid'][znu.true(self.human['symptomatic'])])
         quarantined_human_uids = np.array(self.human['uid'][znu.true(self.human['quarantined'])])
+
+        susceptible_ppe_uids = np.array(self.ppe['uid'][znu.false(self.ppe['contaminated'])])
+        exposed_ppe_uids = np.array(self.ppe['uid'][znu.true(self.ppe['contaminated'])])
+        infectious_ppe_uids = np.array(self.ppe['uid'][znu.true(self.ppe['contaminated'])])
+        quarantined_ppe_uids = np.array(self.ppe['uid'][znu.true(self.ppe['quarantined'])])
 
         susceptible_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['susceptible'])])
         exposed_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['exposed'])])
@@ -334,12 +365,12 @@ class Agents(Roster):
         exposed_water_uids = np.array(self.water['uid'][znu.true(self.water['contaminated'])])
         infectious_water_uids = np.array(self.water['uid'][znu.true(self.water['contaminated'])])
 
-        susceptible_uids = np.concatenate((susceptible_human_uids, susceptible_flock_uids, susceptible_barn_uids, susceptible_water_uids))
-        exposed_uids = np.concatenate((exposed_human_uids, exposed_flock_uids, exposed_barn_uids, exposed_water_uids))
-        infectious_uids = np.concatenate((infectious_human_uids, infectious_flock_uids, infectious_barn_uids, infectious_water_uids))
+        susceptible_uids = np.concatenate((susceptible_human_uids, susceptible_ppe_uids, susceptible_flock_uids, susceptible_barn_uids, susceptible_water_uids))
+        exposed_uids = np.concatenate((exposed_human_uids, exposed_ppe_uids, exposed_flock_uids, exposed_barn_uids, exposed_water_uids))
+        infectious_uids = np.concatenate((infectious_human_uids, infectious_ppe_uids, infectious_flock_uids, infectious_barn_uids, infectious_water_uids))
 
         symptomatic_uids = symptomatic_human_uids
-        quarantined_uids = np.concatenate((quarantined_human_uids, quarantined_flock_uids))
+        quarantined_uids = np.concatenate((quarantined_human_uids, quarantined_ppe_uids, quarantined_flock_uids))
 
         self.susceptible = np.isin(self['uid'], susceptible_uids)
         self.exposed = np.isin(self['uid'], exposed_uids)
@@ -347,6 +378,7 @@ class Agents(Roster):
         self.symptomatic = np.isin(self['uid'], symptomatic_uids)
         self.quarantined = np.isin(self['uid'], quarantined_uids)
         self.infectious_variant = np.concatenate((self.human.infectious_variant,
+                                                  self.ppe.contaminated_variant,
                                                   self.flock.infectious_variant,
                                                   self.barn.contaminated_variant,
                                                   self.water.contaminated_variant))
@@ -360,44 +392,51 @@ class Agents(Roster):
     def get_human_rel_sus(self):
         return self.human.rel_sus
     
+    def get_ppe_rel_sus(self):
+        
+        return self.ppe.rel_sus
+    
     def get_flock_rel_sus(self):
         return self.flock.rel_sus
     
     def get_barn_rel_sus(self):
-        #TODO: This should depend on the temperature and humidity of the barn
-        return np.repeat([1.0], len(self.barn))
+
+        return self.barn.rel_sus
     
     def get_water_rel_sus(self):
         #TODO: This should depend on the temperature of the water
-        return np.repeat([1.0], len(self.water))
+        return self.water.rel_sus
     
     def get_rel_sus(self):
         human_rel_sus = self.get_human_rel_sus()
+        ppe_rel_sus = self.get_ppe_rel_sus()
         flock_rel_sus = self.get_flock_rel_sus()
         barn_rel_sus = self.get_barn_rel_sus()
         water_rel_sus = self.get_water_rel_sus()
-        return np.concatenate((human_rel_sus, flock_rel_sus, barn_rel_sus, water_rel_sus))
+        return np.concatenate((human_rel_sus, ppe_rel_sus, flock_rel_sus, barn_rel_sus, water_rel_sus))
     
     def get_human_rel_trans(self):
         return self.human.rel_trans
+    
+    def get_ppe_rel_trans(self):
+        return self.ppe.rel_trans 
     
     def get_flock_rel_trans(self):
         return self.flock.rel_trans
     
     def get_barn_rel_trans(self):
-        #TODO: This should depend on the temperature and humidity of the barn
-        return np.repeat([1.0], len(self.barn))
+        return self.barn.rel_trans
     
     def get_water_rel_trans(self):
-        #TODO: This should depend on the temperature of the water
-        return np.repeat([1.0], len(self.water))
+        return self.water.rel_trans
     
     def get_rel_trans(self):
         human_rel_trans = self.get_human_rel_trans()
+        ppe_rel_trans = self.get_ppe_rel_trans()
         flock_rel_trans = self.get_flock_rel_trans()
         barn_rel_trans = self.get_barn_rel_trans()
         water_rel_trans = self.get_water_rel_trans()
-        return np.concatenate((human_rel_trans, flock_rel_trans, barn_rel_trans, water_rel_trans))
+        return np.concatenate((human_rel_trans, ppe_rel_trans, flock_rel_trans, barn_rel_trans, water_rel_trans))
 
 
     #%% Methods to make events occur (infection and diagnosis)
@@ -420,6 +459,8 @@ class Agents(Roster):
         human_inds = np.where(np.isin(self.human.uid, self.uid[inds]))
         #human_inds = np.array([i for i, uid in enumerate(self.human.uid) if uid in set(self.uid[inds])]) # Supposedly faster if self.uid[inds] is large
 
+        ppe_inds = np.where(np.isin(self.ppe.uid, self.uid[inds]))
+
         flock_inds = np.where(np.isin(self.flock.uid, self.uid[inds])) 
         #flock_inds = np.array([i fo i,uid in enumerate(self.flock.uid) if uid in set(self.uid[inds])])
 
@@ -430,6 +471,7 @@ class Agents(Roster):
         #barn_inds = np.array([i fo i,uid in enumerate(self.barn.uid) if uid in set(self.uid[inds])])
 
         self.human.infect(human_inds, hosp_max, source, layer, variant)
+        self.ppe.infect(ppe_inds, source, layer, variant)
         self.flock.infect(flock_inds, source, layer, variant)
         self.barn.infect(barn_inds, source, layer, variant)
         self.water.infect(water_inds, source, layer, variant)
@@ -442,7 +484,7 @@ class Agents(Roster):
         '''
         Check for farms that are scheduled to be repopulated and reincarnate the resident flock with proper initial conditions.
         '''
-        prod_pars = self.pars['production_cycle'] 
+        prod_pars = self.pars['poultry_pars'] 
         progs = self.pars['prognoses']['flock']
         barn_inds = np.where(self.barn.date_repopulate <= t)[0]
         if barn_inds.size > 0:

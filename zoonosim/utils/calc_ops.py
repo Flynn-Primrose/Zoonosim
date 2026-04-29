@@ -99,7 +99,7 @@ def compute_infections(beta,     p1,        p2,       layer_betas,  rel_trans,  
         source_trans     = rel_trans[sources] # Pull out the transmissibility of the sources (0 for non-infectious people). Cx1 array. 
         inf_inds         = source_trans.nonzero()[0] # Infectious indices -- remove noninfectious people. Smaller array of the non-zero inds.
         # betas: I x 1 array, I is # contacts where P1 is infectious. 
-        betas            = beta[inf_inds] * layer_betas[inf_inds] * source_trans[inf_inds] * rel_sus[targets[inf_inds]] # Calculate the raw transmission probabilities
+        betas            = beta[targets[inf_inds]] * layer_betas[inf_inds] * source_trans[inf_inds] * rel_sus[targets[inf_inds]] # Calculate the raw transmission probabilities
         # There will be zeros intoduced, for example if someone isn't susciptible due to an intervention. 
         nonzero_inds     = betas.nonzero()[0] # Find nonzero entries
         nonzero_inf_inds = inf_inds[nonzero_inds] # Map onto original indices
