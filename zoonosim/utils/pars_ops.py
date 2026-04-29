@@ -3,6 +3,7 @@ Utilities for working with nested parameter dictionaries.
 '''
 import numpy as np
 import sciris as sc
+import json
 from .. import defaults as znd
 
 def compare_pars(dict_new, dict_orig):
@@ -263,3 +264,26 @@ def mergenested(dict1, dict2, die=False, verbose=False, _path=None):
         else:
             a[key] = b[key]
     return a
+
+def pars_from_json(filename):
+    '''
+    ad-hoc method to turn pars stored in a JSON file into a useable pars dict
+
+    args:
+    filename (string): The path to a JSON file with saved pars
+    '''
+    with open(filename, 'r') as file:
+        pars = json.load(file)
+
+    for key, value in pars['prognoses']['human'].items():
+        pars['prognoses']['human'][key] = np.array(value)
+    for key, value in pars['prognoses']['flock'].items():
+        if key == 'breed':
+            pars['prognoses']['flock'][key] = np.array(value, dtype=znd.default_str)
+        else:
+            pars['prognoses']['flock'][key] = np.array(value)
+    for key, value in pars['poultry_pars'].items():
+        if key == 'breeds':
+            pars['poultry_pars'][key] = np.array(value, dtype=znd.default_str)
+
+    return pars

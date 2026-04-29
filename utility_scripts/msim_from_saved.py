@@ -5,19 +5,21 @@ import numpy as np
 saved_pars_filename = "saved_pars/AOQ_4th_iteration_best.json"
 sim_label = "AOQ_4th_iteration_RHB"
 
-with open(saved_pars_filename, 'r') as file:
-    saved_pars = json.load(file)
+# with open(saved_pars_filename, 'r') as file:
+#     saved_pars = json.load(file)
 
-for key, value in saved_pars['prognoses']['human'].items():
-    saved_pars['prognoses']['human'][key] = np.array(value)
-for key, value in saved_pars['prognoses']['flock'].items():
-    if key == 'breed':
-        saved_pars['prognoses']['flock'][key] = np.array(value, dtype=zn.default_str)
-    else:
-        saved_pars['prognoses']['flock'][key] = np.array(value)
-for key, value in saved_pars['poultry_pars'].items():
-    if key == 'breeds':
-        saved_pars['poultry_pars'][key] = np.array(value, dtype=zn.default_str)
+# for key, value in saved_pars['prognoses']['human'].items():
+#     saved_pars['prognoses']['human'][key] = np.array(value)
+# for key, value in saved_pars['prognoses']['flock'].items():
+#     if key == 'breed':
+#         saved_pars['prognoses']['flock'][key] = np.array(value, dtype=zn.default_str)
+#     else:
+#         saved_pars['prognoses']['flock'][key] = np.array(value)
+# for key, value in saved_pars['poultry_pars'].items():
+#     if key == 'breeds':
+#         saved_pars['poultry_pars'][key] = np.array(value, dtype=zn.default_str)
+
+saved_pars = zn.pars_from_json(saved_pars_filename)
 
 saved_sim = zn.Sim(pars = saved_pars, label = sim_label)
 new_pars = dict(

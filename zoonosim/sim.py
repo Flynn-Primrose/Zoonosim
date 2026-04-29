@@ -621,62 +621,29 @@ class Sim(znb.BaseSim):
     def init_infections(self, force=False, verbose=None):
         if verbose is None:
             verbose = self['verbose']
-        
-        human_pop_size = self.pars['pop_size_by_type']['human']
-        ppe_pop_size = self.pars['pop_size_by_type']['ppe']
-        flock_pop_size = self.pars['pop_size_by_type']['flock']
-        barn_pop_size = self.pars['pop_size_by_type']['barn']
-        water_pop_size = self.pars['pop_size_by_type']['water']
 
+        def infect_requested(self, agent_type):
+            '''
+            Utility method to make things less repetitive
 
-        requested_human_exposures = self.pars['initial_conditions']['human']
-        requested_ppe_exposures = self.pars['initial_conditions']['ppe']
-        requested_flock_exposures = self.pars['initial_conditions']['flock']
-        requested_barn_contaminations = self.pars['initial_conditions']['barn']
-        requested_water_contaminations = self.pars['initial_conditions']['water']
+            args:
+            agent_type (string): The type of agent 
+            '''
 
+            pop_size = self.pars['pop_size_by_type'][agent_type]
+            requested_exposures = self.pars['initial_conditions'][agent_type]
+            if requested_exposures > 0:
+                if pop_size >= requested_exposures:
+                    inds = znu.choose(pop_size, requested_exposures)
+                    self.agents.infect_type(agent_type, inds, update=False)
+                else:
+                    errormsg = (f'requested number of exposed {agent_type} agents ({requested_exposures}) '
+                                f'is greater than the {agent_type} population ({pop_size})')
+                    ValueError(errormsg)
 
         if (self.agents.count('exposed') == 0 and self.agents.count('infectious')==0) or force:
-            if requested_human_exposures > 0:
-                if human_pop_size >= requested_human_exposures:
-                    inds = znu.choose(human_pop_size, requested_human_exposures)
-                    self.agents.infect_type('human', inds, update=False)
-                else:
-                    errormsg = (f'requested number of exposed humans ({requested_human_exposures}) '
-                    f'is greater than the human population size ({human_pop_size})')
-                    ValueError(errormsg)
-            if requested_ppe_exposures > 0:
-                if ppe_pop_size >= requested_ppe_exposures:
-                    inds = znu.choose(ppe_pop_size, requested_ppe_exposures)
-                    self.agents.infect_type('ppe', inds, update=False)
-                else:
-                    errormsg = (f'requested number of exposed ppe ({requested_ppe_exposures}) '
-                    f'is greater than the ppe population size ({ppe_pop_size})')
-                    ValueError(errormsg)
-            if requested_flock_exposures > 0:
-                if flock_pop_size >= requested_flock_exposures:
-                    inds = znu.choose(flock_pop_size, requested_flock_exposures)
-                    self.agents.infect_type('flock', inds, update=False)
-                else:
-                    errormsg = (f'requested number of exposed flocks ({requested_flock_exposures}) '
-                                f'is greater than the flock population ({flock_pop_size})')
-                    ValueError(errormsg)
-            if requested_barn_contaminations > 0:
-                if barn_pop_size >= requested_barn_contaminations:
-                    inds = znu.choose(barn_pop_size, requested_barn_contaminations)
-                    self.agents.infect_type('barn', inds, update = False)
-                else:
-                    errormsg = (f'requested number of contaminated barns ({requested_barn_contaminations}) '
-                                f'is greater than the barn population ({barn_pop_size})')
-                    ValueError(errormsg)
-            if requested_water_contaminations > 0:
-                if water_pop_size >= requested_water_contaminations:
-                    inds = znu.choose(water_pop_size, requested_water_contaminations)
-                    self.agents.infect_type('water', inds, update = False)
-                else:
-                    errormsg = (f'requested number of contaminated waterbodies ({requested_water_contaminations}) '
-                                f'is greater than the waterbody population ({water_pop_size})')
-                    ValueError(errormsg)
+            for agent_type in self.pars['agent_types']:
+                infect_requested[agent_type]
             
             self.agents.update_states_from_subrosters()
         elif verbose:
@@ -703,61 +670,93 @@ class Sim(znb.BaseSim):
         if t == 0:
             self.init_infections(verbose=False)
 
+        def import_infections(self, agent_type):
+            '''
+            Utility method ment to make this a little more readable
 
-        
-        # Randomly infect some people (imported infections)
-        if self['n_imports']['human']:
-            if self['n_imports']['human']['import_pattern'] == 'uniform':
-                n_human_imports = znu.poisson(self['n_imports']['human']['import_rate']) # imported human cases
-                if n_human_imports>0:
-                    human_inds = znu.choose(max_n=len(self.agents.human), n=n_human_imports)
-                    self.agents.infect_type('human', human_inds)
-                    self.results['n_human_imports'][t] += n_human_imports
-            else:
-                raise NotImplementedError(f"Import pattern {self['n_imports']['human']['import_pattern']} not implemented yet.")
-        if self['n_imports']['flock']:
-            if self['n_imports']['flock']['import_pattern'] == 'uniform':
-                n_flock_imports = znu.poisson(self['n_imports']['flock']['import_rate']) # imported flock cases
-                if n_flock_imports>0:
-                    flock_inds = znu.choose(max_n=len(self.agents.flock), n=n_flock_imports)
-                    self.agents.infect_type('flock', flock_inds)
-                    self.results['n_flock_imports'][t] += n_flock_imports
-            else:
-                raise NotImplementedError(f"Import pattern {self['n_imports']['flock']['import_pattern']} not implemented yet.")
-        if self['n_imports']['barn']:
-            if self['n_imports']['barn']['import_pattern'] == 'uniform':
-                n_barn_imports = znu.poisson(self['n_imports']['barn']['import_rate']) # imported barn contaminations
-                if n_barn_imports>0:
-                    barn_inds = znu.choose(max_n=len(self.agents.barn), n=n_barn_imports)
-                    self.agents.infect_type('barn', barn_inds)
-                    self.results['n_barn_imports'][t] += n_barn_imports
-            elif self['n_imports']['barn']['import_pattern'] == 'seasonal':
-                # Seasonal importation based on a sine wave
-                day_of_year = (self.datevec[t].timetuple().tm_yday - 1)  # Day of year (0-364)
-                n_barn_imports = znu.poisson(self['n_imports']['barn']['max_import_rate'] * (1 + np.cos(2 * np.pi * (day_of_year - self['n_imports']['barn']['peak_day']) / 365)) / 2)
-                if n_barn_imports>0:
-                    barn_inds = znu.choose(max_n=len(self.agents.barn), n=n_barn_imports)
-                    self.agents.infect_type('barn', barn_inds)
-                    self.results['n_barn_imports'][t] += n_barn_imports
-            else:
-                raise NotImplementedError(f"Import pattern {self['n_imports']['barn']['import_pattern']} not implemented yet.")
-        if self['n_imports']['water']:
-            if self['n_imports']['water']['import_pattern'] == 'uniform':
-                n_water_imports = znu.poisson(self['n_imports']['water']['import_rate']) # imported water contaminations
-                if n_water_imports>0:
-                    water_inds = znu.choose(max_n = len(self.agents.water), n=n_water_imports)
-                    self.agents.infect_type('water', water_inds)
-                    self.results['n_water_imports'][t] += n_water_imports
-            elif self['n_imports']['water']['import_pattern'] == 'seasonal':
-                # Seasonal importation based on a sine wave
-                day_of_year = (self.datevec[t].timetuple().tm_yday - 1)  # Day of year (0-364)
-                n_water_imports = znu.poisson(self['n_imports']['water']['max_import_rate'] * (1 + np.cos(2 * np.pi * (day_of_year - self['n_imports']['water']['peak_day']) / 365)) / 2)
-                if n_water_imports>0:
-                    water_inds = znu.choose(max_n = len(self.agents.water), n=n_water_imports)
-                    self.agents.infect_type('water', water_inds)
-                    self.results['n_water_imports'][t] += n_water_imports
-            else:
-                raise NotImplementedError(f"Import pattern {self['n_imports']['water']['import_pattern']} not implemented yet.")
+            args:
+            agent_type (string): The type of agent for which to import infections
+            '''
+
+            if self['n_imports'][agent_type] == 0:
+                return
+            pattern = self['n_imports'][agent_type]['import_pattern']
+            match pattern:
+                case 'uniform':
+                    n_imports = znu.poisson(self['n_imports'][agent_type]['import_rate'])
+                    if n_imports > 0:
+                        inds = znu.choose(max_n=len(self.agents[agent_type]), n=n_imports)
+                        self.agents.infect_type(agent_type, inds)
+                        result_string = f'n_{agent_type}_imports'
+                        self.results[result_string] += n_imports
+                case 'seasonal':
+                    day_of_year = (self.datevec[t].timetuple().tm_yday - 1)  # Day of year (0-364)
+                    n_imports = znu.poisson(self['n_imports'][agent_type]['max_import_rate'] * (1 + np.cos(2 * np.pi * (day_of_year - self['n_imports'][agent_type]['peak_day']) / 365)) / 2)
+                    if n_imports > 0:
+                        inds = znu.choose(max_n = len(self.agents[agent_type]), n=n_imports)
+                        self.agents.infect_type(agent_type, inds)
+                        result_string = f'n_{agent_type}_imports'
+                        self.results[result_string] += n_imports
+                case _:
+                    raise NotImplementedError(f"Import pattern {self['n_imports'][agent_type]['import_pattern']} is not implemented yet.")
+
+
+        for agent_type in self.pars['agent_types']:
+            import_infections(agent_type)
+
+        # # Randomly infect some people (imported infections)
+        # if self['n_imports']['human']:
+        #     if self['n_imports']['human']['import_pattern'] == 'uniform':
+        #         n_human_imports = znu.poisson(self['n_imports']['human']['import_rate']) # imported human cases
+        #         if n_human_imports>0:
+        #             human_inds = znu.choose(max_n=len(self.agents.human), n=n_human_imports)
+        #             self.agents.infect_type('human', human_inds)
+        #             self.results['n_human_imports'][t] += n_human_imports
+        #     else:
+        #         raise NotImplementedError(f"Import pattern {self['n_imports']['human']['import_pattern']} not implemented yet.")
+        # if self['n_imports']['flock']:
+        #     if self['n_imports']['flock']['import_pattern'] == 'uniform':
+        #         n_flock_imports = znu.poisson(self['n_imports']['flock']['import_rate']) # imported flock cases
+        #         if n_flock_imports>0:
+        #             flock_inds = znu.choose(max_n=len(self.agents.flock), n=n_flock_imports)
+        #             self.agents.infect_type('flock', flock_inds)
+        #             self.results['n_flock_imports'][t] += n_flock_imports
+        #     else:
+        #         raise NotImplementedError(f"Import pattern {self['n_imports']['flock']['import_pattern']} not implemented yet.")
+        # if self['n_imports']['barn']:
+        #     if self['n_imports']['barn']['import_pattern'] == 'uniform':
+        #         n_barn_imports = znu.poisson(self['n_imports']['barn']['import_rate']) # imported barn contaminations
+        #         if n_barn_imports>0:
+        #             barn_inds = znu.choose(max_n=len(self.agents.barn), n=n_barn_imports)
+        #             self.agents.infect_type('barn', barn_inds)
+        #             self.results['n_barn_imports'][t] += n_barn_imports
+        #     elif self['n_imports']['barn']['import_pattern'] == 'seasonal':
+        #         # Seasonal importation based on a sine wave
+        #         day_of_year = (self.datevec[t].timetuple().tm_yday - 1)  # Day of year (0-364)
+        #         n_barn_imports = znu.poisson(self['n_imports']['barn']['max_import_rate'] * (1 + np.cos(2 * np.pi * (day_of_year - self['n_imports']['barn']['peak_day']) / 365)) / 2)
+        #         if n_barn_imports>0:
+        #             barn_inds = znu.choose(max_n=len(self.agents.barn), n=n_barn_imports)
+        #             self.agents.infect_type('barn', barn_inds)
+        #             self.results['n_barn_imports'][t] += n_barn_imports
+        #     else:
+        #         raise NotImplementedError(f"Import pattern {self['n_imports']['barn']['import_pattern']} not implemented yet.")
+        # if self['n_imports']['water']:
+        #     if self['n_imports']['water']['import_pattern'] == 'uniform':
+        #         n_water_imports = znu.poisson(self['n_imports']['water']['import_rate']) # imported water contaminations
+        #         if n_water_imports>0:
+        #             water_inds = znu.choose(max_n = len(self.agents.water), n=n_water_imports)
+        #             self.agents.infect_type('water', water_inds)
+        #             self.results['n_water_imports'][t] += n_water_imports
+        #     elif self['n_imports']['water']['import_pattern'] == 'seasonal':
+        #         # Seasonal importation based on a sine wave
+        #         day_of_year = (self.datevec[t].timetuple().tm_yday - 1)  # Day of year (0-364)
+        #         n_water_imports = znu.poisson(self['n_imports']['water']['max_import_rate'] * (1 + np.cos(2 * np.pi * (day_of_year - self['n_imports']['water']['peak_day']) / 365)) / 2)
+        #         if n_water_imports>0:
+        #             water_inds = znu.choose(max_n = len(self.agents.water), n=n_water_imports)
+        #             self.agents.infect_type('water', water_inds)
+        #             self.results['n_water_imports'][t] += n_water_imports
+        #     else:
+        #         raise NotImplementedError(f"Import pattern {self['n_imports']['water']['import_pattern']} not implemented yet.")
             
 
         # Add variants
