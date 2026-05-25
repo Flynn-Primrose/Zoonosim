@@ -17,11 +17,11 @@ result_float = np.float64 # Always use float64 for results, for simplicity
 #nbint         = nb.int32
 
 default_str = object # 
-default_float = np.float64
-default_int   = np.int64
+default_float = np.float32
+default_int   = np.int32
 default_bool  = np.bool_
-nbfloat       = nb.float64
-nbint         = nb.int64
+nbfloat       = nb.float32
+nbint         = nb.int32
 nbbool        = nb.bool_
 
 
@@ -457,11 +457,23 @@ def get_default_colors(agent_type):
             c.quarantined = '#a6d854' # 
             c.exposed_by_variant = '#ffd92f' # 
             c.infectious_by_variant = '#e5c494' # 
-        case 'breed':
+        case 'flock_breed':
             c.duck = '#66c2a5' # 
             c.broiler = '#fc8d62' # 
             c.layer = '#8da0cb' #
             c.poultry = '#fc8d62'
+        case 'herd':
+            c.susceptible = '#66c2a5' # 
+            c.exposed = '#fc8d62' # 
+            c.infectious = '#8da0cb' # 
+            c.suspected = '#e78ac3' # 
+            c.quarantined = '#a6d854' # 
+            c.exposed_by_variant = '#ffd92f' # 
+            c.infectious_by_variant = '#e5c494' #
+        case 'herd_breed':
+            c.cattle = '#66c2a5' # 
+            c.sheep = '#fc8d62' # 
+            c.pigs = '#8da0cb' #
         case 'barn': 
             c.uncontaminated = '#1b9e77' # 
             c.contaminated = '#d95f02' # 
@@ -524,7 +536,7 @@ default_ppe_prognoses = dict(
 
 default_flock_prognoses = dict(
     breeds = np.array(['duck', 'broiler', 'layer'], dtype=default_str),
-    sus_ORs = np.array([2.00, 1.00, 0.75]),
+    sus_ORs = np.array([1.00, 1.00, 0.75]),
     trans_ORs = np.array([1.00, 1.00, 1.00]),
     baseline_symptomatic_rate = np.array([0.001, 0.001, 0.001]),
     symptomatic_rate_increase = np.array([dict(dist='lognormal', par1 = 0.001, par2 = 0.5),
@@ -544,6 +556,21 @@ default_flock_prognoses = dict(
                                       dict(dist='lognormal', par1=0.75, par2=0.5)])
     # mean_water_rate_increase = np.array([1.50, 1.00, 0.75]),
     # sd_water_rate_increase = np.array([0.5, 0.5, 0.5]),
+)
+
+default_herd_prognoses = dict(
+    breeds = np.array(['dairy', 'beef'], dtype=default_str),
+    sus_ORs = np.array([1.00, 1.00]),
+    trans_ORs = np.array([1.00, 1.00]),
+    baseline_symptomatic_rate = np.array([0.001, 0.001]),
+    symptomatic_rate_increase = np.array([dict(dist='lognormal', par1 = 0.001, par2 = 0.5),
+                                          dict(dist='lognormal', par1=0.0005, par2 = 0.5)]),
+    baseline_mortality_rate = np.array([0.001, 0.001]),
+    mortality_rate_increase = np.array([dict(dist='lognormal', par1 = 0.005, par2 = 0.5),
+                                      dict(dist='lognormal', par1=0.002, par2 = 0.5)]),
+    baseline_water_rate = np.array([1.00, 1.00]),
+    water_rate_increase = np.array([dict(dist='lognormal', par1 = 1.5, par2 = 0.5),
+                                      dict(dist='lognormal', par1=1.00, par2 = 0.5)])
 )
 
 default_barn_prognoses = dict(
@@ -566,6 +593,10 @@ human_calibration_flows = {
 
 flock_calibration_flows = {
     'infectious': 'Number of infectious flocks'
+}
+
+herd_calibration_flows = {
+    'infectious': 'Number of infectious herds'
 }
 
 calibration_result_prefix = 'monthly_new_' # The expected prefix for results that are used for calibration; used in analysis.py to identify which results to use for calibration. 
@@ -594,6 +625,14 @@ flock_stocks = {
     'suspected':   'Number of suspected flocks',
     'infectious':  'Number of infectious flocks',
     'quarantined': 'Number of quarantined flocks',
+}
+
+herd_stocks = {
+    'susceptible': 'Number of susceptible herds',
+    'exposed':     'Number of exposed herds',
+    'suspected':   'Number of suspected herds',
+    'infectious':  'Number of infectious herds',
+    'quarantined': 'Number of quarantined herds',
 }
 
 barn_stocks = {
@@ -626,6 +665,10 @@ flock_stocks_by_variant = {
     'infectious_by_variant':  'Number infectious flocks by variant',
 }
 
+herd_stocks_by_variant = {
+    'exposed_by_variant':     'Number exposed herds by variant',
+    'infectious_by_variant':  'Number infectious herds by variant',
+}
 
 barn_stocks_by_variant = {
     'contaminated_by_variant': 'Number contaminated barns by variant',
@@ -685,6 +728,15 @@ flock_flows = {
 }
 new_flock_flows = [f'new_{key}' for key in flock_flows.keys()]
 cum_flock_flows = [f'cum_{key}' for key in flock_flows.keys()]
+
+herd_flows = {
+    'exposed':     'exposed herds',
+    'infectious':   'infectious herds',
+    'suspected' : 'herds suspected of being infectious',
+    'quarantined': 'herds quarantined',
+}
+new_herd_flows = [f'new_{key}' for key in herd_flows.keys()]
+cum_herd_flows = [f'cum_{key}' for key in herd_flows.keys()]
 
 barn_flows = {
     'contaminated': 'contaminated barns',

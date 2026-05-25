@@ -298,7 +298,9 @@ class Sim(znb.BaseSim):
         human_dcols = znd.get_default_colors('human') # Get default human colors
         ppe_dcols = znd.get_default_colors('ppe') # Get default PPE colors
         flock_dcols = znd.get_default_colors('flock') # Get default flock colors
-        breed_dcols = znd.get_default_colors('breed') # Get default breed colors
+        flock_breed_dcols = znd.get_default_colors('flock_breed') # Get default breed colors
+        herd_dcols = znd.get_default_colors('herd')  # Get default herd colors
+        herd_breed_dcols = znd.get_default_colors('herd_breed')  # Get default herd breed colors
         barn_dcols  = znd.get_default_colors('barn')  # Get default barn colors
         water_dcols = znd.get_default_colors('water') # Get default water colors
         misc_dcols = znd.get_default_colors('misc') # Get default misc colors
@@ -323,7 +325,14 @@ class Sim(znb.BaseSim):
 
         for breed in self['poultry_pars']['breeds']:
             for key,label in znd.flock_flows.items():
-                self.results[f'new_{breed}_flock_{key}'] = init_res(f'Number of new {label} ({breed})', color=breed_dcols[breed])
+                self.results[f'new_{breed}_flock_{key}'] = init_res(f'Number of new {label} ({breed})', color=flock_breed_dcols[breed])
+
+        for key,label in znd.herd_flows.items():
+            self.results[f'new_herd_{key}'] = init_res(f'Number of new {label}', color=herd_dcols[key])
+
+        for breed in self['cattle_pars']['breeds']:
+            for key,label in znd.herd_flows.items():
+                self.results[f'new_{breed}_herd_{key}'] = init_res(f'Number of new {label} ({breed})', color=herd_breed_dcols[breed])
 
         for key,label in znd.barn_flows.items():
             self.results[f'new_barn_{key}'] = init_res(f'Number of new {label}', color=barn_dcols[key])
@@ -342,6 +351,9 @@ class Sim(znb.BaseSim):
         for key,label in znd.flock_stocks.items():
             self.results[f'n_flock_{key}'] = init_res(label, color=flock_dcols[key])
 
+        for key,label in znd.herd_stocks.items():
+            self.results[f'n_herd_{key}'] = init_res(label, color=herd_dcols[key])
+
         for key,label in znd.barn_stocks.items():
             self.results[f'n_barn_{key}'] = init_res(label, color=barn_dcols[key])
 
@@ -350,18 +362,23 @@ class Sim(znb.BaseSim):
 
 
         # Other variables
-        self.results['n_human_imports'] = init_res('Number of imported human infections', scale = True)
-        self.results['n_ppe_imports'] = init_res('Number of imported PPE contaminations', scale = True)
-        self.results['n_flock_imports'] = init_res('Number of imported flock infections', scale = True)
-        self.results['n_barn_imports'] = init_res('Number of imported barn infections', scale = True)
-        self.results['n_water_imports'] = init_res('Number of imported water infections', scale = True)
+        self.results['n_human_imports'] = init_res('Number of imported human infections', scale = False)
+        self.results['n_ppe_imports'] = init_res('Number of imported PPE contaminations', scale = False)
+        self.results['n_flock_imports'] = init_res('Number of imported flock infections', scale = False)
+        self.results['n_herd_imports'] = init_res('Number of imported herd infections', scale = False)
+        self.results['n_barn_imports'] = init_res('Number of imported barn infections', scale = False)
+        self.results['n_water_imports'] = init_res('Number of imported water infections', scale = False)
 
 
 
         # Derived breed results
         for breed in self['poultry_pars']['breeds']:
             for key,label in znd.flock_flows.items():
-                self.results[f'n_{breed}_flock_{key}'] = init_res(f'Number of {label} ({breed})', color=breed_dcols[breed])
+                self.results[f'n_{breed}_flock_{key}'] = init_res(f'Number of {label} ({breed})', color=flock_breed_dcols[breed])
+
+        for breed in self['cattle_pars']['breeds']:
+            for key,label in znd.herd_flows.items():
+                self.results[f'n_{breed}_herd_{key}'] = init_res(f'Number of {label} ({breed})', color=herd_breed_dcols[breed])
 
         # Nab levels and population immunity
         self.results['pop_nabs']            = init_res('nab levels in human population', scale=False, color=human_dcols.pop_nabs)
@@ -390,24 +407,6 @@ class Sim(znb.BaseSim):
 
         nv = self['n_variants']
         self.results['variant'] = {}
-        #self.results['variant']['prevalence_by_variant'] = init_res('Prevalence by variant', scale=False, n_variants=nv)
-        #self.results['variant']['incidence_by_variant']  = init_res('Incidence by variant', scale=False, n_variants=nv)
-        # for key,label in znd.human_flows_by_variant.items():
-        #     self.results['variant'][f'cum_human_{key}'] = init_res(f'Cumulative {label}', color=human_dcols[key], n_variants=nv)  # Cumulative variables -- e.g. "Cumulative infections"
-
-        # for key,label in znd.ppe_flows_by_variant.items():
-        #     self.results['variant'][f'cum_ppe_{key}'] = init_res(f'Cumulative {label}', color=ppe_dcols[key], n_variants=nv)  # Cumulative variables -- e.g. "Cumulative contaminated PPE"
-
-        # for key,label in znd.flock_flows_by_variant.items():
-        #     self.results['variant'][f'cum_flock_{key}'] = init_res(f'Cumulative {label}', color=flock_dcols[key], n_variants=nv )
-
-        # for key,label in znd.barn_flows_by_variant.items():
-        #     self.results['variant'][f'cum_barn_{key}'] = init_res(f'Cumulative {label}', color=barn_dcols[key], n_variants=nv )
-
-        # for key,label in znd.water_flows_by_variant.items():
-        #     self.results['variant'][f'cum_water_{key}'] = init_res(f'Cumulative {label}', color=water_dcols[key], n_variants=nv )
-
-
 
         for key,label in znd.human_flows_by_variant.items():
             self.results['variant'][f'new_human_{key}'] = init_res(f'Number of new {label}', color=human_dcols[key], n_variants=nv) # Flow variables -- e.g. "Number of new infections"
@@ -418,27 +417,14 @@ class Sim(znb.BaseSim):
         for key,label in znd.flock_flows_by_variant.items():
             self.results['variant'][f'new_flock_{key}'] = init_res(f'Number of new {label}', color=flock_dcols[key], n_variants=nv)
 
+        for key,label in znd.herd_flows_by_variant.items():
+            self.results['variant'][f'new_herd_{key}'] = init_res(f'Number of new {label}', color=herd_dcols[key], n_variants=nv)
+
         for key,label in znd.barn_flows_by_variant.items():
             self.results['variant'][f'new_barn_{key}'] = init_res(f'Number of new {label}', color=barn_dcols[key], n_variants=nv)
 
         for key,label in znd.water_flows_by_variant.items():
             self.results['variant'][f'new_water_{key}'] = init_res(f'Number of new {label}', color=water_dcols[key], n_variants=nv)
-
-
-        # for key,label in znd.human_stocks_by_variant.items():
-        #     self.results['variant'][f'n_human_{key}'] = init_res(label, color=human_dcols[key], n_variants=nv)
-
-        # for key,label in znd.ppe_stocks_by_variant.items():
-        #     self.results['variant'][f'n_ppe_{key}'] = init_res(label, color=ppe_dcols[key], n_variants=nv)
-
-        # for key,label in znd.flock_stocks_by_variant.items():
-        #     self.results['variant'][f'n_flock_{key}'] = init_res(label, color=flock_dcols[key], n_variants=nv)
-
-        # for key,label in znd.barn_stocks_by_variant.items():
-        #     self.results['variant'][f'n_barn_{key}'] = init_res(label, color=barn_dcols[key], n_variants=nv)
-
-        # for key,label in znd.water_stocks_by_variant.items():
-        #     self.results['variant'][f'n_water_{key}'] = init_res(label, color=water_dcols[key], n_variants=nv)
 
         # Populate the rest of the results
 
@@ -703,60 +689,6 @@ class Sim(znb.BaseSim):
 
         for agent_type in self.pars['agent_types']:
             import_infections(agent_type)
-
-        # # Randomly infect some people (imported infections)
-        # if self['n_imports']['human']:
-        #     if self['n_imports']['human']['import_pattern'] == 'uniform':
-        #         n_human_imports = znu.poisson(self['n_imports']['human']['import_rate']) # imported human cases
-        #         if n_human_imports>0:
-        #             human_inds = znu.choose(max_n=len(self.agents.human), n=n_human_imports)
-        #             self.agents.infect_type('human', human_inds)
-        #             self.results['n_human_imports'][t] += n_human_imports
-        #     else:
-        #         raise NotImplementedError(f"Import pattern {self['n_imports']['human']['import_pattern']} not implemented yet.")
-        # if self['n_imports']['flock']:
-        #     if self['n_imports']['flock']['import_pattern'] == 'uniform':
-        #         n_flock_imports = znu.poisson(self['n_imports']['flock']['import_rate']) # imported flock cases
-        #         if n_flock_imports>0:
-        #             flock_inds = znu.choose(max_n=len(self.agents.flock), n=n_flock_imports)
-        #             self.agents.infect_type('flock', flock_inds)
-        #             self.results['n_flock_imports'][t] += n_flock_imports
-        #     else:
-        #         raise NotImplementedError(f"Import pattern {self['n_imports']['flock']['import_pattern']} not implemented yet.")
-        # if self['n_imports']['barn']:
-        #     if self['n_imports']['barn']['import_pattern'] == 'uniform':
-        #         n_barn_imports = znu.poisson(self['n_imports']['barn']['import_rate']) # imported barn contaminations
-        #         if n_barn_imports>0:
-        #             barn_inds = znu.choose(max_n=len(self.agents.barn), n=n_barn_imports)
-        #             self.agents.infect_type('barn', barn_inds)
-        #             self.results['n_barn_imports'][t] += n_barn_imports
-        #     elif self['n_imports']['barn']['import_pattern'] == 'seasonal':
-        #         # Seasonal importation based on a sine wave
-        #         day_of_year = (self.datevec[t].timetuple().tm_yday - 1)  # Day of year (0-364)
-        #         n_barn_imports = znu.poisson(self['n_imports']['barn']['max_import_rate'] * (1 + np.cos(2 * np.pi * (day_of_year - self['n_imports']['barn']['peak_day']) / 365)) / 2)
-        #         if n_barn_imports>0:
-        #             barn_inds = znu.choose(max_n=len(self.agents.barn), n=n_barn_imports)
-        #             self.agents.infect_type('barn', barn_inds)
-        #             self.results['n_barn_imports'][t] += n_barn_imports
-        #     else:
-        #         raise NotImplementedError(f"Import pattern {self['n_imports']['barn']['import_pattern']} not implemented yet.")
-        # if self['n_imports']['water']:
-        #     if self['n_imports']['water']['import_pattern'] == 'uniform':
-        #         n_water_imports = znu.poisson(self['n_imports']['water']['import_rate']) # imported water contaminations
-        #         if n_water_imports>0:
-        #             water_inds = znu.choose(max_n = len(self.agents.water), n=n_water_imports)
-        #             self.agents.infect_type('water', water_inds)
-        #             self.results['n_water_imports'][t] += n_water_imports
-        #     elif self['n_imports']['water']['import_pattern'] == 'seasonal':
-        #         # Seasonal importation based on a sine wave
-        #         day_of_year = (self.datevec[t].timetuple().tm_yday - 1)  # Day of year (0-364)
-        #         n_water_imports = znu.poisson(self['n_imports']['water']['max_import_rate'] * (1 + np.cos(2 * np.pi * (day_of_year - self['n_imports']['water']['peak_day']) / 365)) / 2)
-        #         if n_water_imports>0:
-        #             water_inds = znu.choose(max_n = len(self.agents.water), n=n_water_imports)
-        #             self.agents.infect_type('water', water_inds)
-        #             self.results['n_water_imports'][t] += n_water_imports
-        #     else:
-        #         raise NotImplementedError(f"Import pattern {self['n_imports']['water']['import_pattern']} not implemented yet.")
             
 
         # Add variants
@@ -779,6 +711,9 @@ class Sim(znb.BaseSim):
         # Compute infection levels in flocks
         flock_infection_levels = self.agents.update_flock_infection_levels()
 
+        # Compute infection levels in herds
+        herd_infection_levels = self.agents.update_herd_infection_levels()
+
         
         # Compute modifiers for barns
         barn_biosec = self.agents.update_barn_biosecurity_levels()
@@ -787,7 +722,7 @@ class Sim(znb.BaseSim):
         water_biosec = self.agents.update_water_biosecurity_levels()
 
         # Set modifiers for all agent types
-        misc_modifiers = np.concatenate((human_viral_load, ppe_biosec, flock_infection_levels, barn_biosec, water_biosec)) 
+        misc_modifiers = np.concatenate((human_viral_load, ppe_biosec, flock_infection_levels, herd_infection_levels, barn_biosec, water_biosec)) 
 
         # Perform initial operations
         #self.rescale() # Check if we need to rescale
@@ -849,6 +784,7 @@ class Sim(znb.BaseSim):
             human_rel_beta = self['variant_pars']['wild']['human']['rel_beta']
             ppe_rel_beta   = self['variant_pars']['wild']['ppe']['rel_beta']
             flock_rel_beta = self['variant_pars']['wild']['flock']['rel_beta']
+            herd_rel_beta  = self['variant_pars']['wild']['herd']['rel_beta']
             barn_rel_beta  = self['variant_pars']['wild']['barn']['rel_beta']
             water_rel_beta = self['variant_pars']['wild']['human']['rel_beta']
 
@@ -859,6 +795,7 @@ class Sim(znb.BaseSim):
                 human_rel_beta *= self['variant_pars'][variant_label]['human']['rel_beta']
                 ppe_rel_beta   *= self['variant_pars'][variant_label]['ppe']['rel_beta']
                 flock_rel_beta *= self['variant_pars'][variant_label]['flock']['rel_beta']
+                herd_rel_beta  *= self['variant_pars'][variant_label]['herd']['rel_beta']
                 barn_rel_beta  *= self['variant_pars'][variant_label]['barn']['rel_beta']
                 water_rel_beta *= self['variant_pars'][variant_label]['human']['rel_beta']
 
@@ -867,6 +804,7 @@ class Sim(znb.BaseSim):
             beta = np.repeat([znd.default_float(self['beta']['human']*human_rel_beta),
                               znd.default_float(self['beta']['ppe']*ppe_rel_beta),
                               znd.default_float(self['beta']['flock']*flock_rel_beta), 
+                              znd.default_float(self['beta']['herd']*herd_rel_beta), 
                               znd.default_float(self['beta']['barn']*barn_rel_beta), 
                               znd.default_float(self['beta']['water']*water_rel_beta)], 
                               [len(agents.human), len(agents.ppe), len(agents.flock), len(agents.barn), len(agents.water)])
@@ -908,6 +846,14 @@ class Sim(znb.BaseSim):
         for breed in self['poultry_pars']['breeds']:
             for key,label in znd.flock_flows.items():
                 self.results[f'n_{breed}_flock_{key}'][t] = np.count_nonzero(self.agents.flock[key][agents.flock.breed == breed])
+
+        # Update counts for this time step: Herd stocks
+        for key in znd.herd_stocks:
+            self.results[f'n_herd_{key}'][t] = agents.herd.count(key)
+
+        for breed in self['cattle_pars']['breeds']:
+            for key,label in znd.herd_flows.items():
+                self.results[f'n_{breed}_herd_{key}'][t] = np.count_nonzero(self.agents.herd[key][agents.herd.breed == breed])
 
         # Update counts for this time step: Barn stocks
         for key in znd.barn_stocks:
@@ -959,6 +905,12 @@ class Sim(znb.BaseSim):
             for breed in self['poultry_pars']['breeds']:
                 self.results[f'new_{breed}_flock_{key}'][t] = agents.flock.flows_breed[(breed, f'new_{key}')]
 
+        # Update counts for this time step: Herd flows
+        for key in znd.herd_flows:
+            self.results[f'new_herd_{key}'][t] = agents.herd.flows[f'new_{key}']
+            for breed in self['cattle_pars']['breeds']:
+                self.results[f'new_{breed}_herd_{key}'][t] = agents.herd.flows_breed[(breed, f'new_{key}')]
+
         # Update counts for this time step: Barn flows
         for key in znd.barn_flows:
             self.results[f'new_barn_{key}'][t] = agents.barn.flows[f'new_{key}']
@@ -981,6 +933,11 @@ class Sim(znb.BaseSim):
         for key in znd.flock_flows_by_variant:
             for variant in range(nv):
                 self.results['variant'][f'new_flock_{key}'][variant, t] = agents.flock.flows_variant[f'new_{key}'][variant]
+
+        # Update counts for this time step: Herd flows by variant
+        for key in znd.herd_flows_by_variant:
+            for variant in range(nv):
+                self.results['variant'][f'new_herd_{key}'][variant, t] = agents.herd.flows_variant[f'new_{key}'][variant]
 
         
         # Update counts for this time step: Barn flows by variant
@@ -1141,7 +1098,9 @@ class Sim(znb.BaseSim):
         human_dcols = znd.get_default_colors('human') # Get default human colors
         # ppe_dcols = znd.get_default_colors('ppe') # Get default PPE colors
         # flock_dcols = znd.get_default_colors('flock') # Get default flock colors
-        breed_dcols = znd.get_default_colors('breed') # Get default breed colors
+        flock_breed_dcols = znd.get_default_colors('breed') # Get default breed colors
+        # herd_dcols = znd.get_default_colors('herd') # Get default herd colors
+        herd_breed_dcols = znd.get_default_colors('breed') # Get default breed colors
         # barn_dcols  = znd.get_default_colors('barn')  # Get default barn colors
         # water_dcols = znd.get_default_colors('water') # Get default water colors
     
@@ -1152,13 +1111,19 @@ class Sim(znb.BaseSim):
             self.results[f'monthly_new_human_{key}'] = init_res(f'{label}', color=human_dcols[key])  # Stock variables -- e.g. "Number of exposed humans per month"
         for key,label in znd.flock_calibration_flows.items():
             for breed in self['poultry_pars']['breeds']:
-                self.results[f'monthly_new_{breed}_flock_{key}'] = init_res(f'{label} ({breed})', color=breed_dcols[breed])  # Stock variables -- e.g. "Number of exposed flocks per month"
+                self.results[f'monthly_new_{breed}_flock_{key}'] = init_res(f'{label} ({breed})', color=flock_breed_dcols[breed])  # Stock variables -- e.g. "Number of exposed flocks per month"
+        for key,label in znd.herd_calibration_flows.items():
+            for breed in self['cattle_pars']['breeds']:
+                self.results[f'monthly_new_{breed}_herd_{key}'] = init_res(f'{label} ({breed})', color=herd_breed_dcols[breed])  # Stock variables -- e.g. "Number of exposed herds per month"
         #calculate monthly results for humans
         for key in znd.human_calibration_flows.keys():
             self.results[f'monthly_new_human_{key}'][end_of_month_inds] = znm.monthly_from_daily(self.results[f'new_human_{key}'][:], self.datevec)
         for key in znd.flock_calibration_flows.keys():
             for breed in self['poultry_pars']['breeds']:
                 self.results[f'monthly_new_{breed}_flock_{key}'][end_of_month_inds] = znm.monthly_from_daily(self.results[f'new_{breed}_flock_{key}'][:], self.datevec)
+        for key in znd.herd_calibration_flows.keys():
+            for breed in self['cattle_pars']['breeds']:
+                self.results[f'monthly_new_{breed}_herd_{key}'][end_of_month_inds] = znm.monthly_from_daily(self.results[f'new_{breed}_herd_{key}'][:], self.datevec)
         self.finalize_interventions()
         self.finalize_analyzers() 
         # Final settings
@@ -1201,7 +1166,9 @@ class Sim(znb.BaseSim):
         human_dcols = znd.get_default_colors('human') # Get default human colors
         ppe_dcols = znd.get_default_colors('ppe') # Get default PPE colors
         flock_dcols = znd.get_default_colors('flock') # Get default flock colors
-        breed_dcols = znd.get_default_colors('breed') # Get default breed colors
+        flock_breed_dcols = znd.get_default_colors('breed') # Get default breed colors
+        herd_dcols = znd.get_default_colors('herd') # Get default herd colors
+        herd_breed_dcols = znd.get_default_colors('breed') # Get default breed colors
         barn_dcols  = znd.get_default_colors('barn')  # Get default barn colors
         water_dcols = znd.get_default_colors('water') # Get default water colors
         # misc_dcols = znd.get_default_colors('misc') # Get default misc colors
@@ -1220,7 +1187,14 @@ class Sim(znb.BaseSim):
 
         for breed in self['poultry_pars']['breeds']:
             for key,label in znd.flock_flows.items():
-                self.results[f'cum_{breed}_flock_{key}'] = init_res(f'Cumulative {label} ({breed})', color=breed_dcols[breed])
+                self.results[f'cum_{breed}_flock_{key}'] = init_res(f'Cumulative {label} ({breed})', color=flock_breed_dcols[breed])
+
+        for key,label in znd.herd_flows.items():
+            self.results[f'cum_herd_{key}'] = init_res(f'Cumulative {label}', color=herd_dcols[key])
+
+        for breed in self['cattle_pars']['breeds']:
+            for key,label in znd.herd_flows.items():
+                self.results[f'cum_{breed}_herd_{key}'] = init_res(f'Cumulative {label} ({breed})', color=herd_breed_dcols[breed])
 
         for key,label in znd.barn_flows.items():
             self.results[f'cum_barn_{key}'] = init_res(f'Cumulative {label}', color=barn_dcols[key])
@@ -1241,6 +1215,10 @@ class Sim(znb.BaseSim):
         # for key in znd.human_flows_by_variant:
         #     for variant in range(self['n_variants']):
         #         self.results['variant'][f'cum_human_{key}'][variant, :] = np.cumsum(self.results['variant'][f'new_human_{key}'][variant, :], axis=0)
+
+        # Calculate cumulative results: PPE
+        for key in znd.ppe_flows:
+            self.results[f'cum_ppe_{key}'][:] = np.cumsum(self.results[f'new_ppe_{key}'][:], axis=0)
         
         # Calculate cumulative results: Flock
         for key in znd.flock_flows:
@@ -1250,6 +1228,12 @@ class Sim(znb.BaseSim):
         # for key in znd.flock_flows_by_variant:
         #     for variant in range(self['n_variants']):
         #         self.results['variant'][f'cum_flock_{key}'][variant, :] = np.cumsum(self.results['variant'][f'new_flock_{key}'][variant, :], axis=0)
+
+        # Calculate cumulative results: Herd
+        for key in znd.herd_flows:
+            self.results[f'cum_herd_{key}'][:] = np.cumsum(self.results[f'new_herd_{key}'][:], axis=0)
+            for breed in self['cattle_pars']['breeds']:
+                self.results[f'cum_{breed}_herd_{key}'][:] = np.cumsum(self.results[f'new_{breed}_herd_{key}'][:], axis=0)
         
         # Calculate cumulative results: Barn
         for key in znd.barn_flows:
@@ -1268,7 +1252,7 @@ class Sim(znb.BaseSim):
 
         # Finalize interventions and analyzers
         self.finalize_interventions()
-        #self.finalize_testobjs() # TODO: Ritchie toggle. 
+        self.finalize_testobjs()
         self.finalize_analyzers()
 
         # Final settings
