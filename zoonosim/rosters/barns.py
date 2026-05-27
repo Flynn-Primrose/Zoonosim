@@ -22,7 +22,7 @@ class BarnMeta(sc.prettyobj):
             'humidity',
             'rel_trans',        # Float
             'rel_sus',          # Float
-            'flock', # uid of the flock residing here
+            'resident_uid', # uid of the collective residing here
             'repopulations' # Number of times this barn has been repopulated
         ]
 
@@ -120,7 +120,7 @@ class Barns(Subroster):
 
         # Set person properties -- all floats except for UID
         for key in self.meta.agent:
-            if key in ['uid', 'flock', 'repopulations']:
+            if key in ['uid', 'resident_uid', 'repopulations']:
                 self[key] = np.zeros(pop_size, dtype=znd.default_int) # NOTE: The uid values are passed in kwargs by make_barn()
             elif key in ['green', 'yellow', 'orange']:
                 val = key in ['green']
