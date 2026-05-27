@@ -640,7 +640,7 @@ class Agents(Roster):
             #barn_inds = np.where(np.isin(self.barn.flock, self.flock.uid[flock_inds]))[0]
 
             pos_flock_inds = flock_inds[np.where(self.flock.infectious[flock_inds] == True)[0]]
-            pos_barn_inds = np.where(np.isin(self.barn.flock, self.flock.uid[pos_flock_inds]))[0]
+            pos_barn_inds = np.where(np.isin(self.barn.resident_uid, self.flock.uid[pos_flock_inds]))[0]
 
 
             neg_flock_inds = flock_inds[np.where(self.flock.infectious[flock_inds] == False)[0]]
@@ -675,7 +675,47 @@ class Agents(Roster):
             self.flock.date_quarantined[neg_flock_inds] = np.nan
             self.flock.update_event_log(neg_flock_inds, 'negative')
 
-        return len(flock_inds)
+        herd_inds = np.where(self.herd.date_result <= t)[0]
+
+        if herd_inds.size>0:
+
+            pos_herd_inds = herd_inds[np.where(self.herd.infectious[herd_inds] == True)[0]]
+            pos_barn_inds = np.where(np.isin(self.barn.resident_uid, self.herd.uid[pos_herd_inds]))[0]
+
+
+            neg_herd_inds = herd_inds[np.where(self.herd.infectious[herd_inds] == False)[0]]
+
+            self.barn.date_cycle_end[pos_barn_inds] = np.nan
+            self.barn.composting[pos_barn_inds] = True
+            self.barn.date_composting[pos_barn_inds] = t + znu.sample(**self.pars['dur']['barn']['composting'], size = len(pos_barn_inds))
+
+            self.herd.headcount[pos_herd_inds] = 0
+            self.herd.exposed_headcount[pos_herd_inds] = 0
+            self.herd.infectious_headcount[pos_herd_inds] = 0
+            self.herd.symptomatic_headcount[pos_herd_inds] = 0
+            self.herd.daily_dead_headcount[pos_herd_inds] = 0
+            self.herd.total_dead_headcount[pos_herd_inds] = 0
+            self.herd.water_consumption[pos_herd_inds] = 0
+
+            self.herd.susceptible[pos_herd_inds] = False
+            self.herd.exposed[pos_herd_inds] = False
+            self.herd.infectious[pos_herd_inds] = False
+            self.herd.quarantined[pos_herd_inds] = False
+            self.herd.date_infectious[pos_herd_inds] = np.nan
+            self.herd.date_exposed[pos_herd_inds] = np.nan
+            self.herd.date_suspected[pos_herd_inds] = np.nan
+            self.herd.date_result[pos_herd_inds] = np.nan
+            self.herd.date_quarantined[pos_herd_inds] = np.nan
+            self.herd.update_event_log(pos_herd_inds, 'cull')
+
+            self.herd.suspected[neg_herd_inds] = False
+            self.herd.quarantined[neg_herd_inds] = False
+            self.herd.date_suspected[neg_herd_inds] = np.nan
+            self.herd.date_result[neg_herd_inds] = np.nan
+            self.herd.date_quarantined[neg_herd_inds] = np.nan
+            self.herd.update_event_log(neg_herd_inds, 'negative')
+
+        return len(flock_inds) + len(herd_inds)
     
     def check_cycle_end(self, t):
         '''
@@ -683,33 +723,56 @@ class Agents(Roster):
         '''
 
         barn_inds = np.where(self.barn.date_cycle_end <= t)[0]
-        flock_inds = np.where(np.isin(self.flock.uid, self.barn.flock[barn_inds]))[0]
+        flock_inds = np.where(np.isin(self.flock.uid, self.barn.resident_uid[barn_inds]))[0]
+        herd_inds = np.where(np.isin(self.herd.uid, self.barn.resident_uid[barn_inds]))[0]
 
         if barn_inds.size>0:
             self.barn.date_cycle_end[barn_inds] = np.nan
             self.barn.cleaning[barn_inds] = True
             self.barn.date_cleaning[barn_inds] = t + znu.sample(**self.pars['dur']['barn']['cleaning'], size = len(barn_inds))
 
-            self.flock.headcount[flock_inds] = 0
-            self.flock.exposed_headcount[flock_inds] = 0
-            self.flock.infectious_headcount[flock_inds] = 0
-            self.flock.symptomatic_headcount[flock_inds] = 0
-            self.flock.daily_dead_headcount[flock_inds] = 0
-            self.flock.total_dead_headcount[flock_inds] = 0
-            self.flock.water_consumption[flock_inds] = 0
+            if flock_inds.size > 0:
+                self.flock.headcount[flock_inds] = 0
+                self.flock.exposed_headcount[flock_inds] = 0
+                self.flock.infectious_headcount[flock_inds] = 0
+                self.flock.symptomatic_headcount[flock_inds] = 0
+                self.flock.daily_dead_headcount[flock_inds] = 0
+                self.flock.total_dead_headcount[flock_inds] = 0
+                self.flock.water_consumption[flock_inds] = 0
 
-            self.flock.susceptible[flock_inds] = False
-            self.flock.exposed[flock_inds] = False
-            self.flock.infectious[flock_inds] = False
-            self.flock.suspected[flock_inds] = False
-            self.flock.quarantined[flock_inds] = False
-            self.flock.date_infectious[flock_inds] = np.nan
-            self.flock.date_exposed[flock_inds] = np.nan
-            self.flock.date_suspected[flock_inds] = np.nan
-            self.flock.date_quarantined[flock_inds] = np.nan
-            self.flock.date_result[flock_inds] = np.nan
-            self.flock.update_event_log(flock_inds, 'cycle_end')
+                self.flock.susceptible[flock_inds] = False
+                self.flock.exposed[flock_inds] = False
+                self.flock.infectious[flock_inds] = False
+                self.flock.suspected[flock_inds] = False
+                self.flock.quarantined[flock_inds] = False
+                self.flock.date_infectious[flock_inds] = np.nan
+                self.flock.date_exposed[flock_inds] = np.nan
+                self.flock.date_suspected[flock_inds] = np.nan
+                self.flock.date_quarantined[flock_inds] = np.nan
+                self.flock.date_result[flock_inds] = np.nan
+                self.flock.update_event_log(flock_inds, 'cycle_end')
+
+            if herd_inds.size > 0:
+                self.herd.headcount[herd_inds] = 0
+                self.herd.exposed_headcount[herd_inds] = 0
+                self.herd.infectious_headcount[herd_inds] = 0
+                self.herd.symptomatic_headcount[herd_inds] = 0
+                self.herd.daily_dead_headcount[herd_inds] = 0
+                self.herd.total_dead_headcount[herd_inds] = 0
+                self.herd.water_consumption[herd_inds] = 0
+
+                self.herd.susceptible[herd_inds] = False
+                self.herd.exposed[herd_inds] = False
+                self.herd.infectious[herd_inds] = False
+                self.herd.suspected[herd_inds] = False
+                self.herd.quarantined[herd_inds] = False
+                self.herd.date_infectious[herd_inds] = np.nan
+                self.herd.date_exposed[herd_inds] = np.nan
+                self.herd.date_suspected[herd_inds] = np.nan
+                self.herd.date_quarantined[herd_inds] = np.nan
+                self.herd.date_result[herd_inds] = np.nan
+                self.herd.update_event_log(herd_inds, 'cycle_end')
+
             self.barn.update_event_log(barn_inds, 'cycle_end')
-
 
         return len(barn_inds)
