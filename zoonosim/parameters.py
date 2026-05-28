@@ -37,6 +37,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     
     # Parameters specifically for generating the population and contacts
     pars['pop_pars'] = dict(
+        prop_cattle_farms = 0.3, # Proportion of farms that are cattle farms (as opposed to poultry farms)
         avg_barns_per_farm = 5.0,
         avg_humans_per_barn = 1.5,
         avg_water_per_farm = 0.75,
@@ -354,19 +355,6 @@ def reset_layer_pars(pars, layer_keys=None, force=False):
     (i.e. if the contact layers in the population do not match the parameters). More
     commonly, however, mismatches need to be fixed explicitly.
 
-    NOTE:   hp = Human-PPE
-            hh = Human-Human
-            hf = Human-Flock
-            hb = Human-Barn
-            hw = Human-Water
-            pp = PPE-PPE
-            pf = PPE-Flock
-            pb = PPE-Barn
-            pw = PPE-Water
-            fb = Flock-Barn
-            fw = Flock-Water
-            bw = Barn-Water
-            transient = Transient contacts
 
     Args:
         pars (dict): the parameters dictionary
@@ -375,9 +363,63 @@ def reset_layer_pars(pars, layer_keys=None, force=False):
     '''
 
     layer_defaults = dict(
-        beta_layer = dict(hp = 1.0, hh = 1.0, hf = 1.0, hb = 1.0, hw = 1.0, pp = 1.0, pf = 1.0, pb = 1.0, pw = 1.0, fb = 1.0, fw = 1.0, bw = 1.0, transient = 1.0), # Transmissibility per layer -- set to one by default
-        dynam_layer = dict(hp = 0.0, hh = 0.0, hf = 0.0, hb = 0.0, hw = 0.0, pp = 0.0, pf = 0.0, pb = 0.0, pw = 0.0, fb = 0.0, fw = 0.0, bw = 0.0, transient = 1.0), # Dynamic layer -- Only the transient layer is dynamic by default
-        quar_factor = dict(hp = 0.0, hh = 0.0, hf = 0.0, hb = 0.0, hw = 0.0, pp = 0.0, pf = 0.0, pb = 0.0, pw = 0.0, fb = 0.0, fw = 0.0, bw = 0.0, transient = 0.0), # Quarantine factor -- set to zero by default
+        beta_layer = dict(
+            human_ppe = 1.0,
+            human_human = 1.0,
+            human_flock = 1.0,
+            human_herd = 1.0,
+            human_barn = 1.0,
+            human_water = 1.0,
+            ppe_ppe = 1.0,
+            ppe_flock = 1.0,
+            ppe_herd = 1.0,
+            ppe_barn = 1.0,
+            ppe_water = 1.0,
+            #flock_herd = 1.0,
+            flock_barn = 1.0,
+            flock_water = 1.0,
+            herd_barn = 1.0,
+            herd_water = 1.0,
+            barn_water = 1.0,
+            transient = 1.0), # Transmissibility per layer -- set to one by default
+        dynam_layer = dict(
+            human_ppe = 0.0,
+            human_human = 0.0,
+            human_flock = 0.0,
+            human_herd = 0.0,
+            human_barn = 0.0,
+            human_water = 0.0,
+            ppe_ppe = 0.0,
+            ppe_flock = 0.0,
+            ppe_herd = 0.0,
+            ppe_barn = 0.0,
+            ppe_water = 0.0,
+            #flock_herd = 0.0,
+            flock_barn = 0.0,
+            flock_water = 0.0,
+            herd_barn = 0.0,
+            herd_water = 0.0,
+            barn_water = 0.0,
+            transient = 1.0), # Dynamic layer -- Only the transient layer is dynamic by default
+        quar_factor = dict(
+            human_ppe = 0.0, 
+            human_human = 0.0, 
+            human_flock = 0.0,
+            human_herd = 0.0, 
+            human_barn = 0.0, 
+            human_water = 0.0, 
+            ppe_ppe = 0.0, 
+            ppe_flock = 0.0, 
+            ppe_herd = 0.0,
+            ppe_barn = 0.0, 
+            ppe_water = 0.0,
+            #flock_herd = 0.0, 
+            flock_barn = 0.0, 
+            flock_water = 0.0, 
+            herd_barn = 0.0, 
+            herd_water = 0.0, 
+            barn_water = 0.0, 
+            transient = 0.0), # Quarantine factor -- set to zero by default
     )
 
     default_val = 1.0 # Default value for parameters that are not specified
