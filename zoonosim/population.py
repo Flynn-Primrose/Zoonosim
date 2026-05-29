@@ -67,7 +67,7 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
     human = make_humans(sim.pars, popdict['human_uids'], popdict['transient_uids'], popdict['human2ppe'], ppe.schedule_quarantine) # We pass the ppe quarantine function to the human roster so that when a human is quarantined, their assigned ppe can also be quarantined
     flock = make_flocks(sim.pars, popdict['flock_uids'], popdict['flock2barn'], popdict['flock_breed_index'])
     herd = make_herds(sim.pars, popdict['herd_uids'], popdict['herd2barn'], popdict['herd_breed_index'])
-    barn = make_barns(sim.pars, popdict['barn_uids'], popdict['barn2flock'], popdict['barn2breed'])
+    barn = make_barns(sim.pars, popdict['barn_uids'], popdict['barn2type'], popdict['barn2resident'], popdict['barn2breed'])
     water = make_water(sim.pars, popdict['water_uids'])
     contacts = make_contacts(sim.pars, popdict, skip_layers)
 
@@ -301,6 +301,7 @@ def make_popdict(sim, **kwargs):
     popdict['farmdict'] = farmdict # Add the contact dictionary to the population dictionary
     popdict['flock_breed_index'] = flock_breed_index
     popdict['herd_breed_index'] = herd_breed_index
+
     popdict['barn2water'] = barn2water # Add the barn to water mapping to the population dictionary
 
     popdict['flock2barn'] = flock2barn # Add the flock to barn mapping to the population dictionary
@@ -311,12 +312,21 @@ def make_popdict(sim, **kwargs):
     barn2herd = {v: k for k, v in herd2barn.items()}
     popdict['barn2herd'] = barn2herd
 
+    if barn2flock.keys() & barn2herd.keys(): # Check that there are no barns that have both flocks and herds, as this would cause issues to say the least
+        errormsg = 'There are some barns that have both flocks and herds, which is not allowed in the current version of the model. Please ensure that poultry farms do not have herds and cattle farms do not have flocks.'
+        raise ValueError(errormsg)
+    else:
+        popdict['barn2resident'] = {**barn2flock, **barn2herd} # Create a barn to resident mapping by combining the barn to flock and barn to herd mappings
+
     popdict['human2ppe'] = human2ppe
     ppe2human = {v: k for k, v in human2ppe.items()}
     popdict['ppe2human'] = ppe2human
     
     popdict['barn2breed'] = {k: flock2breed[v] for k, v in barn2flock.items()}
     popdict['barn2breed'].update({k: herd2breed[v] for k, v in barn2herd.items()})
+
+    popdict['barn2type'] = {k: 'flock' for k in barn2flock.keys()}
+    popdict['barn2type'].update({k: 'herd' for k in barn2herd.keys()})
     return popdict
 
 def make_humans(sim_pars, uid, transient_uid, human2ppe, schedule_ppe_quarantine=None):
@@ -397,26 +407,34 @@ def make_herds(sim_pars, uid, herd2barn, breed_index):
     herds = Herds(sim_pars, strict = False, uid=uid, breed = breed, barn = barn, headcount=headcount)
     return herds
 
-def make_barns(sim_pars, uid, barn2flock, barn2breed):
+def make_barns(sim_pars, uid, barn2type, barn2resident, barn2breed):
     temperature = znu.n_poisson(22.5, len(uid)) # NOTE: Dummy values
     humidity = znu.n_poisson(45, len(uid)) # NOTE: Dummy values
-    flock = np.empty(len(uid), dtype=znd.default_int)
+    resident_uid = np.empty(len(uid), dtype=znd.default_int)
     breed_index = np.empty(len(uid), dtype=znd.default_int)
+    type_index = np.empty(len(uid), dtype=znd.default_str)
     date_cycle_end = np.empty(len(uid), dtype=znd.default_float)
     for index in range(len(uid)):
-        flock[index] = barn2flock[uid[index]]
+        type_index[index] = barn2type[uid[index]]
+        resident_uid[index] = barn2resident[uid[index]]
         breed_index[index] = barn2breed[uid[index]]
-    # flock = barn2flock[uid]
-    # breed_index = barn2breed[uid]
 
 
-    prod_pars = sim_pars['poultry_pars']
-    breed, freq = np.unique(list(barn2breed.values()), return_counts=True)
+    poultry_barn_uids = [uid for uid in uid if barn2type[uid] == 'flock']
+    poultrybarn2breed = {uid: barn2breed[uid] for uid in poultry_barn_uids}
+    breed, freq = np.unique(list(poultrybarn2breed.values()), return_counts=True)
     breed_dict = dict(zip(breed, freq))
     for breed, freq in breed_dict.items():
-        date_cycle_end[breed_index == breed] = znu.sample(**prod_pars['cycle_dur'][breed], size = freq)
-        
-    barns = Barns(sim_pars, strict = False, uid=uid, temperature = temperature, humidity = humidity, flock = flock, date_cycle_end = date_cycle_end)
+        date_cycle_end[(type_index == 'flock') & (breed_index == breed)] = znu.sample(**sim_pars['poultry_pars']['cycle_dur'][breed], size = freq)
+
+    cattle_barn_uids = [uid for uid in uid if barn2type[uid] == 'herd']
+    cattlebarn2breed = {uid: barn2breed[uid] for uid in cattle_barn_uids}
+    breed, freq = np.unique(list(cattlebarn2breed.values()), return_counts=True)
+    breed_dict = dict(zip(breed, freq))
+    for breed, freq in breed_dict.items():
+        date_cycle_end[(type_index == 'herd') & (breed_index == breed)] = znu.sample(**sim_pars['cattle_pars']['cycle_dur'][breed], size = freq)
+
+    barns = Barns(sim_pars, strict = False, uid=uid, temperature = temperature, humidity = humidity, resident_uid = resident_uid, date_cycle_end = date_cycle_end)
     return barns
 
 def make_water(sim_pars, uid):
@@ -451,13 +469,13 @@ def make_contacts(sim_pars, popdict, skip_layers=None, layers_to_make=None):
     for layer in all_layers:
         if layer not in skip_layers:
             if layer in sim_pars['beta_layer'].keys(): # Only make the layer if it's specified in the beta_layer dictionary, otherwise skip it
-                data[layer] = make_contacts(layer, popdict, sim_pars['beta_layer'][layer])
+                data[layer] = make_layer_contacts(layer, popdict, sim_pars['beta_layer'][layer])
             else:
                 warnmsg = f'Layer "{layer}" specified in layers_to_make but not found in sim_pars["beta_layer"]; skipping this layer.'
                 znu.warn(warnmsg)
     return Contacts(data=data)
 
-def make_contacts(layer, popdict, beta):
+def make_layer_contacts(layer, popdict, beta):
     '''
     Create contacts for a specific layer.
 
@@ -501,23 +519,23 @@ def make_contacts(layer, popdict, beta):
         case 'ppe_ppe':
             if human_human_layer is None: # If the human-human layer has not already been created, we need to create it in order to create the ppe-ppe layer
                 human_human_layer = human_human_contacts(popdict, beta)
-            return ppe_ppe_contacts(popdict, beta)
+            return ppe_ppe_contacts(human_human_layer, popdict, beta)
         case 'ppe_flock':
             if human_flock_layer is None: # If the human-flock layer has not already been created, we need to create it in order to create the ppe-flock layer
                 human_flock_layer = human_flock_contacts(popdict, beta)
-            return ppe_flock_contacts(popdict, beta)
+            return ppe_flock_contacts(human_flock_layer, popdict, beta)
         case 'ppe_herd':
             if human_herd_layer is None: # If the human-herd layer has not already been created, we need to create it in order to create the ppe-herd layer
                 human_herd_layer = human_herd_contacts(popdict, beta)
-            return ppe_herd_contacts(popdict, beta)
+            return ppe_herd_contacts(human_herd_layer, popdict, beta)
         case 'ppe_barn':
             if human_barn_layer is None: # If the human-barn layer has not already been created, we need to create it in order to create the ppe-barn layer
                 human_barn_layer = human_barn_contacts(popdict, beta)
-            return ppe_barn_contacts(popdict, beta)
+            return ppe_barn_contacts(human_barn_layer, popdict, beta)
         case 'ppe_water':
             if human_water_layer is None: # If the human-water layer has not already been created, we need to create it in order to create the ppe-water layer
                 human_water_layer = human_water_contacts(popdict, beta)
-            return ppe_water_contacts(popdict, beta)
+            return ppe_water_contacts(human_water_layer, popdict, beta)
         case 'flock_barn':
             return flock_barn_contacts(popdict, beta)
         case 'flock_water':

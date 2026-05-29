@@ -2,8 +2,8 @@ import zoonosim as zn
 import json
 import numpy as np
 
-saved_pars_filename = "saved_pars/AOQ_4th_iteration_best.json"
-sim_label = "AOQ_4th_iteration_RHB"
+saved_pars_filename = "saved_pars/default_single_breed_poultry_and_cattle.json"
+sim_label = "default single breed poultry and cattle"
 
 # with open(saved_pars_filename, 'r') as file:
 #     saved_pars = json.load(file)
@@ -22,16 +22,16 @@ sim_label = "AOQ_4th_iteration_RHB"
 saved_pars = zn.pars_from_json(saved_pars_filename)
 
 saved_sim = zn.Sim(pars = saved_pars, label = sim_label)
-new_pars = dict(
-    rand_seed = 21,
-    beta = dict(
-        human = saved_pars['beta']['flock']
-    )
-)
-saved_sim.update_pars(new_pars, recursive=True)
+# new_pars = dict(
+#     rand_seed = 21,
+#     beta = dict(
+#         human = saved_pars['beta']['flock']
+#     )
+# )
+# saved_sim.update_pars(new_pars, recursive=True)
 
 
-msim = zn.MultiSim(saved_sim, label=sim_label, n_runs=100, verbose=0.1)  # Wrap the simulation in a MultiSim object.
+msim = zn.MultiSim(saved_sim, label=sim_label, n_runs=10, verbose=0.1)  # Wrap the simulation in a MultiSim object.
 
 if __name__ == "__main__":
     msim.run(keep_people = True, run_args=dict(auto_finalize=False))                    # Run the simulations.
@@ -42,9 +42,7 @@ if __name__ == "__main__":
     msim.summarize()              # Summarize the Reduced results.
     msim.plot()                   # Plot the results.
     msim.plot('flock')
+    msim.plot('herd')
     msim.plot('human')
     msim.plot('ppe')
-    msim.plot_transmission_vectors('flock')
-    msim.plot_transmission_vectors('human')
-    msim.plot_transmission_vectors('ppe')
 

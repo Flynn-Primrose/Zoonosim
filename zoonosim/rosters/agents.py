@@ -572,7 +572,7 @@ class Agents(Roster):
         poultry_pars = self.pars['poultry_pars'] 
         poultry_progs = self.pars['prognoses']['flock']
 
-        cattle_pars = self.pars['poultry_pars']
+        cattle_pars = self.pars['cattle_pars']
         cattle_progs = self.pars['prognoses']['herd']
 
         barn_inds = np.where(self.barn.date_repopulate <= t)[0]
@@ -580,46 +580,47 @@ class Agents(Roster):
         if barn_inds.size > 0:
             self.barn.repopulations[barn_inds]+= 1
             self.barn.date_repopulate[barn_inds] = np.nan
-            flock_inds = np.where(np.isin(self.flock.uid, self.barn.flock[barn_inds]))[0]
-            herd_inds = np.where(np.isin(self))
+            flock_inds = np.where(np.isin(self.flock.uid, self.barn.resident_uid[barn_inds]))[0]
+            herd_inds = np.where(np.isin(self.herd.uid, self.barn.resident_uid[barn_inds]))[0]
 
-            flock_breed_to_index = {breed: index for index, breed in enumerate(poultry_pars['breeds'])}
-            flock_breed_inds = np.array([flock_breed_to_index[this_breed] for this_breed in self.flock.breed[flock_inds]])
+            if flock_inds.size > 0:
+                flock_breed_to_index = {breed: index for index, breed in enumerate(poultry_pars['breeds'])}
+                flock_breed_inds = np.array([flock_breed_to_index[this_breed] for this_breed in self.flock.breed[flock_inds]])
 
-            breed, freq = np.unique(flock_breed_inds, return_counts=True)
-            flock_breed_dict = dict(zip(breed, freq))
-            for breed, freq in flock_breed_dict.items():
-                current_breed_inds = np.where(flock_breed_inds == breed)[0]
-                self.barn.date_cycle_end[barn_inds[current_breed_inds]] = t + znu.sample(**poultry_pars['cycle_dur'][breed], size = freq)
-                self.flock.headcount[flock_inds[current_breed_inds]] = znu.sample(**poultry_pars['flock_size'][breed], size = freq)   
-            
-            self.flock.susceptible[flock_inds] = True
-            self.flock.suspected[flock_inds] = False
-            self.flock.baseline_symptomatic_rate[flock_inds] = poultry_progs['baseline_symptomatic_rate'][flock_breed_inds]
-            self.flock.baseline_mortality_rate[flock_inds] = poultry_progs['baseline_mortality_rate'][flock_breed_inds]
-            self.flock.baseline_water_rate[flock_inds] = poultry_progs['baseline_water_rate'][flock_breed_inds]
-            self.flock.rel_sus[flock_inds] = poultry_progs['sus_ORs'][flock_breed_inds]
-            self.flock.rel_trans[flock_inds] = poultry_progs['trans_ORs'][flock_breed_inds]
+                breed, freq = np.unique(flock_breed_inds, return_counts=True)
+                flock_breed_dict = dict(zip(breed, freq))
+                for breed, freq in flock_breed_dict.items():
+                    current_breed_inds = np.where(flock_breed_inds == breed)[0]
+                    self.barn.date_cycle_end[barn_inds[current_breed_inds]] = t + znu.sample(**poultry_pars['cycle_dur'][breed], size = freq)
+                    self.flock.headcount[flock_inds[current_breed_inds]] = znu.sample(**poultry_pars['flock_size'][breed], size = freq)   
+
+                self.flock.susceptible[flock_inds] = True
+                self.flock.suspected[flock_inds] = False
+                self.flock.baseline_symptomatic_rate[flock_inds] = poultry_progs['baseline_symptomatic_rate'][flock_breed_inds]
+                self.flock.baseline_mortality_rate[flock_inds] = poultry_progs['baseline_mortality_rate'][flock_breed_inds]
+                self.flock.baseline_water_rate[flock_inds] = poultry_progs['baseline_water_rate'][flock_breed_inds]
+                self.flock.rel_sus[flock_inds] = poultry_progs['sus_ORs'][flock_breed_inds]
+                self.flock.rel_trans[flock_inds] = poultry_progs['trans_ORs'][flock_breed_inds]
 
 
-
-            herd_breed_to_index = {breed: index for index, breed in enumerate(cattle_pars['breeds'])}
-            herd_breed_inds = np.array([herd_breed_to_index[this_breed] for this_breed in self.herd.breed[herd_inds]])
-
-            breed, freq = np.unique(herd_breed_inds, return_counts=True)
-            herd_breed_dict = dict(zip(breed, freq))
-            for breed, freq in herd_breed_dict.items():
-                current_breed_inds = np.where(herd_breed_inds == breed)[0]
-                self.barn.date_cycle_end[barn_inds[current_breed_inds]] = t + znu.sample(**cattle_pars['cycle_dur'][breed], size = freq)
-                self.flock.headcount[herd_inds[current_breed_inds]] = znu.sample(**cattle_pars['herd_size'][breed], size = freq) 
-
-            self.herd.susceptible[herd_inds] = True
-            self.herd.suspected[herd_inds] = False
-            self.herd.baseline_symptomatic_rate[herd_inds] = cattle_progs['baseline_symptomatic_rate'][herd_breed_inds]
-            self.herd.baseline_mortality_rate[herd_inds] = cattle_progs['baseline_mortality_rate'][herd_breed_inds]
-            self.herd.baseline_water_rate[herd_inds] = cattle_progs['baseline_water_rate'][herd_breed_inds]
-            self.herd.rel_sus[herd_inds] = cattle_progs['sus_ORs'][herd_breed_inds]
-            self.herd.rel_trans[flock_inds] = cattle_progs['trans_ORs'][herd_breed_inds]
+            if herd_inds.size > 0:
+                herd_breed_to_index = {breed: index for index, breed in enumerate(cattle_pars['breeds'])}
+                herd_breed_inds = np.array([herd_breed_to_index[this_breed] for this_breed in self.herd.breed[herd_inds]])
+    
+                breed, freq = np.unique(herd_breed_inds, return_counts=True)
+                herd_breed_dict = dict(zip(breed, freq))
+                for breed, freq in herd_breed_dict.items():
+                    current_breed_inds = np.where(herd_breed_inds == breed)[0]
+                    self.barn.date_cycle_end[barn_inds[current_breed_inds]] = t + znu.sample(**cattle_pars['cycle_dur'][breed], size = freq)
+                    self.herd.headcount[herd_inds[current_breed_inds]] = znu.sample(**cattle_pars['herd_size'][breed], size = freq) 
+    
+                self.herd.susceptible[herd_inds] = True
+                self.herd.suspected[herd_inds] = False
+                self.herd.baseline_symptomatic_rate[herd_inds] = cattle_progs['baseline_symptomatic_rate'][herd_breed_inds]
+                self.herd.baseline_mortality_rate[herd_inds] = cattle_progs['baseline_mortality_rate'][herd_breed_inds]
+                self.herd.baseline_water_rate[herd_inds] = cattle_progs['baseline_water_rate'][herd_breed_inds]
+                self.herd.rel_sus[herd_inds] = cattle_progs['sus_ORs'][herd_breed_inds]
+                self.herd.rel_trans[herd_inds] = cattle_progs['trans_ORs'][herd_breed_inds]
 
             self.flock.update_event_log(flock_inds, 'cycle_start')
             self.herd.update_event_log(herd_inds, 'cycle_start')

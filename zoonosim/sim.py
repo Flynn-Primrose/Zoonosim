@@ -629,7 +629,7 @@ class Sim(znb.BaseSim):
 
         if (self.agents.count('exposed') == 0 and self.agents.count('infectious')==0) or force:
             for agent_type in self.pars['agent_types']:
-                infect_requested[agent_type]
+                infect_requested(self, agent_type)
             
             self.agents.update_states_from_subrosters()
         elif verbose:
@@ -664,7 +664,7 @@ class Sim(znb.BaseSim):
             agent_type (string): The type of agent for which to import infections
             '''
 
-            if self['n_imports'][agent_type] == 0:
+            if self['n_imports'][agent_type] == 0 or self['n_imports'][agent_type] is None:
                 return
             pattern = self['n_imports'][agent_type]['import_pattern']
             match pattern:
@@ -674,7 +674,7 @@ class Sim(znb.BaseSim):
                         inds = znu.choose(max_n=len(self.agents[agent_type]), n=n_imports)
                         self.agents.infect_type(agent_type, inds)
                         result_string = f'n_{agent_type}_imports'
-                        self.results[result_string] += n_imports
+                        self.results[result_string][t] += n_imports
                 case 'seasonal':
                     day_of_year = (self.datevec[t].timetuple().tm_yday - 1)  # Day of year (0-364)
                     n_imports = znu.poisson(self['n_imports'][agent_type]['max_import_rate'] * (1 + np.cos(2 * np.pi * (day_of_year - self['n_imports'][agent_type]['peak_day']) / 365)) / 2)
@@ -682,13 +682,13 @@ class Sim(znb.BaseSim):
                         inds = znu.choose(max_n = len(self.agents[agent_type]), n=n_imports)
                         self.agents.infect_type(agent_type, inds)
                         result_string = f'n_{agent_type}_imports'
-                        self.results[result_string] += n_imports
+                        self.results[result_string][t] += n_imports
                 case _:
                     raise NotImplementedError(f"Import pattern {self['n_imports'][agent_type]['import_pattern']} is not implemented yet.")
 
 
         for agent_type in self.pars['agent_types']:
-            import_infections(agent_type)
+            import_infections(self, agent_type)
             
 
         # Add variants
@@ -780,7 +780,7 @@ class Sim(znb.BaseSim):
 
             # The 'wild' variant defines the baseline for all these values
             asymp_factor = np.repeat([self['variant_pars']['wild']['human']['rel_asymp_fact'], 1.0], 
-                                  [len(agents.human), (len(agents.ppe) + len(agents.flock) + len(agents.barn) + len(agents.water))])
+                                  [len(agents.human), (len(agents.ppe) + len(agents.flock) + len(agents.herd) + len(agents.barn) + len(agents.water))])
             human_rel_beta = self['variant_pars']['wild']['human']['rel_beta']
             ppe_rel_beta   = self['variant_pars']['wild']['ppe']['rel_beta']
             flock_rel_beta = self['variant_pars']['wild']['flock']['rel_beta']
@@ -791,7 +791,7 @@ class Sim(znb.BaseSim):
             if variant:
                 variant_label = self.pars['variant_map'][variant]
                 asymp_factor *= np.repeat([self['variant_pars'][variant_label]['human']['rel_asymp_fact'], 1.0], 
-                                  [len(agents.human), (len(agents.ppe) + len(agents.flock) + len(agents.barn) + len(agents.water))])
+                                  [len(agents.human), (len(agents.ppe) + len(agents.flock) + len(agents.herd) + len(agents.barn) + len(agents.water))])
                 human_rel_beta *= self['variant_pars'][variant_label]['human']['rel_beta']
                 ppe_rel_beta   *= self['variant_pars'][variant_label]['ppe']['rel_beta']
                 flock_rel_beta *= self['variant_pars'][variant_label]['flock']['rel_beta']
@@ -807,7 +807,7 @@ class Sim(znb.BaseSim):
                               znd.default_float(self['beta']['herd']*herd_rel_beta), 
                               znd.default_float(self['beta']['barn']*barn_rel_beta), 
                               znd.default_float(self['beta']['water']*water_rel_beta)], 
-                              [len(agents.human), len(agents.ppe), len(agents.flock), len(agents.barn), len(agents.water)])
+                              [len(agents.human), len(agents.ppe), len(agents.flock), len(agents.herd), len(agents.barn), len(agents.water)])
 
             for lkey, layer in contacts.items():
                 p1 = layer['p1']
@@ -1098,9 +1098,9 @@ class Sim(znb.BaseSim):
         human_dcols = znd.get_default_colors('human') # Get default human colors
         # ppe_dcols = znd.get_default_colors('ppe') # Get default PPE colors
         # flock_dcols = znd.get_default_colors('flock') # Get default flock colors
-        flock_breed_dcols = znd.get_default_colors('breed') # Get default breed colors
+        flock_breed_dcols = znd.get_default_colors('flock_breed') # Get default breed colors
         # herd_dcols = znd.get_default_colors('herd') # Get default herd colors
-        herd_breed_dcols = znd.get_default_colors('breed') # Get default breed colors
+        herd_breed_dcols = znd.get_default_colors('herd_breed') # Get default breed colors
         # barn_dcols  = znd.get_default_colors('barn')  # Get default barn colors
         # water_dcols = znd.get_default_colors('water') # Get default water colors
     
@@ -1166,9 +1166,9 @@ class Sim(znb.BaseSim):
         human_dcols = znd.get_default_colors('human') # Get default human colors
         ppe_dcols = znd.get_default_colors('ppe') # Get default PPE colors
         flock_dcols = znd.get_default_colors('flock') # Get default flock colors
-        flock_breed_dcols = znd.get_default_colors('breed') # Get default breed colors
+        flock_breed_dcols = znd.get_default_colors('flock_breed') # Get default breed colors
         herd_dcols = znd.get_default_colors('herd') # Get default herd colors
-        herd_breed_dcols = znd.get_default_colors('breed') # Get default breed colors
+        herd_breed_dcols = znd.get_default_colors('herd_breed') # Get default breed colors
         barn_dcols  = znd.get_default_colors('barn')  # Get default barn colors
         water_dcols = znd.get_default_colors('water') # Get default water colors
         # misc_dcols = znd.get_default_colors('misc') # Get default misc colors
