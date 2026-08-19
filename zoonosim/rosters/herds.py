@@ -1,5 +1,5 @@
 '''
-Defines the subroster and metaroster for flock-like agents
+Defines the subroster and metaroster for herd-like agents
 '''
 
 import numpy as np
@@ -11,25 +11,25 @@ from .. import utils as znu
 from .. import defaults as znd
 from .rosters import Subroster
 
-__all__ = ['Flocks', 'FlocksMeta']
+__all__ = ['Herds', 'HerdsMeta']
 
-class FlocksMeta(sc.prettyobj):
-    ''' Defines all keys that are used by flocks '''
+class HerdsMeta(sc.prettyobj):
+    ''' Defines all keys that are used by herds '''
 
     def __init__(self):
         
         self.agent = [
             'uid', # int
-            'breed', # e.g. breeder, layer, broiler
-            'barn', # uid of the barn where the flock is located
-            'headcount', # Number of live birds in the flock
+            'breed', # e.g. beef, dairy, etc.
+            'barn', # uid of the barn where the herd is located
+            'headcount', # Number of live animals in the herd
             'rel_sus', # Relative susceptibility
             'rel_trans', # Relative Transmissibility
             'exposed_headcount',
             'infectious_headcount',
             'symptomatic_headcount',
-            'daily_dead_headcount', # Daily number of dead birds in the flock
-            'total_dead_headcount', # Total number of dead birds in the flock
+            'daily_dead_headcount', # Daily number of dead animals in the herd
+            'total_dead_headcount', # Total number of dead animals in the herd
             'baseline_symptomatic_rate', 
             'infected_symptomatic_rate',
             'baseline_mortality_rate',
@@ -43,7 +43,7 @@ class FlocksMeta(sc.prettyobj):
             'susceptible',
             'exposed',
             'infectious',
-            'suspected', # Producer suspects flock is infected
+            'suspected', # Producer suspected herd is infected
             'quarantined', # Quarantined by CFIA agent
         ]
 
@@ -61,16 +61,16 @@ class FlocksMeta(sc.prettyobj):
 
         # Set the dates various events took place: these are floats per agent
         self.state_dates = [f'date_{state}' for state in self.states] # Convert each state into a date
-        self.state_dates.append('date_end_quarantine') # Store the date when a flock comes out of quarantine
+        self.state_dates.append('date_end_quarantine') # Store the date when a herd comes out of quarantine
 
-        # Dates for the cfia protocols: these are floats per flock
+        # Dates for the cfia protocols: these are floats per herd
         self.protocol_dates = [
             'date_result', # Date of lab test result
         ]
 
         self.dates = self.state_dates + self.protocol_dates
 
-        # Duration of different states: these are floats per flock.
+        # Duration of different states: these are floats per herd.
         self.durs = [
             'dur_exp2inf', # Mean time from exposed to infectious
             'dur_inf2out', # Mean time from infectious to outcome (recovered/removed)
@@ -93,10 +93,9 @@ class FlocksMeta(sc.prettyobj):
 
         return
     
-
-class Flocks(Subroster):
+class Herds(Subroster):
     '''
-    A class to perform all the operations on the flock agents -- usually not invoked directly.
+    A class to perform all the operations on the herd agents -- usually not invoked directly.
 
     Note that this class handles the mechanics of updating the actual poultry, while
     ``cv.BaseRoster`` takes care of housekeeping (saving, loading, exporting, etc.).
@@ -120,20 +119,20 @@ class Flocks(Subroster):
         # Other initialization
         self.t = 0 # Keep current simulation time
         self._lock = False # Prevent further modification of keys
-        self.meta = FlocksMeta() # Store list of keys and dtypes
+        self.meta = HerdsMeta() # Store list of keys and dtypes
         self.contacts = None
         self.record_all_events = self.pars['record_all_events'] # Whether or not to record all events in the sim. If false, only transmision events are recorded. We set this to true by default since we have so few agents, but it can be set to false to save memory if desired.
         self.event_log = [] # Record of events - keys for ['target', 'event_type', 'date']
         self.infection_log = [] # Record of infections - keys for ['source','target','date','layer']
         
-        pop_size = pars['pop_size_by_type']['flock']
+        pop_size = pars['pop_size_by_type']['herd']
 
-        # Set flock properties
+        # Set herd properties
         for key in self.meta.agent:
             if key in ['uid', 'barn']:
-                self[key] = np.zeros(pop_size, dtype=znd.default_int)# NOTE: values get passed as kwargs by make_flock
+                self[key] = np.zeros(pop_size, dtype=znd.default_int)# NOTE: values get passed as kwargs by make_herd
             elif key == 'breed':
-                self[key] = np.zeros(pop_size, dtype=znd.default_str) # NOTE: values get passed as kwargs by make_flock
+                self[key] = np.zeros(pop_size, dtype=znd.default_str) # NOTE: values get passed as kwargs by make_herd
             else:
                 self[key] = np.zeros(pop_size,dtype=znd.default_float)
 
@@ -171,20 +170,20 @@ class Flocks(Subroster):
             else:
                 self[key] = value
 
-        self._pending_quarantine = defaultdict(list)  # Internal cache to record flocks that need to be quarantined on each timestep {t:(person, quarantine_end_day)}
+        self._pending_quarantine = defaultdict(list)  # Internal cache to record herds that need to be quarantined on each timestep {t:(person, quarantine_end_day)}
 
         return
 
 
     def init_flows(self):
         ''' Initialize flows to be zero '''
-        self.flows = {key:0 for key in znd.new_flock_flows}
+        self.flows = {key:0 for key in znd.new_herd_flows}
         self.flows_breed = {}
-        for breed in self.pars['poultry_pars']['breeds']:
-            for key in znd.new_flock_flows:
+        for breed in self.pars['cattle_pars']['breeds']:
+            for key in znd.new_herd_flows:
                 self.flows_breed[(breed, key)] = 0
         self.flows_variant = {}
-        for key in znd.new_flock_flows_by_variant:
+        for key in znd.new_herd_flows_by_variant:
             self.flows_variant[key] = np.zeros(self.pars['n_variants'], dtype=znd.default_float)
         return
 
@@ -199,17 +198,17 @@ class Flocks(Subroster):
 
     def set_prognoses(self):
         '''
-        Set the prognoses for each flock based on breed. 
+        Set the prognoses for each herd based on breed. 
         '''
         pars = self.pars # Shorten
         if 'prognoses' not in pars or 'rand_seed' not in pars:
-            errormsg = 'This flock object does not have the required parameters ("prognoses" and "rand_seed").'
+            errormsg = 'This herd object does not have the required parameters ("prognoses" and "rand_seed").'
             raise sc.KeyNotFoundError(errormsg)
 
 
         znu.set_seed(pars['rand_seed'])
 
-        progs = pars['prognoses']['flock']
+        progs = pars['prognoses']['herd']
         breed_to_index = {breed: index for index, breed in enumerate(progs['breeds'])}
         #inds = np.fromiter((breed_to_index[this_breed] for this_breed in self.breed), dtype=znd.default_str)
         
@@ -236,8 +235,8 @@ class Flocks(Subroster):
 
         # Perform updates
         self.init_flows()
-        self.update_water_consumption() # Update the headcounts and water consumption of the flocks
-        self.flows['new_infectious'] = self.check_infectious() # For flocks that are exposed and not infectious, check if they begin being infectious
+        self.update_water_consumption() # Update the headcounts and water consumption of the herds
+        self.flows['new_infectious'] = self.check_infectious() # For herds that are exposed and not infectious, check if they begin being infectious
         self.flows['new_suspected'] = self.check_suspected()
         self.flows['new_quarantined'] = self.check_quarantined() # 
         return
@@ -246,7 +245,7 @@ class Flocks(Subroster):
     def update_states_post(self):
         ''' Perform post-timestep updates '''
 
-        # Update the status of flocks
+        # Update the status of herds
 
         return
 
@@ -255,7 +254,7 @@ class Flocks(Subroster):
         Add an entry to the event log
 
         args:
-            target_inds: array of indices of flocks that experienced a recordable event
+            target_inds: array of indices of herds that experienced a recordable event
             event (str): The specific event in question
         '''
 
@@ -275,13 +274,13 @@ class Flocks(Subroster):
 
     def check_breed(self, inds, breed):
         '''
-        Check if the specified flocks are of the specified breed
+        Check if the specified herds are of the specified breed
 
         Args:
-            inds (array): indices of flocks to check
+            inds (array): indices of herds to check
             breed (str): breed to check for
         Returns:
-            bool array: array of booleans indicating whether each flock is of the specified breed
+            bool array: array of booleans indicating whether each herd is of the specified breed
         '''
         return self.breed[inds] == breed
 
@@ -291,9 +290,7 @@ class Flocks(Subroster):
         unsuspected_inds = np.where((self.suspected == False) & (self.headcount>0))[0]
         if len(unsuspected_inds) == 0:
             return 0
-        # actual_symptomatic_rate = self.symptomatic_headcount[unsuspected_inds] / self.headcount[unsuspected_inds]
-        # actual_mortality_rate = self.daily_dead_headcount[unsuspected_inds] / self.headcount[unsuspected_inds]
-        # actual_water_rate = self.water_consumption[unsuspected_inds] / self.headcount[unsuspected_inds]
+
         expected_symptomatic_headcount = self.headcount[unsuspected_inds] * self.baseline_symptomatic_rate[unsuspected_inds]
         symptomatic_deviation = np.abs(self.symptomatic_headcount[unsuspected_inds] - expected_symptomatic_headcount) / np.maximum(expected_symptomatic_headcount, 1) # Avoid division by zero
         expected_mortality_headcount = self.headcount[unsuspected_inds] * self.baseline_mortality_rate[unsuspected_inds]
@@ -301,17 +298,16 @@ class Flocks(Subroster):
         expected_water_consumption = self.headcount[unsuspected_inds] * self.baseline_water_rate[unsuspected_inds]
         water_deviation = np.abs(self.water_consumption[unsuspected_inds] - expected_water_consumption) / np.maximum(expected_water_consumption, 1) # Avoid division by zero
 
-        breed_to_index = {breed: index for index, breed in enumerate(self.pars['poultry_pars']['breeds'])}
+        breed_to_index = {breed: index for index, breed in enumerate(self.pars['cattle_pars']['breeds'])}
         breed_index = np.array([breed_to_index[this_breed] for this_breed in self.breed[unsuspected_inds]])
 
-        # symptomatic_suspicion_thresholds = self.pars['poultry_pars']['symptomatic_suspicion_threshold'][breed_index] # Get the suspicion threshold for each flock based on its breed
-        symptomatic_suspicion_thresholds = np.array([self.pars['poultry_pars']['symptomatic_suspicion_threshold'][index] for index in breed_index]) # Get the suspicion threshold for each flock based on its breed
+        
+        symptomatic_suspicion_thresholds = np.array([self.pars['cattle_pars']['symptomatic_suspicion_threshold'][index] for index in breed_index]) # Get the suspicion threshold for each herd based on its breed
 
-        #mortality_suspician_thresholds = self.pars['poultry_pars']['mortality_suspicion_threshold'][breed_index]
-        mortality_suspicion_thresholds = np.array([self.pars['poultry_pars']['mortality_suspicion_threshold'][index] for index in breed_index])
+        mortality_suspicion_thresholds = np.array([self.pars['cattle_pars']['mortality_suspicion_threshold'][index] for index in breed_index])
 
-        #water_suspicion_thresholds = self.pars['poultry_pars']['consumption_suspicion_threshold'][breed_index]
-        water_suspicion_thresholds = np.array([self.pars['poultry_pars']['consumption_suspicion_threshold'][index] for index in breed_index])
+
+        water_suspicion_thresholds = np.array([self.pars['cattle_pars']['consumption_suspicion_threshold'][index] for index in breed_index])
 
         suspicious_symptomatic_inds = np.where(symptomatic_deviation > symptomatic_suspicion_thresholds)[0]
         suspicious_mortality_inds = np.where(mortality_deviation > mortality_suspicion_thresholds)[0]
@@ -321,7 +317,7 @@ class Flocks(Subroster):
             return 0
         new_suspicious_inds = unsuspected_inds[suspicious_inds]
 
-        for breed in self.pars['poultry_pars']['breeds']: # Update flows by breed
+        for breed in self.pars['cattle_pars']['breeds']: # Update flows by breed
             breed_inds = znu.itrue(self.check_breed(new_suspicious_inds, breed), new_suspicious_inds)
             n_breed_inds = len(breed_inds)
             self.flows_breed[(breed, 'new_suspected')] += n_breed_inds
@@ -329,7 +325,7 @@ class Flocks(Subroster):
         if len(new_suspicious_inds):
             self.suspected[new_suspicious_inds] = True
             self.date_suspected[new_suspicious_inds] = self.t
-            self.dur_susp2res[new_suspicious_inds] = znu.sample(**self.pars['dur']['flock']['susp2res'], size=len(new_suspicious_inds))
+            self.dur_susp2res[new_suspicious_inds] = znu.sample(**self.pars['dur']['herd']['susp2res'], size=len(new_suspicious_inds))
             self.date_result[new_suspicious_inds] = self.date_suspected[new_suspicious_inds] + self.dur_susp2res[new_suspicious_inds]
             self.schedule_quarantine(new_suspicious_inds)
             #self.date_quarantined[new_suspicious_inds] = self.t
@@ -350,7 +346,7 @@ class Flocks(Subroster):
         self.date_infectious[inds] = self.t
         self.update_event_log(inds, 'infectious')
 
-        for breed in self.pars['poultry_pars']['breeds']: # Update flows by breed
+        for breed in self.pars['cattle_pars']['breeds']: # Update flows by breed
             breed_inds = znu.itrue(self.check_breed(inds, breed), inds)
             n_breed_inds = len(breed_inds)
             self.flows_breed[(breed, 'new_infectious')] += n_breed_inds
@@ -366,7 +362,7 @@ class Flocks(Subroster):
 
     def check_quarantined(self):
         ''' Check for new progressions to quarantined '''
-        n_quarantined = 0 # Number of flocks entering quarantine
+        n_quarantined = 0 # Number of herds entering quarantine
         quarantined_inds = []
         for ind,end_day in self._pending_quarantine[self.t]:
             if self.quarantined[ind]: # Update when quarantine should be finished (in case schedule_quarantine is called on someone already in quarantine)
@@ -382,7 +378,7 @@ class Flocks(Subroster):
 
         if len(quarantined_inds):
             self.update_event_log(quarantined_inds, 'quarantined')
-            for breed in self.pars['poultry_pars']['breeds']: # Update flows by breed
+            for breed in self.pars['cattle_pars']['breeds']: # Update flows by breed
                 breed_inds = znu.itrue(self.check_breed(quarantined_inds, breed), quarantined_inds)
                 n_breed_inds = len(breed_inds)
                 self.flows_breed[(breed, 'new_quarantined')] += n_breed_inds
@@ -396,7 +392,7 @@ class Flocks(Subroster):
 
 
     def update_water_consumption(self):
-        ''' Update the water consumption of the flocks '''
+        ''' Update the water consumption of the herds '''
         infected_headcount = self.exposed_headcount + self.infectious_headcount
         uninfected_headcount = self.headcount - infected_headcount
         self.water_consumption = infected_headcount * self.infected_water_rate + uninfected_headcount * self.baseline_water_rate
@@ -424,7 +420,7 @@ class Flocks(Subroster):
             variant  (int):   the variant agents are being infected by
 
         Returns:
-            count (int): number of flocks infected
+            count (int): number of herds infected
         '''
 
         if len(inds) == 0:
@@ -443,17 +439,17 @@ class Flocks(Subroster):
 
         # Deal with variant parameters
         variant_keys = ['rel_symp_delta', 'rel_death_delta', 'rel_water_delta']
-        infect_pars = {k:self.pars['variant_pars']['wild']['flock'][k] for k in variant_keys}
+        infect_pars = {k:self.pars['variant_pars']['wild']['herd'][k] for k in variant_keys}
         variant_label = self.pars['variant_map'][variant]
         if variant:
             for k in variant_keys:
-                infect_pars[k] *= self.pars['variant_pars'][variant_label]['flock'][k]
+                infect_pars[k] *= self.pars['variant_pars'][variant_label]['herd'][k]
 
         n_infections = len(inds)
-        durpars      = self.pars['dur']['flock']
+        durpars      = self.pars['dur']['herd']
 
-        # Determine how many birds are initially exposed for each flock
-        initial_exposed = znu.n_multinomial(np.ones(6)/6.0, len(inds)) + 1 # All flocks start with between 1 and 6 initial exposures
+        # Determine how many cattle are initially exposed for each herd
+        initial_exposed = znu.n_multinomial(np.ones(6)/6.0, len(inds)) + 1 # All herds start with between 1 and 6 initial exposures
 
         # Update states, variant info, and flows
         self.susceptible[inds]    = False
@@ -461,7 +457,7 @@ class Flocks(Subroster):
         self.exposed_headcount[inds] = initial_exposed
         self.exposed_variant[inds] = variant
         self.exposed_by_variant[variant, inds] = True
-        for breed in self.pars['poultry_pars']['breeds']: # Update flows by breed
+        for breed in self.pars['cattle_pars']['breeds']: # Update flows by breed
             breed_inds = znu.itrue(self.check_breed(inds, breed), inds)
             n_breed_inds = len(breed_inds)
             self.flows_breed[(breed, 'new_exposed')] += n_breed_inds
@@ -473,7 +469,7 @@ class Flocks(Subroster):
             entry = dict(source=source[i] if source is not None else None, target=self.uid[target_ind], date=self.t, layer=layer, variant=variant_label)
             self.infection_log.append(entry)
 
-        # Calculate how long before this flock can infect other flocks
+        # Calculate how long before this herd can infect other herds
         self.dur_exp2inf[inds] = np.maximum(znu.sample(**durpars['exp2inf'], size=n_infections), 0.1) # Ensure that this is positive
         self.dur_inf2out[inds] = np.maximum(znu.sample(**durpars['inf2out'], size=n_infections), 0.1) # Ensure that this is positive
         self.date_exposed[inds] = self.t
@@ -481,9 +477,9 @@ class Flocks(Subroster):
         #Update water rate, symptomatic rate, and mortality rate.
         pars = self.pars # Shorten
         if 'prognoses' not in pars or 'rand_seed' not in pars:
-            errormsg = 'This flock object does not have the required parameters ("prognoses" and "rand_seed").'
+            errormsg = 'This herd object does not have the required parameters ("prognoses" and "rand_seed").'
             raise sc.KeyNotFoundError(errormsg)
-        progs = pars['prognoses']['flock']
+        progs = pars['prognoses']['herd']
         breed_to_index = {breed: index for index, breed in enumerate(progs['breeds'])}
         breed_inds = np.array([breed_to_index[this_breed] for this_breed in self.breed[inds]])
         breed, frequency = np.unique(breed_inds, return_counts=True)
@@ -499,12 +495,12 @@ class Flocks(Subroster):
 
     def test(self, inds, sample_size):
         '''
-        Method to test poultry. Typically not to be called by the user directly;
+        Method to test cattle. Typically not to be called by the user directly;
         see interventions.
 
         Args:
             inds: indices of who to test
-            sample_size (int): The number of birds to be tested in each flock
+            sample_size (int): The number of cattle to be tested in each herd
         '''
         unsuspected_inds = np.where(self.suspected == False)[0]
         inds_to_test = np.intersect1d(inds, unsuspected_inds)
@@ -524,7 +520,7 @@ class Flocks(Subroster):
         if len(pos_inds)>0:
             self.suspected[pos_inds] = True
             self.date_suspected[pos_inds] = self.t
-            self.dur_susp2res[pos_inds] = znu.sample(**self.pars['dur']['flock']['susp2res'], size=len(pos_inds))
+            self.dur_susp2res[pos_inds] = znu.sample(**self.pars['dur']['herd']['susp2res'], size=len(pos_inds))
             self.date_result[pos_inds] = self.date_suspected[pos_inds] + self.dur_susp2res[pos_inds]
             self.date_quarantined[pos_inds] = self.t
             self.update_event_log(pos_inds, 'screened_pos')
@@ -539,7 +535,7 @@ class Flocks(Subroster):
         Schedule a quarantine. Typically not called by the user directly except
         via a custom intervention; see the contact_tracing() intervention instead.
 
-        This function will create a request to quarantine a flock on the start_date for
+        This function will create a request to quarantine a herd on the start_date for
         a period of time. Whether they are on an existing quarantine that gets extended, or
         whether they are no longer eligible for quarantine, will be checked when the start_date
         is reached.
@@ -547,41 +543,41 @@ class Flocks(Subroster):
         Args:
             inds (int): indices of who to quarantine, specified by check_quar()
             start_date (int): day to begin quarantine (defaults to the current day, `sim.t`)
-            period (int): quarantine duration (defaults to ``pars['dur']['flock']['quar']``)
+            period (int): quarantine duration (defaults to ``pars['dur']['herd']['quar']``)
         '''
 
         start_date = self.t if start_date is None else int(start_date)
-        period = self.pars['dur']['flock']['quar'] if period is None else int(period)
+        period = self.pars['dur']['herd']['quar'] if period is None else int(period)
         for ind in inds:
             self._pending_quarantine[start_date].append((ind, start_date + period))
         return
 
     def story(self, uid, *args):
         '''
-        Print out a short history of events in the life of the specified flock.
+        Print out a short history of events in the life of the specified herd.
 
         Args:
-            uid (int/list): the flock or flocks whose story is to be regaled
-            args (list): these flocks will tell their stories too
+            uid (int/list): the herd or herds whose story is to be regaled
+            args (list): these herds will tell their stories too
 
         **Example**::
 
             sim = cv.Sim()
             sim.run()
-            sim.agents.flock.story(12)
-            sim.agents.flock.story(795)
+            sim.agents.herd.story(12)
+            sim.agents.herd.story(795)
         '''
 
         def label_lkey(lkey):
             ''' Friendly name for common layer keys '''
             if lkey.lower() == 'hf':
-                llabel = 'human-flock contacts'
+                llabel = 'human-herd contacts'
             elif lkey.lower() == 'pf':
-                llabel = 'ppe-flock contacts'
+                llabel = 'ppe-herd contacts'
             elif lkey.lower() == 'fb':
-                llabel = 'flock-barn contacts'
+                llabel = 'herd-barn contacts'
             elif lkey.lower() == 'fw':
-                llabel = 'flock-water contacts'
+                llabel = 'herd-water contacts'
             else:
                 llabel = f'"{lkey}"'
             return llabel
@@ -594,7 +590,7 @@ class Flocks(Subroster):
             breed = self.breed[uid_ind].item()
             barn = self.barn[uid_ind].item()
 
-            intro = f'\nThis is the story of {uid}, a flock of {breed}s housed in barn {barn}.'
+            intro = f'\nThis is the story of {uid}, a herd of {breed}s housed in barn {barn}.'
             print(f'{intro}')
 
             events = []

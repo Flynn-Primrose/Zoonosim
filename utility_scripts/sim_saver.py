@@ -2,11 +2,13 @@ import zoonosim as zn
 import numpy as np
 
 new_pars = dict(
+    agent_types = ['human', 'ppe', 'flock', 'herd', 'barn', 'water'],
     n_farms = 50,
     start_day = '2022-01-01',
     end_day = '2025-12-31',
     record_all_events = False, # Whether to record all events in the simulation (True) or just transmission events.
     pop_pars = dict(
+        prop_cattle_farms = 0.2,
         avg_barns_per_farm = 5.0,
         avg_humans_per_barn = 1.5,
         avg_water_per_farm = 0.75,
@@ -17,13 +19,15 @@ new_pars = dict(
         human = 0.003,
         ppe = 0.141,
         flock = 0.219,
+        herd = 0.100,
         barn = 0.201,
         water = 0.277,
     ),
     n_imports = dict(
-        human=None,  # Number of imported human cases per day; None = disabled
+        human = None,  # Number of imported human cases per day; None = disabled
         flock=None,  # Number of imported flock cases per day; None = disabled
         ppe = None,   # Number of imported PPE contaminations per day; None = disabled
+        herd = None,  # Number of imported herd contaminations per day; None = disabled
         barn=dict(import_pattern='seasonal', max_import_rate=0.2, peak_day=300),  # Number of imported barn contaminations per day; None = disabled
         water=dict(import_pattern='seasonal', max_import_rate=0.2, peak_day=300),  # Number of imported water contaminations per day; None = disabled
     ), 
@@ -40,50 +44,59 @@ new_pars = dict(
         participation_rate        =   0.3,  # proportion of the population that has a smartwatch
     ),
     dynam_layer = dict(
-                hp = 0.0, 
-                hh = 0.0, 
-                hf = 0.0, 
-                hb = 0.0, 
-                hw = 0.0, 
-                pp = 0.0, 
-                pf = 0.0, 
-                pb = 0.0, 
-                pw = 0.0, 
-                fb = 0.0, 
-                fw = 0.0, 
-                bw = 0.0, 
-                transient = 1.0
-                ),
+            human_ppe = 0.0, 
+            human_human = 0.0, 
+            human_flock = 0.0,
+            human_herd = 0.0, 
+            human_barn = 0.0, 
+            human_water = 0.0, 
+            ppe_ppe = 0.0, 
+            ppe_flock = 0.0, 
+            ppe_herd = 0.0,
+            ppe_barn = 0.0, 
+            ppe_water = 0.0,
+            flock_barn = 0.0, 
+            flock_water = 0.0, 
+            herd_barn = 0.0, 
+            herd_water = 0.0, 
+            barn_water = 0.0, 
+            transient = 0.1), # Dynamic layer -- Only the transient layer is dynamic by default
     beta_layer = dict(
-                hp = 0.491, 
-                hh = 0.374, 
-                hf = 0.095, 
-                hb = 0.474, 
-                hw = 0.001, 
-                pp = 0.198, 
-                pf = 0.121, 
-                pb = 0.376, 
-                pw = 0.356, 
-                fb = 0.499, 
-                fw = 0.022, 
-                bw = 0.260, 
-                transient = 0.004 
-                ),
+            human_ppe = 0.500,
+            human_human = 0.400,
+            human_flock = 0.100,
+            human_herd = 0.100,
+            human_barn = 0.500,
+            human_water = 0.001,
+            ppe_ppe = 0.200,
+            ppe_flock = 0.100,
+            ppe_herd = 0.100,
+            ppe_barn = 0.375,
+            ppe_water = 0.350,
+            flock_barn = 0.500,
+            flock_water = 0.025,
+            herd_barn = 0.500,
+            herd_water = 0.025,
+            barn_water = 0.250,
+            transient = 1.0),
     quar_factor = dict(
-                hp = 0.0, 
-                hh = 0.0, 
-                hf = 0.0, 
-                hb = 0.0, 
-                hw = 0.0, 
-                pp = 0.0, 
-                pf = 0.0, 
-                pb = 0.0, 
-                pw = 0.0, 
-                fb = 0.0, 
-                fw = 0.0, 
-                bw = 0.0, 
-                transient = 0.0
-                ),
+            human_ppe = 0.0, 
+            human_human = 0.0, 
+            human_flock = 0.0,
+            human_herd = 0.0, 
+            human_barn = 0.0, 
+            human_water = 0.0, 
+            ppe_ppe = 0.0, 
+            ppe_flock = 0.0, 
+            ppe_herd = 0.0,
+            ppe_barn = 0.0, 
+            ppe_water = 0.0,
+            flock_barn = 0.0, 
+            flock_water = 0.0, 
+            herd_barn = 0.0, 
+            herd_water = 0.0, 
+            barn_water = 0.0, 
+            transient = 0.0), # Quarantine factor -- set to zero by default
     dur = dict(
         human = {
             # Duration: disease progression
@@ -108,6 +121,14 @@ new_pars = dict(
             # Duration: disease progression
             'exp2inf': dict(dist='lognormal_int', par1=2.0, par2=1.0), # Duration from exposed to infectious. 
             'inf2out': dict(dist='lognormal_int', par1=2.0, par2=1.0), # Duration from infectious to recovery/removal. 
+            'susp2res': dict(dist='lognormal_int', par1=5.0, par2=1.0), # Duration from suspicion to a definitive test result. 
+            # Duration: Quarantine
+            'quar': 14
+        },
+        herd = {
+            # Duration: disease progression
+            'exp2inf': dict(dist='lognormal_int', par1=7.0, par2=3.0), # Duration from exposed to infectious. 
+            'inf2out': dict(dist='lognormal_int', par1=14.0, par2=7.0), # Duration from infectious to recovery/removal. 
             'susp2res': dict(dist='lognormal_int', par1=5.0, par2=1.0), # Duration from suspicion to a definitive test result. 
             # Duration: Quarantine
             'quar': 14
@@ -141,16 +162,21 @@ new_pars = dict(
             trans_ORs = np.array([1.00]),
             baseline_symptomatic_rate = np.array([0.001]),
             symptomatic_rate_increase = np.array([dict(dist='lognormal', par1=0.01, par2 = 0.5)]),
-            # mean_symptomatic_rate_increase = np.array([0.01]),
-            # sd_symptomatic_rate_increase = np.array([0.5]),
             baseline_mortality_rate = np.array([0.001]),
             mortality_rate_increase = np.array([dict(dist='lognormal', par1=0.01, par2=0.5)]),
-            # mean_mortality_rate_increase = np.array([0.01]),
-            # sd_mortality_rate_increase = np.array([0.5]),
             baseline_water_rate = np.array([1.00]),
             water_rate_increase = np.array([dict(dist='lognormal', par1=1.0, par2=0.5)]),
-            # mean_water_rate_increase = np.array([1.00]),
-            # sd_water_rate_increase = np.array([0.5]),
+        ),
+        herd = dict(
+            breeds = np.array(['cattle'], dtype=zn.default_str),
+            sus_ORs = np.array([1.00]),
+            trans_ORs = np.array([1.00]),
+            baseline_symptomatic_rate = np.array([0.001]),
+            symptomatic_rate_increase = np.array([dict(dist='lognormal', par1=0.001, par2 = 0.01)]),
+            baseline_mortality_rate = np.array([0.000]),
+            mortality_rate_increase = np.array([dict(dist='lognormal', par1=0.001, par2=0.01)]),
+            baseline_water_rate = np.array([10.00]),
+            water_rate_increase = np.array([dict(dist='lognormal', par1=5.00, par2=2.50)]),
         ),
         barn = dict(
             sus_ORs = np.array([1.00]),
@@ -164,11 +190,20 @@ new_pars = dict(
     poultry_pars = dict(
         breeds = np.array(['poultry'], dtype=zn.default_str),
         breed_freqs = np.array([1.0]),
-        mortality_suspicion_threshold = [0.0012], # I.E a deviation from the expected mortality rate of 0.01*expected_value will trigger suspicion
-        symptomatic_suspicion_threshold = [0.0001], # I.E a deviation from the expected symptomatic rate of 0.01*expected_value will trigger suspicion
+        mortality_suspicion_threshold = [0.001], # I.E a deviation from the expected mortality rate of 0.01*expected_value will trigger suspicion
+        symptomatic_suspicion_threshold = [0.001], # I.E a deviation from the expected symptomatic rate of 0.01*expected_value will trigger suspicion
         consumption_suspicion_threshold = [0.001], # I.E a deviation from the expected rate of water consumption of 0.01*expected_value will trigger suspicion
         cycle_dur = [dict(dist = 'normal_pos', par1 = 100, par2 = 25)],
         flock_size = [dict(dist = 'normal_pos', par1 = 20000, par2 = 10000)]
+    ),
+    cattle_pars = dict(
+        breeds = np.array(['cattle'], dtype=zn.default_str),
+        breed_freqs = np.array([1.0]),
+        mortality_suspicion_threshold = [0.001], # I.E a deviation from the expected mortality rate of 0.01*expected_value will trigger suspicion
+        symptomatic_suspicion_threshold = [0.001], # I.E a deviation from the expected symptomatic rate of 0.01*expected_value will trigger suspicion
+        consumption_suspicion_threshold = [0.10], # I.E a deviation from the expected rate of water consumption of 0.01*expected_value will trigger suspicion
+        cycle_dur = [dict(dist = 'normal_pos', par1 = 3000, par2 = 750)],
+        herd_size = [dict(dist = 'normal_pos', par1 = 1000, par2 = 500)]
     ),
     wild = dict(
         human = dict(
@@ -189,6 +224,12 @@ new_pars = dict(
             rel_death_delta = 1.0,
             rel_water_delta = 1.0
         ),
+        herd = dict(
+            rel_beta = 1.0,
+            rel_symp_delta = 1.0,
+            rel_death_delta = 1.0,
+            rel_water_delta = 1.0
+        ),
         barn = dict(
             rel_beta = 1.0,
             rel_dur_contamination = 1.0
@@ -198,9 +239,46 @@ new_pars = dict(
             rel_dur_contamination = 1.0
         )
     ),
+    variant_pars = dict(
+        wild = dict(
+            human = dict(
+                rel_beta = 1.0,
+                rel_symp_prob = 0.33,
+                rel_severe_prob = 0.25,
+                rel_death_prob = 0.01,
+                rel_asymp_fact = 0.5
+
+            ),
+            ppe = dict(
+                rel_beta = 1.0,
+                rel_dur_contamination = 1.0
+            ),
+            flock = dict(
+                rel_beta = 1.0,
+                rel_symp_delta = 1.0,
+                rel_death_delta = 1.0,
+                rel_water_delta = 1.0
+            ),
+            herd = dict(
+                rel_beta = 1.0,
+                rel_symp_delta = 1.0,
+                rel_death_delta = 1.0,
+                rel_water_delta = 1.0
+            ),
+            barn = dict(
+                rel_beta = 1.0,
+                rel_dur_contamination = 1.0
+            ),
+            water = dict(
+                rel_beta = 1.0,
+                rel_dur_contamination = 1.0
+            )
+        )
+    )
 )
 
-new_pars_filename = "saved_pars/AOQ_4th_iteration_best.json"
 
-sim = zn.Sim(pars = new_pars, label = "AOQ_4th_iteration_best")
+new_pars_filename = "saved_pars/default_single_breed_poultry_and_cattle.json"
+
+sim = zn.Sim(pars = new_pars, label = "default single breed poultry and cattle")
 sim.export_pars(new_pars_filename)

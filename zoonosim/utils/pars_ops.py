@@ -277,6 +277,7 @@ def pars_from_json(filename):
 
     for key, value in pars['prognoses']['human'].items():
         pars['prognoses']['human'][key] = np.array(value)
+
     for key, value in pars['prognoses']['flock'].items():
         if key == 'breed':
             pars['prognoses']['flock'][key] = np.array(value, dtype=znd.default_str)
@@ -285,5 +286,14 @@ def pars_from_json(filename):
     for key, value in pars['poultry_pars'].items():
         if key == 'breeds':
             pars['poultry_pars'][key] = np.array(value, dtype=znd.default_str)
+
+    for key, value in pars['prognoses']['herd'].items():
+        if key == 'breed':
+            pars['prognoses']['herd'][key] = np.array(value, dtype=znd.default_str)
+        else:
+            pars['prognoses']['herd'][key] = np.array(value)
+    for key, value in pars['cattle_pars'].items():
+        if key == 'breeds':
+            pars['cattle_pars'][key] = np.array(value, dtype=znd.default_str)
 
     return pars
