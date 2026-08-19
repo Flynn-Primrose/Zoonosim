@@ -111,11 +111,13 @@ class Flocks(Subroster):
 
     '''
 
-    def __init__(self, pars, strict=True, **kwargs):
+    def __init__(self, pars, schedule_cycle_end=None, strict=True, **kwargs):
 
         # Handle pars and population size
         self.set_pars(pars)
         self.version = znv.__version__ # Store version info
+
+        self.schedule_cycle_end = schedule_cycle_end # Function to schedule the end of a flock's cycle (i.e., when it will be repopulated)
 
         # Other initialization
         self.t = 0 # Keep current simulation time
@@ -402,8 +404,44 @@ class Flocks(Subroster):
         self.water_consumption = infected_headcount * self.infected_water_rate + uninfected_headcount * self.baseline_water_rate
         return
 
-    #%% Methods to make events occur (infection and diagnosis)
+    #%% Methods to make events occur (e.g., infection and diagnosis)
 
+    def repopulate(self, flock_uids, barn_inds, t):
+        '''
+        Repopulate the specified flocks with new birds. This method is typically called by check_repopulation() when a barn is scheduled to be repopulated.
+
+        Args:
+            flock_uids (array): UIDs of flocks to repopulate
+            barn_inds (array): indices of barns where repopulation occurs
+            t (float): current time
+        '''
+
+        poultry_pars = self.pars['poultry_pars'] 
+        poultry_progs = self.pars['prognoses']['flock']
+
+        flock_inds = np.where(np.isin(self.uid, flock_uids))[0]
+
+        if flock_inds.size > 0:
+            flock_breed_to_index = {breed: index for index, breed in enumerate(poultry_pars['breeds'])}
+            flock_breed_inds = np.array([flock_breed_to_index[this_breed] for this_breed in self.flock.breed[flock_inds]])
+            breed, freq = np.unique(flock_breed_inds, return_counts=True)
+            flock_breed_dict = dict(zip(breed, freq))
+            date_cycle_end = np.full(len(flock_inds), np.nan, dtype=znd.default_float)
+            for breed, freq in flock_breed_dict.items():
+                current_breed_inds = np.where(flock_breed_inds == breed)[0]
+                date_cycle_end[flock_inds[current_breed_inds]] = t + znu.sample(**poultry_pars['cycle_dur'][breed], size = freq)
+                self.flock.headcount[flock_inds[current_breed_inds]] = znu.sample(**poultry_pars['flock_size'][breed], size = freq)
+            self.schedule_cycle_end(date_cycle_end, barn_inds)   
+            self.flock.susceptible[flock_inds] = True
+            self.flock.suspected[flock_inds] = False
+            self.flock.baseline_symptomatic_rate[flock_inds] = poultry_progs['baseline_symptomatic_rate'][flock_breed_inds]
+            self.flock.baseline_mortality_rate[flock_inds] = poultry_progs['baseline_mortality_rate'][flock_breed_inds]
+            self.flock.baseline_water_rate[flock_inds] = poultry_progs['baseline_water_rate'][flock_breed_inds]
+            self.flock.rel_sus[flock_inds] = poultry_progs['sus_ORs'][flock_breed_inds]
+            self.flock.rel_trans[flock_inds] = poultry_progs['trans_ORs'][flock_breed_inds]
+
+            self.flock.update_event_log(flock_inds, 'cycle_start')
+        return
 
     def infect(self, inds, source=None, layer=None, variant=0):
         '''

@@ -213,7 +213,7 @@ class Agents(Roster):
         self.check_result(t)
         self.check_cycle_end(t)
         
-        self.check_repopulation(t)
+        #self.check_repopulation(t)
 
         self.update_states_from_subrosters() # Update the states of the main roster
 
@@ -462,43 +462,45 @@ class Agents(Roster):
         return
 
     #%% Methods that require access to multiple subrosters
-    def check_repopulation(self, t):
-        '''
-        Check for farms that are scheduled to be repopulated and reincarnate the resident flock with proper initial conditions.
-        '''
-        poultry_pars = self.pars['poultry_pars'] 
-        poultry_progs = self.pars['prognoses']['flock']
 
-        barn_inds = np.where(self.barn.date_repopulate <= t)[0]
+    # The below function has been replaced by other functionality in the barn and flock subrosters. I'm leaving it here for now in case we need it for debugging purposes, but it is not currently being used in the simulation.
+    # def check_repopulation(self, t):
+    #     '''
+    #     Check for barns that are scheduled to be repopulated and reincarnate the resident flock with proper initial conditions.
+    #     '''
+    #     poultry_pars = self.pars['poultry_pars'] 
+    #     poultry_progs = self.pars['prognoses']['flock']
 
-        if barn_inds.size > 0:
-            self.barn.repopulations[barn_inds]+= 1
-            self.barn.date_repopulate[barn_inds] = np.nan
-            flock_inds = np.where(np.isin(self.flock.uid, self.barn.resident_uid[barn_inds]))[0]
+    #     barn_inds = np.where(self.barn.date_repopulate <= t)[0]
 
-            if flock_inds.size > 0:
-                flock_breed_to_index = {breed: index for index, breed in enumerate(poultry_pars['breeds'])}
-                flock_breed_inds = np.array([flock_breed_to_index[this_breed] for this_breed in self.flock.breed[flock_inds]])
+    #     if barn_inds.size > 0:
+    #         self.barn.repopulations[barn_inds]+= 1
+    #         self.barn.date_repopulate[barn_inds] = np.nan
+    #         flock_inds = np.where(np.isin(self.flock.uid, self.barn.resident_uid[barn_inds]))[0]
 
-                breed, freq = np.unique(flock_breed_inds, return_counts=True)
-                flock_breed_dict = dict(zip(breed, freq))
-                for breed, freq in flock_breed_dict.items():
-                    current_breed_inds = np.where(flock_breed_inds == breed)[0]
-                    self.barn.date_cycle_end[barn_inds[current_breed_inds]] = t + znu.sample(**poultry_pars['cycle_dur'][breed], size = freq)
-                    self.flock.headcount[flock_inds[current_breed_inds]] = znu.sample(**poultry_pars['flock_size'][breed], size = freq)   
+    #         if flock_inds.size > 0:
+    #             flock_breed_to_index = {breed: index for index, breed in enumerate(poultry_pars['breeds'])}
+    #             flock_breed_inds = np.array([flock_breed_to_index[this_breed] for this_breed in self.flock.breed[flock_inds]])
 
-                self.flock.susceptible[flock_inds] = True
-                self.flock.suspected[flock_inds] = False
-                self.flock.baseline_symptomatic_rate[flock_inds] = poultry_progs['baseline_symptomatic_rate'][flock_breed_inds]
-                self.flock.baseline_mortality_rate[flock_inds] = poultry_progs['baseline_mortality_rate'][flock_breed_inds]
-                self.flock.baseline_water_rate[flock_inds] = poultry_progs['baseline_water_rate'][flock_breed_inds]
-                self.flock.rel_sus[flock_inds] = poultry_progs['sus_ORs'][flock_breed_inds]
-                self.flock.rel_trans[flock_inds] = poultry_progs['trans_ORs'][flock_breed_inds]
+    #             breed, freq = np.unique(flock_breed_inds, return_counts=True)
+    #             flock_breed_dict = dict(zip(breed, freq))
+    #             for breed, freq in flock_breed_dict.items():
+    #                 current_breed_inds = np.where(flock_breed_inds == breed)[0]
+    #                 self.barn.date_cycle_end[barn_inds[current_breed_inds]] = t + znu.sample(**poultry_pars['cycle_dur'][breed], size = freq)
+    #                 self.flock.headcount[flock_inds[current_breed_inds]] = znu.sample(**poultry_pars['flock_size'][breed], size = freq)   
 
-            self.flock.update_event_log(flock_inds, 'cycle_start')
-            self.barn.update_event_log(barn_inds, 'cycle_start')
+    #             self.flock.susceptible[flock_inds] = True
+    #             self.flock.suspected[flock_inds] = False
+    #             self.flock.baseline_symptomatic_rate[flock_inds] = poultry_progs['baseline_symptomatic_rate'][flock_breed_inds]
+    #             self.flock.baseline_mortality_rate[flock_inds] = poultry_progs['baseline_mortality_rate'][flock_breed_inds]
+    #             self.flock.baseline_water_rate[flock_inds] = poultry_progs['baseline_water_rate'][flock_breed_inds]
+    #             self.flock.rel_sus[flock_inds] = poultry_progs['sus_ORs'][flock_breed_inds]
+    #             self.flock.rel_trans[flock_inds] = poultry_progs['trans_ORs'][flock_breed_inds]
 
-        return len(barn_inds)
+    #         self.flock.update_event_log(flock_inds, 'cycle_start')
+    #         self.barn.update_event_log(barn_inds, 'cycle_start')
+
+    #     return len(barn_inds)
     
 
     

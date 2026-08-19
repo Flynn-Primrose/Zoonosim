@@ -102,11 +102,13 @@ class Barns(Subroster):
     **Examples**::
     '''
 
-    def __init__(self, pars, strict=True, **kwargs):
+    def __init__(self, pars, repopulate=None, strict=True, **kwargs):
 
         # Handle pars and population size
         self.set_pars(pars)
         self.version = znv.__version__ # Store version info
+
+        self.repopulate = repopulate
 
         # Other initialization
         self.t = 0 # Keep current simulation time
@@ -211,6 +213,7 @@ class Barns(Subroster):
         self.flows['new_cleaned'] = self.check_cleaned()
         self.flows['new_uncontaminated'] = self.check_uncontaminated()
         self.flows['new_composted'] = self.check_composted()
+        self.check_repopulation() # This function is called for its side effects, not its return value
         return
 
 
@@ -281,6 +284,23 @@ class Barns(Subroster):
             self.update_event_log(inds, 'composting_finished')
             self.update_event_log(inds, 'cleaning_started')
         return len(inds)
+
+    def check_repopulation(self):
+        ''' Check which barns are scheduled to be repopulated this timestep '''
+        barn_inds = np.where(self.barn.date_repopulate <= self.t)[0]
+        if barn_inds.size > 0:
+            self.barn.repopulations[barn_inds]+= 1
+            self.barn.date_repopulate[barn_inds] = np.nan
+            flock_uids = self.barn.resident_uid[barn_inds]
+            if self.barn.repopulate is not None:
+                self.barn.repopulate(flock_uids)
+            self.update_event_log(barn_inds, 'cycle_start')
+        return len(barn_inds)
+
+    def schedule_cycle_end(self, date_cycle_end, barn_inds):
+        ''' Schedule the end of the production cycle for the specified barns '''
+        self.date_cycle_end[barn_inds] = date_cycle_end
+        return
 
 
     #%% Methods to make events occur (infection and diagnosis)
