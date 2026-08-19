@@ -321,24 +321,6 @@ class Agents(Roster):
         infection_levels[non_zero_headcount_inds] = self.flock.infectious_headcount[non_zero_headcount_inds]/self.flock.headcount[non_zero_headcount_inds]
 
         return infection_levels
-    
-    def update_ppe_biosecurity_levels(self):
-        '''
-        Update the biosecurity levels of the PPE subroster. 
-        '''
-        return np.ones(len(self.ppe), dtype=znd.default_float) # Placeholder for now
-    
-    def update_barn_biosecurity_levels(self):
-        '''
-        Update the biosecurity levels of the barn subroster. 
-        '''
-        return np.ones(len(self.barn), dtype=znd.default_float) # Placeholder for now
-    
-    def update_water_biosecurity_levels(self):
-        '''
-        Update the biosecurity levels of the water subroster. 
-        '''
-        return np.ones(len(self.water), dtype=znd.default_float) # Placeholder for now
 
     def update_states_from_subrosters(self):
         susceptible_human_uids = np.array(self.human['uid'][znu.true(self.human['susceptible'])])
@@ -486,8 +468,6 @@ class Agents(Roster):
         '''
         poultry_pars = self.pars['poultry_pars'] 
         poultry_progs = self.pars['prognoses']['flock']
-
-        cattle_pars = self.pars['cattle_pars']
 
         barn_inds = np.where(self.barn.date_repopulate <= t)[0]
 

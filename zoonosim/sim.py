@@ -686,24 +686,21 @@ class Sim(znb.BaseSim):
         # Compute viral loads in humans
         human_viral_load = self.agents.update_human_viral_loads(t=t)
 
-        # Compute modifiers for PPE
-        ppe_biosec = self.agents.update_ppe_biosecurity_levels()
+
 
         # Compute infection levels in flocks
         flock_infection_levels = self.agents.update_flock_infection_levels()
 
-        
-        # Compute modifiers for barns
-        barn_biosec = self.agents.update_barn_biosecurity_levels()
-
-        # Compute modifiers for water
-        water_biosec = self.agents.update_water_biosecurity_levels()
+        # Below we set the modifiers for PPE, barns, and water to be 1, which means there is no effect on the transmission probability.
+        # Eventually, we may want to add more sophisticated modifiers for these agent types, but for now, we will keep it simple.
+        ppe_ones = np.ones(len(self.agents.ppe))
+        barn_ones = np.ones(len(self.agents.barn))
+        water_ones = np.ones(len(self.agents.water))
 
         # Set modifiers for all agent types
-        misc_modifiers = np.concatenate((human_viral_load, ppe_biosec, flock_infection_levels, barn_biosec, water_biosec)) 
+        misc_modifiers = np.concatenate((human_viral_load, ppe_ones, flock_infection_levels, barn_ones, water_ones)) 
 
         # Perform initial operations
-        #self.rescale() # Check if we need to rescale
         agents = self.agents # Shorten this for later use
 
         agents.update_states_pre(t=t) # Update the state of everyone and count the flows. This isn't infecting people nor updating their SEIR's. The date of infection seems to be pre-assigned. 

@@ -2,8 +2,8 @@ import zoonosim as zn
 import json
 import numpy as np
 
-saved_pars_filename = "saved_pars/default_single_breed_poultry_and_cattle.json"
-sim_label = "default single breed poultry and cattle"
+saved_pars_filename = "saved_pars/default_single_breed.json"
+sim_label = "default single breed poultry"
 
 # with open(saved_pars_filename, 'r') as file:
 #     saved_pars = json.load(file)
@@ -42,7 +42,6 @@ if __name__ == "__main__":
     msim.summarize()              # Summarize the Reduced results.
     msim.plot()                   # Plot the results.
     msim.plot('flock')
-    msim.plot('herd')
     msim.plot('human')
     msim.plot('ppe')
 

@@ -159,22 +159,10 @@ def make_popdict(sim, **kwargs):
     else:
         poultry_pars = sim.pars['poultry_pars']
 
-    if 'cattle_pars' in kwargs:
-        cattle_pars = kwargs['cattle_pars']
-    else:
-        cattle_pars = sim.pars['cattle_pars']
-
     # Farms
     n_farms = sim.pars['n_farms']
     farm_ids = np.arange(n_farms, dtype=znd.default_int) # Create a list of unique IDs for each farm
 
-    #cattle farms
-    n_cattle_farms = round(n_farms * pop_pars['prop_cattle_farms']) # Number of cattle farms
-    cattle_farm_ids = farm_ids[:n_cattle_farms] # Assign the first n_cattle_farms IDs to cattle farms
-
-    #poultry farms
-    n_poultry_farms = n_farms - n_cattle_farms # Number of poultry farms
-    poultry_farm_ids = farm_ids[n_cattle_farms:] # Assign the remaining IDs to poultry farms
 
     # Create water sources
     n_water = round(n_farms * pop_pars['avg_water_per_farm']) # Number of water sources
@@ -195,8 +183,7 @@ def make_popdict(sim, **kwargs):
     n_ppe = n_humans # We assume one ppe per human
 
     # Create flocks
-    n_flocks_by_farm = np.concatenate([np.zeros(n_cattle_farms, dtype=znd.default_int), n_barns_by_farm[n_cattle_farms:]]) # Number of flocks per poultry farm, we assume cattle farms do not have flocks
-    n_flocks = sum(n_flocks_by_farm)
+    n_flocks = sum(n_barns_by_farm)
 
 
     n_agents = n_humans + n_ppe + n_barns + n_flocks + n_water
@@ -232,8 +219,7 @@ def make_popdict(sim, **kwargs):
 
     farmdict = {}
     for farm in range(n_farms):
-        if farm_ids[farm] in poultry_farm_ids:
-                flock_value = popdict['flock_uids'][flock_index:(flock_index + n_flocks_by_farm[farm])]
+        flock_value = popdict['flock_uids'][flock_index:(flock_index + n_barns_by_farm[farm])]
         farmdict[farm] = {
             'humans':popdict['human_uids'][human_index:(human_index + n_humans_by_farm[farm])],
             'ppe':popdict['ppe_uids'][ppe_index:(ppe_index + n_ppe_by_farm[farm])],
@@ -247,7 +233,7 @@ def make_popdict(sim, **kwargs):
         human_index += n_humans_by_farm[farm]
         ppe_index += n_ppe_by_farm[farm]
         barn_index += n_barns_by_farm[farm]
-        flock_index += n_flocks_by_farm[farm]
+        flock_index += n_barns_by_farm[farm]
 
         if farmdict[farm]['flocks'].size > 0: # Only create the flock to barn mapping if there are flocks on this farm
             farmdict[farm]['flock2barn'] = dict(zip(farmdict[farm]['flocks'], farmdict[farm]['barns']))# Map flocks to barns for this farm
