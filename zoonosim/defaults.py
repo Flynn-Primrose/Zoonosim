@@ -500,13 +500,13 @@ def get_default_colors(agent_type):
             c.layer = '#8da0cb' #
             c.poultry = '#fc8d62'
         case 'herd':
-            c.susceptible = '#66c2a5' # 
-            c.exposed = '#fc8d62' # 
-            c.infectious = '#8da0cb' # 
-            c.suspected = '#e78ac3' # 
-            c.quarantined = '#a6d854' # 
-            c.exposed_by_variant = '#ffd92f' # 
-            c.infectious_by_variant = '#e5c494' #
+            c.susceptible = "#214de0" # 
+            c.exposed = "#a1380f" # 
+            c.infectious = "#7f2596" # 
+            c.suspected = "#918519" # 
+            c.quarantined = "#858d0e" # 
+            c.exposed_by_variant = "#138d2d" # 
+            c.infectious_by_variant = "#805618" #
         case 'herd_breed':
             c.cattle = '#66c2a5' # 
             c.sheep = '#fc8d62' # 

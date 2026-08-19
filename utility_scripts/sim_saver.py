@@ -7,13 +7,14 @@ new_pars = dict(
     start_day = '2022-01-01',
     end_day = '2025-12-31',
     record_all_events = False, # Whether to record all events in the simulation (True) or just transmission events.
+    rand_seed = 89,
     pop_pars = dict(
         prop_cattle_farms = 0.2,
         avg_barns_per_farm = 5.0,
         avg_humans_per_barn = 1.5,
         avg_water_per_farm = 0.75,
-        number_of_transients = 3,
-        visits_per_day = 3, # Number of farms each transient visits in a day
+        number_of_transients = 10,
+        visits_per_day = 5, # Number of farms each transient visits in a day
     ),
     beta = dict(
         human = 0.003,
@@ -161,22 +162,22 @@ new_pars = dict(
             sus_ORs = np.array([1.00]),
             trans_ORs = np.array([1.00]),
             baseline_symptomatic_rate = np.array([0.001]),
-            symptomatic_rate_increase = np.array([dict(dist='lognormal', par1=0.01, par2 = 0.5)]),
+            symptomatic_rate_increase = np.array([dict(dist='lognormal', par1=0.01, par2 = 0.005)]),
             baseline_mortality_rate = np.array([0.001]),
-            mortality_rate_increase = np.array([dict(dist='lognormal', par1=0.01, par2=0.5)]),
+            mortality_rate_increase = np.array([dict(dist='lognormal', par1=0.01, par2=0.005)]),
             baseline_water_rate = np.array([1.00]),
             water_rate_increase = np.array([dict(dist='lognormal', par1=1.0, par2=0.5)]),
         ),
         herd = dict(
             breeds = np.array(['cattle'], dtype=zn.default_str),
             sus_ORs = np.array([1.00]),
-            trans_ORs = np.array([1.00]),
+            trans_ORs = np.array([0.500]),
             baseline_symptomatic_rate = np.array([0.001]),
-            symptomatic_rate_increase = np.array([dict(dist='lognormal', par1=0.001, par2 = 0.01)]),
+            symptomatic_rate_increase = np.array([dict(dist='lognormal', par1=0.01, par2 = 0.005)]),
             baseline_mortality_rate = np.array([0.000]),
-            mortality_rate_increase = np.array([dict(dist='lognormal', par1=0.001, par2=0.01)]),
+            mortality_rate_increase = np.array([dict(dist='lognormal', par1=0.005, par2=0.001)]),
             baseline_water_rate = np.array([10.00]),
-            water_rate_increase = np.array([dict(dist='lognormal', par1=5.00, par2=2.50)]),
+            water_rate_increase = np.array([dict(dist='lognormal', par1=10.00, par2=5.00)]),
         ),
         barn = dict(
             sus_ORs = np.array([1.00]),
@@ -190,7 +191,7 @@ new_pars = dict(
     poultry_pars = dict(
         breeds = np.array(['poultry'], dtype=zn.default_str),
         breed_freqs = np.array([1.0]),
-        mortality_suspicion_threshold = [0.001], # I.E a deviation from the expected mortality rate of 0.01*expected_value will trigger suspicion
+        mortality_suspicion_threshold = [0.004], # I.E a deviation from the expected mortality rate of 0.01*expected_value will trigger suspicion
         symptomatic_suspicion_threshold = [0.001], # I.E a deviation from the expected symptomatic rate of 0.01*expected_value will trigger suspicion
         consumption_suspicion_threshold = [0.001], # I.E a deviation from the expected rate of water consumption of 0.01*expected_value will trigger suspicion
         cycle_dur = [dict(dist = 'normal_pos', par1 = 100, par2 = 25)],
@@ -199,9 +200,9 @@ new_pars = dict(
     cattle_pars = dict(
         breeds = np.array(['cattle'], dtype=zn.default_str),
         breed_freqs = np.array([1.0]),
-        mortality_suspicion_threshold = [0.001], # I.E a deviation from the expected mortality rate of 0.01*expected_value will trigger suspicion
-        symptomatic_suspicion_threshold = [0.001], # I.E a deviation from the expected symptomatic rate of 0.01*expected_value will trigger suspicion
-        consumption_suspicion_threshold = [0.10], # I.E a deviation from the expected rate of water consumption of 0.01*expected_value will trigger suspicion
+        mortality_suspicion_threshold = [0.01], # I.E a deviation from the expected mortality rate of 0.01*expected_value will trigger suspicion
+        symptomatic_suspicion_threshold = [0.01], # I.E a deviation from the expected symptomatic rate of 0.01*expected_value will trigger suspicion
+        consumption_suspicion_threshold = [0.01], # I.E a deviation from the expected rate of water consumption of 0.01*expected_value will trigger suspicion
         cycle_dur = [dict(dist = 'normal_pos', par1 = 3000, par2 = 750)],
         herd_size = [dict(dist = 'normal_pos', par1 = 1000, par2 = 500)]
     ),

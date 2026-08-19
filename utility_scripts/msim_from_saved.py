@@ -5,20 +5,6 @@ import numpy as np
 saved_pars_filename = "saved_pars/default_single_breed_poultry_and_cattle.json"
 sim_label = "default single breed poultry and cattle"
 
-# with open(saved_pars_filename, 'r') as file:
-#     saved_pars = json.load(file)
-
-# for key, value in saved_pars['prognoses']['human'].items():
-#     saved_pars['prognoses']['human'][key] = np.array(value)
-# for key, value in saved_pars['prognoses']['flock'].items():
-#     if key == 'breed':
-#         saved_pars['prognoses']['flock'][key] = np.array(value, dtype=zn.default_str)
-#     else:
-#         saved_pars['prognoses']['flock'][key] = np.array(value)
-# for key, value in saved_pars['poultry_pars'].items():
-#     if key == 'breeds':
-#         saved_pars['poultry_pars'][key] = np.array(value, dtype=zn.default_str)
-
 saved_pars = zn.pars_from_json(saved_pars_filename)
 
 saved_sim = zn.Sim(pars = saved_pars, label = sim_label)
@@ -31,7 +17,7 @@ saved_sim = zn.Sim(pars = saved_pars, label = sim_label)
 # saved_sim.update_pars(new_pars, recursive=True)
 
 
-msim = zn.MultiSim(saved_sim, label=sim_label, n_runs=10, verbose=0.1)  # Wrap the simulation in a MultiSim object.
+msim = zn.MultiSim(saved_sim, label=sim_label, n_runs=100, verbose=0.3)  # Wrap the simulation in a MultiSim object.
 
 if __name__ == "__main__":
     msim.run(keep_people = True, run_args=dict(auto_finalize=False))                    # Run the simulations.

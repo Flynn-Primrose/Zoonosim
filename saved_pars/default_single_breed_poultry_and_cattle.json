@@ -22,8 +22,8 @@
     "avg_barns_per_farm": 5.0,
     "avg_humans_per_barn": 1.5,
     "avg_water_per_farm": 0.75,
-    "number_of_transients": 3,
-    "visits_per_day": 3
+    "number_of_transients": 10,
+    "visits_per_day": 5
   },
   "pop_scale": 1.0,
   "rescale": false,
@@ -39,7 +39,7 @@
   "start_day": "2022-01-01",
   "end_day": "2025-12-31",
   "n_days": 150,
-  "rand_seed": null,
+  "rand_seed": 89,
   "verbose": 0.1,
   "enable_testobjs": false,
   "testobjs": null,
@@ -513,7 +513,7 @@
         {
           "dist": "lognormal",
           "par1": 0.01,
-          "par2": 0.5
+          "par2": 0.005
         }
       ],
       "baseline_mortality_rate": [
@@ -523,7 +523,7 @@
         {
           "dist": "lognormal",
           "par1": 0.01,
-          "par2": 0.5
+          "par2": 0.005
         }
       ],
       "baseline_water_rate": [
@@ -545,7 +545,7 @@
         1.0
       ],
       "trans_ORs": [
-        1.0
+        0.5
       ],
       "baseline_symptomatic_rate": [
         0.001
@@ -553,8 +553,8 @@
       "symptomatic_rate_increase": [
         {
           "dist": "lognormal",
-          "par1": 0.001,
-          "par2": 0.01
+          "par1": 0.01,
+          "par2": 0.005
         }
       ],
       "baseline_mortality_rate": [
@@ -563,8 +563,8 @@
       "mortality_rate_increase": [
         {
           "dist": "lognormal",
-          "par1": 0.001,
-          "par2": 0.01
+          "par1": 0.005,
+          "par2": 0.001
         }
       ],
       "baseline_water_rate": [
@@ -573,8 +573,8 @@
       "water_rate_increase": [
         {
           "dist": "lognormal",
-          "par1": 5.0,
-          "par2": 2.5
+          "par1": 10.0,
+          "par2": 5.0
         }
       ]
     },
@@ -603,7 +603,7 @@
       1.0
     ],
     "mortality_suspicion_threshold": [
-      0.001
+      0.004
     ],
     "symptomatic_suspicion_threshold": [
       0.001
@@ -634,13 +634,13 @@
       1.0
     ],
     "mortality_suspicion_threshold": [
-      0.001
+      0.01
     ],
     "symptomatic_suspicion_threshold": [
-      0.001
+      0.01
     ],
     "consumption_suspicion_threshold": [
-      0.1
+      0.01
     ],
     "cycle_dur": [
       {
