@@ -13,7 +13,6 @@ from .rosters import Roster
 from .humans import Humans
 from .ppe import PPE
 from .flocks import Flocks
-from .herds import Herds
 from .barns import Barns
 from .waters import Water
 
@@ -120,12 +119,6 @@ class Agents(Roster):
         else:
             raise ValueError("flock must be an instance of Flocks class")
         
-        herd = kwargs.pop('herd', None)
-        if isinstance(herd, Herds):
-            self.herd = herd
-        else:
-            raise ValueError("herd must be an instance of the Herds class")
-        
         barn = kwargs.pop('barn', None)
         if isinstance(barn, Barns):
             self.barn = barn
@@ -198,7 +191,6 @@ class Agents(Roster):
         self.human.initialize(self.pars) # Initialize the human subroster
         self.ppe.initialize(self.pars) # Initialize the ppe subroster
         self.flock.initialize(self.pars) # Initialize the flock subroster
-        self.herd.initialize(self.pars) # Initialize the herd subroster
         self.barn.initialize(self.pars) # Initialize the barn subroster
         self.water.initialize(self.pars) # Initialize the water subroster
         self.update_states_from_subrosters() # Update the states of the main roster based on the subrosters
@@ -215,7 +207,6 @@ class Agents(Roster):
         self.human.update_states_pre(t)
         self.ppe.update_states_pre(t)
         self.flock.update_states_pre(t)
-        self.herd.update_states_pre(t)
         self.barn.update_states_pre(t)
         self.water.update_states_pre(t)
 
@@ -236,7 +227,6 @@ class Agents(Roster):
         self.human.update_states_post()
         self.ppe.update_states_post()
         self.flock.update_states_post()
-        self.herd.update_states_post()
         self.barn.update_states_post()
         self.water.update_states_post()
         # Update the states of the main roster
@@ -332,65 +322,6 @@ class Agents(Roster):
 
         return infection_levels
     
-    def update_herd_infection_levels(self):
-        '''
-        Update the infection levels of the herd subroster. This is done by calculating the exposed and infectious deltas for each herd and updating the headcounts accordingly.
-        NOTE: This is not optimized for speed, so it may be slow for large populations.
-        '''
-
-        exposed_delta = np.zeros(self.herd.exposed_headcount.shape, dtype=znd.default_float) # Initialize the exposed delta
-        exposed_dead = np.zeros(self.herd.exposed_headcount.shape, dtype=znd.default_float) # Initialize the exposed dead delta
-        infectious_delta = np.zeros(self.herd.infectious_headcount.shape, dtype=znd.default_float) # Initialize the infectious delta
-        infectious_dead = np.zeros(self.herd.infectious_headcount.shape, dtype=znd.default_float) # Initialize the infectious dead delta
-        dead_delta = np.zeros(self.herd.daily_dead_headcount.shape, dtype=znd.default_float) # Initialize the dead delta
-        infected_symptomatic_rate = np.zeros(self.herd.headcount.shape, dtype=znd.default_float) # Initialize the infected symptomatic rate
-        infected_inds = znu.true(self.herd['exposed'])
-
-        if len(infected_inds) > 0: # If there are any infected herds
-
-            # Calculate exposed_delta for all infected herds
-            variant_keys = np.array([self.pars['variant_map'][variant_ind] for variant_ind in self.herd.exposed_variant[infected_inds].astype(znd.default_int)]) # Get the variant keys for each infected flock
-            rel_betas = np.array([self.pars['variant_pars'][key]['herd']['rel_beta'] for key in variant_keys])
-            betas = rel_betas * self.pars['beta']['herd'] # Get beta for each infected herd based on the variant
-            susceptible_headcount = self.herd.headcount[infected_inds] - self.herd.exposed_headcount[infected_inds] - self.herd.infectious_headcount[infected_inds] # Get the susceptible headcount for each infected flock
-            exposed_in = susceptible_headcount * self.herd.infectious_headcount[infected_inds] * betas / self.herd.headcount[infected_inds] # Calculate the new exposed headcount for each infected flock
-            exposed_dead[infected_inds] = self.herd.exposed_headcount[infected_inds] * self.herd['baseline_mortality_rate'][infected_inds] # Question: Should this be the baseline mortality rate, the infected mortality rate, or both?
-            exposed_out = self.herd.exposed_headcount[infected_inds]/ self.herd['dur_exp2inf'][infected_inds] + exposed_dead[infected_inds] # Calculate the exposed headcount that is leaving the exposed state for each infected flock
-            exposed_delta[infected_inds] = exposed_in - exposed_out # Calculate the change in exposed headcount for each infected flock
-
-            # Calculate infectious_delta for all infected herd
-            infectious_in = self.herd.exposed_headcount[infected_inds]/self.herd['dur_exp2inf'][infected_inds]
-            infectious_dead[infected_inds] = self.herd.infectious_headcount[infected_inds] * self.herd['infected_mortality_rate'][infected_inds] # Question: Should this bw the infected mortality rate or a combination of the baseline and infected mortality rates?
-            infectious_out = self.herd.infectious_headcount[infected_inds] / self.herd['dur_inf2out'][infected_inds] + infectious_dead[infected_inds] # Calculate the infectious headcount that is leaving the infectious state for each infected flock
-            infectious_delta[infected_inds] = infectious_in - infectious_out # Calculate the change in infectious headcount for each infected flock
-
-            # Get symptomatic rates for infected herd
-            infected_symptomatic_rate[infected_inds] = self.flock.infected_symptomatic_rate[infected_inds] # Get the infected symptomatic rate for each infected flock
-
-
-
-        susceptible_dead = (self.herd.headcount - self.herd.exposed_headcount - self.herd.infectious_headcount) * self.herd['baseline_mortality_rate'] # Calculate the susceptible headcount that is dying for each flock
-        dead_delta = susceptible_dead + exposed_dead + infectious_dead # Calculate the total dead headcount for each herd
-
-        # Actually update all the headcounts
-        
-        self.herd.exposed_headcount += exposed_delta
-        self.herd.infectious_headcount += infectious_delta 
-        self.herd.daily_dead_headcount = dead_delta
-        self.herd.total_dead_headcount += dead_delta
-        self.herd.headcount -= dead_delta 
-
-        # Calculate the new symptomatic headcount
-        
-        
-        self.herd.symptomatic_headcount = self.herd.headcount * self.herd.baseline_symptomatic_rate + (self.herd.exposed_headcount + self.herd.infectious_headcount) * infected_symptomatic_rate
-
-        infection_levels = np.zeros(self.herd.headcount.shape, dtype=znd.default_float)
-        non_zero_headcount_inds = np.where(self.herd.headcount > 0)[0]
-        infection_levels[non_zero_headcount_inds] = self.herd.infectious_headcount[non_zero_headcount_inds]/self.herd.headcount[non_zero_headcount_inds]
-
-        return infection_levels
-    
     def update_ppe_biosecurity_levels(self):
         '''
         Update the biosecurity levels of the PPE subroster. 
@@ -426,11 +357,6 @@ class Agents(Roster):
         infectious_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['infectious'])])
         quarantined_flock_uids = np.array(self.flock['uid'][znu.true(self.flock['quarantined'])])
 
-        susceptible_herd_uids = np.array(self.herd['uid'][znu.true(self.herd['susceptible'])])
-        exposed_herd_uids = np.array(self.herd['uid'][znu.true(self.herd['exposed'])])
-        infectious_herd_uids = np.array(self.herd['uid'][znu.true(self.herd['infectious'])])
-        quarantined_herd_uids = np.array(self.herd['uid'][znu.true(self.herd['quarantined'])])
-
         susceptible_barn_uids = np.array(self.barn['uid'][znu.false(self.barn['contaminated'])])
         exposed_barn_uids = np.array(self.barn['uid'][znu.true(self.barn['contaminated'])])
         infectious_barn_uids = np.array(self.barn['uid'][znu.true(self.barn['contaminated'])])
@@ -439,12 +365,12 @@ class Agents(Roster):
         exposed_water_uids = np.array(self.water['uid'][znu.true(self.water['contaminated'])])
         infectious_water_uids = np.array(self.water['uid'][znu.true(self.water['contaminated'])])
 
-        susceptible_uids = np.concatenate((susceptible_human_uids, susceptible_ppe_uids, susceptible_flock_uids, susceptible_herd_uids, susceptible_barn_uids, susceptible_water_uids))
-        exposed_uids = np.concatenate((exposed_human_uids, exposed_ppe_uids, exposed_flock_uids, exposed_herd_uids, exposed_barn_uids, exposed_water_uids))
-        infectious_uids = np.concatenate((infectious_human_uids, infectious_ppe_uids, infectious_flock_uids, infectious_herd_uids, infectious_barn_uids, infectious_water_uids))
+        susceptible_uids = np.concatenate((susceptible_human_uids, susceptible_ppe_uids, susceptible_flock_uids, susceptible_barn_uids, susceptible_water_uids))
+        exposed_uids = np.concatenate((exposed_human_uids, exposed_ppe_uids, exposed_flock_uids, exposed_barn_uids, exposed_water_uids))
+        infectious_uids = np.concatenate((infectious_human_uids, infectious_ppe_uids, infectious_flock_uids, infectious_barn_uids, infectious_water_uids))
 
         symptomatic_uids = symptomatic_human_uids
-        quarantined_uids = np.concatenate((quarantined_human_uids, quarantined_ppe_uids, quarantined_flock_uids, quarantined_herd_uids))
+        quarantined_uids = np.concatenate((quarantined_human_uids, quarantined_ppe_uids, quarantined_flock_uids))
 
         self.susceptible = np.isin(self['uid'], susceptible_uids)
         self.exposed = np.isin(self['uid'], exposed_uids)
@@ -454,7 +380,6 @@ class Agents(Roster):
         self.infectious_variant = np.concatenate((self.human.infectious_variant,
                                                   self.ppe.contaminated_variant,
                                                   self.flock.infectious_variant,
-                                                  self.herd.infectious_variant,
                                                   self.barn.contaminated_variant,
                                                   self.water.contaminated_variant))
         return
@@ -474,8 +399,6 @@ class Agents(Roster):
     def get_flock_rel_sus(self):
         return self.flock.rel_sus
     
-    def get_herd_rel_sus(self):
-        return self.herd.rel_sus
     
     def get_barn_rel_sus(self):
 
@@ -488,10 +411,9 @@ class Agents(Roster):
         human_rel_sus = self.get_human_rel_sus()
         ppe_rel_sus = self.get_ppe_rel_sus()
         flock_rel_sus = self.get_flock_rel_sus()
-        herd_rel_sus = self.get_herd_rel_sus()
         barn_rel_sus = self.get_barn_rel_sus()
         water_rel_sus = self.get_water_rel_sus()
-        return np.concatenate((human_rel_sus, ppe_rel_sus, flock_rel_sus, herd_rel_sus, barn_rel_sus, water_rel_sus))
+        return np.concatenate((human_rel_sus, ppe_rel_sus, flock_rel_sus, barn_rel_sus, water_rel_sus))
     
     def get_human_rel_trans(self):
         return self.human.rel_trans
@@ -501,9 +423,6 @@ class Agents(Roster):
     
     def get_flock_rel_trans(self):
         return self.flock.rel_trans
-    
-    def get_herd_rel_trans(self):
-        return self.herd.rel_trans
     
     def get_barn_rel_trans(self):
         return self.barn.rel_trans
@@ -515,10 +434,9 @@ class Agents(Roster):
         human_rel_trans = self.get_human_rel_trans()
         ppe_rel_trans = self.get_ppe_rel_trans()
         flock_rel_trans = self.get_flock_rel_trans()
-        herd_rel_trans = self.get_herd_rel_trans()
         barn_rel_trans = self.get_barn_rel_trans()
         water_rel_trans = self.get_water_rel_trans()
-        return np.concatenate((human_rel_trans, ppe_rel_trans, flock_rel_trans, herd_rel_trans, barn_rel_trans, water_rel_trans))
+        return np.concatenate((human_rel_trans, ppe_rel_trans, flock_rel_trans, barn_rel_trans, water_rel_trans))
 
 
     #%% Methods to make events occur (infection and diagnosis)
@@ -546,8 +464,6 @@ class Agents(Roster):
         flock_inds = np.where(np.isin(self.flock.uid, self.uid[inds])) 
         #flock_inds = np.array([i fo i,uid in enumerate(self.flock.uid) if uid in set(self.uid[inds])])
 
-        herd_inds = np.where(np.isin(self.herd.uid, self.uid[inds]))
-
         barn_inds = np.where(np.isin(self.barn.uid, self.uid[inds]))
         #barn_inds = np.array([i fo i,uid in enumerate(self.barn.uid) if uid in set(self.uid[inds])])
 
@@ -557,7 +473,6 @@ class Agents(Roster):
         self.human.infect(human_inds, hosp_max, source, layer, variant)
         self.ppe.infect(ppe_inds, source, layer, variant)
         self.flock.infect(flock_inds, source, layer, variant)
-        self.herd.infect(herd_inds, source, layer, variant)
         self.barn.infect(barn_inds, source, layer, variant)
         self.water.infect(water_inds, source, layer, variant)
 
@@ -573,7 +488,6 @@ class Agents(Roster):
         poultry_progs = self.pars['prognoses']['flock']
 
         cattle_pars = self.pars['cattle_pars']
-        cattle_progs = self.pars['prognoses']['herd']
 
         barn_inds = np.where(self.barn.date_repopulate <= t)[0]
 
@@ -581,7 +495,6 @@ class Agents(Roster):
             self.barn.repopulations[barn_inds]+= 1
             self.barn.date_repopulate[barn_inds] = np.nan
             flock_inds = np.where(np.isin(self.flock.uid, self.barn.resident_uid[barn_inds]))[0]
-            herd_inds = np.where(np.isin(self.herd.uid, self.barn.resident_uid[barn_inds]))[0]
 
             if flock_inds.size > 0:
                 flock_breed_to_index = {breed: index for index, breed in enumerate(poultry_pars['breeds'])}
@@ -602,28 +515,7 @@ class Agents(Roster):
                 self.flock.rel_sus[flock_inds] = poultry_progs['sus_ORs'][flock_breed_inds]
                 self.flock.rel_trans[flock_inds] = poultry_progs['trans_ORs'][flock_breed_inds]
 
-
-            if herd_inds.size > 0:
-                herd_breed_to_index = {breed: index for index, breed in enumerate(cattle_pars['breeds'])}
-                herd_breed_inds = np.array([herd_breed_to_index[this_breed] for this_breed in self.herd.breed[herd_inds]])
-    
-                breed, freq = np.unique(herd_breed_inds, return_counts=True)
-                herd_breed_dict = dict(zip(breed, freq))
-                for breed, freq in herd_breed_dict.items():
-                    current_breed_inds = np.where(herd_breed_inds == breed)[0]
-                    self.barn.date_cycle_end[barn_inds[current_breed_inds]] = t + znu.sample(**cattle_pars['cycle_dur'][breed], size = freq)
-                    self.herd.headcount[herd_inds[current_breed_inds]] = znu.sample(**cattle_pars['herd_size'][breed], size = freq) 
-    
-                self.herd.susceptible[herd_inds] = True
-                self.herd.suspected[herd_inds] = False
-                self.herd.baseline_symptomatic_rate[herd_inds] = cattle_progs['baseline_symptomatic_rate'][herd_breed_inds]
-                self.herd.baseline_mortality_rate[herd_inds] = cattle_progs['baseline_mortality_rate'][herd_breed_inds]
-                self.herd.baseline_water_rate[herd_inds] = cattle_progs['baseline_water_rate'][herd_breed_inds]
-                self.herd.rel_sus[herd_inds] = cattle_progs['sus_ORs'][herd_breed_inds]
-                self.herd.rel_trans[herd_inds] = cattle_progs['trans_ORs'][herd_breed_inds]
-
             self.flock.update_event_log(flock_inds, 'cycle_start')
-            self.herd.update_event_log(herd_inds, 'cycle_start')
             self.barn.update_event_log(barn_inds, 'cycle_start')
 
         return len(barn_inds)
@@ -676,47 +568,7 @@ class Agents(Roster):
             self.flock.date_quarantined[neg_flock_inds] = np.nan
             self.flock.update_event_log(neg_flock_inds, 'negative')
 
-        herd_inds = np.where(self.herd.date_result <= t)[0]
-
-        if herd_inds.size>0:
-
-            pos_herd_inds = herd_inds[np.where(self.herd.infectious[herd_inds] == True)[0]]
-            pos_barn_inds = np.where(np.isin(self.barn.resident_uid, self.herd.uid[pos_herd_inds]))[0]
-
-
-            neg_herd_inds = herd_inds[np.where(self.herd.infectious[herd_inds] == False)[0]]
-
-            self.barn.date_cycle_end[pos_barn_inds] = np.nan
-            self.barn.composting[pos_barn_inds] = True
-            self.barn.date_composting[pos_barn_inds] = t + znu.sample(**self.pars['dur']['barn']['composting'], size = len(pos_barn_inds))
-
-            self.herd.headcount[pos_herd_inds] = 0
-            self.herd.exposed_headcount[pos_herd_inds] = 0
-            self.herd.infectious_headcount[pos_herd_inds] = 0
-            self.herd.symptomatic_headcount[pos_herd_inds] = 0
-            self.herd.daily_dead_headcount[pos_herd_inds] = 0
-            self.herd.total_dead_headcount[pos_herd_inds] = 0
-            self.herd.water_consumption[pos_herd_inds] = 0
-
-            self.herd.susceptible[pos_herd_inds] = False
-            self.herd.exposed[pos_herd_inds] = False
-            self.herd.infectious[pos_herd_inds] = False
-            self.herd.quarantined[pos_herd_inds] = False
-            self.herd.date_infectious[pos_herd_inds] = np.nan
-            self.herd.date_exposed[pos_herd_inds] = np.nan
-            self.herd.date_suspected[pos_herd_inds] = np.nan
-            self.herd.date_result[pos_herd_inds] = np.nan
-            self.herd.date_quarantined[pos_herd_inds] = np.nan
-            self.herd.update_event_log(pos_herd_inds, 'cull')
-
-            self.herd.suspected[neg_herd_inds] = False
-            self.herd.quarantined[neg_herd_inds] = False
-            self.herd.date_suspected[neg_herd_inds] = np.nan
-            self.herd.date_result[neg_herd_inds] = np.nan
-            self.herd.date_quarantined[neg_herd_inds] = np.nan
-            self.herd.update_event_log(neg_herd_inds, 'negative')
-
-        return len(flock_inds) + len(herd_inds)
+        return len(flock_inds)
     
     def check_cycle_end(self, t):
         '''
@@ -725,7 +577,6 @@ class Agents(Roster):
 
         barn_inds = np.where(self.barn.date_cycle_end <= t)[0]
         flock_inds = np.where(np.isin(self.flock.uid, self.barn.resident_uid[barn_inds]))[0]
-        herd_inds = np.where(np.isin(self.herd.uid, self.barn.resident_uid[barn_inds]))[0]
 
         if barn_inds.size>0:
             self.barn.date_cycle_end[barn_inds] = np.nan
@@ -752,27 +603,6 @@ class Agents(Roster):
                 self.flock.date_quarantined[flock_inds] = np.nan
                 self.flock.date_result[flock_inds] = np.nan
                 self.flock.update_event_log(flock_inds, 'cycle_end')
-
-            if herd_inds.size > 0:
-                self.herd.headcount[herd_inds] = 0
-                self.herd.exposed_headcount[herd_inds] = 0
-                self.herd.infectious_headcount[herd_inds] = 0
-                self.herd.symptomatic_headcount[herd_inds] = 0
-                self.herd.daily_dead_headcount[herd_inds] = 0
-                self.herd.total_dead_headcount[herd_inds] = 0
-                self.herd.water_consumption[herd_inds] = 0
-
-                self.herd.susceptible[herd_inds] = False
-                self.herd.exposed[herd_inds] = False
-                self.herd.infectious[herd_inds] = False
-                self.herd.suspected[herd_inds] = False
-                self.herd.quarantined[herd_inds] = False
-                self.herd.date_infectious[herd_inds] = np.nan
-                self.herd.date_exposed[herd_inds] = np.nan
-                self.herd.date_suspected[herd_inds] = np.nan
-                self.herd.date_quarantined[herd_inds] = np.nan
-                self.herd.date_result[herd_inds] = np.nan
-                self.herd.update_event_log(herd_inds, 'cycle_end')
 
             self.barn.update_event_log(barn_inds, 'cycle_end')
 

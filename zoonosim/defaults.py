@@ -38,14 +38,12 @@ overview_plots = sc.odict({
     'n_human_infections',
     'n_ppe_contaminated',
     'n_flock_infectious',
-    'n_herd_infectious',
     ],
 })
 
 overview_variant_plots = sc.odict({
     'Human Infections by Variant' : ['new_human_infections_by_variant'],
     'Flock Infections by Variant' : ['new_flock_infections_by_variant'],
-    'Herd Infections by Variant' : ['new_herd_infections_by_variant'],
     'Contaminated Barns by Variant': ['new_barn_contaminated_by_variant'],
     'Contaminated Water by Variant' : ['new_water_contaminated_by_variant'],
 })
@@ -113,26 +111,6 @@ flock_plots = sc.odict({
     # ],
 })
 
-herd_plots = sc.odict({
-    'Total counts': [
-        'n_herd_infectious',
-        # 'n_herd_exposed',
-        'n_herd_suspected',
-        # 'n_herd_quarantined',
-    ],
-    # 'Cumulative counts': [
-    #     'cum_herd_infectious',
-    #     'cum_herd_exposed',
-    #     'cum_herd_suspected',
-    #     'cum_herd_quarantined',
-    # ],
-    # 'Daily counts': [
-    #     'new_herd_infectious',
-    #     'new_herd_exposed',
-    #     'new_herd_suspected',
-    #     'new_herd_quarantined',
-    # ],
-})
 
 breed_plots = sc.odict({
     'number exposed' : [
@@ -231,22 +209,18 @@ seasonality_plots = sc.odict({
     'water_vs_suspected':[
         'n_water_contaminated',
         'n_flock_suspected',
-        'n_herd_suspected',
     ],
     'water_vs_infectious':[
         'n_water_contaminated',
         'n_flock_infectious',
-        'n_herd_infectious',
     ],
     'barn_vs_suspected':[
         'n_barn_contaminated',
         'n_flock_suspected',
-        'n_herd_suspected',
     ],
     'barn_vs_infectious':[
         'n_barn_contaminated',
         'n_flock_infectious',
-        'n_herd_infectious',
     ],
 })
 
@@ -289,7 +263,6 @@ def get_default_plots(which='default', kind='sim', sim=None):
                 'Response': [
                     'n_flock_infectious',
                     'n_human_infectious',
-                    'n_herd_infectious',
                 ]
                 # 'Total counts': [
                 #     'n_human_infectious',
@@ -333,7 +306,6 @@ def get_default_plots(which='default', kind='sim', sim=None):
                     'new_human_infections',
                     'new_ppe_contaminated',
                     'new_flock_infectious',
-                    'new_herd_infectious',
                     'new_barn_contaminated',
                     'new_water_contaminated',
                 ],
@@ -358,9 +330,6 @@ def get_default_plots(which='default', kind='sim', sim=None):
 
     elif which == 'flock': # pragma: no cover
         plots = sc.dcp(flock_plots)
-
-    elif which == 'herd': # pragma: no cover
-        plots = sc.dcp(herd_plots)
 
     elif which == 'breed': # pragma: no cover
         plots = sc.dcp(breed_plots)
@@ -396,10 +365,6 @@ def get_default_plots(which='default', kind='sim', sim=None):
                     #'cum_flock_infectious_by_variant',
                     'new_flock_infectious_by_variant',  
                 ],
-                'Herd infections by variant': [
-                    #'cum_herd_infectious_by_variant',
-                    'new_herd_infectious_by_variant',
-                ],
                 'Barn contaminations by variant': [
                     #'cum_barn_contaminated_by_variant',
                     'new_barn_contaminated_by_variant',
@@ -423,7 +388,6 @@ def get_default_plots(which='default', kind='sim', sim=None):
                         'new_human_infections_by_variant',
                         'new_ppe_contaminated_by_variant',
                         'new_flock_infectious_by_variant',
-                        'new_herd_infectious_by_variant',
                         'new_barn_contaminated_by_variant',
                         'new_water_contaminated_by_variant',
                     ],
@@ -499,18 +463,6 @@ def get_default_colors(agent_type):
             c.broiler = '#fc8d62' # 
             c.layer = '#8da0cb' #
             c.poultry = '#fc8d62'
-        case 'herd':
-            c.susceptible = '#66c2a5' # 
-            c.exposed = '#fc8d62' # 
-            c.infectious = '#8da0cb' # 
-            c.suspected = '#e78ac3' # 
-            c.quarantined = '#a6d854' # 
-            c.exposed_by_variant = '#ffd92f' # 
-            c.infectious_by_variant = '#e5c494' #
-        case 'herd_breed':
-            c.cattle = '#66c2a5' # 
-            c.sheep = '#fc8d62' # 
-            c.pigs = '#8da0cb' #
         case 'barn': 
             c.uncontaminated = '#1b9e77' # 
             c.contaminated = '#d95f02' # 
@@ -595,20 +547,6 @@ default_flock_prognoses = dict(
     # sd_water_rate_increase = np.array([0.5, 0.5, 0.5]),
 )
 
-default_herd_prognoses = dict(
-    breeds = np.array(['dairy', 'beef'], dtype=default_str),
-    sus_ORs = np.array([1.00, 1.00]),
-    trans_ORs = np.array([1.00, 1.00]),
-    baseline_symptomatic_rate = np.array([0.001, 0.001]),
-    symptomatic_rate_increase = np.array([dict(dist='lognormal', par1 = 0.001, par2 = 0.5),
-                                          dict(dist='lognormal', par1=0.0005, par2 = 0.5)]),
-    baseline_mortality_rate = np.array([0.001, 0.001]),
-    mortality_rate_increase = np.array([dict(dist='lognormal', par1 = 0.005, par2 = 0.5),
-                                      dict(dist='lognormal', par1=0.002, par2 = 0.5)]),
-    baseline_water_rate = np.array([1.00, 1.00]),
-    water_rate_increase = np.array([dict(dist='lognormal', par1 = 1.5, par2 = 0.5),
-                                      dict(dist='lognormal', par1=1.00, par2 = 0.5)])
-)
 
 default_barn_prognoses = dict(
     sus_ORs = 1.00,
@@ -632,9 +570,6 @@ flock_calibration_flows = {
     'infectious': 'Number of infectious flocks'
 }
 
-herd_calibration_flows = {
-    'infectious': 'Number of infectious herds'
-}
 
 calibration_result_prefix = 'monthly_new_' # The expected prefix for results that are used for calibration; used in analysis.py to identify which results to use for calibration. 
 
@@ -664,13 +599,6 @@ flock_stocks = {
     'quarantined': 'Number of quarantined flocks',
 }
 
-herd_stocks = {
-    'susceptible': 'Number of susceptible herds',
-    'exposed':     'Number of exposed herds',
-    'suspected':   'Number of suspected herds',
-    'infectious':  'Number of infectious herds',
-    'quarantined': 'Number of quarantined herds',
-}
 
 barn_stocks = {
     'composting': 'Number of barns that are being composted',
@@ -702,10 +630,6 @@ flock_stocks_by_variant = {
     'infectious_by_variant':  'Number infectious flocks by variant',
 }
 
-herd_stocks_by_variant = {
-    'exposed_by_variant':     'Number exposed herds by variant',
-    'infectious_by_variant':  'Number infectious herds by variant',
-}
 
 barn_stocks_by_variant = {
     'contaminated_by_variant': 'Number contaminated barns by variant',
@@ -766,15 +690,6 @@ flock_flows = {
 new_flock_flows = [f'new_{key}' for key in flock_flows.keys()]
 cum_flock_flows = [f'cum_{key}' for key in flock_flows.keys()]
 
-herd_flows = {
-    'exposed':     'exposed herds',
-    'infectious':   'infectious herds',
-    'suspected' : 'herds suspected of being infectious',
-    'quarantined': 'herds quarantined',
-}
-new_herd_flows = [f'new_{key}' for key in herd_flows.keys()]
-cum_herd_flows = [f'cum_{key}' for key in herd_flows.keys()]
-
 barn_flows = {
     'contaminated': 'contaminated barns',
     'uncontaminated': 'uncontaminated barns',
@@ -815,13 +730,6 @@ flock_flows_by_variant = {
 }
 new_flock_flows_by_variant = [f'new_{key}' for key in flock_flows_by_variant.keys()]
 cum_flock_flows_by_variant = [f'cum_{key}' for key in flock_flows_by_variant.keys()]
-
-herd_flows_by_variant = {
-    'exposed_by_variant':     'exposed herds by variant',
-    'infectious_by_variant':  'infectious herds by variant',
-}
-new_herd_flows_by_variant = [f'new_{key}' for key in herd_flows_by_variant.keys()]
-cum_herd_flows_by_variant = [f'cum_{key}' for key in herd_flows_by_variant.keys()]
 
 barn_flows_by_variant = {
     'contaminated_by_variant': 'contaminated barns by variant',
