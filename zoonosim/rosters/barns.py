@@ -102,13 +102,14 @@ class Barns(Subroster):
     **Examples**::
     '''
 
-    def __init__(self, pars, repopulate=None, strict=True, **kwargs):
+    def __init__(self, pars, repopulate=None, end_cycle=None, strict=True, **kwargs):
 
         # Handle pars and population size
         self.set_pars(pars)
         self.version = znv.__version__ # Store version info
 
         self.repopulate = repopulate
+        self.end_cycle = end_cycle
 
         # Other initialization
         self.t = 0 # Keep current simulation time
@@ -214,6 +215,7 @@ class Barns(Subroster):
         self.flows['new_uncontaminated'] = self.check_uncontaminated()
         self.flows['new_composted'] = self.check_composted()
         self.check_repopulation() # This function is called for its side effects, not its return value
+        self.check_cycle_end(t) # This function is called for its side effects, not its return value
         return
 
 
@@ -297,9 +299,40 @@ class Barns(Subroster):
             self.update_event_log(barn_inds, 'cycle_start')
         return len(barn_inds)
 
+    def check_cycle_end(self, t):
+        '''
+        Check for flocks that are at the end of their production cycle.
+        '''
+
+        barn_inds = np.where(self.barn.date_cycle_end <= t)[0]
+        flock_uids = self.barn.resident_uid[barn_inds]
+
+
+        if barn_inds.size>0:
+            self.barn.date_cycle_end[barn_inds] = np.nan
+            self.barn.cleaning[barn_inds] = True
+            self.barn.date_cleaning[barn_inds] = t + znu.sample(**self.pars['dur']['barn']['cleaning'], size = len(barn_inds))
+
+            self.end_cycle(flock_uids)
+
+            self.barn.update_event_log(barn_inds, 'cycle_end')
+
+        return len(barn_inds)
+
+
     def schedule_cycle_end(self, date_cycle_end, barn_inds):
         ''' Schedule the end of the production cycle for the specified barns '''
         self.date_cycle_end[barn_inds] = date_cycle_end
+        return
+
+    def schedule_composting(self,  flock_uids):
+        ''' Schedule the end of the composting process for the specified barns '''
+        barn_inds = np.where(np.isin(self.barn.resident_uid, flock_uids))[0]
+
+        self.barn.date_cycle_end[barn_inds] = np.nan
+        self.date_composting[barn_inds] = self.t + znu.sample(**self.pars['dur']['barn']['composting'], size = len(barn_inds))
+        self.composting[barn_inds] = True
+        self.update_event_log(barn_inds, 'composting_started')
         return
 
 

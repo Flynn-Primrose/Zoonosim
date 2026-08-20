@@ -63,8 +63,8 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
 
     ppe = make_ppe(sim.pars, popdict['ppe_uids'], popdict['ppe2human'])
     human = make_humans(sim.pars, popdict['human_uids'], popdict['transient_uids'], popdict['human2ppe'], ppe.schedule_quarantine) # We pass the ppe quarantine function to the human roster so that when a human is quarantined, their assigned ppe can also be quarantined
-    flock = make_flocks(sim.pars, popdict['flock_uids'], popdict['flock2barn'], popdict['flock_breed_index'], barn.schedule_cycle_end) # We pass the barn schedule_cycle_end function to the flock roster so that when a flock is repopulated, the assigned barn can be provided with a new cycle end date
-    barn = make_barns(sim.pars, popdict['barn_uids'], popdict['barn2type'], popdict['barn2resident'], popdict['barn2breed'], flock.repopulate) # We pass the flock.repopulate function to the barn roster so that when a barn is scheduled for repopulation, the assigned flock can also be repopulated
+    flock = make_flocks(sim.pars, popdict['flock_uids'], popdict['flock2barn'], popdict['flock_breed_index'], barn.schedule_cycle_end, barn.schedule_composting) # We pass the barn schedule_cycle_end function to the flock roster so that when a flock is repopulated, the assigned barn can be provided with a new cycle end date
+    barn = make_barns(sim.pars, popdict['barn_uids'], popdict['barn2type'], popdict['barn2resident'], popdict['barn2breed'], flock.repopulate, flock.end_cycle) # We pass the flock.repopulate function to the barn roster so that when a barn is scheduled for repopulation, the assigned flock can also be repopulated
     water = make_water(sim.pars, popdict['water_uids'])
     contacts = make_contacts(sim.pars, popdict, skip_layers)
 
@@ -314,7 +314,7 @@ def make_ppe(sim_pars, uid, ppe2human):
     ppe = PPE(sim_pars, strict = False, uid=uid, human=human)
     return ppe
 
-def make_flocks(sim_pars, uid, flock2barn, breed_index, schedule_cycle_end=None):
+def make_flocks(sim_pars, uid, flock2barn, breed_index, schedule_cycle_end=None, schedule_composting=None):
     prod_pars = sim_pars['poultry_pars']
 
     breed = np.empty(len(uid), dtype = object)
@@ -332,10 +332,10 @@ def make_flocks(sim_pars, uid, flock2barn, breed_index, schedule_cycle_end=None)
     for this_breed, freq in breed_dict.items():
         headcount[breed_index == this_breed] = znu.sample(**prod_pars['flock_size'][this_breed], size = freq)
     
-    flocks = Flocks(sim_pars, schedule_cycle_end=schedule_cycle_end, strict = False, uid=uid, breed = breed, barn = barn, headcount=headcount)
+    flocks = Flocks(sim_pars, schedule_cycle_end=schedule_cycle_end, schedule_composting=schedule_composting, strict = False, uid=uid, breed = breed, barn = barn, headcount=headcount)
     return flocks
 
-def make_barns(sim_pars, uid, barn2type, barn2resident, barn2breed, repopulate=None):
+def make_barns(sim_pars, uid, barn2type, barn2resident, barn2breed, repopulate=None, end_cycle=None):
     temperature = znu.n_poisson(22.5, len(uid)) # NOTE: Dummy values
     humidity = znu.n_poisson(45, len(uid)) # NOTE: Dummy values
     resident_uid = np.empty(len(uid), dtype=znd.default_int)
@@ -355,7 +355,7 @@ def make_barns(sim_pars, uid, barn2type, barn2resident, barn2breed, repopulate=N
     for breed, freq in breed_dict.items():
         date_cycle_end[(type_index == 'flock') & (breed_index == breed)] = znu.sample(**sim_pars['poultry_pars']['cycle_dur'][breed], size = freq)
 
-    barns = Barns(sim_pars, repopulate=None, strict = False, uid=uid, temperature = temperature, humidity = humidity, resident_uid = resident_uid, date_cycle_end = date_cycle_end)
+    barns = Barns(sim_pars, repopulate=repopulate, end_cycle=end_cycle, strict = False, uid=uid, temperature = temperature, humidity = humidity, resident_uid = resident_uid, date_cycle_end = date_cycle_end)
     return barns
 
 def make_water(sim_pars, uid):

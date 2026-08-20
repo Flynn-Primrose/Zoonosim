@@ -111,13 +111,14 @@ class Flocks(Subroster):
 
     '''
 
-    def __init__(self, pars, schedule_cycle_end=None, strict=True, **kwargs):
+    def __init__(self, pars, schedule_cycle_end=None, schedule_composting=None, strict=True, **kwargs):
 
         # Handle pars and population size
         self.set_pars(pars)
         self.version = znv.__version__ # Store version info
 
         self.schedule_cycle_end = schedule_cycle_end # Function to schedule the end of a flock's cycle (i.e., when it will be repopulated)
+        self.schedule_composting = schedule_composting # Function to schedule the end of a flock's composting process
 
         # Other initialization
         self.t = 0 # Keep current simulation time
@@ -242,6 +243,7 @@ class Flocks(Subroster):
         self.flows['new_infectious'] = self.check_infectious() # For flocks that are exposed and not infectious, check if they begin being infectious
         self.flows['new_suspected'] = self.check_suspected()
         self.flows['new_quarantined'] = self.check_quarantined() # 
+        self.check_result(self.t)
         return
 
 
@@ -395,6 +397,53 @@ class Flocks(Subroster):
 
         return n_quarantined
 
+    def check_result(self, t):
+        '''
+        Check for flocks that have received their test results and update the states accordingly.
+        '''
+
+        flock_inds = np.where(self.flock.date_result <= t)[0]
+
+        if flock_inds.size>0:
+            #barn_inds = np.where(np.isin(self.barn.flock, self.flock.uid[flock_inds]))[0]
+
+            pos_flock_inds = flock_inds[np.where(self.flock.infectious[flock_inds] == True)[0]]
+            flock_uids = self.flock.uid[pos_flock_inds]
+
+            self.schedule_composting(flock_uids)
+
+            neg_flock_inds = flock_inds[np.where(self.flock.infectious[flock_inds] == False)[0]]
+
+
+
+            self.flock.headcount[pos_flock_inds] = 0
+            self.flock.exposed_headcount[pos_flock_inds] = 0
+            self.flock.infectious_headcount[pos_flock_inds] = 0
+            self.flock.symptomatic_headcount[pos_flock_inds] = 0
+            self.flock.daily_dead_headcount[pos_flock_inds] = 0
+            self.flock.total_dead_headcount[pos_flock_inds] = 0
+            self.flock.water_consumption[pos_flock_inds] = 0
+
+            self.flock.susceptible[pos_flock_inds] = False
+            self.flock.exposed[pos_flock_inds] = False
+            self.flock.infectious[pos_flock_inds] = False
+            self.flock.quarantined[pos_flock_inds] = False
+            self.flock.date_infectious[pos_flock_inds] = np.nan
+            self.flock.date_exposed[pos_flock_inds] = np.nan
+            self.flock.date_suspected[pos_flock_inds] = np.nan
+            self.flock.date_result[pos_flock_inds] = np.nan
+            self.flock.date_quarantined[pos_flock_inds] = np.nan
+            self.flock.update_event_log(pos_flock_inds, 'cull')
+
+            self.flock.suspected[neg_flock_inds] = False
+            self.flock.quarantined[neg_flock_inds] = False
+            self.flock.date_suspected[neg_flock_inds] = np.nan
+            self.flock.date_result[neg_flock_inds] = np.nan
+            self.flock.date_quarantined[neg_flock_inds] = np.nan
+            self.flock.update_event_log(neg_flock_inds, 'negative')
+
+        return len(flock_inds)
+
 
 
     def update_water_consumption(self):
@@ -405,6 +454,34 @@ class Flocks(Subroster):
         return
 
     #%% Methods to make events occur (e.g., infection and diagnosis)
+
+    def end_cycle(self, flock_uids):
+        '''
+        End the production cycle for the specified flocks.
+        '''
+        flock_inds = np.where(np.isin(self.uid, flock_uids))[0]
+
+        if flock_inds.size > 0:
+                        self.flock.headcount[flock_inds] = 0
+                        self.flock.exposed_headcount[flock_inds] = 0
+                        self.flock.infectious_headcount[flock_inds] = 0
+                        self.flock.symptomatic_headcount[flock_inds] = 0
+                        self.flock.daily_dead_headcount[flock_inds] = 0
+                        self.flock.total_dead_headcount[flock_inds] = 0
+                        self.flock.water_consumption[flock_inds] = 0
+        
+                        self.flock.susceptible[flock_inds] = False
+                        self.flock.exposed[flock_inds] = False
+                        self.flock.infectious[flock_inds] = False
+                        self.flock.suspected[flock_inds] = False
+                        self.flock.quarantined[flock_inds] = False
+                        self.flock.date_infectious[flock_inds] = np.nan
+                        self.flock.date_exposed[flock_inds] = np.nan
+                        self.flock.date_suspected[flock_inds] = np.nan
+                        self.flock.date_quarantined[flock_inds] = np.nan
+                        self.flock.date_result[flock_inds] = np.nan
+                        self.flock.update_event_log(flock_inds, 'cycle_end')
+        return
 
     def repopulate(self, flock_uids, barn_inds, t):
         '''
