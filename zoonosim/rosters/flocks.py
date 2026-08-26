@@ -275,6 +275,65 @@ class Flocks(Subroster):
 
         return
 
+    def update_infection_levels(self):
+        '''
+        Update the infection levels of the flock subroster. 
+        This is done by calculating the exposed and infectious deltas for each flock and updating the headcounts accordingly.
+        NOTE: This is not optimized for speed, so it may be slow for large populations.
+        '''
+        exposed_delta = np.zeros(self.exposed_headcount.shape, dtype=znd.default_float) # Initialize the exposed delta
+        exposed_dead = np.zeros(self.exposed_headcount.shape, dtype=znd.default_float) # Initialize the exposed dead delta
+        infectious_delta = np.zeros(self.infectious_headcount.shape, dtype=znd.default_float) # Initialize the infectious delta
+        infectious_dead = np.zeros(self.infectious_headcount.shape, dtype=znd.default_float) # Initialize the infectious dead delta
+        dead_delta = np.zeros(self.daily_dead_headcount.shape, dtype=znd.default_float) # Initialize the dead delta
+        infected_symptomatic_rate = np.zeros(self.headcount.shape, dtype=znd.default_float) # Initialize the infected symptomatic rate
+        infected_inds = znu.true(self['exposed'])
+
+        if len(infected_inds) > 0: # If there are any infected flocks
+
+            # Calculate exposed_delta for all infected flocks
+            variant_keys = np.array([self.pars['variant_map'][variant_ind] for variant_ind in self.exposed_variant[infected_inds].astype(znd.default_int)]) # Get the variant keys for each infected flock
+            rel_betas = np.array([self.pars['variant_pars'][key]['flock']['rel_beta'] for key in variant_keys])
+            betas = rel_betas * self.pars['beta']['flock'] # Get beta for each infected flock based on the variant
+            susceptible_headcount = self.headcount[infected_inds] - self.exposed_headcount[infected_inds] - self.infectious_headcount[infected_inds] # Get the susceptible headcount for each infected flock
+            exposed_in = susceptible_headcount * self.infectious_headcount[infected_inds] * betas / self.headcount[infected_inds] # Calculate the new exposed headcount for each infected flock
+            exposed_dead[infected_inds] = self.exposed_headcount[infected_inds] * self['baseline_mortality_rate'][infected_inds] # Question: Should this be the baseline mortality rate, the infected mortality rate, or both?
+            exposed_out = self.exposed_headcount[infected_inds]/ self['dur_exp2inf'][infected_inds] + exposed_dead[infected_inds] # Calculate the exposed headcount that is leaving the exposed state for each infected flock
+            exposed_delta[infected_inds] = exposed_in - exposed_out # Calculate the change in exposed headcount for each infected flock
+
+            # Calculate infectious_delta for all infected flocks
+            infectious_in = self.exposed_headcount[infected_inds]/self['dur_exp2inf'][infected_inds]
+            infectious_dead[infected_inds] = self.infectious_headcount[infected_inds] * self['infected_mortality_rate'][infected_inds] # Question: Should this bw the infected mortality rate or a combination of the baseline and infected mortality rates?
+            infectious_out = self.infectious_headcount[infected_inds] / self['dur_inf2out'][infected_inds] + infectious_dead[infected_inds] # Calculate the infectious headcount that is leaving the infectious state for each infected flock
+            infectious_delta[infected_inds] = infectious_in - infectious_out # Calculate the change in infectious headcount for each infected flock
+
+            # Get symptomatic rates for infected flocks
+            infected_symptomatic_rate[infected_inds] = self.infected_symptomatic_rate[infected_inds] # Get the infected symptomatic rate for each infected flock
+
+
+
+        susceptible_dead = (self.headcount - self.exposed_headcount - self.infectious_headcount) * self['baseline_mortality_rate'] # Calculate the susceptible headcount that is dying for each flock
+        dead_delta = susceptible_dead + exposed_dead + infectious_dead # Calculate the total dead headcount for each flock
+
+        # Actually update all the headcounts
+        
+        self.exposed_headcount += exposed_delta
+        self.infectious_headcount += infectious_delta 
+        self.daily_dead_headcount = dead_delta
+        self.total_dead_headcount += dead_delta
+        self.headcount -= dead_delta 
+
+        # Calculate the new symptomatic headcount
+        
+        
+        self.symptomatic_headcount = self.headcount * self.baseline_symptomatic_rate + (self.exposed_headcount + self.infectious_headcount) * infected_symptomatic_rate
+
+        infection_levels = np.zeros(self.headcount.shape, dtype=znd.default_float)
+        non_zero_headcount_inds = np.where(self.headcount > 0)[0]
+        infection_levels[non_zero_headcount_inds] = self.infectious_headcount[non_zero_headcount_inds]/self.headcount[non_zero_headcount_inds]
+
+        return infection_levels
+
     #%% Methods for updating state
 
     def check_breed(self, inds, breed):

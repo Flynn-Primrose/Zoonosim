@@ -111,9 +111,9 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
 
     pars['transmission_pars']['human'] = {
         'beta_dist': dict(dist='neg_binomial', par1=1.0, par2=0.45, step=0.01), # Distribution to draw individual level transmissibility
-        'viral_dist':dict(frac_time=0.3, load_ratio=2, high_cap=4), # Currently unused since we use Ritchie's viral load model
-        'enable_vl':True, # Specifies whether we should use the updated viral load calculation; False = use native calculation
-        'viral_levels':dict(min_vl=0.75, max_vl=2) # Specifies the range within which viral load should be scaled so it can contribute to relative transmissibility
+        'viral_loads':dict(minimum_detectable_load=3, peak_load=6),
+        'viral_levels':dict(min_scl=0.75, max_scl=2), # Specifies the range within which viral load should be scaled so it can contribute to relative transmissibility
+        'gamma_pars':dict(par1=2.0, par2=0.35) # Parameters for the gamma distribution used to draw individual level transmissibility
     }
 
     pars['transmission_pars']['ppe'] = {

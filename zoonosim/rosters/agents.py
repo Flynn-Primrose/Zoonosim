@@ -248,81 +248,23 @@ class Agents(Roster):
     def update_human_viral_loads(self, t):
         '''
         update the viral levels of human agents
+        This function just calls the relevent function in the human subroster, but is included here for convenience.
 
         Args:
             t (float): Current time in simulation
         '''
-        # Question: Should this be in the human subroster?
-        # Question: Should we filter the human subroster to only include humans that are infectious?
 
-        x_p1, y_p1 = self.human.x_p1, self.human.y_p1
-        x_p2, y_p2 = self.human.x_p2, self.human.y_p2
-        x_p3, y_p3 = self.human.x_p3, self.human.y_p3
-        min_vl = znd.default_float(self.pars['transmission_pars']['human']['viral_levels']['min_vl'])
-        max_vl = znd.default_float(self.pars['transmission_pars']['human']['viral_levels']['max_vl'])
-
-        self.human.viral_load, human_viral_load = znu.compute_viral_load(t, x_p1, y_p1, x_p2, y_p2, x_p3, y_p3, min_vl, max_vl)
-        return human_viral_load
+        return self.human.update_viral_loads(t)
     
     def update_flock_infection_levels(self):
         '''
-        Update the infection levels of the flock subroster. This is done by calculating the exposed and infectious deltas for each flock and updating the headcounts accordingly.
+        Update the infection levels of the flock subroster. 
+        This function just calls the relevant function in the flock subroster, but is included here for convenience.
         NOTE: This is not optimized for speed, so it may be slow for large populations.
         '''
 
-        exposed_delta = np.zeros(self.flock.exposed_headcount.shape, dtype=znd.default_float) # Initialize the exposed delta
-        exposed_dead = np.zeros(self.flock.exposed_headcount.shape, dtype=znd.default_float) # Initialize the exposed dead delta
-        infectious_delta = np.zeros(self.flock.infectious_headcount.shape, dtype=znd.default_float) # Initialize the infectious delta
-        infectious_dead = np.zeros(self.flock.infectious_headcount.shape, dtype=znd.default_float) # Initialize the infectious dead delta
-        dead_delta = np.zeros(self.flock.daily_dead_headcount.shape, dtype=znd.default_float) # Initialize the dead delta
-        infected_symptomatic_rate = np.zeros(self.flock.headcount.shape, dtype=znd.default_float) # Initialize the infected symptomatic rate
-        infected_inds = znu.true(self.flock['exposed'])
-
-        if len(infected_inds) > 0: # If there are any infected flocks
-
-            # Calculate exposed_delta for all infected flocks
-            variant_keys = np.array([self.pars['variant_map'][variant_ind] for variant_ind in self.flock.exposed_variant[infected_inds].astype(znd.default_int)]) # Get the variant keys for each infected flock
-            rel_betas = np.array([self.pars['variant_pars'][key]['flock']['rel_beta'] for key in variant_keys])
-            betas = rel_betas * self.pars['beta']['flock'] # Get beta for each infected flock based on the variant
-            susceptible_headcount = self.flock.headcount[infected_inds] - self.flock.exposed_headcount[infected_inds] - self.flock.infectious_headcount[infected_inds] # Get the susceptible headcount for each infected flock
-            exposed_in = susceptible_headcount * self.flock.infectious_headcount[infected_inds] * betas / self.flock.headcount[infected_inds] # Calculate the new exposed headcount for each infected flock
-            exposed_dead[infected_inds] = self.flock.exposed_headcount[infected_inds] * self.flock['baseline_mortality_rate'][infected_inds] # Question: Should this be the baseline mortality rate, the infected mortality rate, or both?
-            exposed_out = self.flock.exposed_headcount[infected_inds]/ self.flock['dur_exp2inf'][infected_inds] + exposed_dead[infected_inds] # Calculate the exposed headcount that is leaving the exposed state for each infected flock
-            exposed_delta[infected_inds] = exposed_in - exposed_out # Calculate the change in exposed headcount for each infected flock
-
-            # Calculate infectious_delta for all infected flocks
-            infectious_in = self.flock.exposed_headcount[infected_inds]/self.flock['dur_exp2inf'][infected_inds]
-            infectious_dead[infected_inds] = self.flock.infectious_headcount[infected_inds] * self.flock['infected_mortality_rate'][infected_inds] # Question: Should this bw the infected mortality rate or a combination of the baseline and infected mortality rates?
-            infectious_out = self.flock.infectious_headcount[infected_inds] / self.flock['dur_inf2out'][infected_inds] + infectious_dead[infected_inds] # Calculate the infectious headcount that is leaving the infectious state for each infected flock
-            infectious_delta[infected_inds] = infectious_in - infectious_out # Calculate the change in infectious headcount for each infected flock
-
-            # Get symptomatic rates for infected flocks
-            infected_symptomatic_rate[infected_inds] = self.flock.infected_symptomatic_rate[infected_inds] # Get the infected symptomatic rate for each infected flock
-
-
-
-        susceptible_dead = (self.flock.headcount - self.flock.exposed_headcount - self.flock.infectious_headcount) * self.flock['baseline_mortality_rate'] # Calculate the susceptible headcount that is dying for each flock
-        dead_delta = susceptible_dead + exposed_dead + infectious_dead # Calculate the total dead headcount for each flock
-
-        # Actually update all the headcounts
-        
-        self.flock.exposed_headcount += exposed_delta
-        self.flock.infectious_headcount += infectious_delta 
-        self.flock.daily_dead_headcount = dead_delta
-        self.flock.total_dead_headcount += dead_delta
-        self.flock.headcount -= dead_delta 
-
-        # Calculate the new symptomatic headcount
-        
-        
-        self.flock.symptomatic_headcount = self.flock.headcount * self.flock.baseline_symptomatic_rate + (self.flock.exposed_headcount + self.flock.infectious_headcount) * infected_symptomatic_rate
-
-        infection_levels = np.zeros(self.flock.headcount.shape, dtype=znd.default_float)
-        non_zero_headcount_inds = np.where(self.flock.headcount > 0)[0]
-        infection_levels[non_zero_headcount_inds] = self.flock.infectious_headcount[non_zero_headcount_inds]/self.flock.headcount[non_zero_headcount_inds]
-
-        return infection_levels
-
+        return self.flock.update_infection_levels()
+    
     def update_states_from_subrosters(self):
         susceptible_human_uids = np.array(self.human['uid'][znu.true(self.human['susceptible'])])
         exposed_human_uids = np.array(self.human['uid'][znu.true(self.human['exposed'])])
@@ -461,132 +403,3 @@ class Agents(Roster):
 
         self.update_states_from_subrosters()
         return
-
-    #%% Methods that require access to multiple subrosters
-
-    # The below function has been replaced by other functionality in the barn and flock subrosters. I'm leaving it here for now in case we need it for debugging purposes, but it is not currently being used in the simulation.
-    # def check_repopulation(self, t):
-    #     '''
-    #     Check for barns that are scheduled to be repopulated and reincarnate the resident flock with proper initial conditions.
-    #     '''
-    #     poultry_pars = self.pars['poultry_pars'] 
-    #     poultry_progs = self.pars['prognoses']['flock']
-
-    #     barn_inds = np.where(self.barn.date_repopulate <= t)[0]
-
-    #     if barn_inds.size > 0:
-    #         self.barn.repopulations[barn_inds]+= 1
-    #         self.barn.date_repopulate[barn_inds] = np.nan
-    #         flock_inds = np.where(np.isin(self.flock.uid, self.barn.resident_uid[barn_inds]))[0]
-
-    #         if flock_inds.size > 0:
-    #             flock_breed_to_index = {breed: index for index, breed in enumerate(poultry_pars['breeds'])}
-    #             flock_breed_inds = np.array([flock_breed_to_index[this_breed] for this_breed in self.flock.breed[flock_inds]])
-
-    #             breed, freq = np.unique(flock_breed_inds, return_counts=True)
-    #             flock_breed_dict = dict(zip(breed, freq))
-    #             for breed, freq in flock_breed_dict.items():
-    #                 current_breed_inds = np.where(flock_breed_inds == breed)[0]
-    #                 self.barn.date_cycle_end[barn_inds[current_breed_inds]] = t + znu.sample(**poultry_pars['cycle_dur'][breed], size = freq)
-    #                 self.flock.headcount[flock_inds[current_breed_inds]] = znu.sample(**poultry_pars['flock_size'][breed], size = freq)   
-
-    #             self.flock.susceptible[flock_inds] = True
-    #             self.flock.suspected[flock_inds] = False
-    #             self.flock.baseline_symptomatic_rate[flock_inds] = poultry_progs['baseline_symptomatic_rate'][flock_breed_inds]
-    #             self.flock.baseline_mortality_rate[flock_inds] = poultry_progs['baseline_mortality_rate'][flock_breed_inds]
-    #             self.flock.baseline_water_rate[flock_inds] = poultry_progs['baseline_water_rate'][flock_breed_inds]
-    #             self.flock.rel_sus[flock_inds] = poultry_progs['sus_ORs'][flock_breed_inds]
-    #             self.flock.rel_trans[flock_inds] = poultry_progs['trans_ORs'][flock_breed_inds]
-
-    #         self.flock.update_event_log(flock_inds, 'cycle_start')
-    #         self.barn.update_event_log(barn_inds, 'cycle_start')
-
-    #     return len(barn_inds)
-    
-
-    
-    # def check_result(self, t):
-    #     '''
-    #     Check for flocks that have received their test results and update the states accordingly.
-    #     '''
-
-    #     flock_inds = np.where(self.flock.date_result <= t)[0]
-
-    #     if flock_inds.size>0:
-    #         #barn_inds = np.where(np.isin(self.barn.flock, self.flock.uid[flock_inds]))[0]
-
-    #         pos_flock_inds = flock_inds[np.where(self.flock.infectious[flock_inds] == True)[0]]
-    #         pos_barn_inds = np.where(np.isin(self.barn.resident_uid, self.flock.uid[pos_flock_inds]))[0]
-
-
-    #         neg_flock_inds = flock_inds[np.where(self.flock.infectious[flock_inds] == False)[0]]
-
-    #         self.barn.date_cycle_end[pos_barn_inds] = np.nan
-    #         self.barn.composting[pos_barn_inds] = True
-    #         self.barn.date_composting[pos_barn_inds] = t + znu.sample(**self.pars['dur']['barn']['composting'], size = len(pos_barn_inds))
-
-    #         self.flock.headcount[pos_flock_inds] = 0
-    #         self.flock.exposed_headcount[pos_flock_inds] = 0
-    #         self.flock.infectious_headcount[pos_flock_inds] = 0
-    #         self.flock.symptomatic_headcount[pos_flock_inds] = 0
-    #         self.flock.daily_dead_headcount[pos_flock_inds] = 0
-    #         self.flock.total_dead_headcount[pos_flock_inds] = 0
-    #         self.flock.water_consumption[pos_flock_inds] = 0
-
-    #         self.flock.susceptible[pos_flock_inds] = False
-    #         self.flock.exposed[pos_flock_inds] = False
-    #         self.flock.infectious[pos_flock_inds] = False
-    #         self.flock.quarantined[pos_flock_inds] = False
-    #         self.flock.date_infectious[pos_flock_inds] = np.nan
-    #         self.flock.date_exposed[pos_flock_inds] = np.nan
-    #         self.flock.date_suspected[pos_flock_inds] = np.nan
-    #         self.flock.date_result[pos_flock_inds] = np.nan
-    #         self.flock.date_quarantined[pos_flock_inds] = np.nan
-    #         self.flock.update_event_log(pos_flock_inds, 'cull')
-
-    #         self.flock.suspected[neg_flock_inds] = False
-    #         self.flock.quarantined[neg_flock_inds] = False
-    #         self.flock.date_suspected[neg_flock_inds] = np.nan
-    #         self.flock.date_result[neg_flock_inds] = np.nan
-    #         self.flock.date_quarantined[neg_flock_inds] = np.nan
-    #         self.flock.update_event_log(neg_flock_inds, 'negative')
-
-    #     return len(flock_inds)
-    
-    # def check_cycle_end(self, t):
-    #     '''
-    #     Check for flocks that are at the end of their production cycle.
-    #     '''
-
-    #     barn_inds = np.where(self.barn.date_cycle_end <= t)[0]
-    #     flock_inds = np.where(np.isin(self.flock.uid, self.barn.resident_uid[barn_inds]))[0]
-
-    #     if barn_inds.size>0:
-    #         self.barn.date_cycle_end[barn_inds] = np.nan
-    #         self.barn.cleaning[barn_inds] = True
-    #         self.barn.date_cleaning[barn_inds] = t + znu.sample(**self.pars['dur']['barn']['cleaning'], size = len(barn_inds))
-
-    #         if flock_inds.size > 0:
-    #             self.flock.headcount[flock_inds] = 0
-    #             self.flock.exposed_headcount[flock_inds] = 0
-    #             self.flock.infectious_headcount[flock_inds] = 0
-    #             self.flock.symptomatic_headcount[flock_inds] = 0
-    #             self.flock.daily_dead_headcount[flock_inds] = 0
-    #             self.flock.total_dead_headcount[flock_inds] = 0
-    #             self.flock.water_consumption[flock_inds] = 0
-
-    #             self.flock.susceptible[flock_inds] = False
-    #             self.flock.exposed[flock_inds] = False
-    #             self.flock.infectious[flock_inds] = False
-    #             self.flock.suspected[flock_inds] = False
-    #             self.flock.quarantined[flock_inds] = False
-    #             self.flock.date_infectious[flock_inds] = np.nan
-    #             self.flock.date_exposed[flock_inds] = np.nan
-    #             self.flock.date_suspected[flock_inds] = np.nan
-    #             self.flock.date_quarantined[flock_inds] = np.nan
-    #             self.flock.date_result[flock_inds] = np.nan
-    #             self.flock.update_event_log(flock_inds, 'cycle_end')
-
-    #         self.barn.update_event_log(barn_inds, 'cycle_end')
-
-    #     return len(barn_inds)

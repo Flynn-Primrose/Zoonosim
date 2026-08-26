@@ -109,22 +109,27 @@ class HumanMeta(sc.prettyobj):
         ]
 
         # Timing of control points for viral load
-        self.ctrl_points = [
-            'x_p_inf',
-            'y_p_inf',
-            'x_p1',
-            'y_p1',
-            'x_p2',
-            'y_p2',
-            'x_p3',
-            'y_p3',
+        # self.ctrl_points = [
+        #     'x_p_inf',
+        #     'y_p_inf',
+        #     'x_p1',
+        #     'y_p1',
+        #     'x_p2',
+        #     'y_p2',
+        #     'x_p3',
+        #     'y_p3',
+        # ]
+        self.viral_load_control_points = [
+            't_detectable', # Time when viral load exceeds the limit of detection threshold
+            't_peak', # Time of peak viral load
+            't_undetectable' # Time when viral load falls below the limit of detection threshold
         ]
-        self.all_recordable_states = self.agent + self.states + self.variant_states + self.nab_states + self.vacc_states + self.dates + self.durs + self.ctrl_points
-        self.all_states = self.agent + self.states + self.variant_states + self.by_variant_states + self.imm_states + self.nab_states + self.vacc_states + self.dates + self.durs + self.ctrl_points
+        self.all_recordable_states = self.agent + self.states + self.variant_states + self.nab_states + self.vacc_states + self.dates + self.durs + self.viral_load_control_points
+        self.all_states = self.agent + self.states + self.variant_states + self.by_variant_states + self.imm_states + self.nab_states + self.vacc_states + self.dates + self.durs + self.viral_load_control_points
 
         # Validate
         self.state_types = ['agent', 'states', 'variant_states', 'by_variant_states', 'imm_states',
-                            'nab_states', 'vacc_states', 'dates', 'durs', 'ctrl_points', 'all_states']
+                            'nab_states', 'vacc_states', 'dates', 'durs', 'viral_load_control_points', 'all_states']
         for state_type in self.state_types:
             states = getattr(self, state_type)
             n_states        = len(states)
@@ -406,6 +411,18 @@ class Humans(Subroster):
             self.event_log.append(entry)
 
         return
+
+    def update_viral_loads(self):
+        '''
+        update the viral levels of human agents
+        '''
+
+        minimum_detectable_load = self.pars['transmission_pars']['human']['viral_loads']['minimum_detectable_load']
+        peak_load = self.pars['transmission_pars']['human']['viral_loads']['peak_load']
+        min_vl = self.pars['transmission_pars']['human']['viral_levels']['min_vl']
+        max_vl = self.pars['transmission_pars']['human']['viral_levels']['max_vl']
+        self.viral_load, scaled_viral_load = znu.compute_viral_load(self.t, min_vl, max_vl)
+        return scaled_viral_load
 
     def check_sw_quarantined(self):
         sw_quarantined_arr = np.logical_and(self.quarantined, self.has_watch)
@@ -797,29 +814,36 @@ class Humans(Subroster):
 
         # HANDLE VIRAL LOAD CONTROL POINTS
         
-        # Get P_inf: where viral load crosses 10^6 cp/mL
-        self.x_p_inf[inds] = self.dur_exp2inf[inds]
-        self.y_p_inf[inds] = 6
+        self.t_peak[inds] = self.date_infectious[inds] # Peak viral load coincides with the date they become infectious
+        self.t_detectable[inds] = np.maximum(self.dur_exp2inf[inds] - np.random.gamma(**self.pars['transmission_pars']['human']['gamma_pars'], size=len(inds)), 0) + self.t # Date viral load becomes detectable
+        recovered_inds = ~np.isnan(self.date_recovered[inds])
+        dead_inds = ~np.isnan(self.date_dead[inds])
+        self.t_undetectable[recovered_inds] = np.maximum(self.date_recovered[recovered_inds], self.t_detectable[recovered_inds])
+        self.t_undetectable[dead_inds] = np.maximum(self.date_dead[dead_inds], self.t_detectable[dead_inds])
 
-        # Get P1: where viral load crosses 10^3 cp/mL;  dummy value for now
-        self.x_p1[inds] = np.maximum(self.x_p_inf[inds] - (np.random.gamma(2, 0.35, size=len(inds)) + 0.25), 0)
-        self.y_p1[inds] = 3
+        # # Get P_inf: where viral load crosses 10^6 cp/mL
+        # self.x_p_inf[inds] = self.dur_exp2inf[inds]
+        # self.y_p_inf[inds] = 6
 
-        # Get P2: where viral load peaks; dummy value for now
-        self.x_p2[inds] = self.x_p_inf[inds] + (np.random.gamma(3, 0.26, size=len(inds)) + 0.1)
-        self.y_p2[inds] = ((self.y_p_inf[inds] - self.y_p1[inds])*(self.x_p2[inds] - self.x_p1[inds])/(self.x_p_inf[inds] - self.x_p1[inds])) + self.y_p1[inds]
+        # # Get P1: where viral load crosses 10^3 cp/mL;  dummy value for now
+        # self.x_p1[inds] = np.maximum(self.x_p_inf[inds] - (np.random.gamma(2, 0.35, size=len(inds)) + 0.25), 0)
+        # self.y_p1[inds] = 3
 
-        # Align P1, P_inf, and P2 to current time
-        self.x_p1[inds] = self.x_p1[inds] + self.t
-        self.x_p_inf[inds] = self.x_p_inf[inds] + self.t
-        self.x_p2[inds] = self.x_p2[inds] + self.t
+        # # Get P2: where viral load peaks; dummy value for now
+        # self.x_p2[inds] = self.x_p_inf[inds] + (np.random.gamma(3, 0.26, size=len(inds)) + 0.1)
+        # self.y_p2[inds] = ((self.y_p_inf[inds] - self.y_p1[inds])*(self.x_p2[inds] - self.x_p1[inds])/(self.x_p_inf[inds] - self.x_p1[inds])) + self.y_p1[inds]
 
-        # Get P3: where viral load drops below 10^6 cp/mL
-        time_recovered = np.ones(len(self.date_recovered), dtype=znd.default_float)*self.date_recovered # This is needed to make a copy
-        inds_dead = ~np.isnan(self.date_dead)
-        time_recovered[inds_dead] = self.date_dead[inds_dead]
-        self.x_p3[inds] = np.maximum(time_recovered[inds], self.x_p2[inds])
-        self.y_p3[inds] = 6
+        # # Align P1, P_inf, and P2 to current time
+        # self.x_p1[inds] = self.x_p1[inds] + self.t
+        # self.x_p_inf[inds] = self.x_p_inf[inds] + self.t
+        # self.x_p2[inds] = self.x_p2[inds] + self.t
+
+        # # Get P3: where viral load drops below 10^6 cp/mL
+        # time_recovered = np.ones(len(self.date_recovered), dtype=znd.default_float)*self.date_recovered # This is needed to make a copy
+        # inds_dead = ~np.isnan(self.date_dead)
+        # time_recovered[inds_dead] = self.date_dead[inds_dead]
+        # self.x_p3[inds] = np.maximum(time_recovered[inds], self.x_p2[inds])
+        # self.y_p3[inds] = 6
 
             # # For testing purposes
             # if self.t < self.pars['x_p1'].shape[1]:

@@ -19,44 +19,41 @@ if options.numba_parallel not in [0, 1, 2, '0', '1', '2', 'none', 'safe', 'full'
     raise ValueError(errormsg)
 cache = options.numba_cache # Turning this off can help switching parallelization options
 
-@nb.njit(             (nbint,   nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:], nbfloat[:], nbfloat,    nbfloat), cache=cache, parallel=safe_parallel)
-def compute_viral_load(t,       x_p1,       y_p1,       x_p2,       y_p2,       x_p3,       y_p3,       min_vl,     max_vl): # pragma: no cover
+@nb.njit(             (nbint,   nbfloat[:],     nbfloat[:],  nbfloat[:],    nbfloat,                    nbfloat,    nbfloat,    nbfloat), cache=cache, parallel=safe_parallel)
+def compute_viral_load(t,       t_detectable,   t_peak,      t_recovered,   minimum_detectable_load,    peak_load,  min_scl,     max_scl): # pragma: no cover
     '''
     Calculate viral load for infectious humans?
 
     Args:
         t: (int) timestep
-        x_p1: (float[]) date of onset of infectiousness
-        y_p1: (float[]) viral load (3 cp/mL)
-        x_p2: (float[]) date of peak viral load
-        y_p2: (float[]) peak viral load
-        x_p3: (float[]) date of hitting viral load of 6 cp/mL
-        y_p3: (float[]) viral load (6 cp/mL)
+        t_detectable: (float) time when viral load becomes detectable
+        t_peak: (float) time when viral load reaches its peak
+        t_recovered: (float) time when viral load drops to recovered level
+        minimum_detectable_load: (float) minimum detectable viral load
+        peak_load: (float) peak viral load
+        min_scl: (float) relative transmissibility scaling factor for minimum viral load
+        max_scl: (float) relative transmissibility scaling factor for peak viral load
 
     Returns:
         viral_load (float): viral load
     '''
 
     # Set up arrays
-    N = len(x_p2)
-    vl = np.zeros(N, dtype=znd.default_float)
-    vl_rescaled = np.zeros(N, dtype=znd.default_float)
+    vl = np.zeros(len(t_detectable), dtype=znd.default_float)
+    vl_rescaled = np.zeros(len(t_detectable), dtype=znd.default_float)
 
     # Calculate viral load for those for whom it is rising
-    rising_vl = t < x_p2
-    vl[rising_vl] = y_p1[rising_vl] + (y_p2[rising_vl] - y_p1[rising_vl])*(t - x_p1[rising_vl])/(x_p2[rising_vl] - x_p1[rising_vl])
+    rising_vl = t < t_peak
+    vl[rising_vl] = minimum_detectable_load + (peak_load - minimum_detectable_load)*(t - t_detectable[rising_vl])/(t_peak[rising_vl] - t_detectable[rising_vl])
 
     # Calculate viral load for those for whom it is falling
-    falling_vl = t >= x_p2
-    vl[falling_vl] = y_p2[falling_vl] + (y_p3[falling_vl] - y_p2[falling_vl])*(t - x_p2[falling_vl])/(x_p3[falling_vl] - x_p2[falling_vl])
+    falling_vl = t >= t_peak
+    vl[falling_vl] = minimum_detectable_load + (peak_load - minimum_detectable_load)*(t - t_peak[falling_vl])/(t_recovered[falling_vl] - t_peak[falling_vl])
 
-    # Rescale viral load for Covasim computation
-    # NOTE: I think I need to talk to Ritchie about this -- I don't understand how this works
-    infected = ~np.isnan(x_p2)
-    infected_vl = vl[infected]
-    infected_vl = min_vl + (max_vl - min_vl)*(infected_vl - 6)/(11 - 6) 
-    infected_vl[infected_vl < min_vl] = 0
-    vl_rescaled[infected] = infected_vl
+    # Rescale viral load to represent relative transmissibility
+    vl_rescaled = min_scl + (max_scl - min_scl)*(vl - minimum_detectable_load)/(peak_load - minimum_detectable_load)
+    vl_rescaled[vl_rescaled < min_scl] = min_scl #Not sure if this is necessary, but it seems like a good idea to prevent negative values.
+    vl_rescaled[vl_rescaled > max_scl] = max_scl #Not sure if this is necessary, but it seems like a good idea to prevent values above max_scl.
 
     # Clip viral load when it falls below 10^0 cp/mL to reflect LoD
     vl[vl <= 0] = 0
