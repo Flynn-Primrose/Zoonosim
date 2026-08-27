@@ -104,13 +104,24 @@ In terms of operating the software, the most important component is the "pars" o
         - par1
         - par2
         - step
-    - viral_dist
-      - the time varying viral load. A dictionary with the following keys:
-        - frac_time
-        - load_ratio
-        - high_cap
-    - enable_vl
-      - Boolean. whether or not to use custom viral load calculations. False means the native calculations get used.
+    - viral_loads
+      - a dictionary with the following keys
+        - minimum_detectable_load
+          - The minimum detectable viral load. specified as a logarithm, so a value of 3 implies a viral load of 10^3 cp/ml
+        peak_load
+          - peak viral load. specified as a logarithm, so a value of 6 implies a viral load of 10^6 cp/ml
+    - viral_levels
+      - a dictionary with the following keys
+        - min_scl
+          - the scaling factor used to adjust transmissibility for an agent with the minimum viral load.
+        - max_scl
+          - the scaling factor used to adjust the transmissibility for an agent with the peak viral load.
+    - gamma_pars, parameters used in the gamma distribution when determining the moment when an agents viral load exceeds the minimum detectible load
+      - a dictionary with the following keys
+        - par1
+          - the first value used in the gamma distribution
+        - par2
+          - the second value used in the gamma distribution.
   - ppe
     - beta_dist
   - flock

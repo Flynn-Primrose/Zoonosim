@@ -9,7 +9,7 @@ from .settings import options
 
 __all__ = ['make_pars']
 
-def make_pars(set_prognoses = False, version = None, **kwargs):
+def make_pars(version = None, **kwargs):
 
     '''
     Create the parameters for the simulation. Typically, this function is used
@@ -18,8 +18,6 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     directly.
 
     Args:
-        set_prognoses (bool): whether or not to create prognoses (else, added when the population is created)
-        prog_by_age   (bool): whether or not to use age-based severity, mortality etc.
         kwargs        (dict): any additional kwargs are interpreted as parameter names
         version       (str):  if supplied, use parameters from this Zoonosim version
 
@@ -112,8 +110,8 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
     pars['transmission_pars']['human'] = {
         'beta_dist': dict(dist='neg_binomial', par1=1.0, par2=0.45, step=0.01), # Distribution to draw individual level transmissibility
         'viral_loads':dict(minimum_detectable_load=3, peak_load=6),
-        'viral_levels':dict(min_scl=0.75, max_scl=2), # Specifies the range within which viral load should be scaled so it can contribute to relative transmissibility
-        'gamma_pars':dict(par1=2.0, par2=0.35) # Parameters for the gamma distribution used to draw individual level transmissibility
+        'viral_levels':dict(min_scl=0.25, max_scl=1.0), # Specifies the range within which viral load should be scaled so it can contribute to relative transmissibility
+        'gamma_pars':dict(par1=2.0, par2=0.35) # Parameters for the gamma distribution used to determine the moment when an agents viral load exceeds the minimum detectable load. This is used to determine when an agent becomes infectious. NOTE: This is a dummy variable!
     }
 
     pars['transmission_pars']['ppe'] = {
@@ -301,9 +299,7 @@ def make_pars(set_prognoses = False, version = None, **kwargs):
 
     # Update with any supplied parameter values and generate things that need to be generated
     pars.update(kwargs)
-    # reset_layer_pars(pars)
-    #if set_prognoses: # If not set here, gets set when the population is initialized
-        # pars['prognoses'] = get_prognoses(pars['prog_by_age'], version=version) # Default to age-specific prognoses NOTE: this will have to change to accommodate multiple agent types
+    reset_layer_pars(pars)
 
     return pars
 
