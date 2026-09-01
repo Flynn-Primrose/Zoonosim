@@ -109,16 +109,6 @@ class HumanMeta(sc.prettyobj):
         ]
 
         # Timing of control points for viral load
-        # self.ctrl_points = [
-        #     'x_p_inf',
-        #     'y_p_inf',
-        #     'x_p1',
-        #     'y_p1',
-        #     'x_p2',
-        #     'y_p2',
-        #     'x_p3',
-        #     'y_p3',
-        # ]
         self.viral_load_control_points = [
             't_detectable', # Time when viral load exceeds the limit of detection threshold
             't_peak', # Time of peak viral load
@@ -214,7 +204,7 @@ class Humans(Subroster):
             self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
 
         # Set dates for viral load profile -- floats
-        for key in self.meta.ctrl_points:
+        for key in self.meta.viral_load_control_points:
             self[key] = np.full(pop_size, np.nan, dtype=znd.default_float)
 
         # Store the dtypes used in a flat dict
@@ -419,9 +409,9 @@ class Humans(Subroster):
 
         minimum_detectable_load = self.pars['transmission_pars']['human']['viral_loads']['minimum_detectable_load']
         peak_load = self.pars['transmission_pars']['human']['viral_loads']['peak_load']
-        min_vl = self.pars['transmission_pars']['human']['viral_levels']['min_vl']
-        max_vl = self.pars['transmission_pars']['human']['viral_levels']['max_vl']
-        self.viral_load, scaled_viral_load = znu.compute_viral_load(self.t, min_vl, max_vl)
+        min_scl = self.pars['transmission_pars']['human']['viral_levels']['min_scl']
+        max_scl = self.pars['transmission_pars']['human']['viral_levels']['max_scl']
+        self.viral_load, scaled_viral_load = znu.compute_viral_load(self.t, self.t_detectable, self.t_peak, self.t_undetectable, minimum_detectable_load, peak_load, min_scl, max_scl)
         return scaled_viral_load
 
     def check_sw_quarantined(self):
@@ -816,45 +806,11 @@ class Humans(Subroster):
         
         self.t_peak[inds] = self.date_infectious[inds] # Peak viral load coincides with the date they become infectious
         self.t_detectable[inds] = np.maximum(self.dur_exp2inf[inds] - np.random.gamma(**self.pars['transmission_pars']['human']['gamma_pars'], size=len(inds)), 0) + self.t # Date viral load becomes detectable
-        recovered_inds = ~np.isnan(self.date_recovered[inds])
-        dead_inds = ~np.isnan(self.date_dead[inds])
-        self.t_undetectable[recovered_inds] = np.maximum(self.date_recovered[recovered_inds], self.t_detectable[recovered_inds])
-        self.t_undetectable[dead_inds] = np.maximum(self.date_dead[dead_inds], self.t_detectable[dead_inds])
-
-        # # Get P_inf: where viral load crosses 10^6 cp/mL
-        # self.x_p_inf[inds] = self.dur_exp2inf[inds]
-        # self.y_p_inf[inds] = 6
-
-        # # Get P1: where viral load crosses 10^3 cp/mL;  dummy value for now
-        # self.x_p1[inds] = np.maximum(self.x_p_inf[inds] - (np.random.gamma(2, 0.35, size=len(inds)) + 0.25), 0)
-        # self.y_p1[inds] = 3
-
-        # # Get P2: where viral load peaks; dummy value for now
-        # self.x_p2[inds] = self.x_p_inf[inds] + (np.random.gamma(3, 0.26, size=len(inds)) + 0.1)
-        # self.y_p2[inds] = ((self.y_p_inf[inds] - self.y_p1[inds])*(self.x_p2[inds] - self.x_p1[inds])/(self.x_p_inf[inds] - self.x_p1[inds])) + self.y_p1[inds]
-
-        # # Align P1, P_inf, and P2 to current time
-        # self.x_p1[inds] = self.x_p1[inds] + self.t
-        # self.x_p_inf[inds] = self.x_p_inf[inds] + self.t
-        # self.x_p2[inds] = self.x_p2[inds] + self.t
-
-        # # Get P3: where viral load drops below 10^6 cp/mL
-        # time_recovered = np.ones(len(self.date_recovered), dtype=znd.default_float)*self.date_recovered # This is needed to make a copy
-        # inds_dead = ~np.isnan(self.date_dead)
-        # time_recovered[inds_dead] = self.date_dead[inds_dead]
-        # self.x_p3[inds] = np.maximum(time_recovered[inds], self.x_p2[inds])
-        # self.y_p3[inds] = 6
-
-            # # For testing purposes
-            # if self.t < self.pars['x_p1'].shape[1]:
-            #     self.pars['x_p1'][:, self.t] = self.x_p1
-            #     self.pars['x_p_inf'][:, self.t] = self.x_p_inf
-            #     self.pars['x_p2'][:, self.t] = self.x_p2
-            #     self.pars['x_p3'][:, self.t] = self.x_p3
-            #     self.pars['y_p1'][:, self.t] = self.y_p1
-            #     self.pars['y_p_inf'][:, self.t] = self.y_p_inf
-            #     self.pars['y_p2'][:, self.t] = self.y_p2
-            #     self.pars['y_p3'][:, self.t] = self.y_p3
+        recovered_inds = np.where(~np.isnan(self.date_recovered[inds]))
+        dead_inds = np.where(~np.isnan(self.date_dead[inds]))
+ 
+        self.t_undetectable[recovered_inds] = self.date_recovered[recovered_inds]
+        self.t_undetectable[dead_inds] = self.date_dead[dead_inds]
 
         # Handle immunity aspects
         if self.pars['immunity_pars']['human']['use_waning']:

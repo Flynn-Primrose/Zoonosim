@@ -287,7 +287,7 @@ class Flocks(Subroster):
         infectious_dead = np.zeros(self.infectious_headcount.shape, dtype=znd.default_float) # Initialize the infectious dead delta
         dead_delta = np.zeros(self.daily_dead_headcount.shape, dtype=znd.default_float) # Initialize the dead delta
         infected_symptomatic_rate = np.zeros(self.headcount.shape, dtype=znd.default_float) # Initialize the infected symptomatic rate
-        infected_inds = znu.true(self['exposed'])
+        infected_inds = znu.true(self['exposed'] & (self['headcount'] > 0)) # Get the indices of flocks that are exposed and have a headcount greater than 0
 
         if len(infected_inds) > 0: # If there are any infected flocks
 
@@ -461,45 +461,44 @@ class Flocks(Subroster):
         Check for flocks that have received their test results and update the states accordingly.
         '''
 
-        flock_inds = np.where(self.flock.date_result <= t)[0]
+        flock_inds = np.where(self.date_result <= t)[0]
 
         if flock_inds.size>0:
-            #barn_inds = np.where(np.isin(self.barn.flock, self.flock.uid[flock_inds]))[0]
 
-            pos_flock_inds = flock_inds[np.where(self.flock.infectious[flock_inds] == True)[0]]
-            flock_uids = self.flock.uid[pos_flock_inds]
+            pos_flock_inds = flock_inds[np.where(self.infectious[flock_inds] == True)[0]]
+            flock_uids = self.uid[pos_flock_inds]
 
             self.schedule_composting(flock_uids)
 
-            neg_flock_inds = flock_inds[np.where(self.flock.infectious[flock_inds] == False)[0]]
+            neg_flock_inds = flock_inds[np.where(self.infectious[flock_inds] == False)[0]]
 
 
 
-            self.flock.headcount[pos_flock_inds] = 0
-            self.flock.exposed_headcount[pos_flock_inds] = 0
-            self.flock.infectious_headcount[pos_flock_inds] = 0
-            self.flock.symptomatic_headcount[pos_flock_inds] = 0
-            self.flock.daily_dead_headcount[pos_flock_inds] = 0
-            self.flock.total_dead_headcount[pos_flock_inds] = 0
-            self.flock.water_consumption[pos_flock_inds] = 0
+            self.headcount[pos_flock_inds] = 0
+            self.exposed_headcount[pos_flock_inds] = 0
+            self.infectious_headcount[pos_flock_inds] = 0
+            self.symptomatic_headcount[pos_flock_inds] = 0
+            self.daily_dead_headcount[pos_flock_inds] = 0
+            self.total_dead_headcount[pos_flock_inds] = 0
+            self.water_consumption[pos_flock_inds] = 0
 
-            self.flock.susceptible[pos_flock_inds] = False
-            self.flock.exposed[pos_flock_inds] = False
-            self.flock.infectious[pos_flock_inds] = False
-            self.flock.quarantined[pos_flock_inds] = False
-            self.flock.date_infectious[pos_flock_inds] = np.nan
-            self.flock.date_exposed[pos_flock_inds] = np.nan
-            self.flock.date_suspected[pos_flock_inds] = np.nan
-            self.flock.date_result[pos_flock_inds] = np.nan
-            self.flock.date_quarantined[pos_flock_inds] = np.nan
-            self.flock.update_event_log(pos_flock_inds, 'cull')
+            self.susceptible[pos_flock_inds] = False
+            self.exposed[pos_flock_inds] = False
+            self.infectious[pos_flock_inds] = False
+            self.quarantined[pos_flock_inds] = False
+            self.date_infectious[pos_flock_inds] = np.nan
+            self.date_exposed[pos_flock_inds] = np.nan
+            self.date_suspected[pos_flock_inds] = np.nan
+            self.date_result[pos_flock_inds] = np.nan
+            self.date_quarantined[pos_flock_inds] = np.nan
+            self.update_event_log(pos_flock_inds, 'cull')
 
-            self.flock.suspected[neg_flock_inds] = False
-            self.flock.quarantined[neg_flock_inds] = False
-            self.flock.date_suspected[neg_flock_inds] = np.nan
-            self.flock.date_result[neg_flock_inds] = np.nan
-            self.flock.date_quarantined[neg_flock_inds] = np.nan
-            self.flock.update_event_log(neg_flock_inds, 'negative')
+            self.suspected[neg_flock_inds] = False
+            self.quarantined[neg_flock_inds] = False
+            self.date_suspected[neg_flock_inds] = np.nan
+            self.date_result[neg_flock_inds] = np.nan
+            self.date_quarantined[neg_flock_inds] = np.nan
+            self.update_event_log(neg_flock_inds, 'negative')
 
         return len(flock_inds)
 
@@ -521,25 +520,25 @@ class Flocks(Subroster):
         flock_inds = np.where(np.isin(self.uid, flock_uids))[0]
 
         if flock_inds.size > 0:
-                        self.flock.headcount[flock_inds] = 0
-                        self.flock.exposed_headcount[flock_inds] = 0
-                        self.flock.infectious_headcount[flock_inds] = 0
-                        self.flock.symptomatic_headcount[flock_inds] = 0
-                        self.flock.daily_dead_headcount[flock_inds] = 0
-                        self.flock.total_dead_headcount[flock_inds] = 0
-                        self.flock.water_consumption[flock_inds] = 0
+                        self.headcount[flock_inds] = 0
+                        self.exposed_headcount[flock_inds] = 0
+                        self.infectious_headcount[flock_inds] = 0
+                        self.symptomatic_headcount[flock_inds] = 0
+                        self.daily_dead_headcount[flock_inds] = 0
+                        self.total_dead_headcount[flock_inds] = 0
+                        self.water_consumption[flock_inds] = 0
         
-                        self.flock.susceptible[flock_inds] = False
-                        self.flock.exposed[flock_inds] = False
-                        self.flock.infectious[flock_inds] = False
-                        self.flock.suspected[flock_inds] = False
-                        self.flock.quarantined[flock_inds] = False
-                        self.flock.date_infectious[flock_inds] = np.nan
-                        self.flock.date_exposed[flock_inds] = np.nan
-                        self.flock.date_suspected[flock_inds] = np.nan
-                        self.flock.date_quarantined[flock_inds] = np.nan
-                        self.flock.date_result[flock_inds] = np.nan
-                        self.flock.update_event_log(flock_inds, 'cycle_end')
+                        self.susceptible[flock_inds] = False
+                        self.exposed[flock_inds] = False
+                        self.infectious[flock_inds] = False
+                        self.suspected[flock_inds] = False
+                        self.quarantined[flock_inds] = False
+                        self.date_infectious[flock_inds] = np.nan
+                        self.date_exposed[flock_inds] = np.nan
+                        self.date_suspected[flock_inds] = np.nan
+                        self.date_quarantined[flock_inds] = np.nan
+                        self.date_result[flock_inds] = np.nan
+                        self.update_event_log(flock_inds, 'cycle_end')
         return
 
     def repopulate(self, flock_uids, barn_inds, t):
@@ -559,24 +558,24 @@ class Flocks(Subroster):
 
         if flock_inds.size > 0:
             flock_breed_to_index = {breed: index for index, breed in enumerate(poultry_pars['breeds'])}
-            flock_breed_inds = np.array([flock_breed_to_index[this_breed] for this_breed in self.flock.breed[flock_inds]])
+            flock_breed_inds = np.array([flock_breed_to_index[this_breed] for this_breed in self.breed[flock_inds]])
             breed, freq = np.unique(flock_breed_inds, return_counts=True)
             flock_breed_dict = dict(zip(breed, freq))
             date_cycle_end = np.full(len(flock_inds), np.nan, dtype=znd.default_float)
             for breed, freq in flock_breed_dict.items():
                 current_breed_inds = np.where(flock_breed_inds == breed)[0]
-                date_cycle_end[flock_inds[current_breed_inds]] = t + znu.sample(**poultry_pars['cycle_dur'][breed], size = freq)
-                self.flock.headcount[flock_inds[current_breed_inds]] = znu.sample(**poultry_pars['flock_size'][breed], size = freq)
+                date_cycle_end[current_breed_inds] = t + znu.sample(**poultry_pars['cycle_dur'][breed], size = freq)
+                self.headcount[current_breed_inds] = znu.sample(**poultry_pars['flock_size'][breed], size = freq)
             self.schedule_cycle_end(date_cycle_end, barn_inds)   
-            self.flock.susceptible[flock_inds] = True
-            self.flock.suspected[flock_inds] = False
-            self.flock.baseline_symptomatic_rate[flock_inds] = poultry_progs['baseline_symptomatic_rate'][flock_breed_inds]
-            self.flock.baseline_mortality_rate[flock_inds] = poultry_progs['baseline_mortality_rate'][flock_breed_inds]
-            self.flock.baseline_water_rate[flock_inds] = poultry_progs['baseline_water_rate'][flock_breed_inds]
-            self.flock.rel_sus[flock_inds] = poultry_progs['sus_ORs'][flock_breed_inds]
-            self.flock.rel_trans[flock_inds] = poultry_progs['trans_ORs'][flock_breed_inds]
+            self.susceptible[flock_inds] = True
+            self.suspected[flock_inds] = False
+            self.baseline_symptomatic_rate[flock_inds] = poultry_progs['baseline_symptomatic_rate'][flock_breed_inds]
+            self.baseline_mortality_rate[flock_inds] = poultry_progs['baseline_mortality_rate'][flock_breed_inds]
+            self.baseline_water_rate[flock_inds] = poultry_progs['baseline_water_rate'][flock_breed_inds]
+            self.rel_sus[flock_inds] = poultry_progs['sus_ORs'][flock_breed_inds]
+            self.rel_trans[flock_inds] = poultry_progs['trans_ORs'][flock_breed_inds]
 
-            self.flock.update_event_log(flock_inds, 'cycle_start')
+            self.update_event_log(flock_inds, 'cycle_start')
         return
 
     def infect(self, inds, source=None, layer=None, variant=0):

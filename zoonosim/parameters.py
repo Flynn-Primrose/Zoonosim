@@ -85,10 +85,10 @@ def make_pars(version = None, **kwargs):
 
 
     # Network parameters, generally initialized after the population has been constructed
-    #pars['contacts']        = None  # The number of contacts per layer; set by reset_layer_pars() below
-    pars['dynam_layer']     = dict(hp = 0.0, hh = 0.0, hf = 0.0, hb = 0.0, hw = 0.0, pp = 0.0, pf = 0.0, pb = 0.0, pw = 0.0, fb = 0.0, fw = 0.0, bw = 0.0, transient = 1.0)  # Which layers are dynamic; set by reset_layer_pars() below
-    pars['beta_layer']      = dict(hp = 1.0, hh = 1.0, hf = 1.0, hb = 1.0, hw = 1.0, pp = 1.0, pf = 1.0, pb = 1.0, pw = 1.0, fb = 1.0, fw = 1.0, bw = 1.0, transient = 1.0)  # Transmissibility per layer; set by reset_layer_pars() below
-    pars['quar_factor']     =  dict(hp = 0.0, hh = 0.0, hf = 0.0, hb = 0.0, hw = 0.0, pp = 0.0, pf = 0.0, pb = 0.0, pw = 0.0, fb = 0.0, fw = 0.0, bw = 0.0, transient = 0.0)  # Quarantine multiplier on transmissibility and susceptibility; set by reset_layer_pars() below
+    pars['contacts']        = None  # The number of contacts per layer; set by reset_layer_pars() below
+    pars['dynam_layer']     = None # The dynamicity of each layer; set by reset_layer_pars() below
+    pars['beta_layer']      = None # The transmissibility of each layer; set by reset_layer_pars() below
+    pars['quar_factor']     =  None # The quarantine factor of each layer; set by reset_layer_pars() below
 
     # Parameters that control settings and defaults for multi-variant runs
     pars['n_variants'] = 1 # The number of variants circulating in the population
@@ -111,7 +111,7 @@ def make_pars(version = None, **kwargs):
         'beta_dist': dict(dist='neg_binomial', par1=1.0, par2=0.45, step=0.01), # Distribution to draw individual level transmissibility
         'viral_loads':dict(minimum_detectable_load=3, peak_load=6),
         'viral_levels':dict(min_scl=0.25, max_scl=1.0), # Specifies the range within which viral load should be scaled so it can contribute to relative transmissibility
-        'gamma_pars':dict(par1=2.0, par2=0.35) # Parameters for the gamma distribution used to determine the moment when an agents viral load exceeds the minimum detectable load. This is used to determine when an agent becomes infectious. NOTE: This is a dummy variable!
+        'gamma_pars':dict(shape=2.0, scale=0.35) # Parameters for the gamma distribution used to determine the moment when an agents viral load exceeds the minimum detectable load. This is used to determine when an agent becomes infectious. NOTE: This is a dummy variable!
     }
 
     pars['transmission_pars']['ppe'] = {

@@ -13,7 +13,7 @@ import collections as co
 from pathlib import Path
 from . import version as znv
 from . import defaults as znd
-from .settings import options
+
 
 #%% Convenience imports from Sciris
 
@@ -713,6 +713,8 @@ For help on Zoonosim options, see zn.options.help().
 def warn(msg, category=None, verbose=None, die=None):
     ''' Helper function to handle warnings -- not for the user '''
 
+    from .settings import options
+
     # Handle inputs
     warnopt = options.warnings if not die else 'error'
     if category is None:
@@ -733,8 +735,8 @@ def warn(msg, category=None, verbose=None, die=None):
     elif warnopt == 'ignore':
         pass
     else:
-        options = ['error', 'warn', 'print', 'ignore']
-        errormsg = f'Could not understand "{warnopt}": should be one of {options}'
+        available_options = ['error', 'warn', 'print', 'ignore']
+        errormsg = f'Could not understand "{warnopt}": should be one of {available_options}'
         raise ValueError(errormsg)
 
     return

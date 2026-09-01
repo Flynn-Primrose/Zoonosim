@@ -684,7 +684,7 @@ class Sim(znb.BaseSim):
             self.agents.human.watches.update_alert_histories(self)
 
         # Compute viral loads in humans
-        human_viral_load = self.agents.update_human_viral_loads(t=t)
+        human_viral_load = self.agents.update_human_viral_loads()
 
 
 

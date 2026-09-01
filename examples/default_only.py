@@ -3,11 +3,6 @@
 import zoonosim as zn
 sim=zn.Sim()
 sim.initialize()
-#print(sim.agents.flock['quarantined'])
-#sim.step()
-#print(sim.agents.flock['quarantined'])
-#print(sim.agents.flock['suspected'])
-#print(sim.agents.flock['_pending_quarantine'][sim.agents.flock.t])
 
 
 sim.run()

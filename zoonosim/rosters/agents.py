@@ -245,7 +245,7 @@ class Agents(Roster):
 
         return self.contacts
     
-    def update_human_viral_loads(self, t):
+    def update_human_viral_loads(self):
         '''
         update the viral levels of human agents
         This function just calls the relevent function in the human subroster, but is included here for convenience.
@@ -254,7 +254,7 @@ class Agents(Roster):
             t (float): Current time in simulation
         '''
 
-        return self.human.update_viral_loads(t)
+        return self.human.update_viral_loads()
     
     def update_flock_infection_levels(self):
         '''

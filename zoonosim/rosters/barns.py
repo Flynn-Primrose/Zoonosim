@@ -289,13 +289,13 @@ class Barns(Subroster):
 
     def check_repopulation(self):
         ''' Check which barns are scheduled to be repopulated this timestep '''
-        barn_inds = np.where(self.barn.date_repopulate <= self.t)[0]
+        barn_inds = np.where(self.date_repopulate <= self.t)[0]
         if barn_inds.size > 0:
-            self.barn.repopulations[barn_inds]+= 1
-            self.barn.date_repopulate[barn_inds] = np.nan
-            flock_uids = self.barn.resident_uid[barn_inds]
-            if self.barn.repopulate is not None:
-                self.barn.repopulate(flock_uids)
+            self.repopulations[barn_inds]+= 1
+            self.date_repopulate[barn_inds] = np.nan
+            flock_uids = self.resident_uid[barn_inds]
+            if self.repopulate is not None:
+                self.repopulate(flock_uids, barn_inds, self.t)
             self.update_event_log(barn_inds, 'cycle_start')
         return len(barn_inds)
 
@@ -304,18 +304,18 @@ class Barns(Subroster):
         Check for flocks that are at the end of their production cycle.
         '''
 
-        barn_inds = np.where(self.barn.date_cycle_end <= t)[0]
-        flock_uids = self.barn.resident_uid[barn_inds]
+        barn_inds = np.where(self.date_cycle_end <= t)[0]
+        flock_uids = self.resident_uid[barn_inds]
 
 
         if barn_inds.size>0:
-            self.barn.date_cycle_end[barn_inds] = np.nan
-            self.barn.cleaning[barn_inds] = True
-            self.barn.date_cleaning[barn_inds] = t + znu.sample(**self.pars['dur']['barn']['cleaning'], size = len(barn_inds))
+            self.date_cycle_end[barn_inds] = np.nan
+            self.cleaning[barn_inds] = True
+            self.date_cleaning[barn_inds] = t + znu.sample(**self.pars['dur']['barn']['cleaning'], size = len(barn_inds))
 
             self.end_cycle(flock_uids)
 
-            self.barn.update_event_log(barn_inds, 'cycle_end')
+            self.update_event_log(barn_inds, 'cycle_end')
 
         return len(barn_inds)
 
@@ -327,9 +327,9 @@ class Barns(Subroster):
 
     def schedule_composting(self,  flock_uids):
         ''' Schedule the end of the composting process for the specified barns '''
-        barn_inds = np.where(np.isin(self.barn.resident_uid, flock_uids))[0]
+        barn_inds = np.where(np.isin(self.resident_uid, flock_uids))[0]
 
-        self.barn.date_cycle_end[barn_inds] = np.nan
+        self.date_cycle_end[barn_inds] = np.nan
         self.date_composting[barn_inds] = self.t + znu.sample(**self.pars['dur']['barn']['composting'], size = len(barn_inds))
         self.composting[barn_inds] = True
         self.update_event_log(barn_inds, 'composting_started')

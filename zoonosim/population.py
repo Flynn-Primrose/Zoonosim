@@ -7,6 +7,7 @@ import sciris as sc
 
 from . import defaults as znd
 from . import utils as znu
+from . import misc as znm
 
 from .rosters.agents import Agents
 from .rosters.humans import Humans
@@ -63,8 +64,10 @@ def make_agents(sim, popdict=None, reset = False, **kwargs):
 
     ppe = make_ppe(sim.pars, popdict['ppe_uids'], popdict['ppe2human'])
     human = make_humans(sim.pars, popdict['human_uids'], popdict['transient_uids'], popdict['human2ppe'], ppe.schedule_quarantine) # We pass the ppe quarantine function to the human roster so that when a human is quarantined, their assigned ppe can also be quarantined
-    flock = make_flocks(sim.pars, popdict['flock_uids'], popdict['flock2barn'], popdict['flock_breed_index'], barn.schedule_cycle_end, barn.schedule_composting) # We pass the barn schedule_cycle_end function to the flock roster so that when a flock is repopulated, the assigned barn can be provided with a new cycle end date
-    barn = make_barns(sim.pars, popdict['barn_uids'], popdict['barn2type'], popdict['barn2resident'], popdict['barn2breed'], flock.repopulate, flock.end_cycle) # We pass the flock.repopulate function to the barn roster so that when a barn is scheduled for repopulation, the assigned flock can also be repopulated
+    flock = make_flocks(sim.pars, popdict['flock_uids'], popdict['flock2barn'], popdict['flock_breed_index']) # We pass the barn schedule_cycle_end function to the flock roster so that when a flock is repopulated, the assigned barn can be provided with a new cycle end date
+    barn = make_barns(sim.pars, popdict['barn_uids'], popdict['barn2flock'], popdict['barn2breed'], flock.repopulate, flock.end_cycle) # We pass the flock.repopulate function to the barn roster so that when a barn is scheduled for repopulation, the assigned flock can also be repopulated
+    flock.schedule_composting = barn.schedule_composting # We pass the barn.schedule_composting function to the flock roster so that when a flock is scheduled for composting, the assigned barn can also be scheduled for composting. This must happen after the barn roster is created so that the flock can access the barn's schedule_composting function
+    flock.schedule_cycle_end = barn.schedule_cycle_end # We pass the barn.schedule_cycle_end function to the flock roster so that when a flock is scheduled for a new cycle, the assigned barn can also be scheduled for a new cycle. This must happen after the barn roster is created so that the flock can access the barn's schedule_cycle_end function
     water = make_water(sim.pars, popdict['water_uids'])
     contacts = make_contacts(sim.pars, popdict, skip_layers)
 
@@ -108,6 +111,7 @@ def validate_popdict(popdict, pars, verbose=True):
                      'farmdict',
                      'barn2water',
                      'flock2barn',
+                     'barn2flock',
                      'flock_breed_index',
                      ]
     popdict_keys = popdict.keys()
@@ -335,25 +339,21 @@ def make_flocks(sim_pars, uid, flock2barn, breed_index, schedule_cycle_end=None,
     flocks = Flocks(sim_pars, schedule_cycle_end=schedule_cycle_end, schedule_composting=schedule_composting, strict = False, uid=uid, breed = breed, barn = barn, headcount=headcount)
     return flocks
 
-def make_barns(sim_pars, uid, barn2type, barn2resident, barn2breed, repopulate=None, end_cycle=None):
+def make_barns(sim_pars, uid, barn2resident, barn2breed, repopulate=None, end_cycle=None):
     temperature = znu.n_poisson(22.5, len(uid)) # NOTE: Dummy values
     humidity = znu.n_poisson(45, len(uid)) # NOTE: Dummy values
     resident_uid = np.empty(len(uid), dtype=znd.default_int)
     breed_index = np.empty(len(uid), dtype=znd.default_int)
-    type_index = np.empty(len(uid), dtype=znd.default_str)
     date_cycle_end = np.empty(len(uid), dtype=znd.default_float)
     for index in range(len(uid)):
-        type_index[index] = barn2type[uid[index]]
         resident_uid[index] = barn2resident[uid[index]]
         breed_index[index] = barn2breed[uid[index]]
 
 
-    poultry_barn_uids = [uid for uid in uid if barn2type[uid] == 'flock']
-    poultrybarn2breed = {uid: barn2breed[uid] for uid in poultry_barn_uids}
-    breed, freq = np.unique(list(poultrybarn2breed.values()), return_counts=True)
+    breed, freq = np.unique(list(barn2breed.values()), return_counts=True)
     breed_dict = dict(zip(breed, freq))
     for breed, freq in breed_dict.items():
-        date_cycle_end[(type_index == 'flock') & (breed_index == breed)] = znu.sample(**sim_pars['poultry_pars']['cycle_dur'][breed], size = freq)
+        date_cycle_end[(breed_index == breed)] = znu.sample(**sim_pars['poultry_pars']['cycle_dur'][breed], size = freq)
 
     barns = Barns(sim_pars, repopulate=repopulate, end_cycle=end_cycle, strict = False, uid=uid, temperature = temperature, humidity = humidity, resident_uid = resident_uid, date_cycle_end = date_cycle_end)
     return barns
@@ -391,9 +391,12 @@ def make_contacts(sim_pars, popdict, skip_layers=None, layers_to_make=None):
         if layer not in skip_layers:
             if layer in sim_pars['beta_layer'].keys(): # Only make the layer if it's specified in the beta_layer dictionary, otherwise skip it
                 data[layer] = make_layer_contacts(layer, popdict, sim_pars['beta_layer'][layer])
+                if data[layer] is None:
+                    warnmsg = f'Layer "{layer}" specified in layers_to_make but not found in sim_pars["beta_layer"]; skipping this layer.'
+                    znm.warn(warnmsg)
             else:
                 warnmsg = f'Layer "{layer}" specified in layers_to_make but not found in sim_pars["beta_layer"]; skipping this layer.'
-                znu.warn(warnmsg)
+                znm.warn(warnmsg)
     return Contacts(data=data)
 
 def make_layer_contacts(layer, popdict, beta):
