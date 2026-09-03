@@ -1,0 +1,458 @@
+Date detected,Infected premises,Province,Premises type,Premises classification,PCZ,PCZ status
+"December 30, 2025",ON-IP71,Ontario,commercial,poultry,PCZ-315,Active
+"December 21, 2025",ON-IP70,Ontario,commercial,poultry,PCZ-315,Active
+"December 19, 2025",BC-IP275,British Columbia,commercial,poultry,PCZ-FV6,Active
+"December 19, 2025",BC-IP276,British Columbia,commercial,poultry,PCZ-FV5,Active
+"December 19, 2025",ON-IP69,Ontario,commercial,poultry,PCZ-315,Active
+"December 15, 2025",ON-IP68,Ontario,commercial,poultry,PCZ-315,Active
+"December 12, 2025",QC-IP67,Quebec,commercial,poultry,PCZ-314,Active
+"December 4, 2025",BC-IP272,British Columbia,commercial,poultry,PCZ-FV6,Active
+"December 2, 2025",SK-IP59,Saskatchewan,commercial,poultry,PCZ-312,Active
+"December 1, 2025",MB-IP32,Manitoba,commercial,poultry,PCZ-311,Revoked
+"November 29, 2025",BC-IP270,British Columbia,commercial,poultry,PCZ-FV4,Active
+"November 29, 2025",ON-IP67,Ontario,commercial,poultry,PCZ-310,Active
+"November 28, 2025",ON-IP66,Ontario,commercial,poultry,PCZ-308,Active
+"November 26, 2025",ON-IP65,Ontario,commercial,poultry,PCZ-308,Active
+"November 22, 2025",ON-IP64,Ontario,commercial,poultry,PCZ-302,Active
+"November 21, 2025",AB-IP108,Alberta,commercial,poultry,PCZ-307,Active
+"November 19, 2025",AB-IP106,Alberta,commercial,poultry,PCZ-306,Revoked
+"November 18, 2025",QC-IP66,Quebec,commercial,poultry,PCZ-304,Active
+"November 16, 2025",AB-IP105,Alberta,commercial,poultry,PCZ-303,Revoked
+"November 14, 2025",ON-IP63,Ontario,commercial,poultry,PCZ-302,Active
+"November 13, 2025",BC-IP265,British Columbia,commercial,poultry,PCZ-FV4,Active
+"November 12, 2025",BC-IP263,British Columbia,commercial,poultry,PCZ-FV4,Active
+"November 12, 2025",SK-IP56,Saskatchewan,commercial,poultry,PCZ-301,Revoked
+"November 10, 2025",BC-IP262,British Columbia,commercial,poultry,PCZ-FV4,Active
+"November 8, 2025",BC-IP261,British Columbia,commercial,poultry,PCZ-FV1,Revoked
+"November 7, 2025",BC-IP260,British Columbia,commercial,poultry,PCZ-FV7,Active
+"November 7, 2025",BC-IP258,British Columbia,commercial,poultry,PCZ-FV7,Active
+"November 6, 2025",AB-IP104,Alberta,commercial,poultry,PCZ-300,Revoked
+"November 5, 2025",BC-IP257,British Columbia,commercial,poultry,PCZ-FV6,Active
+"November 4, 2025",QC-IP65,Quebec,commercial,poultry,PCZ-299,Revoked
+"November 4, 2025",BC-IP255,British Columbia,commercial,poultry,PCZ-FV4,Active
+"November 3, 2025",AB-IP103,Alberta,commercial,poultry,PCZ-298,Revoked
+"November 1, 2025",BC-IP254,British Columbia,commercial,poultry,PCZ-297,Revoked
+"October 31, 2025",BC-IP253,British Columbia,commercial,poultry,PCZ-FV4,Active
+"October 30, 2025",AB-IP100,Alberta,commercial,poultry,PCZ-296,Revoked
+"October 30, 2025",BC-IP251,British Columbia,commercial,poultry,PCZ-FV6,Active
+"October 30, 2025",AB-IP99,Alberta,commercial,poultry,PCZ-295,Revoked
+"October 30, 2025",AB-IP98,Alberta,commercial,poultry,PCZ-294,Revoked
+"October 28, 2025",BC-IP250,British Columbia,commercial,poultry,PCZ-FV3,Active
+"October 28, 2025",AB-IP97,Alberta,commercial,poultry,PCZ-293,Revoked
+"October 28, 2025",BC-IP249,British Columbia,commercial,poultry,PCZ-FV6,Active
+"October 27, 2025",BC-IP248,British Columbia,commercial,poultry,PCZ-FV6,Active
+"October 27, 2025",AB-IP96,Alberta,commercial,poultry,PCZ-292,Revoked
+"October 26, 2025",BC-IP247,British Columbia,commercial,poultry,PCZ-FV6,Active
+"October 26, 2025",SK-IP54,Saskatchewan,commercial,poultry,PCZ-291,Revoked
+"October 25, 2025",BC-IP246,British Columbia,commercial,poultry,PCZ-FV6,Active
+"October 25, 2025",BC-IP245,British Columbia,commercial,poultry,PCZ-FV6,Active
+"October 25, 2025",MB-IP31,Manitoba,commercial,poultry,PCZ-290,Revoked
+"October 24, 2025",BC-IP242,British Columbia,commercial,poultry,PCZ-FV6,Active
+"October 24, 2025",BC-IP243,British Columbia,commercial,poultry,PCZ-FV6,Active
+"October 24, 2025",BC-IP244,British Columbia,commercial,poultry,PCZ-FV6,Active
+"October 23, 2025",SK-IP53,Saskatchewan,commercial,poultry,PCZ-289,Revoked
+"October 23, 2025",BC-IP241,British Columbia,commercial,poultry,PCZ-FV6,Active
+"October 21, 2025",MB-IP30,Manitoba,commercial,poultry,PCZ-288,Revoked
+"October 16, 2025",MB-IP29,Manitoba,commercial,poultry,PCZ-285,Revoked
+"October 16, 2025",SK-IP52,Saskatchewan,commercial,poultry,PCZ-286,Revoked
+"October 15, 2025",QC-IP63,Quebec,commercial,poultry,PCZ-284,Revoked
+"October 14, 2025",BC-IP240,British Columbia,commercial,poultry,PCZ-FV5,Active
+"October 12, 2025",QC-IP62,Quebec,commercial,poultry,PCZ-283,Revoked
+"October 10, 2025",MB-IP28,Manitoba,commercial,poultry,PCZ-282,Revoked
+"October 8, 2025",ON-IP62,Ontario,commercial,poultry,PCZ-280,Revoked
+"October 9, 2025",MB-IP27,Manitoba,commercial,poultry,PCZ-281,Revoked
+"October 7, 2025",AB-IP94,Alberta,commercial,poultry,PCZ-279,Revoked
+"October 2, 2025",AB-IP92,Alberta,commercial,poultry,PCZ-278,Revoked
+"October 1, 2025",SK-IP50,Saskatchewan,commercial,poultry,PCZ-277,Revoked
+"September 15, 2025",QC-IP60,Quebec,commercial,poultry,PCZ-276,Revoked
+"September 15, 2025",AB-IP91,Alberta,commercial,poultry,PCZ-275,Revoked
+"September 10, 2025",AB-IP90,Alberta,commercial,poultry,PCZ-274,Revoked
+"September 9, 2025",AB-IP88,Alberta,commercial,poultry,PCZ-272,Revoked
+"September 9, 2025",AB-IP89,Alberta,commercial,poultry,PCZ-273,Revoked
+"May 2, 2025",MB-IP25,Manitoba,commercial,poultry,PCZ-268,Revoked
+"March 24, 2025",ON-IP61,Ontario,commercial,poultry,PCZ-266,Revoked
+"March 13, 2025",ON-IP60,Ontario,commercial,poultry,PCZ-264,Revoked
+"February 28, 2025",ON-IP59,Ontario,commercial,poultry,PCZ-262,Revoked
+"January 30, 2025",QC-IP59,Quebec,commercial,poultry,PCZ-260,Revoked
+"January 11, 2025",BC-IP239,British Columbia,commercial,poultry,PCZ FV4,Revoked
+"January 11, 2025",BC-IP238,British Columbia,commercial,poultry,PCZ FV5,Revoked
+"January 10, 2025",ON-IP57,Ontario,commercial,poultry,PCZ-259,Revoked
+"January 5, 2025",BC-IP237,British Columbia,commercial,poultry,PCZ FV4,Revoked
+"January 4, 2025",BC-IP236,British Columbia,commercial,poultry,PCZ FV4,Revoked
+"January 3, 2025",ON-IP56,Ontario,commercial,poultry,PCZ-258,Revoked
+"January 1, 2025",BC-IP235,British Columbia,commercial,poultry,PCZ FV4,Revoked
+"December 31, 2024",BC-IP234,British Columbia,commercial,poultry,PCZ FV5,Revoked
+"December 27, 2024",ON-IP55,Ontario,commercial,poultry,PCZ-256,Revoked
+"December 23, 2024",BC-IP232,British Columbia,commercial,poultry,PCZ FV6,Revoked
+"December 20, 2024",ON-IP54,Ontario,commercial,poultry,PCZ-255,Revoked
+"December 20, 2024",ON-IP53,Ontario,commercial,poultry,PCZ-254,Revoked
+"December 20, 2024",ON-IP52,Ontario,commercial,poultry,PCZ-254,Revoked
+"December 19, 2024",ON-IP51,Ontario,commercial,poultry,PCZ-253,Revoked
+"December 17, 2024",BC-IP231,British Columbia,commercial,poultry,PCZ FV6,Revoked
+"December 14, 2024",ON-IP50,Ontario,commercial,poultry,PCZ-252,Revoked
+"December 13, 2024",BC-IP230,British Columbia,commercial,poultry,PCZ FV6,Revoked  PCZ-239 Revoked
+"December 10, 2024",BC-IP229,British Columbia,commercial,poultry,PCZ FV7,Revoked  PCZ-236 Revoked
+"December 10, 2024",BC-IP228,British Columbia,commercial,poultry,PCZ FV7,Revoked  PCZ-236 Revoked
+"December 9, 2024",BC-IP227,British Columbia,commercial,poultry,PCZ FV4,Revoked  PCZ-240 Revoked
+"December 8, 2024",BC-IP226,British Columbia,commercial,poultry,PCZ FV6,Revoked  PCZ-248 Revoked
+"December 8, 2024",BC-IP225,British Columbia,commercial,poultry,PCZ FV6,Revoked  PCZ-248 Revoked
+"December 6, 2024",BC-IP224,British Columbia,commercial,poultry,PCZ FV6,Revoked  PCZ-248 Revoked
+"December 4, 2024",BC-IP223,British Columbia,commercial,poultry,PCZ FV6,Revoked  PCZ-248 Revoked
+"December 4, 2024",BC-IP222,British Columbia,commercial,poultry,PCZ FV7,Revoked  PCZ-242 Revoked
+"December 4, 2024",BC-IP221,British Columbia,commercial,poultry,PCZ FV4,Revoked  PCZ-240 Revoked
+"December 3, 2024",BC-IP220,British Columbia,commercial,poultry,PCZ FV4,Revoked  PCZ-240 Revoked
+"December 1, 2024",BC-IP219,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 30, 2024",BC-IP218,British Columbia,commercial,poultry,PCZ FV4,Revoked  PCZ-240 Revoked
+"November 30, 2024",BC-IP217,British Columbia,commercial,poultry,PCZ FV4,Revoked  PCZ-240 Revoked
+"November 29, 2024",BC-IP216,British Columbia,commercial,poultry,PCZ FV4,Revoked  PCZ-240 Revoked
+"November 29, 2024",BC-IP215,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 28, 2024",BC-IP214,British Columbia,commercial,poultry,PCZ FV6,Revoked  PCZ-248 Revoked
+"November 27, 2024",BC-IP213,British Columbia,commercial,poultry,PCZ FV4,Revoked  PCZ-240 Revoked
+"November 26, 2024",MB-IP24,Manitoba,commercial,poultry,PCZ-250,Revoked
+"November 24, 2024",BC-IP212,British Columbia,commercial,poultry,PCZ FV4,Revoked  PCZ-240 Revoked
+"November 23, 2024",BC-IP211,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 22, 2024",BC-IP210,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 22, 2024",BC-IP209,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 21, 2024",BC-IP206,British Columbia,commercial,poultry,PCZ FV4,Revoked  PCZ-240 Revoked
+"November 21, 2024",BC-IP205,British Columbia,commercial,poultry,PCZ FV6,Revoked  PCZ-248 Revoked
+"November 20, 2024",BC-IP204,British Columbia,commercial,poultry,PCZ FV6,Revoked  PCZ-239 Revoked
+"November 20, 2024",BC-IP203,British Columbia,commercial,poultry,PCZ FV6,Revoked  PCZ-239 Revoked
+"November 20, 2024",BC-IP202,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 19, 2024",BC-IP201,British Columbia,commercial,poultry,PCZ FV6,Revoked  PCZ-239 Revoked
+"November 19, 2024",BC-IP200,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 17, 2024",BC-IP199,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 17, 2024",BC-IP198,British Columbia,commercial,poultry,PCZ FV6,Revoked  PCZ-239 Revoked
+"November 17, 2024",BC-IP197,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-237 Revoked
+"November 17, 2024",BC-IP196,British Columbia,commercial,poultry,PCZ FV4,Revoked  PCZ-240 Revoked
+"November 16, 2024",BC-IP195,British Columbia,commercial,poultry,PCZ FV6,Revoked  PCZ-239 Revoked
+"November 16, 2024",BC-IP194,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 15, 2024",BC-IP193,British Columbia,commercial,poultry,PCZ FV4,Revoked  PCZ-240 Revoked
+"November 15, 2024",BC-IP192,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 15, 2024",BC-IP191,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 15, 2024",BC-IP189,British Columbia,commercial,poultry,PCZ FV6,Revoked  PCZ-239 Revoked
+"November 14, 2024",BC-IP187,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 15, 2024",BC-IP188,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 12, 2024",AB-IP84,Alberta,commercial,poultry,PCZ-243,Revoked
+"November 12, 2024",BC-IP186,British Columbia,commercial,poultry,PCZ FV7,Revoked  PCZ-242 Revoked
+"November 12, 2024",BC-IP185,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 12, 2024",BC-IP184,British Columbia,commercial,poultry,PCZ FV4,Revoked  PCZ-240 Revoked
+"November 11, 2024",BC-IP183,British Columbia,commercial,poultry,PCZ FV4,Revoked  PCZ-240 Revoked
+"November 10, 2024",BC-IP182,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 9, 2024",BC-IP181,British Columbia,commercial,poultry,PCZ FV6,Revoked  PCZ-239 Revoked
+"November 9, 2024",BC-IP180,British Columbia,commercial,poultry,PCZ FV4,Revoked  PCZ-240 Revoked
+"November 8, 2024",BC-IP179,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 8, 2024",BC-IP178,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 8, 2024",BC-IP177,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 8, 2024",BC-IP176,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 7, 2024",BC-IP175,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 7, 2024",BC-IP174,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 3, 2024",BC-IP173,British Columbia,commercial,poultry,PCZ FV4,Revoked  PCZ-240 Revoked
+"November 1, 2024",BC-IP171,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"November 1, 2024",BC-IP170,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-237 Revoked
+"November 1, 2024",BC-IP169,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"October 31, 2024",BC-IP167,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-240 Revoked
+"October 30, 2024",BC-IP166,British Columbia,commercial,poultry,PCZ FV7,Revoked  PCZ-236 Revoked
+"October 30, 2024",BC-IP165,British Columbia,commercial,poultry,PCZ FV6,Revoked  PCZ-239 Revoked
+"October 28, 2024",BC-IP164,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-237 Revoked
+"October 27, 2024",BC-IP163,British Columbia,commercial,poultry,PCZ FV5,Revoked  PCZ-237 Revoked
+"October 25, 2024",BC-IP162,British Columbia,commercial,poultry,PCZ FV7,Revoked  PCZ-236 Revoked
+"October 29, 2024",SK-IP45,Saskatchewan,commercial,poultry,PCZ-238,Revoked
+"October 21, 2024",BC-IP161,British Columbia,commercial,poultry,PCZ FV6,Revoked  PCZ-237 Revoked
+"October 21, 2024",BC-IP160,British Columbia,commercial,poultry,PCZ FV7,Revoked  PCZ-236 Revoked
+"October 21, 2024",BC-IP159,British Columbia,commercial,poultry,PCZ FV7,Revoked  PCZ-236 Revoked
+"February 19, 2024",AB-IP82,Alberta,commercial,poultry,PCZ-235,Revoked
+"December 8, 2023",AB-IP79,Alberta,commercial,poultry,PCZ-227,Revoked
+"December 5, 2023",AB-IP78,Alberta,commercial,poultry,PCZ-226,Revoked
+"November 27, 2023",AB-IP77,Alberta,commercial,poultry,PCZ-224,Revoked
+"November 26, 2023",AB-IP76,Alberta,commercial,poultry,PCZ-223,Revoked
+"November 6, 2023",AB-IP71,Alberta,commercial,poultry,PCZ-209,Revoked
+"October 23, 2023",AB-IP70,Alberta,commercial,poultry,PCZ-198,Revoked
+"October 6, 2023",AB-IP67,Alberta,commercial,poultry,PCZ-195,Revoked
+"October 3, 2023",AB-IP66,Alberta,commercial,poultry,PCZ-194,Revoked
+"September 26, 2023",AB-IP65,Alberta,commercial,poultry,PCZ-193,Revoked
+"September 11, 2023",AB-IP62,Alberta,commercial,poultry,PCZ-191,Revoked
+"November 16, 2022",AB-IP59,Alberta,commercial,poultry,PCZ-147,Revoked
+"November 3, 2022",AB-IP57,Alberta,commercial,poultry,PCZ-144,Revoked
+"October 27, 2022",AB-IP56,Alberta,commercial,poultry,PCZ-142,Revoked
+"September 28, 2022",AB-IP49,Alberta,commercial,poultry,PCZ-106,Revoked
+"September 27, 2022",AB-IP48,Alberta,commercial,poultry,PCZ-102,Revoked
+"September 23, 2022",AB-IP45,Alberta,commercial,poultry,PCZ-98,Revoked
+"September 21, 2022",AB-IP44,Alberta,commercial,poultry,PCZ-96,Revoked
+"September 20, 2022",AB-IP43,Alberta,commercial,poultry,PCZ-95,Revoked
+"September 20, 2022",AB-IP42,Alberta,commercial,poultry,PCZ-93,Revoked
+"September 18, 2022",AB-IP41,Alberta,commercial,poultry,PCZ-89,Revoked
+"September 17, 2022",AB-IP40,Alberta,commercial,poultry,PCZ-90,Revoked
+"September 16, 2022",AB-IP39,Alberta,commercial,poultry,PCZ-88,Revoked
+"September 15, 2022",AB-IP38,Alberta,commercial,poultry,PCZ-86,Revoked
+"September 12, 2022",AB-IP37,Alberta,commercial,poultry,PCZ-82,Revoked
+"September 12, 2022",AB-IP36,Alberta,commercial,poultry,PCZ-81,Revoked
+"September 4, 2022",AB-IP35,Alberta,commercial,poultry,PCZ-79,Revoked
+"August 31, 2022",AB-IP34,Alberta,commercial,poultry,PCZ-78,Revoked
+"August 23, 2022",AB-IP33,Alberta,commercial,poultry,PCZ-77,Revoked
+"July 28, 2022",AB-IP32,Alberta,commercial,poultry,PCZ-75,Revoked
+"May 11, 2022",AB-IP26,Alberta,commercial,poultry,PCZ-61,Revoked
+"May 5, 2022",AB-IP24,Alberta,commercial,poultry,PCZ-59,Revoked
+"May 1, 2022",AB-IP23,Alberta,commercial,poultry,PCZ-50,Revoked
+"May 1, 2022",AB-IP22,Alberta,commercial,poultry,PCZ-49,Revoked
+"April 25, 2022",AB-IP18,Alberta,commercial,poultry,PCZ-43,Revoked
+"April 24, 2022",AB-IP17,Alberta,commercial,poultry,PCZ-39,Revoked
+"April 21, 2022",AB-IP14,Alberta,commercial,poultry,PCZ-37,Revoked
+"April 20, 2022",AB-IP13,Alberta,commercial,poultry,PCZ-34,Revoked
+"April 15, 2022",AB-IP12,Alberta,commercial,poultry,PCZ-31,Revoked
+"April 14, 2022",AB-IP10,Alberta,commercial,poultry,PCZ-26,Revoked
+"April 14, 2022",AB-IP09,Alberta,commercial,poultry,PCZ-25,Revoked
+"April 12, 2022",AB-IP08,Alberta,commercial,poultry,PCZ-20,Revoked
+"April 11, 2022",AB-IP07,Alberta,commercial,poultry,PCZ-19,Revoked
+"April 10, 2022",AB-IP06,Alberta,commercial,poultry,PCZ-17,Revoked
+"April 9, 2022",AB-IP05,Alberta,commercial,poultry,PCZ-16,Revoked
+"April 8, 2022",AB-IP04,Alberta,commercial,poultry,PCZ-15,Revoked
+"April 6, 2022",AB-IP03,Alberta,commercial,poultry,PCZ-14,Revoked
+"April 6, 2022",AB-IP02,Alberta,commercial,poultry,PCZ-13,Revoked
+"April 6, 2022",AB-IP01,Alberta,commercial,poultry,PCZ-11,Revoked
+"December 25, 2023",BC-IP158,British Columbia,commercial,poultry,PCZ-221,Revoked
+"December 9, 2023",BC-IP155,British Columbia,commercial,poultry,PCZ-211,Revoked
+"December 3, 2023",BC-IP154,British Columbia,commercial,poultry,PCZ-211,Revoked
+"December 1, 2023",BC-IP153,British Columbia,commercial,poultry,PCZ-220,Revoked
+"November 25, 2023",BC-IP152,British Columbia,commercial,poultry,PCZ-211,Revoked
+"November 25, 2023",BC-IP151,British Columbia,commercial,poultry,PCZ-221,Revoked
+"November 24, 2023",BC-IP150,British Columbia,commercial,poultry,PCZ-197,Revoked
+"November 24, 2023",BC-IP149,British Columbia,commercial,poultry,PCZ-220,Revoked
+"November 23, 2023",BC-IP148,British Columbia,commercial,poultry,PCZ-206,Revoked
+"November 23, 2023",BC-IP147,British Columbia,commercial,poultry,PCZ-206,Revoked
+"November 22, 2023",BC-IP146,British Columbia,commercial,poultry,PCZ-199,Revoked
+"November 22, 2023",BC-IP145,British Columbia,commercial,poultry,PCZ-211,Revoked
+"November 22, 2023",BC-IP144,British Columbia,commercial,poultry,PCZ-206,Revoked
+"November 20, 2023",BC-IP143,British Columbia,commercial,poultry,PCZ-199,Revoked
+"November 19, 2023",BC-IP142,British Columbia,commercial,poultry,PCZ-211,Revoked
+"November 18, 2023",BC-IP141,British Columbia,commercial,poultry,PCZ-206,Revoked
+"November 17, 2023",BC-IP140,British Columbia,commercial,poultry,PCZ-199,Revoked
+"November 17, 2023",BC-IP139,British Columbia,commercial,poultry,PCZ-197,Revoked
+"November 17, 2023",BC-IP138,British Columbia,commercial,poultry,PCZ-199,Revoked
+"November 17, 2023",BC-IP137,British Columbia,commercial,poultry,PCZ-218,Revoked
+"November 15, 2023",BC-IP136,British Columbia,commercial,poultry,PCZ-213,Revoked
+"November 14, 2023",BC-IP135,British Columbia,commercial,poultry,PCZ-211,Revoked
+"November 13, 2023",BC-IP134,British Columbia,commercial,poultry,PCZ-211,Revoked
+"November 13, 2023",BC-IP133,British Columbia,commercial,poultry,PCZ-211,Revoked
+"November 12, 2023",BC-IP132,British Columbia,commercial,poultry,PCZ-197,Revoked
+"November 12, 2023",BC-IP131,British Columbia,commercial,poultry,PCZ-200,Revoked
+"November 10, 2023",BC-IP130,British Columbia,commercial,poultry,PCZ-199,Revoked
+"November 10, 2023",BC-IP129,British Columbia,commercial,poultry,PCZ-199,Revoked
+"November 10, 2023",BC-IP128,British Columbia,commercial,poultry,PCZ-207,Revoked
+"November 10, 2023",BC-IP127,British Columbia,commercial,poultry,PCZ-197,Revoked
+"November 8, 2023",BC-IP126,British Columbia,commercial,poultry,PCZ-212,Revoked
+"November 8, 2023",BC-IP125,British Columbia,commercial,poultry,PCZ-200,Revoked
+"November 8, 2023",BC-IP124,British Columbia,commercial,poultry,PCZ-206,Revoked
+"November 8, 2023",BC-IP123,British Columbia,commercial,poultry,PCZ-211,Revoked
+"November 8, 2023",BC-IP122,British Columbia,commercial,poultry,PCZ-213,Revoked
+"November 7, 2023",BC-IP119,British Columbia,commercial,poultry,PCZ-197,Revoked
+"November 7, 2023",BC-IP117,British Columbia,commercial,poultry,PCZ-211,Revoked
+"November 7, 2023",BC-IP116,British Columbia,commercial,poultry,PCZ-211,Revoked
+"November 7, 2023",BC-IP115,British Columbia,commercial,poultry,PCZ-211,Revoked
+"November 7, 2023",BC-IP114,British Columbia,commercial,poultry,PCZ-197,Revoked
+"November 7, 2023",BC-IP113,British Columbia,commercial,poultry,PCZ-212,Revoked
+"November 7, 2023",BC-IP112,British Columbia,commercial,poultry,PCZ-210,Revoked
+"November 4, 2023",BC-IP111,British Columbia,commercial,poultry,PCZ-207,Revoked
+"November 4, 2023",BC-IP110,British Columbia,commercial,poultry,PCZ-206,Revoked
+"November 2, 2023",BC-IP109,British Columbia,commercial,poultry,PCZ-197,Revoked
+"October 26, 2023",BC-IP108,British Columbia,commercial,poultry,PCZ-197,Revoked
+"October 25, 2023",BC-IP107,British Columbia,commercial,poultry,PCZ-200,Revoked
+"October 24, 2023",BC-IP106,British Columbia,commercial,poultry,PCZ-199,Revoked
+"October 20, 2023",BC-IP105,British Columbia,commercial,poultry,PCZ-197,Revoked
+"April 29, 2023",BC-IP104,British Columbia,commercial,poultry,PCZ-189,Revoked
+"January 22, 2023",BC-IP103,British Columbia,commercial,poultry,PCZ-153,Revoked
+"January 18, 2023",BC-IP102,British Columbia,commercial,poultry,PCZ-153,Revoked
+"January 14, 2023",BC-IP101,British Columbia,commercial,poultry,PCZ-153,Revoked
+"January 13, 2023",BC-IP100,British Columbia,commercial,poultry,PCZ-153,Revoked
+"January 11, 2023",BC-IP099,British Columbia,commercial,poultry,PCZ-153,Revoked
+"January 7, 2023",BC-IP098,British Columbia,commercial,poultry,PCZ-153,Revoked
+"December 28, 2022",BC-IP094,British Columbia,commercial,poultry,PCZ-153,Revoked
+"December 27, 2022",BC-IP093,British Columbia,commercial,poultry,PCZ-153,Revoked
+"December 23, 2022",BC-IP092,British Columbia,commercial,poultry,PCZ-162,Revoked
+"December 22, 2022",BC-IP090,British Columbia,commercial,poultry,PCZ-158,Revoked
+"December 20, 2022",BC-IP089,British Columbia,commercial,poultry,PCZ-166,Revoked
+"December 20, 2022",BC-IP088,British Columbia,commercial,poultry,PCZ-166,Revoked
+"December 18, 2022",BC-IP087,British Columbia,commercial,poultry,PCZ-162,Revoked
+"December 15, 2022",BC-IP086,British Columbia,commercial,poultry,PCZ-153,Revoked
+"December 13, 2022",BC-IP085,British Columbia,commercial,poultry,PCZ-166,Revoked
+"December 13, 2022",BC-IP084,British Columbia,commercial,poultry,PCZ-148,Revoked
+"December 12, 2022",BC-IP083,British Columbia,commercial,poultry,PCZ-161,Revoked
+"December 11, 2022",BC-IP082,British Columbia,commercial,poultry,PCZ-161,Revoked
+"December 10, 2022",BC-IP081,British Columbia,commercial,poultry,PCZ-161,Revoked
+"December 10, 2022",BC-IP080,British Columbia,commercial,poultry,PCZ-162,Revoked
+"December 10, 2022",BC-IP079,British Columbia,commercial,poultry,PCZ-153,Revoked
+"December 9, 2022",BC-IP078,British Columbia,commercial,poultry,PCZ-165,Revoked
+"December 9, 2022",BC-IP077,British Columbia,commercial,poultry,PCZ-148,Revoked
+"December 9, 2022",BC-IP076,British Columbia,commercial,poultry,PCZ-162,Revoked
+"December 7, 2022",BC-IP075,British Columbia,commercial,poultry,PCZ-153,Revoked
+"December 7, 2022",BC-IP074,British Columbia,commercial,poultry,PCZ-153,Revoked
+"December 7, 2022",BC-IP073,British Columbia,commercial,poultry,PCZ-152,Revoked
+"December 7, 2022",BC-IP072,British Columbia,commercial,poultry,PCZ-164,Revoked
+"December 6, 2022",BC-IP071,British Columbia,commercial,poultry,PCZ-148,Revoked
+"December 6, 2022",BC-IP070,British Columbia,commercial,poultry,PCZ-161,Revoked
+"December 6, 2022",BC-IP069,British Columbia,commercial,poultry,PCZ-148,Revoked
+"December 5, 2022",BC-IP068,British Columbia,commercial,poultry,PCZ-153,Revoked
+"December 4, 2022",BC-IP067,British Columbia,commercial,poultry,PCZ-158,Revoked
+"December 4, 2022",BC-IP066,British Columbia,commercial,poultry,PCZ-158,Revoked
+"December 3, 2022",BC-IP065,British Columbia,commercial,poultry,PCZ-148,Revoked
+"December 2, 2022",BC-IP064,British Columbia,commercial,poultry,PCZ-153,Revoked
+"December 3, 2022",BC-IP063,British Columbia,commercial,poultry,PCZ-162,Revoked
+"December 2, 2022",BC-IP062,British Columbia,commercial,poultry,PCZ-161,Revoked
+"December 1, 2022",BC-IP061,British Columbia,commercial,poultry,PCZ-153,Revoked
+"November 30, 2022",BC-IP060,British Columbia,commercial,poultry,PCZ-153,Revoked
+"November 29, 2022",BC-IP059,British Columbia,commercial,poultry,PCZ-161,Revoked
+"November 26, 2022",BC-IP058,British Columbia,commercial,poultry,PCZ-153,Revoked
+"November 27, 2022",BC-IP057,British Columbia,commercial,poultry,PCZ-148,Revoked
+"November 27, 2022",BC-IP056,British Columbia,commercial,poultry,PCZ-151,Revoked
+"November 27, 2022",BC-IP055,British Columbia,commercial,poultry,PCZ-159,Revoked
+"November 27, 2022",BC-IP054,British Columbia,commercial,poultry,PCZ-153,Revoked
+"November 27, 2022",BC-IP053,British Columbia,commercial,poultry,PCZ-153,Revoked
+"November 26, 2022",BC-IP052,British Columbia,commercial,poultry,PCZ-152,Revoked
+"November 26, 2022",BC-IP051,British Columbia,commercial,poultry,PCZ-151,Revoked
+"November 26, 2022",BC-IP050,British Columbia,commercial,poultry,PCZ-153,Revoked
+"November 26, 2022",BC-IP049,British Columbia,commercial,poultry,PCZ-152,Revoked
+"November 25, 2022",BC-IP048,British Columbia,commercial,poultry,PCZ-158,Revoked
+"November 25, 2022",BC-IP047,British Columbia,commercial,poultry,PCZ-148,Revoked
+"November 26, 2022",BC-IP046,British Columbia,commercial,poultry,PCZ-153,Revoked
+"November 24, 2022",BC-IP044,British Columbia,commercial,poultry,PCZ-153,Revoked
+"November 24, 2022",BC-IP045,British Columbia,commercial,poultry,PCZ-148,Revoked
+"November 23, 2022",BC-IP043,British Columbia,commercial,poultry,PCZ-149,Revoked
+"November 22, 2022",BC-IP042,British Columbia,commercial,poultry,PCZ-149,Revoked
+"November 22, 2022",BC-IP041,British Columbia,commercial,poultry,PCZ-153,Revoked
+"November 22, 2022",BC-IP040,British Columbia,commercial,poultry,PCZ-149,Revoked
+"November 22, 2022",BC-IP039,British Columbia,commercial,poultry,PCZ-156,Revoked
+"November 22, 2022",BC-IP038,British Columbia,commercial,poultry,PCZ-153,Revoked
+"November 21, 2022",BC-IP037,British Columbia,commercial,poultry,PCZ-155,Revoked
+"November 19, 2022",BC-IP036,British Columbia,commercial,poultry,PCZ-153,Revoked
+"November 19, 2022",BC-IP035,British Columbia,commercial,poultry,PCZ-148,Revoked
+"November 19, 2022",BC-IP034,British Columbia,commercial,poultry,PCZ-152,Revoked
+"November 19, 2022",BC-IP033,British Columbia,commercial,poultry,PCZ-148,Revoked
+"November 18, 2022",BC-IP032,British Columbia,commercial,poultry,PCZ-151,Revoked
+"November 16, 2022",BC-IP031,British Columbia,commercial,poultry,PCZ-149,Revoked
+"November 16, 2022",BC-IP030,British Columbia,commercial,poultry,PCZ-148,Revoked
+"October 20, 2022",BC-IP028,British Columbia,commercial,poultry,PCZ-133,Revoked
+"October 15, 2022",BC-IP027,British Columbia,commercial,poultry,PCZ-127,Revoked
+"September 12, 2022",BC-IP019,British Columbia,commercial,poultry,PCZ-84,Revoked
+"June 8, 2022",BC-IP016,British Columbia,commercial,poultry,PCZ-70,Revoked
+"May 20, 2022",BC-IP011,British Columbia,commercial,poultry,PCZ-64,Revoked
+"May 19, 2022",BC-IP009,British Columbia,commercial,poultry,PCZ-64,Revoked
+"April 13, 2022",BC-IP001,British Columbia,commercial,poultry,PCZ-24,Revoked
+"November 8, 2023",MB-IP22,Manitoba,commercial,poultry,PCZ-214,Revoked
+"October 26, 2022",MB-IP20,Manitoba,commercial,poultry,PCZ-137,Revoked
+"October 24, 2022",MB-IP19,Manitoba,commercial,poultry,PCZ-136,Revoked
+"October 7, 2022",MB-IP18,Manitoba,commercial,poultry,PCZ-118,Revoked
+"October 6, 2022",MB-IP17,Manitoba,commercial,poultry,PCZ-101,Revoked
+"October 6, 2022",MB-IP16,Manitoba,commercial,poultry,PCZ-115,Revoked
+"October 6, 2022",MB-IP15,Manitoba,commercial,poultry,PCZ-101,Revoked
+"October 5, 2022",MB-IP14,Manitoba,commercial,poultry,PCZ-97,Revoked
+"October 1, 2022",MB-IP13,Manitoba,commercial,poultry,PCZ-112,Revoked
+"September 30, 2022",MB-IP12,Manitoba,commercial,poultry,PCZ-111,Revoked
+"September 30, 2022",MB-IP11,Manitoba,commercial,poultry,PCZ-110,Revoked
+"September 27, 2022",MB-IP09,Manitoba,commercial,poultry,PCZ-101,Revoked
+"September 25, 2022",MB-IP08,Manitoba,commercial,poultry,PCZ-92,Revoked
+"September 22, 2022",MB-IP07,Manitoba,commercial,poultry,PCZ 97,Revoked
+"September 19, 2022",MB-IP06,Manitoba,commercial,poultry,PCZ-92,Revoked
+"September 16, 2022",MB-IP05,Manitoba,commercial,poultry,PCZ-87,Revoked
+"September 14, 2022",MB-IP04,Manitoba,commercial,poultry,PCZ-85,Revoked
+"April 23, 2022",MB-IP01,Manitoba,commercial,poultry,PCZ-35,Revoked
+"February 11, 2022",NS-IP03,Nova Scotia,commercial,poultry,,
+"February 3, 2022",NS-IP02,Nova Scotia,commercial,poultry,,
+"January 30, 2024",ON-IP49,Ontario,commercial,poultry,PCZ-231,Revoked
+"April 19, 2023",ON-IP47,Ontario,commercial,poultry,PCZ-185,Revoked
+"April 5, 2023",ON-IP46,Ontario,commercial,poultry,PCZ-181,Revoked
+"March 14, 2023",ON-IP45,Ontario,commercial,poultry,PCZ-177,Revoked
+"December 21, 2022",ON-IP43,Ontario,commercial,poultry,PCZ-167,Revoked
+"December 17, 2022",ON-IP42,Ontario,commercial,poultry,PCZ-167,Revoked
+"December 13, 2022",ON-IP41,Ontario,commercial,poultry,PCZ-167,Revoked
+"November 27, 2022",ON-IP40,Ontario,commercial,poultry,PCZ-160,Revoked
+"November 21, 2022",ON-IP39,Ontario,commercial,poultry,PCZ-154,Revoked
+"November 18, 2022",ON-IP38,Ontario,commercial,poultry,PCZ-150,Revoked
+"October 18, 2022",ON-IP36,Ontario,commercial,poultry,PCZ-130,Revoked
+"September 29, 2022",ON-IP31,Ontario,commercial,poultry,PCZ-109,Revoked
+"September 17, 2022",ON-IP27,Ontario,commercial,poultry,PCZ-91,Revoked
+"May 18, 2022",ON-IP26,Ontario,commercial,poultry,PCZ-65,Revoked
+"May 10, 2022",ON-IP25,Ontario,commercial,poultry,PCZ-45,Revoked
+"May 6, 2022",ON-IP24,Ontario,commercial,poultry,PCZ-58,Revoked
+"May 4, 2022",ON-IP23,Ontario,commercial,poultry,PCZ-55,Revoked
+"April 29, 2022",ON-IP20,Ontario,commercial,poultry,PCZ-45,Revoked
+"April 26, 2022",ON-IP19,Ontario,commercial,poultry,PCZ-41,Revoked
+"April 21, 2022",ON-IP17,Ontario,commercial,poultry,PCZ-33,Revoked
+"April 14, 2022",ON-IP16,Ontario,commercial,poultry,PCZ-22,Revoked
+"April 14, 2022",ON-IP15,Ontario,commercial,poultry,PCZ-06,Revoked
+"April 12, 2022",ON-IP14,Ontario,commercial,poultry,PCZ-06,Revoked
+"April 12, 2022",ON-IP12,Ontario,commercial,poultry,PCZ-10,Revoked
+"April 10, 2022",ON-IP07,Ontario,commercial,poultry,PCZ-10,Revoked
+"April 9, 2022",ON-IP13,Ontario,commercial,poultry,PCZ-12,Revoked
+"April 6, 2022",ON-IP11,Ontario,commercial,poultry,PCZ-09,Revoked
+"April 6, 2022",ON-IP10,Ontario,commercial,poultry,PCZ-08,Revoked
+"April 5, 2022",ON-IP08,Ontario,commercial,poultry,PCZ-06,Revoked
+"April 4, 2022",ON-IP06,Ontario,commercial,poultry,PCZ-05,Revoked
+"March 30, 2022",ON-IP03,Ontario,commercial,poultry,PCZ-01,Revoked
+"March 28, 2022",ON-IP02,Ontario,commercial,poultry,PCZ-02,Revoked
+"March 27, 2022",ON-IP01,Ontario,commercial,poultry,PCZ-01,Revoked
+"February 9, 2024",QC-IP53,Quebec,commercial,poultry,PCZ-233,Revoked
+"January 3, 2024",QC-IP52,Quebec,commercial,poultry,PCZ-229,Revoked
+"December 4, 2023",QC-IP51,Quebec,commercial,poultry,PCZ-225,Revoked
+"November 20, 2023",QC-IP50,Quebec,commercial,poultry,PCZ-216,Revoked
+"November 15, 2023",QC-IP49,Quebec,commercial,poultry,PCZ-216,Revoked
+"October 25, 2023",QC-IP48,Quebec,commercial,poultry,PCZ-201,Revoked
+"May 6, 2023",QC-IP47,Quebec,commercial,poultry,PCZ-190,Revoked
+"April 28, 2023",QC-IP46,Quebec,commercial,poultry,PCZ-188,Revoked
+"April 22, 2023",QC-IP45,Quebec,commercial,poultry,PCZ-184,Revoked
+"April 22, 2023",QC-IP44,Quebec,commercial,poultry,PCZ-184,Revoked
+"April 21, 2023",QC-IP43,Quebec,commercial,poultry,PCZ-187,Revoked
+"April 19, 2023",QC-IP42,Quebec,commercial,poultry,PCZ-184,Revoked
+"April 19, 2023",QC-IP41,Quebec,commercial,poultry,PCZ-184,Revoked
+"April 18, 2023",QC-IP39,Quebec,commercial,poultry,PCZ-186,Revoked
+"April 18, 2023",QC-IP40,Quebec,commercial,poultry,PCZ-187,Revoked
+"April 17, 2023",QC-IP38,Quebec,commercial,poultry,PCZ-184,Revoked
+"April 13, 2023",QC-IP37,Quebec,commercial,poultry,PCZ-182,Revoked
+"April 4, 2023",QC-IP35,Quebec,commercial,poultry,PCZ-180,Revoked
+"April 3, 2023",QC-IP34,Quebec,commercial,poultry,PCZ-179,Revoked
+"April 3, 2023",QC-IP33,Quebec,commercial,poultry,PCZ-178,Revoked
+"March 27, 2023",QC-IP32,Quebec,commercial,poultry,PCZ-178,Revoked
+"February 8, 2023",QC-IP31,Quebec,commercial,poultry,PCZ-173,Revoked
+"February 8, 2023",QC-IP30,Quebec,commercial,poultry,PCZ-174,Revoked
+"February 8, 2023",QC-IP29,Quebec,commercial,poultry,PCZ-172,Revoked
+"February 2, 2023",QC-IP28,Quebec,commercial,poultry,PCZ-172,Revoked
+"February 2, 2023",QC-IP27,Quebec,commercial,poultry,PCZ-173,Revoked
+"February 2, 2023",QC-IP26,Quebec,commercial,poultry,PCZ-173,Revoked
+"January 31, 2023",QC-IP25,Quebec,commercial,poultry,PCZ-172,Revoked
+"January 31, 2023",QC-IP24,Quebec,commercial,poultry,PCZ-172,Revoked
+"November 5, 2022",QC-IP22,Quebec,commercial,poultry,PCZ-143,Revoked
+"October 31, 2022",QC-IP20,Quebec,commercial,poultry,PCZ-143,Revoked
+"October 27, 2022",QC-IP19,Quebec,commercial,poultry,PCZ-141,Revoked
+"October 22, 2022",QC-IP18,Quebec,commercial,poultry,PCZ-135,Revoked
+"October 18, 2022",QC-IP17,Quebec,commercial,poultry,PCZ-129,Revoked
+"October 18, 2022",QC-IP16,Quebec,commercial,poultry,PCZ-128,Revoked
+"October 7, 2022",QC-IP13,Quebec,commercial,poultry,PCZ-117,Revoked
+"August 1, 2022",QC-IP12,Quebec,commercial,poultry,PCZ-76,Revoked
+"July 21, 2022",QC-IP11,Quebec,commercial,poultry,PCZ-74,Revoked
+"July 9, 2022",QC-IP10,Quebec,commercial,poultry,PCZ-73,Revoked
+"July 3, 2022",QC-IP09,Quebec,commercial,poultry,PCZ-73,Revoked
+"June 28, 2022",QC-IP08,Quebec,commercial,poultry,PCZ-73,Revoked
+"April 21, 2022",QC-IP05,Quebec,commercial,poultry,PCZ-32,Revoked
+"April 17, 2022",QC-IP04,Quebec,commercial,poultry,PCZ-28,Revoked
+"April 14, 2022",QC-IP03,Quebec,commercial,poultry,PCZ-23,Revoked
+"April 12, 2022",QC-IP01,Quebec,commercial,poultry,PCZ-18,Revoked
+"November 4, 2023",SK-IP38,Saskatchewan,commercial,poultry,PCZ-208,Revoked
+"November 1, 2023",SK-IP37,Saskatchewan,commercial,poultry,PCZ-205,Revoked
+"November 1, 2023",SK-IP36,Saskatchewan,commercial,poultry,PCZ-204,Revoked
+"October 31, 2023",SK-IP35,Saskatchewan,commercial,poultry,PCZ-203,Revoked
+"October 31, 2023",SK-IP34,Saskatchewan,commercial,poultry,PCZ-202,Revoked
+"September 21, 2023",SK-IP33,Saskatchewan,commercial,poultry,PCZ-192,Revoked
+"November 14, 2022",SK-IP32,Saskatchewan,commercial,poultry,PCZ-146,Revoked
+"October 27, 2022",SK-IP29,Saskatchewan,commercial,poultry,PCZ-139,Revoked
+"October 19, 2022",SK-IP27,Saskatchewan,commercial,poultry,PCZ-132,Revoked
+"October 7, 2022",SK-IP24,Saskatchewan,commercial,poultry,PCZ-119,Revoked
+"October 5, 2022",SK-IP23,Saskatchewan,commercial,poultry,PCZ-114,Revoked
+"September 30, 2022",SK-IP22,Saskatchewan,commercial,poultry,PCZ-107,Revoked
+"September 24, 2022",SK-IP18,Saskatchewan,commercial,poultry,PCZ-99,Revoked
+"September 19, 2022",SK-IP17,Saskatchewan,commercial,poultry,PCZ-94,Revoked
+"September 12, 2022",SK-IP15,Saskatchewan,commercial,poultry,PCZ-83,Revoked
+"September 9, 2022",SK-IP14,Saskatchewan,commercial,poultry,PCZ-80,Revoked
+"May 4, 2022",SK-IP08,Saskatchewan,commercial,poultry,PCZ-56,Revoked
+"April 26, 2022",SK-IP06,Saskatchewan,commercial,poultry,PCZ-44,Revoked
+"April 24, 2022",SK-IP05,Saskatchewan,commercial,poultry,PCZ-40,Revoked
+"April 22, 2022",SK-IP04,Saskatchewan,commercial,poultry,PCZ-36,Revoked
+"April 16, 2022",SK-IP02,Saskatchewan,commercial,poultry,PCZ-30A,Revoked
+"April 15, 2022",SK-IP01,Saskatchewan,commercial,poultry,PCZ-29,Revoked
