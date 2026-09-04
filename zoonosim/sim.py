@@ -1278,51 +1278,7 @@ class Sim(znb.BaseSim):
                     for t in range(self.npts):
                         self.results[f'transmissions_{source}_to_{target}'][t] = np.sum([1 for event in infection_events if event['source'] in valid_sources_set and event['date'] <= t]) # Count the number of infections from source to target
         return        
-                    
-
-    # def compute_yield(self):
-    #     '''
-    #     Compute test yield -- number of positive tests divided by the total number
-    #     of tests, also called test positivity rate. Relative yield is with respect
-    #     to prevalence: i.e., how the yield compares to what the yield would be from
-    #     choosing a person at random from the population.
-    #     '''
-    #     # Absolute yield
-    #     res = self.results
-    #     inds = cvu.true(res['new_tests'][:]) # Pull out non-zero numbers of tests
-    #     self.results['test_yield'][inds] = res['new_diagnoses'][inds]/res['new_tests'][inds] # Calculate the yield
-
-    #     # Relative yield
-    #     inds = cvu.true(res['n_infectious'][:]) # To avoid divide by zero if no one is infectious
-    #     denom = res['n_infectious'][inds] / (res['n_alive'][inds] - res['cum_diagnoses'][inds]) # Alive + undiagnosed people might test; infectious people will test positive
-    #     self.results['rel_test_yield'][inds] = self.results['test_yield'][inds]/denom # Calculate the relative yield
-    #     return
-
-
-    # def compute_doubling(self, window=3, max_doubling_time=30):
-    #     '''
-    #     Calculate doubling time using exponential approximation -- a more detailed
-    #     approach is in utils.py. Compares infections at time t to infections at time
-    #     t-window, and uses that to compute the doubling time. For example, if there are
-    #     100 cumulative infections on day 12 and 200 infections on day 19, doubling
-    #     time is 7 days.
-
-    #     Args:
-    #         window (float): the size of the window used (larger values are more accurate but less precise)
-    #         max_doubling_time (float): doubling time could be infinite, so this places a bound on it
-
-    #     Returns:
-    #         doubling_time (array): the doubling time results array
-    #     '''
-
-    #     cum_infections = self.results['cum_infections'].values
-    #     infections_now = cum_infections[window:]
-    #     infections_prev = cum_infections[:-window]
-    #     use = (infections_prev > 0) & (infections_now > infections_prev)
-    #     doubling_time = window * np.log(2) / np.log(infections_now[use] / infections_prev[use])
-    #     self.results['doubling_time'][:] = np.nan
-    #     self.results['doubling_time'][window:][use] = np.minimum(doubling_time, max_doubling_time)
-    #     return self.results['doubling_time'].values
+                
 
     def plot(self, *args, **kwargs):
         '''

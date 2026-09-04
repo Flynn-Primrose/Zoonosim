@@ -266,16 +266,16 @@ In terms of operating the software, the most important component is the "pars" o
       - relative transmissibility for each breed
     - baseline_symptomatic_rate
       - proportion of healthy birds that appear symptomatic anyway
-    - mean_symptomatic_rate_increase
-      - the mean increase in the rate of symptomatic birds among those infected
+    - symptomatic_rate_increase
+      - a dictionary with the parameters for the distribution from which we draw the increase
     - baseline_mortality_rate
       - the baseline mortality rate for healthy birds
     - mean_mortality_rate_increase
-      - the mean increase in mortality rate among infected birds
+      - a dictionary with the parameters for the distribution from which we draw the increase
     - baseline_water_rate
       - the rate of water consumption among healthy birds
     - mean_water_rate_increase
-      - the mean increase in water consumption among infected birds
+      - a dictionary with the parameters for the distribution from which we draw the increase
   - barn
     - sus_ORs
       - the relative susceptibility of barns

@@ -7,7 +7,7 @@ import sciris as sc
 from . import defaults as znd
 from .settings import options
 
-__all__ = ['make_pars']
+__all__ = ['make_pars', 'reset_layer_pars']
 
 def make_pars(version = None, **kwargs):
 
