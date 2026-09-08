@@ -396,20 +396,32 @@
       "baseline_symptomatic_rate": [
         0.001
       ],
-      "mean_symptomatic_rate_increase": [
-        0.01
+      "symptomatic_rate_increase": [
+        {
+          "dist": "lognormal",
+          "par1": 0.001,
+          "par2": 0.5
+        }
       ],
       "baseline_mortality_rate": [
         0.001
       ],
-      "mean_mortality_rate_increase": [
-        0.01
+      "mortality_rate_increase": [
+        {
+          "dist": "lognormal",
+          "par1": 0.005,
+          "par2": 0.5
+        }
       ],
       "baseline_water_rate": [
         1.0
       ],
-      "mean_water_rate_increase": [
-        1.0
+      "water_rate_increase": [
+        {
+          "dist": "lognormal",
+          "par1": 1.5,
+          "par2": 0.5
+        }
       ]
     },
     "barn": {
