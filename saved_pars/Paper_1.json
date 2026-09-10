@@ -30,7 +30,7 @@
   "end_day": "2025-12-31",
   "n_days": null,
   "rand_seed": 73,
-  "verbose": 2,
+  "verbose": 0,
   "enable_testobjs": false,
   "testobjs": null,
   "enable_smartwatches": false,
