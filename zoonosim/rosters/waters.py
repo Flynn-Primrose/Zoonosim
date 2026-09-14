@@ -155,7 +155,7 @@ class Water(Subroster):
     
     def set_rel_trans(self):
         ''' Set the relative transmissibility of each waterbody based on the parameters '''
-        self.rel_trans = np.full(len(self), self.pars['prognoses']['water']['trans_ORs'], dtype=znd.default_float)
+        self.rel_trans = np.full(len(self), self.pars['prognoses']['water']['trans_ORs'], dtype=znd.default_float) * znu.sample(**self.pars['transmission_pars']['water']['beta_dist'], size = len(self))
         return
 
     def update_states_pre(self, t):
