@@ -306,7 +306,9 @@ class Humans(Subroster):
         self.severe_prob[:] = progs['severe_probs'][inds]*progs['comorbidities'][inds] # Severe disease probability is modified by comorbidities
         self.death_prob[:]  = progs['death_probs'][inds] # Probability of death
         self.rel_sus[:]     = progs['sus_ORs'][inds]  # Default susceptibilities
-        self.rel_trans[:]   = progs['trans_ORs'][inds] * znu.sample(**self.pars['transmission_pars']['human']['beta_dist'], size=len(inds))  # Default transmissibilities, with viral load drawn from a distribution
+        self.rel_trans[:]   = progs['trans_ORs'][inds] 
+        if self.pars['transmission_pars']['human']['beta_dist'] is not None:
+            self.rel_trans = self.rel_trans * znu.sample(**self.pars['transmission_pars']['human']['beta_dist'], size=len(inds))  # Default transmissibilities, with viral load drawn from a distribution
 
         return
 

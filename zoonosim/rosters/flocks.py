@@ -223,7 +223,9 @@ class Flocks(Subroster):
         self.baseline_mortality_rate[:] = progs['baseline_mortality_rate'][inds]
         self.baseline_water_rate[:] = progs['baseline_water_rate'][inds]
         self.rel_sus[:] = progs['sus_ORs'][inds]
-        self.rel_trans[:] = progs['trans_ORs'][inds] * znu.sample(**self.pars['transmission_pars']['flock']['beta_dist'], size=len(inds))
+        self.rel_trans[:] = progs['trans_ORs'][inds] 
+        if self.pars['transmission_pars']['flock']['beta_dist'] is not None:
+            self.rel_trans = self.rell_trans * znu.sample(**self.pars['transmission_pars']['flock']['beta_dist'], size=len(inds))
 
         return
 
