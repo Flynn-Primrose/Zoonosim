@@ -106,8 +106,8 @@ In terms of operating the software, the most important component is the "pars" o
         - step
     - viral_loads
       - a dictionary with the following keys
-        - minimum_detectable_load
-          - The minimum detectable viral load. specified as a logarithm, so a value of 3 implies a viral load of 10^3 cp/ml
+        - minimum_load
+          - The minimum viral load. specified as a logarithm, so a value of 3 implies a viral load of 10^3 cp/ml
         peak_load
           - peak viral load. specified as a logarithm, so a value of 6 implies a viral load of 10^6 cp/ml
     - viral_levels
@@ -266,16 +266,16 @@ In terms of operating the software, the most important component is the "pars" o
       - relative transmissibility for each breed
     - baseline_symptomatic_rate
       - proportion of healthy birds that appear symptomatic anyway
-    - symptomatic_rate_increase
-      - a dictionary with the parameters for the distribution from which we draw the increase
+    - infected_symptomatic_rate
+      - Proportion of infected birds that display symptoms
+        - Can be either a scalar or a dict with distribution parameters
     - baseline_mortality_rate
       - the baseline mortality rate for healthy birds
-    - mean_mortality_rate_increase
-      - a dictionary with the parameters for the distribution from which we draw the increase
     - baseline_water_rate
       - the rate of water consumption among healthy birds
-    - mean_water_rate_increase
-      - a dictionary with the parameters for the distribution from which we draw the increase
+    - water_rate_increase
+      - water consumption of infected birds is equal to the baseline consumption times this factor
+        - May be either a scalar or a dict with distribution parameters
   - barn
     - sus_ORs
       - the relative susceptibility of barns

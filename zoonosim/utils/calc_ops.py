@@ -20,7 +20,7 @@ if options.numba_parallel not in [0, 1, 2, '0', '1', '2', 'none', 'safe', 'full'
 cache = options.numba_cache # Turning this off can help switching parallelization options
 
 @nb.njit(             (nbint,   nbfloat[:],     nbfloat[:],  nbfloat[:],    nbfloat,                    nbfloat,    nbfloat,    nbfloat), cache=cache, parallel=safe_parallel)
-def compute_viral_load(t,       t_detectable,   t_peak,      t_recovered,   minimum_detectable_load,    peak_load,  min_scl,     max_scl): # pragma: no cover
+def compute_viral_load(t,       t_detectable,   t_peak,      t_recovered,   minimum_load,    peak_load,  min_scl,     max_scl): # pragma: no cover
     '''
     Calculate viral load for infectious humans?
 
@@ -29,7 +29,7 @@ def compute_viral_load(t,       t_detectable,   t_peak,      t_recovered,   mini
         t_detectable: (float) time when viral load becomes detectable
         t_peak: (float) time when viral load reaches its peak
         t_recovered: (float) time when viral load drops to recovered level
-        minimum_detectable_load: (float) minimum detectable viral load
+        minimum_load: (float) minimum viral load
         peak_load: (float) peak viral load
         min_scl: (float) relative transmissibility scaling factor for minimum viral load
         max_scl: (float) relative transmissibility scaling factor for peak viral load
@@ -44,14 +44,14 @@ def compute_viral_load(t,       t_detectable,   t_peak,      t_recovered,   mini
 
     # Calculate viral load for those for whom it is rising
     rising_vl = t < t_peak
-    vl[rising_vl] = minimum_detectable_load + (peak_load - minimum_detectable_load)*(t - t_detectable[rising_vl])/(t_peak[rising_vl] - t_detectable[rising_vl])
+    vl[rising_vl] = minimum_load + (peak_load - minimum_load)*(t - t_detectable[rising_vl])/(t_peak[rising_vl] - t_detectable[rising_vl])
 
     # Calculate viral load for those for whom it is falling
     falling_vl = t >= t_peak
-    vl[falling_vl] = minimum_detectable_load + (peak_load - minimum_detectable_load)*(t - t_peak[falling_vl])/(t_recovered[falling_vl] - t_peak[falling_vl])
+    vl[falling_vl] = minimum_load + (peak_load - minimum_load)*(t - t_peak[falling_vl])/(t_recovered[falling_vl] - t_peak[falling_vl])
 
     # Rescale viral load to represent relative transmissibility
-    vl_rescaled = min_scl + (max_scl - min_scl)*(vl - minimum_detectable_load)/(peak_load - minimum_detectable_load)
+    vl_rescaled = min_scl + (max_scl - min_scl)*(vl - minimum_load)/(peak_load - minimum_load)
     vl_rescaled[vl_rescaled < min_scl] = min_scl #Not sure if this is necessary, but it seems like a good idea to prevent negative values.
     vl_rescaled[vl_rescaled > max_scl] = max_scl #Not sure if this is necessary, but it seems like a good idea to prevent values above max_scl.
 

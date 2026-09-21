@@ -109,7 +109,7 @@ def make_pars(version = None, **kwargs):
 
     pars['transmission_pars']['human'] = {
         'beta_dist': dict(dist='neg_binomial', par1=1.0, par2=0.45, step=0.01), # Distribution to draw individual level transmissibility
-        'viral_loads':dict(minimum_detectable_load=3, peak_load=6),
+        'viral_loads':dict(minimum_load=3, peak_load=6),
         'viral_levels':dict(min_scl=0.25, max_scl=1.0), # Specifies the range within which viral load should be scaled so it can contribute to relative transmissibility
         'gamma_pars':dict(shape=2.0, scale=0.35) # Parameters for the gamma distribution used to determine the moment when an agents viral load exceeds the minimum detectable load. This is used to determine when an agent becomes infectious. NOTE: This is a dummy variable!
     }

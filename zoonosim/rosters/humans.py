@@ -409,11 +409,11 @@ class Humans(Subroster):
         update the viral levels of human agents
         '''
 
-        minimum_detectable_load = self.pars['transmission_pars']['human']['viral_loads']['minimum_detectable_load']
+        minimum_load = self.pars['transmission_pars']['human']['viral_loads']['minimum_load']
         peak_load = self.pars['transmission_pars']['human']['viral_loads']['peak_load']
         min_scl = self.pars['transmission_pars']['human']['viral_levels']['min_scl']
         max_scl = self.pars['transmission_pars']['human']['viral_levels']['max_scl']
-        self.viral_load, scaled_viral_load = znu.compute_viral_load(self.t, self.t_detectable, self.t_peak, self.t_undetectable, minimum_detectable_load, peak_load, min_scl, max_scl)
+        self.viral_load, scaled_viral_load = znu.compute_viral_load(self.t, self.t_detectable, self.t_peak, self.t_undetectable, minimum_load, peak_load, min_scl, max_scl)
         return scaled_viral_load
 
     def check_sw_quarantined(self):
