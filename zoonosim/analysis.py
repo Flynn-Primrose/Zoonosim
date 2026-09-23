@@ -17,7 +17,6 @@ from . import run as znr
 from . import utils as znu
 from . import defaults as znd
 
-
 __all__ = ['Analyzer', 'snapshot', 'biography', 'Fit' ,'Calibration' ]
 
 
@@ -771,6 +770,7 @@ class Calibration(Analyzer):
 
         self.run_args.setdefault('parallelizer', 'concurrent')
         #self.run_args.setdefault('parallelizer', 'serial') # DEBUG
+        #self.run_args.setdefault('parallelizer', 'serial-copy') # DEBUG
 
         # if self.run_args['parallelizer'] != 'concurrent' and verbose >= 1:
         #     print(f"Warning: Parallelizer is explicitly set to '{self.run_args['parallelizer']}', this may cause issues on Windows machines. Consider setting parallelizer to 'concurrent'")
@@ -860,29 +860,30 @@ class Calibration(Analyzer):
     def run_workers(self):
         ''' Run multiple workers in parallel '''
         if self.run_args.n_workers > 1: # Normal use case: run in parallel
-            try:
-                output = sc.parallelize(self.worker, iterarg=self.run_args.n_workers, parallelizer=self.run_args.parallelizer)
-            except Exception as E:
-                if isinstance(E, RuntimeError):
-                    if 'freeze_support' in E.args[0]: # For this error, add additional information
-                        errormsg = '''
-                                Uh oh! It appears you are trying to run with multiprocessing on Windows outside
-                                of the __main__ block; please see https://docs.python.org/3/library/multiprocessing.html
-                                for more information. The correct syntax to use is e.g.
+            output = sc.parallelize(self.worker, iterarg=self.run_args.n_workers, parallelizer=self.run_args.parallelizer)
+            # try:
+            #     output = sc.parallelize(self.worker, iterarg=self.run_args.n_workers, parallelizer=self.run_args.parallelizer)
+            # except Exception as E:
+            #     if isinstance(E, RuntimeError):
+            #         if 'freeze_support' in E.args[0]: # For this error, add additional information
+            #             errormsg = '''
+            #                     Uh oh! It appears you are trying to run with multiprocessing on Windows outside
+            #                     of the __main__ block; please see https://docs.python.org/3/library/multiprocessing.html
+            #                     for more information. The correct syntax to use is e.g.
                             
-                                    import zoonosim as zn
-                                    sim = zn.Sim(data_file='data.csv')
-                                    calib = zn.Calibration(sim, calib_pars, n_workers=4, total_trials=100)
+            #                         import zoonosim as zn
+            #                         sim = zn.Sim(data_file='data.csv')
+            #                         calib = zn.Calibration(sim, calib_pars, n_workers=4, total_trials=100)
                             
-                                    if __name__ == '__main__':
-                                        calib.calibrate()
+            #                         if __name__ == '__main__':
+            #                             calib.calibrate()
                             
-                                Alternatively, to run without multiprocessing, set n_workers = 1.
-                                '''
-                        raise RuntimeError(errormsg) from E
-                    else: print(f"Error: {E}")
-                else: # For all other runtime errors, raise the original exception
-                    raise E
+            #                     Alternatively, to run without multiprocessing, set n_workers = 1.
+            #                     '''
+            #             raise RuntimeError(errormsg) from E
+            #         else: print(f"Error: {E}")
+            #     else: # For all other runtime errors, raise the original exception
+            #         raise E
         else: # Special case: just run one
             output = [self.worker()]
         return output

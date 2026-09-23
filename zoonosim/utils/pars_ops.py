@@ -291,3 +291,15 @@ def pars_from_json(filename):
             pars['cattle_pars'][key] = np.array(value, dtype=znd.default_str)
 
     return pars
+
+def equal_beta_assignment(sim, pars):
+    equal_pars = dict(
+        beta = dict(
+            ppe = pars['beta']['human'],
+            flock = pars['beta']['human'],
+            barn = pars['beta']['human'],
+            water = pars['beta']['human'],
+        )
+    )
+    sim.update_pars(equal_pars, recursive=True)
+    return sim

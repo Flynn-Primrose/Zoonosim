@@ -307,8 +307,8 @@ class Flocks(Subroster):
             # Calculate infectious_delta for all infected flocks
             infectious_in = self.exposed_headcount[infected_inds]/self['dur_exp2inf'][infected_inds]
             infectious_baseline_dead[infected_inds] = self.infectious_headcount[infected_inds] * self['infected_mortality_rate'][infected_inds]
-            infectious_dead = self.infectious_headcount[infected_inds] / self['dur_inf2out'][infected_inds] + infectious_baseline_dead[infected_inds] # Calculate the infectious headcount that is leaving the infectious state for each infected flock
-            infectious_out = infectious_dead # This is kinda redundant but I'm doing it this way to maintain the convention of infectious_delta = infectious_in-infectious_out
+            infectious_out = self.infectious_headcount[infected_inds] / self['dur_inf2out'][infected_inds] + infectious_baseline_dead[infected_inds] # Calculate the infectious headcount that is leaving the infectious state for each infected flock
+            infectious_dead[infected_inds] = infectious_out # This is kinda redundant but I'm doing it this way to maintain the convention of infectious_delta = infectious_in-infectious_out
             infectious_delta[infected_inds] = infectious_in - infectious_out # Calculate the change in infectious headcount for each infected flock
 
             # Get symptomatic rates for infected flocks
@@ -666,7 +666,7 @@ class Flocks(Subroster):
         breed, frequency = np.unique(breed_inds, return_counts=True)
         breed_freq = zip(breed, frequency)
         for breed, frequency in breed_freq:
-            if isinstance(progs['symptomatic_rate_increase'][breed], dict):
+            if isinstance(progs['infected_symptomatic_rate'][breed], dict):
                 self.infected_symptomatic_rate[inds[breed_inds == breed]] = np.maximum(znu.sample(**progs['infected_symptomatic_rate'][breed], size=frequency), 0)*infect_pars['rel_symp_delta']
             else:
                 self.infected_symptomatic_rate[inds[breed_inds == breed]] = progs['infected_symptomatic_rate'][breed]*infect_pars['rel_symp_delta']
