@@ -6,7 +6,7 @@ but which are useful for particular investigations.
 import os
 import sciris as sc
 import numpy as np
-import pylab as pl
+import matplotlib.pylab as pl
 import pandas as pd
 import matplotlib.pyplot as plt
 from . import interventions as zni

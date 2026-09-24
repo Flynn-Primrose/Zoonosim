@@ -5,7 +5,6 @@ zoonosim/__init__.py
 zoonosim/analysis.py
 zoonosim/base.py
 zoonosim/defaults.py
-zoonosim/human_behaviour.py
 zoonosim/immunity.py
 zoonosim/interventions.py
 zoonosim/misc.py
@@ -23,13 +22,13 @@ zoonosim.egg-info/SOURCES.txt
 zoonosim.egg-info/dependency_links.txt
 zoonosim.egg-info/requires.txt
 zoonosim.egg-info/top_level.txt
-zoonosim/data/country_age_data.py
 zoonosim/rosters/__init__.py
 zoonosim/rosters/agents.py
 zoonosim/rosters/barns.py
 zoonosim/rosters/contacts.py
 zoonosim/rosters/flocks.py
 zoonosim/rosters/humans.py
+zoonosim/rosters/ppe.py
 zoonosim/rosters/rosters.py
 zoonosim/rosters/waters.py
 zoonosim/testing/TestObj.py

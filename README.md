@@ -6,6 +6,49 @@ The most significant change from previous versions is that the "people" object h
 
 In terms of operating the software, the most important component is the "pars" object. sim.pars details all (most) of the specific values that get used throughout the simulation. The default values of parameters are defined in parameters.py and defaults.py. parameter values can be changed using sim.update_pars.
 
+## 🚀 Installation Guide
+
+Follow these steps to set up the development environment on Windows 11.
+
+## 1. Initialize the Virtual Environment
+
+Open your terminal in the project root folder and create an isolated environment:
+
+python -m venv .venv
+
+## 2. Activate the Environment
+
+Activate the environment so your terminal uses the local isolated Python instance:
+
+.venv\Scripts\Activate.ps1
+
+(Note: If Windows blocks this script, run Set-ExecutionPolicy RemoteSigned -Scope CurrentUser in PowerShell as an Administrator).
+
+## 3. Install Third-Party Dependencies
+
+Install all required libraries (including scikit-learn, pandas, and matplotlib) using the blueprint file:
+
+pip install -r requirements.txt
+
+## 4. Install Your Custom Package (Editable Mode)
+
+Link your local codebase to the environment so that code changes update automatically without reinstalling:
+
+pip install -e .
+
+## 5. Jupyter Notebook Configuration
+
+When opening your .ipynb file in VS Code:
+
+   1. Click Select Kernel in the top-right corner.
+   2. Choose Python Environments... and select your .venv.
+   3. To prevent Jupyter from caching older code versions, add this to your notebook's very first cell:
+   %load_ext autoreload
+
+   %autoreload 2
+   
+------------------------------
+
 ## Model Parameters
 
 - agent_types

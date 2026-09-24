@@ -511,7 +511,7 @@ def get_doubling_time(sim, series=None, interval=None, start_day=None, end_day=N
     return doubling_time
 
 
-def compute_gof(actual, predicted, normalize=True, use_frac=False, use_squared=False, as_scalar='none', eps=1e-9, skestimator=None, estimator=None, **kwargs):
+def compute_gof(actual, predicted, clip = False, normalize=True, use_frac=False, use_squared=False, as_scalar='none', eps=1e-9, skestimator=None, estimator=None, **kwargs):
     '''
     Calculate the goodness of fit. By default use normalized absolute error, but
     highly customizable. For example, mean squared error is equivalent to
@@ -520,6 +520,7 @@ def compute_gof(actual, predicted, normalize=True, use_frac=False, use_squared=F
     Args:
         actual      (arr):   array of actual (data) points
         predicted   (arr):   corresponding array of predicted (model) points
+        clip        (bool):  whether to clip actual and predicted at EPS so that all values are strictly positive
         normalize   (bool):  whether to divide the values by the largest value in either series
         use_frac    (bool):  convert to fractional mismatches rather than absolute
         use_squared (bool):  square the mismatches
@@ -547,6 +548,10 @@ def compute_gof(actual, predicted, normalize=True, use_frac=False, use_squared=F
     # Handle inputs
     actual    = np.array(sc.dcp(actual), dtype=float)
     predicted = np.array(sc.dcp(predicted), dtype=float)
+
+    # Clip if requested
+    actual = np.clip(actual, eps, None)
+    predicted = np.clip(predicted, eps, None)
 
     # Scikit-learn estimator is supplied: use that
     if skestimator is not None: # pragma: no cover
