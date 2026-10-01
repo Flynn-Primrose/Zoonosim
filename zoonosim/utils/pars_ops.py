@@ -292,13 +292,21 @@ def pars_from_json(filename):
 
     return pars
 
-def equal_beta_assignment(sim, pars):
+def custom_assignment(sim, pars):
+    '''
+    Change as needed to assign multiple pars the same calibration value
+    '''
     equal_pars = dict(
         beta = dict(
             ppe = pars['beta']['human'],
             flock = pars['beta']['human'],
             barn = pars['beta']['human'],
             water = pars['beta']['human'],
+        ),
+        n_imports = dict(
+            water = dict(
+                peak_day = pars['n_imports']['barn']['peak_day']
+            )
         )
     )
     sim.update_pars(equal_pars, recursive=True)

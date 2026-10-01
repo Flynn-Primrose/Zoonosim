@@ -71,7 +71,7 @@ class Result(object):
 
     '''
 
-    def __init__(self, name=None, npts=None, scale=True, color=None, n_variants=0):
+    def __init__(self, name=None, npts=None, scale=False, color=None, n_variants=0):
         self.name =  name  # Name of this result
         self.scale = scale # Whether or not to scale the result by the scale factor
         if color is None:
