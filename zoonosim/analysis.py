@@ -17,7 +17,7 @@ from . import run as znr
 from . import utils as znu
 from . import defaults as znd
 
-__all__ = ['Analyzer', 'snapshot', 'biography', 'Fit' ,'Calibration' ]
+__all__ = ['Analyzer', 'snapshot', 'biography', 'Fit' ,'Calibration', 'MultiCalibration_slow' ]
 
 
 class Analyzer(sc.prettyobj):
@@ -708,7 +708,7 @@ def import_optuna():
 
 class Calibration(Analyzer):
     '''
-    A class to handle calibration of Covasim simulations. Uses the Optuna hyperparameter
+    A class to handle calibration of Zoonosim simulations. Uses the Optuna hyperparameter
     optimization library (optuna.org), which must be installed separately (via
     pip install optuna).
 
@@ -797,7 +797,7 @@ class Calibration(Analyzer):
 
 
 
-    def run_sim(self, calib_pars, label=None, return_sim=False):
+    def run_sim(self, calib_pars, n_reps, label=None, return_sim=False):
         ''' Create and run a simulation '''
         sim = self.sim.copy()
         if label: sim.label = label
@@ -810,7 +810,11 @@ class Calibration(Analyzer):
                 errormsg = f'The following parameters are not part of the sim, nor is a custom function specified to use them: {invalid_pars}'
                 raise ValueError(errormsg)
         try:
-            sim.run(auto_finalize=False, finalize_calibration_only=True) # Run the sim, but only finalize the minimum required to compute the fit, which can save time during calibration.
+            msim = znr.MultiSim(sim, n_runs = n_reps, run_args = dict(auto_finalize=False, finalize_calibration_only=True))
+            msim.run()
+            msim.reduce(use_mean=True, bounds=1)
+            sim = msim.base_sim
+            # sim.run(auto_finalize=False, finalize_calibration_only=True) # Run the sim, but only finalize the minimum required to compute the fit, which can save time during calibration.
             sim.compute_fit(**self.fit_args)
             if return_sim:
                 return sim
@@ -830,10 +834,13 @@ class Calibration(Analyzer):
         ''' Define the objective for Optuna '''
         try:
             pars = znu.pars_sampler(trial, self.calib_pars, self.par_samplers)
-            mismatch = 0
-            for rep in range(self.run_args.n_reps):
-                mismatch += self.run_sim(pars)
-            mismatch /= self.run_args.n_reps # Average across reps, if applicable
+
+            mismatch = self.run_sim(pars, self.run_args.n_reps)
+
+            #mismatch = 0
+            # for rep in range(self.run_args.n_reps):
+            #     mismatch += self.run_sim(pars)
+            #mismatch /= self.run_args.n_reps # Average across reps, if applicable. 
         except Exception as E:
             errormsg = f'Error during trial sampling or simulation run: {str(E)}'
             raise RuntimeError(errormsg) from E
@@ -860,30 +867,29 @@ class Calibration(Analyzer):
     def run_workers(self):
         ''' Run multiple workers in parallel '''
         if self.run_args.n_workers > 1: # Normal use case: run in parallel
-            output = sc.parallelize(self.worker, iterarg=self.run_args.n_workers, parallelizer=self.run_args.parallelizer)
-            # try:
-            #     output = sc.parallelize(self.worker, iterarg=self.run_args.n_workers, parallelizer=self.run_args.parallelizer)
-            # except Exception as E:
-            #     if isinstance(E, RuntimeError):
-            #         if 'freeze_support' in E.args[0]: # For this error, add additional information
-            #             errormsg = '''
-            #                     Uh oh! It appears you are trying to run with multiprocessing on Windows outside
-            #                     of the __main__ block; please see https://docs.python.org/3/library/multiprocessing.html
-            #                     for more information. The correct syntax to use is e.g.
+            try:
+                output = sc.parallelize(self.worker, iterarg=self.run_args.n_workers, parallelizer=self.run_args.parallelizer)
+            except Exception as E:
+                if isinstance(E, RuntimeError):
+                    if 'freeze_support' in E.args[0]: # For this error, add additional information
+                        errormsg = '''
+                                Uh oh! It appears you are trying to run with multiprocessing on Windows outside
+                                of the __main__ block; please see https://docs.python.org/3/library/multiprocessing.html
+                                for more information. The correct syntax to use is e.g.
                             
-            #                         import zoonosim as zn
-            #                         sim = zn.Sim(data_file='data.csv')
-            #                         calib = zn.Calibration(sim, calib_pars, n_workers=4, total_trials=100)
+                                    import zoonosim as zn
+                                    sim = zn.Sim(data_file='data.csv')
+                                    calib = zn.Calibration(sim, calib_pars, n_workers=4, total_trials=100)
                             
-            #                         if __name__ == '__main__':
-            #                             calib.calibrate()
+                                    if __name__ == '__main__':
+                                        calib.calibrate()
                             
-            #                     Alternatively, to run without multiprocessing, set n_workers = 1.
-            #                     '''
-            #             raise RuntimeError(errormsg) from E
-            #         else: print(f"Error: {E}")
-            #     else: # For all other runtime errors, raise the original exception
-            #         raise E
+                                Alternatively, to run without multiprocessing, set n_workers = 1.
+                                '''
+                        raise RuntimeError(errormsg) from E
+                    else: print(f"Error: {E}")
+                else: # For all other runtime errors, raise the original exception
+                    raise E
         else: # Special case: just run one
             output = [self.worker()]
         return output
@@ -1077,7 +1083,7 @@ class Calibration(Analyzer):
         '''
         Plot every point in the calibration. Warning, very slow for more than a few hundred trials.
         '''
-        g = pairplotpars(self.data, color_column='mismatch', bounds=self.par_bounds)
+        g = znplt.pairplotpars(self.data, color_column='mismatch', bounds=self.par_bounds)
         return g
 
 
@@ -1085,7 +1091,7 @@ class Calibration(Analyzer):
         ''' Plot only the points with lowest mismatch. New in version 3.1.1. '''
         max_mismatch = self.df['mismatch'].min()*best_thresh
         inds = sc.findinds(self.df['mismatch'].values <= max_mismatch)
-        g = pairplotpars(self.data, inds=inds, color_column='mismatch', bounds=self.par_bounds)
+        g = znplt.pairplotpars(self.data, inds=inds, color_column='mismatch', bounds=self.par_bounds)
         return g
 
 
@@ -1095,47 +1101,296 @@ class Calibration(Analyzer):
         '''
         npts = min(len(self.df), npts)
         inds = np.linspace(0, len(self.df)-1, npts).round()
-        g = pairplotpars(self.data, inds=inds, color_column='mismatch', bounds=self.par_bounds)
+        g = znplt.pairplotpars(self.data, inds=inds, color_column='mismatch', bounds=self.par_bounds)
         return g
 
-def pairplotpars(data, inds=None, color_column=None, bounds=None, cmap='parula', bins=None, edgecolor='w', facecolor='#F8A493', figsize=(20,16)): # pragma: no cover
-    ''' Plot scatterplots, histograms, and kernel densities for calibration results '''
-    try:
-        import seaborn as sns # Optional import
-    except ModuleNotFoundError as E:
-        errormsg = 'Calibration plotting requires Seaborn; please install with "pip install seaborn"'
-        raise ModuleNotFoundError(errormsg) from E
+class MultiCalibration_Slow(Analyzer):
+    '''
+    A class to handle calibration of Zoonosim simulations. Uses the Optuna hyperparameter
+    optimization library (optuna.org), which must be installed separately (via
+    pip install optuna).
 
-    data = sc.odict(sc.dcp(data))
+    Args:
+        sims          (Sim/list)  : A single sim or a list of simulations
+        global_calib_pars   (dict) : a dictionary of the global parameters to calibrate in the format dict(key1=[prior, low, high]).
+        local_calib_pars    (dict) : a dictionary of the local parameters to calibrate in the formate dict(key1=[prior, low, high]).
+        fit_args     (dict) : a dictionary of options that are passed to the fitting function when computing the fit.
+        par_samplers (dict) : an optional mapping from parameters to the Optuna sampler to use for choosing new points for each; by default, suggest_uniform
+        custom_fn    (func) : a custom function for modifying the simulation; receives the sim and calib_pars (global and local) as inputs, should return the modified sim
+        name         (str)  : the name of the database (default: 'zoonosim_calibration')
+        db_name      (str)  : the name of the database file (default: 'zoonosim_calibration.db')
+        keep_db      (bool) : whether to keep the database after calibration (default: false)
+        storage      (str)  : the location of the database (default: sqlite)
+        label        (str)  : a label for this calibration object
+        die          (bool) : whether to stop if an exception is encountered (default: false)
+        verbose      (bool) : whether to print details of the calibration
+        parallel_mode (str) : Whether to parallelize Multisims repetitions or Optunas trials (default: 'reps', options: 'reps', 'trials')
+                                - 'reps': (Local Machine) Optuna runs trials sequentially; MultiSim runs repetitions in parallel.
+                                - 'trials' : (HPC Cluster) Optuna runs trials in parallel; MultiSim runs repetitions sequentially.
+        parallelizer (str) : which parallelizer to use if Optuna is running in parallel (default: 'concurrent')
+        kwargs       (dict) : passed to zn.Calibration()
 
-    # Create the dataframe
-    df = pd.DataFrame.from_dict(data)
-    if inds is not None:
-        df = df.iloc[inds,:].copy()
+    Returns:
+        A Calibration object
 
-    # Choose the colors
-    if color_column:
-        colors = sc.vectocolor(df[color_column].values, cmap=cmap)
-    else:
-        colors = [facecolor for i in range(len(df))]
-    df['color_column'] = [sc.rgb2hex(rgba[:-1]) for rgba in colors]
+    **Example**::
 
-    # Make the plot
-    grid = sns.PairGrid(df)
-    grid = grid.map_lower(pl.scatter, **{'facecolors':df['color_column']})
-    grid = grid.map_diag(pl.hist, bins=bins, edgecolor=edgecolor, facecolor=facecolor)
-    grid = grid.map_upper(sns.kdeplot)
-    grid.fig.set_size_inches(figsize)
-    grid.fig.tight_layout()
+    '''
+    def __init__(self, sims, global_calib_pars=None, local_calib_pars=None, fit_args=None, custom_fn=None, par_samplers=None,
+                 n_reps=None, n_trials=None, n_workers=None, total_trials=None, name=None, db_name=None,
+                 keep_db=None, storage=None, label=None, die=False, verbose=True, parallel_mode='reps', parallelizer = 'concurrent', ):
+        super().__init__(label=label) # Initialize the Analyzer object
 
-    # Set bounds
-    if bounds:
-        for ax in grid.axes.flatten():
-            xlabel = ax.get_xlabel()
-            ylabel = ax.get_ylabel()
-            if xlabel in bounds:
-                ax.set_xlim(bounds[xlabel])
-            if ylabel in bounds:
-                ax.set_ylim(bounds[ylabel])
+        import multiprocessing as mp # Import here since it's also slow
+        op = import_optuna()        # Import here since it's also slow
+        if n_reps    is None: n_reps = 1
+        if n_trials  is None: n_trials = 20
+        if name      is None: name      = 'zoonosim_MultiSimCalibration'
+        if db_name   is None: db_name   = f'../studies/{name}.db'
+        if keep_db   is None: keep_db   = False
+        if storage   is None: storage   = op.storages.JournalStorage(op.storages.journal.JournalFileBackend(db_name, op.storages.journal.JournalFileOpenLock(db_name))) # Use JournalStorage for better concurrency
+        if n_workers is None: n_workers = mp.cpu_count()
+        if total_trials is not None: n_trials = total_trials/n_workers
 
-    return grid    
+        self.run_args   = sc.objdict(n_reps = int(n_reps), n_trials=int(n_trials), n_workers=int(n_workers), name=name, db_name=db_name, keep_db=keep_db, storage=storage)
+
+        # Handle other inputs
+        self.sims = sims
+        self.global_calib_pars   = global_calib_pars
+        self.local_calib_pars    = local_calib_pars
+        self.fit_args     = sc.mergedicts(fit_args)
+        self.par_samplers = sc.mergedicts(par_samplers)
+        self.custom_fn    = custom_fn
+        self.die          = die
+        self.verbose      = verbose
+        self.parallel_mode = parallel_mode
+        self.parallelize = None # Gets set by run_workers
+        self.calibrated   = False
+
+        # Handle if any of the sims have already been run
+        for sim_ind in len(self.sims):
+            if self.sims[sim_ind].complete:
+                warnmsg = f'The sim at inedex {sim_ind} has already been run; re-initializing, but in future, use a sim that has not been run'
+                znm.warn(warnmsg)
+                fresh_sim = self.sims[sim_ind].copy()
+                fresh_sim.initialize()
+                self.sims[sim_ind] = fresh_sim
+
+        return
+
+    def run_multisim(self, trial_pars, n_reps, parallelize = True):
+        '''
+        Create and run the multisim
+        '''
+        mismatch = []
+        for  sim in self.sims:
+            temp_sim = sim.copy()
+            global_pars, local_pars = znu.compare_pars(trial_pars, temp_sim.pars)
+            temp_pars = global_pars | local_pars['temp_sim.label']
+            valid_pars, invalid_pars = znu.compare_pars(temp_pars, temp_sim.pars)
+            temp_sim.update_pars(valid_pars, recursive=True)
+            if self.custom_fn:
+                temp_sim = self.custom(temp_sim, trial_pars)
+            else:
+                if not znu.is_empty(invalid_pars):
+                    errormsg = f'The following parameters are not part of the sim, nor is a custom function specified to use them: {invalid_pars}'
+                    raise ValueError(errormsg)
+            try:
+                temp_msim = znr.MultiSim(temp_sim, n_runs = n_reps, run_args = dict(auto_finalize=False, finalize_calibration_only=True))
+                temp_msim.run(parallel = parallelize)
+                temp_msim.base_sim.compute_fit(**self.fit_args)
+                mismatch.append(temp_msim.fit.mismatch)
+            except Exception as E:
+                if self.die:
+                    raise E
+                else:
+                    warnmsg = f'Encountered error running sim!\nParameters:\n{valid_pars}\nTraceback:\n{sc.traceback()}'
+                    znm.warn(warnmsg)
+                    output = np.inf
+                    return output
+        return np.mean(mismatch)
+
+    def run_trial(self, trial):
+        '''
+        Define the objective for Optuna
+        '''
+        global_pars = znu.pars_sampler(trial, self.global_calib_pars, self.par_samplers)
+        local_pars = znu.pars_sampler(trial, self.local_calib_pars, self.par_samplers)
+        trial_pars = global_pars | local_pars
+        mismatch = self.run_multisim(trial_pars, self.n_reps, self.parallelize) 
+        return(mismatch)
+
+    def worker(self):
+        '''
+        Run a single worker
+        '''
+        op = import_optuna()
+
+        study =  op.load_study(storage=self.run_args.storage, study_name=self.run_args.name)   
+        output = study.optimize(self.run_trial, n_trials=self.run_args.n_trials)
+            
+
+    def run_workers(self):
+        ''' Run multiple workers in parallel '''
+        if self.parallel_mode == 'trials': # Normal use case: run in parallel
+            self.parallelize = False
+            try:
+                output = sc.parallelize(self.worker, iterarg=self.run_args.n_workers, parallelizer=self.run_args.parallelizer)
+            except Exception as E:
+                if isinstance(E, RuntimeError):
+                    if 'freeze_support' in E.args[0]: # For this error, add additional information
+                        errormsg = '''
+                                Uh oh! It appears you are trying to run with multiprocessing on Windows outside
+                                of the __main__ block; please see https://docs.python.org/3/library/multiprocessing.html
+                                for more information. The correct syntax to use is e.g.
+                            
+                                    import zoonosim as zn
+                                    sim = zn.Sim(data_file='data.csv')
+                                    calib = zn.Calibration(sim, calib_pars, n_workers=4, total_trials=100)
+                            
+                                    if __name__ == '__main__':
+                                        calib.calibrate()
+                            
+                                Alternatively, to run without multiprocessing, set n_workers = 1.
+                                '''
+                        raise RuntimeError(errormsg) from E
+                    else: print(f"Error: {E}")
+                else: # For all other runtime errors, raise the original exception
+                    raise E
+        else: # Special case: just run one
+            self.parallelize = True
+            output = [self.worker()]
+        return output
+
+    def remove_db(self):
+        '''
+        Remove the database file if keep_db is false and the path exists.
+        '''
+        if os.path.exists(self.run_args.db_name):
+            try:
+                os.remove(self.run_args.db_name)
+                if self.verbose:
+                    print(f'Removed existing calibration {self.run_args.db_name}')
+            except Exception as E:
+                warnmsg = f'Could not remove existing calibration database {self.run_args.db_name}: {str(E)}'
+                znm.warn(warnmsg)
+
+        return
+
+
+    def make_study(self):
+        ''' Make a study, deleting one if it already exists '''
+        op = import_optuna()
+        if not self.run_args.keep_db:
+            self.remove_db()
+        output = op.create_study(storage=self.run_args.storage, study_name=self.run_args.name)
+        return output
+
+
+    def calibrate(self, global_calib_pars=None, local_calib_pars=None, verbose=True, **kwargs):
+        '''
+        Actually perform calibration.
+
+        Args:
+            calib_pars (dict): if supplied, overwrite stored calib_pars
+            verbose (bool): whether to print output from each trial
+            kwargs (dict): if supplied, overwrite stored run_args (n_trials, n_workers, etc.)
+        '''
+        op = import_optuna()
+
+        # Load and validate calibration parameters
+        if global_calib_pars is not None:
+            self.global_calib_pars = global_calib_pars
+        if self.global_calib_pars is None:
+            errormsg = 'You must supply global calibration parameters either when creating the calibration object or when calling calibrate().'
+            raise ValueError(errormsg)
+                # Load and validate calibration parameters
+        if local_calib_pars is not None:
+            self.local_calib_pars = local_calib_pars
+        if self.local_calib_pars is None:
+            errormsg = 'You must supply local calibration parameters either when creating the calibration object or when calling calibrate().'
+            raise ValueError(errormsg)
+        self.run_args.update(kwargs) # Update optuna settings
+
+
+        # Run the optimization
+        t0 = sc.tic()
+        self.make_study()
+        self.run_workers()
+        self.study = op.load_study(storage=self.run_args.storage, study_name=self.run_args.name)
+
+        self.elapsed = sc.toc(t0, output=True)
+
+        # Compare the results
+        initial_global_pars, global_par_bounds = znu.pars_parser(self.global_calib_pars)
+        initial_local_pars, local_par_bounds = znu.pars_parser(self.local_calib_pars)
+        self.initial_global_pars  = sc.objdict(initial_global_pars)
+        self.initial_local_pars = sc.objdict(initial_local_pars)
+        self.global_par_bounds    = sc.objdict(global_par_bounds)
+        self.local_par_bounds    = sc.objdict(local_par_bounds)
+        self.best_pars_flat = sc.objdict(self.study.best_params)
+        self.best_pars = sc.objdict(znu.unflatten_pars(initial_global_pars, self.study.best_params))
+        self.mismatch_before = self.run_multisim(calib_pars=self.initial_pars, parallelize=True)
+        self.mismatch_after  = self.run_multisim(calib_pars=self.best_pars, parallelize=True)
+        self.parse_study()
+
+        # Tidy up
+        self.calibrated = True
+        if not self.run_args.keep_db:
+            self.remove_db()
+        if verbose:
+            self.summarize()
+
+        return self
+
+
+    def summarize(self):
+        ''' Print out results from the calibration '''
+        if self.calibrated:
+            print(f'Calibration for {self.run_args.n_workers*self.run_args.n_trials} total trials completed in {self.elapsed:0.1f} s.')
+            before = self.before.fit.mismatch
+            after = self.after.fit.mismatch
+            print('\nInitial parameter values:')
+            print(self.initial_pars)
+            print('\nBest parameter values:')
+            print(self.best_pars)
+            print(f'\nMismatch before calibration: {before:n}')
+            print(f'Mismatch after calibration:  {after:n}')
+            print(f'Percent improvement:         {((before-after)/before)*100:0.1f}%')
+            return before, after
+        else:
+            print('Calibration not yet run; please run calib.calibrate()')
+            return
+
+
+    def parse_study(self):
+        '''Parse the study into a data frame -- called automatically '''
+        best = self.best_pars_flat
+
+        print('Making results structure...')
+        results = []
+        n_trials = len(self.study.trials)
+        failed_trials = []
+        for trial in self.study.trials:
+            data = {'index':trial.number, 'mismatch': trial.value}
+            for key,val in trial.params.items():
+                data[key] = val
+            if data['mismatch'] is None:
+                failed_trials.append(data['index'])
+            else:
+                results.append(data)
+        print(f'Processed {n_trials} trials; {len(failed_trials)} failed')
+
+        keys = ['index', 'mismatch'] + list(best.keys())
+        data = sc.objdict().make(keys=keys, vals=[])
+        for i,r in enumerate(results):
+            for key in keys:
+                if key not in r:
+                    warnmsg = f'Key {key} is missing from trial {i}, replacing with default'
+                    znm.warn(warnmsg)
+                    r[key] = best[key]
+                data[key].append(r[key])
+        self.data = data
+        self.df = pd.DataFrame.from_dict(data)
+
+        return

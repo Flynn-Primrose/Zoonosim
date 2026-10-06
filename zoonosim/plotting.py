@@ -9,13 +9,14 @@ webapp.
 import numpy as np
 import pylab as pl
 import sciris as sc
+import pandas as pd
 from . import misc as znm
 from . import defaults as znd
 from .settings import options
 
 
 
-__all__ = ['plot_sim', 'plot_scens', 'plot_result', 'plot_compare', 'plot_people']
+__all__ = ['plot_sim', 'plot_scens', 'plot_result', 'plot_compare', 'plot_people', 'pairplotpars']
 
 
 #%% Plotting helper functions
@@ -714,3 +715,45 @@ def plot_transmission_vectors(target_type, date=None, sim=None, fig_args=None, a
         pl.title(f'Transmission vectors for {target_type}')
 
     return handle_show_return(fig=fig, do_show=do_show)
+
+def pairplotpars(data, inds=None, color_column=None, bounds=None, cmap='parula', bins=None, edgecolor='w', facecolor='#F8A493', figsize=(20,16)): # pragma: no cover
+    ''' Plot scatterplots, histograms, and kernel densities for calibration results '''
+    try:
+        import seaborn as sns # Optional import
+    except ModuleNotFoundError as E:
+        errormsg = 'Calibration plotting requires Seaborn; please install with "pip install seaborn"'
+        raise ModuleNotFoundError(errormsg) from E
+
+    data = sc.odict(sc.dcp(data))
+
+    # Create the dataframe
+    df = pd.DataFrame.from_dict(data)
+    if inds is not None:
+        df = df.iloc[inds,:].copy()
+
+    # Choose the colors
+    if color_column:
+        colors = sc.vectocolor(df[color_column].values, cmap=cmap)
+    else:
+        colors = [facecolor for i in range(len(df))]
+    df['color_column'] = [sc.rgb2hex(rgba[:-1]) for rgba in colors]
+
+    # Make the plot
+    grid = sns.PairGrid(df)
+    grid = grid.map_lower(pl.scatter, **{'facecolors':df['color_column']})
+    grid = grid.map_diag(pl.hist, bins=bins, edgecolor=edgecolor, facecolor=facecolor)
+    grid = grid.map_upper(sns.kdeplot)
+    grid.fig.set_size_inches(figsize)
+    grid.fig.tight_layout()
+
+    # Set bounds
+    if bounds:
+        for ax in grid.axes.flatten():
+            xlabel = ax.get_xlabel()
+            ylabel = ax.get_ylabel()
+            if xlabel in bounds:
+                ax.set_xlim(bounds[xlabel])
+            if ylabel in bounds:
+                ax.set_ylim(bounds[ylabel])
+
+    return grid    
