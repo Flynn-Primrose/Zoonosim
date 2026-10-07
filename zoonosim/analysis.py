@@ -17,7 +17,7 @@ from . import run as znr
 from . import utils as znu
 from . import defaults as znd
 
-__all__ = ['Analyzer', 'snapshot', 'biography', 'Fit' ,'Calibration', 'MultiCalibration_slow' ]
+__all__ = ['Analyzer', 'snapshot', 'biography', 'Fit' ,'Calibration', 'MultiCalibration_Slow' ]
 
 
 class Analyzer(sc.prettyobj):
@@ -1113,7 +1113,7 @@ class MultiCalibration_Slow(Analyzer):
     Args:
         sims          (Sim/list)  : A single sim or a list of simulations
         global_calib_pars   (dict) : a dictionary of the global parameters to calibrate in the format dict(key1=[prior, low, high]).
-        local_calib_pars    (dict) : a dictionary of the local parameters to calibrate in the formate dict(key1=[prior, low, high]).
+        local_calib_pars    (dict) : a dictionary of the local parameters to calibrate in the formate dict(prov1 = dict(key1=[prior, low, high])).
         fit_args     (dict) : a dictionary of options that are passed to the fitting function when computing the fit.
         par_samplers (dict) : an optional mapping from parameters to the Optuna sampler to use for choosing new points for each; by default, suggest_uniform
         custom_fn    (func) : a custom function for modifying the simulation; receives the sim and calib_pars (global and local) as inputs, should return the modified sim
@@ -1136,9 +1136,9 @@ class MultiCalibration_Slow(Analyzer):
     **Example**::
 
     '''
-    def __init__(self, sims, global_calib_pars=None, local_calib_pars=None, fit_args=None, custom_fn=None, par_samplers=None,
+    def __init__(self, sims, global_calib_pars, local_calib_pars, fit_args=None, custom_fn=None, par_samplers=None,
                  n_reps=None, n_trials=None, n_workers=None, total_trials=None, name=None, db_name=None,
-                 keep_db=None, storage=None, label=None, die=False, verbose=True, parallel_mode='reps', parallelizer = 'concurrent', ):
+                 keep_db=None, storage=None, label=None, die=False, verbose=True, parallel_mode='reps' ):
         super().__init__(label=label) # Initialize the Analyzer object
 
         import multiprocessing as mp # Import here since it's also slow
@@ -1148,8 +1148,13 @@ class MultiCalibration_Slow(Analyzer):
         if name      is None: name      = 'zoonosim_MultiSimCalibration'
         if db_name   is None: db_name   = f'../studies/{name}.db'
         if keep_db   is None: keep_db   = False
-        if storage   is None: storage   = op.storages.JournalStorage(op.storages.journal.JournalFileBackend(db_name, op.storages.journal.JournalFileOpenLock(db_name))) # Use JournalStorage for better concurrency
-        if n_workers is None: n_workers = mp.cpu_count()
+        if storage   is None: 
+            # lock_obj = op.storages.journal.JournalFileOpenLock(db_name)
+            lock_obj = op.storages.journal.JournalFileSymlinkLock(db_name)
+            storage   = op.storages.JournalStorage(op.storages.journal.JournalFileBackend(db_name, lock_obj)) # Use JournalStorage for better concurrency
+        if n_workers is None:
+            if parallel_mode == 'trials': n_workers = mp.cpu_count()
+            else: n_workers = 1
         if total_trials is not None: n_trials = total_trials/n_workers
 
         self.run_args   = sc.objdict(n_reps = int(n_reps), n_trials=int(n_trials), n_workers=int(n_workers), name=name, db_name=db_name, keep_db=keep_db, storage=storage)
@@ -1168,7 +1173,7 @@ class MultiCalibration_Slow(Analyzer):
         self.calibrated   = False
 
         # Handle if any of the sims have already been run
-        for sim_ind in len(self.sims):
+        for sim_ind in range(len(self.sims)):
             if self.sims[sim_ind].complete:
                 warnmsg = f'The sim at inedex {sim_ind} has already been run; re-initializing, but in future, use a sim that has not been run'
                 znm.warn(warnmsg)
@@ -1186,48 +1191,75 @@ class MultiCalibration_Slow(Analyzer):
         for  sim in self.sims:
             temp_sim = sim.copy()
             global_pars, local_pars = znu.compare_pars(trial_pars, temp_sim.pars)
-            temp_pars = global_pars | local_pars['temp_sim.label']
+            temp_pars = global_pars | local_pars[temp_sim.label.split('_', 1)[0]]
             valid_pars, invalid_pars = znu.compare_pars(temp_pars, temp_sim.pars)
-            temp_sim.update_pars(valid_pars, recursive=True)
-            if self.custom_fn:
-                temp_sim = self.custom(temp_sim, trial_pars)
-            else:
-                if not znu.is_empty(invalid_pars):
-                    errormsg = f'The following parameters are not part of the sim, nor is a custom function specified to use them: {invalid_pars}'
-                    raise ValueError(errormsg)
             try:
-                temp_msim = znr.MultiSim(temp_sim, n_runs = n_reps, run_args = dict(auto_finalize=False, finalize_calibration_only=True))
-                temp_msim.run(parallel = parallelize)
-                temp_msim.base_sim.compute_fit(**self.fit_args)
-                mismatch.append(temp_msim.fit.mismatch)
+                temp_sim.update_pars(valid_pars, recursive=True)
+                if self.custom_fn:
+                    temp_sim = self.custom_fn(temp_sim, temp_pars)
+                else:
+                    if not znu.is_empty(invalid_pars):
+                        errormsg = f'The following parameters are not part of the sim, nor is a custom function specified to use them: {invalid_pars}'
+                        raise ValueError(errormsg)
             except Exception as E:
                 if self.die:
                     raise E
                 else:
                     warnmsg = f'Encountered error running sim!\nParameters:\n{valid_pars}\nTraceback:\n{sc.traceback()}'
                     znm.warn(warnmsg)
-                    output = np.inf
-                    return output
+                    return None
+
+            try:
+                temp_msim = znr.MultiSim(temp_sim, n_runs = n_reps, run_args = dict(auto_finalize=False, finalize_calibration_only=True))
+                temp_msim.run(reduce = True, parallel = parallelize)
+                temp_sim = temp_msim.base_sim
+                temp_sim.compute_fit(**self.fit_args)
+                mismatch.append(temp_sim.fit.mismatch)
+            except Exception as E:
+                if self.die:
+                    raise E
+                else:
+                    warnmsg = f'Encountered error running sim!\nParameters:\n{valid_pars}\nTraceback:\n{sc.traceback()}'
+                    znm.warn(warnmsg)
+                    return None
         return np.mean(mismatch)
 
     def run_trial(self, trial):
         '''
         Define the objective for Optuna
         '''
-        global_pars = znu.pars_sampler(trial, self.global_calib_pars, self.par_samplers)
-        local_pars = znu.pars_sampler(trial, self.local_calib_pars, self.par_samplers)
-        trial_pars = global_pars | local_pars
-        mismatch = self.run_multisim(trial_pars, self.n_reps, self.parallelize) 
-        return(mismatch)
+        try:
+            global_pars = znu.pars_sampler(trial, self.global_calib_pars, self.par_samplers)
+            local_pars = znu.pars_sampler(trial, self.local_calib_pars, self.par_samplers)
+            trial_pars = global_pars | local_pars
+            mismatch = self.run_multisim(trial_pars, self.run_args.n_reps, self.parallelize) 
+            return(mismatch)
+        except Exception as E:
+            if self.die:
+                raise E
+            else:
+                warnmsg = f'Encountered an error in run_trial: {E}'
+                znm.warn(warnmsg)
+                return None
 
     def worker(self):
         '''
         Run a single worker
         '''
         op = import_optuna()
+        op.logging.set_verbosity(op.logging.INFO)
+        try: 
+            study =  op.load_study(storage=self.run_args.storage, study_name=self.run_args.name)  
+            output = study.optimize(self.run_trial, n_trials=self.run_args.n_trials)
+        except Exception as E:
+            if self.die:
+                raise E
+            else:
+                warnmsg = f'Encountered error in worker: {E}'
+                znm.warn(warnmsg)
 
-        study =  op.load_study(storage=self.run_args.storage, study_name=self.run_args.name)   
-        output = study.optimize(self.run_trial, n_trials=self.run_args.n_trials)
+                return None
+        return output
             
 
     def run_workers(self):
@@ -1235,7 +1267,9 @@ class MultiCalibration_Slow(Analyzer):
         if self.parallel_mode == 'trials': # Normal use case: run in parallel
             self.parallelize = False
             try:
-                output = sc.parallelize(self.worker, iterarg=self.run_args.n_workers, parallelizer=self.run_args.parallelizer)
+                output = sc.parallelize(self.worker, iterarg=self.run_args.n_workers, parallelizer='concurrent')
+                # output = sc.parallelize(self.worker, iterarg=self.run_args.n_workers, serial = True)
+
             except Exception as E:
                 if isinstance(E, RuntimeError):
                     if 'freeze_support' in E.args[0]: # For this error, add additional information
@@ -1257,7 +1291,7 @@ class MultiCalibration_Slow(Analyzer):
                     else: print(f"Error: {E}")
                 else: # For all other runtime errors, raise the original exception
                     raise E
-        else: # Special case: just run one
+        else: # parallel_mode must be 'reps' so we serialize the workers.
             self.parallelize = True
             output = [self.worker()]
         return output
@@ -1326,6 +1360,7 @@ class MultiCalibration_Slow(Analyzer):
         initial_local_pars, local_par_bounds = znu.pars_parser(self.local_calib_pars)
         self.initial_global_pars  = sc.objdict(initial_global_pars)
         self.initial_local_pars = sc.objdict(initial_local_pars)
+        self.initial_pars = sc.objdict({**self.initial_global_pars, **self.initial_local_pars})
         self.global_par_bounds    = sc.objdict(global_par_bounds)
         self.local_par_bounds    = sc.objdict(local_par_bounds)
         self.best_pars_flat = sc.objdict(self.study.best_params)

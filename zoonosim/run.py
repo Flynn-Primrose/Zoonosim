@@ -1481,7 +1481,8 @@ def single_run_wrapper(sim, ind=0, reseed=True, noise=0.0, noisepar=None, noiset
         kwargs      (dict)  : also passed to the sim
     '''
     """Wraps your single_func to log start, finish, and any exceptions."""
-
+    if verbose is None:
+        verbose = sim['verbose']
     if verbose >= 2:
         pid = os.getpid()
         start_time = time.time()
@@ -1536,6 +1537,8 @@ def multi_run(sim, n_runs=4, reseed=None, noise=0.0, noisepar=None, noisetype=No
         sim = zn.Sim()
         sims = zn.multi_run(sim, n_runs=6, noise=0.2)
     '''
+    if verbose is None:
+        verbose = sim['verbose']
 
     # Handle inputs
     sim_args = sc.mergedicts(sim_args, kwargs) # Handle blank
