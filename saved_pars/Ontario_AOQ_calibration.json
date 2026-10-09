@@ -29,7 +29,7 @@
   "start_day": "2022-01-01",
   "end_day": "2025-12-31",
   "n_days": null,
-  "rand_seed": 21,
+  "rand_seed": 17,
   "verbose": 0,
   "enable_testobjs": false,
   "testobjs": null,

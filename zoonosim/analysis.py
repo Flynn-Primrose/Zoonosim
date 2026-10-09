@@ -811,7 +811,7 @@ class Calibration(Analyzer):
                 raise ValueError(errormsg)
         try:
             msim = znr.MultiSim(sim, n_runs = n_reps, run_args = dict(auto_finalize=False, finalize_calibration_only=True))
-            msim.run()
+            msim.run(parallel=False) # Using parallel here is risky because we are already inside a parallel process here.
             msim.reduce(use_mean=True, bounds=1)
             sim = msim.base_sim
             # sim.run(auto_finalize=False, finalize_calibration_only=True) # Run the sim, but only finalize the minimum required to compute the fit, which can save time during calibration.
@@ -1149,8 +1149,8 @@ class MultiCalibration_Slow(Analyzer):
         if db_name   is None: db_name   = f'../studies/{name}.db'
         if keep_db   is None: keep_db   = False
         if storage   is None: 
-            # lock_obj = op.storages.journal.JournalFileOpenLock(db_name)
-            lock_obj = op.storages.journal.JournalFileSymlinkLock(db_name)
+            lock_obj = op.storages.journal.JournalFileOpenLock(db_name)
+            # lock_obj = op.storages.journal.JournalFileSymlinkLock(db_name)
             storage   = op.storages.JournalStorage(op.storages.journal.JournalFileBackend(db_name, lock_obj)) # Use JournalStorage for better concurrency
         if n_workers is None:
             if parallel_mode == 'trials': n_workers = mp.cpu_count()
@@ -1222,7 +1222,7 @@ class MultiCalibration_Slow(Analyzer):
                     warnmsg = f'Encountered error running sim!\nParameters:\n{valid_pars}\nTraceback:\n{sc.traceback()}'
                     znm.warn(warnmsg)
                     return None
-        return np.mean(mismatch)
+        return np.sum(mismatch)
 
     def run_trial(self, trial):
         '''
@@ -1365,8 +1365,8 @@ class MultiCalibration_Slow(Analyzer):
         self.local_par_bounds    = sc.objdict(local_par_bounds)
         self.best_pars_flat = sc.objdict(self.study.best_params)
         self.best_pars = sc.objdict(znu.unflatten_pars(initial_global_pars, self.study.best_params))
-        self.mismatch_before = self.run_multisim(calib_pars=self.initial_pars, parallelize=True)
-        self.mismatch_after  = self.run_multisim(calib_pars=self.best_pars, parallelize=True)
+        self.mismatch_before = self.run_multisim(trial_pars=self.initial_pars, parallelize=True)
+        self.mismatch_after  = self.run_multisim(trial_pars=self.best_pars, parallelize=True)
         self.parse_study()
 
         # Tidy up
