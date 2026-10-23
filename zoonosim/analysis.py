@@ -17,7 +17,7 @@ from . import run as znr
 from . import utils as znu
 from . import defaults as znd
 
-__all__ = ['Analyzer', 'snapshot', 'biography', 'Fit' ,'Calibration', 'MultiCalibration_Slow' ]
+__all__ = ['Analyzer', 'snapshot', 'biography', 'Fit' ,'Calibration', 'MultiCalibration' ]
 
 
 class Analyzer(sc.prettyobj):
@@ -1104,7 +1104,7 @@ class Calibration(Analyzer):
         g = znplt.pairplotpars(self.data, inds=inds, color_column='mismatch', bounds=self.par_bounds)
         return g
 
-class MultiCalibration_Slow(Analyzer):
+class MultiCalibration(Analyzer):
     '''
     A class to handle calibration of Zoonosim simulations. Uses the Optuna hyperparameter
     optimization library (optuna.org), which must be installed separately (via
@@ -1148,10 +1148,11 @@ class MultiCalibration_Slow(Analyzer):
         if name      is None: name      = 'zoonosim_MultiSimCalibration'
         if db_name   is None: db_name   = f'../studies/{name}.db'
         if keep_db   is None: keep_db   = False
-        if storage   is None: 
-            lock_obj = op.storages.journal.JournalFileOpenLock(db_name)
+        if storage   is None:
+            storage = 'initialize_locally' 
+            # # lock_obj = op.storages.journal.JournalFileOpenLock(db_name)
             # lock_obj = op.storages.journal.JournalFileSymlinkLock(db_name)
-            storage   = op.storages.JournalStorage(op.storages.journal.JournalFileBackend(db_name, lock_obj)) # Use JournalStorage for better concurrency
+            # storage   = op.storages.JournalStorage(op.storages.journal.JournalFileBackend(db_name, lock_obj)) # Use JournalStorage for better concurrency
         if n_workers is None:
             if parallel_mode == 'trials': n_workers = mp.cpu_count()
             else: n_workers = 1
@@ -1183,45 +1184,54 @@ class MultiCalibration_Slow(Analyzer):
 
         return
 
-    def run_multisim(self, trial_pars, n_reps, parallelize = True):
+    def run_multisim(self, sampled_pars, n_reps, parallelize = True):
         '''
         Create and run the multisim
         '''
+        msims = []
+        for i, sim in enumerate(self.sims):
+            new_seed = sim['rand_seed'] + i
+            sim.update_pars({'rand_seed':new_seed}) # Update the original sim so that on the next trial it retains the new seed
+            global_pars, local_pars = znu.compare_pars(sampled_pars, sim.pars)
+            trial_pars = global_pars | local_pars[sim.label.split('_', 1)[0]]
+            valid_pars, invalid_pars = znu.compare_pars(trial_pars, sim.pars)
+            trial_sims = []
+            for j in range(n_reps):
+                try:
+                    trial_sim = sim.copy()
+                    valid_pars['rand_seed'] = new_seed + j
+                    trial_sim.update_pars(valid_pars, recursive=True)
+                    if self.custom_fn:
+                        trial_sim = self.custom_fn(trial_sim, trial_pars)
+                    else:
+                        if not znu.is_empty(invalid_pars):
+                            errormsg = f'The following parameters are not part of the sim, nor is a custom function specified to use them: {invalid_pars}'
+                            raise ValueError(errormsg)
+                    trial_sims.append(trial_sim)
+                except Exception as E:
+                    if self.die:
+                        raise E
+                    else:
+                        warnmsg = f'Encountered error running sim!\nParameters:\n{valid_pars}\nTraceback:\n{sc.traceback()}'
+                        znm.warn(warnmsg)
+                        return None
+            msims.append(znr.MultiSim(trial_sims, run_args = dict(auto_finalize=False, finalize_calibration_only=True)))
+        try:
+            trial_msim = znr.MultiSim.merge(msims)
+            trial_msim.run(parallel = parallelize)
+        except Exception as E:
+            if self.die:
+                raise E
+            else:
+                warnmsg = f'Encountered error running sim!\nParameters:\n{valid_pars}\nTraceback:\n{sc.traceback()}'
+                znm.warn(warnmsg)
+                return None
+        trial_msims = trial_msim.split()
         mismatch = []
-        for  sim in self.sims:
-            temp_sim = sim.copy()
-            global_pars, local_pars = znu.compare_pars(trial_pars, temp_sim.pars)
-            temp_pars = global_pars | local_pars[temp_sim.label.split('_', 1)[0]]
-            valid_pars, invalid_pars = znu.compare_pars(temp_pars, temp_sim.pars)
-            try:
-                temp_sim.update_pars(valid_pars, recursive=True)
-                if self.custom_fn:
-                    temp_sim = self.custom_fn(temp_sim, temp_pars)
-                else:
-                    if not znu.is_empty(invalid_pars):
-                        errormsg = f'The following parameters are not part of the sim, nor is a custom function specified to use them: {invalid_pars}'
-                        raise ValueError(errormsg)
-            except Exception as E:
-                if self.die:
-                    raise E
-                else:
-                    warnmsg = f'Encountered error running sim!\nParameters:\n{valid_pars}\nTraceback:\n{sc.traceback()}'
-                    znm.warn(warnmsg)
-                    return None
-
-            try:
-                temp_msim = znr.MultiSim(temp_sim, n_runs = n_reps, run_args = dict(auto_finalize=False, finalize_calibration_only=True))
-                temp_msim.run(reduce = True, parallel = parallelize)
-                temp_sim = temp_msim.base_sim
-                temp_sim.compute_fit(**self.fit_args)
-                mismatch.append(temp_sim.fit.mismatch)
-            except Exception as E:
-                if self.die:
-                    raise E
-                else:
-                    warnmsg = f'Encountered error running sim!\nParameters:\n{valid_pars}\nTraceback:\n{sc.traceback()}'
-                    znm.warn(warnmsg)
-                    return None
+        for msim in trial_msims:
+            msim.reduce()
+            msim.base_sim.compute_fit(**self.fit_args)
+            mismatch.append(msim.base_sim.fit.mismatch)
         return np.sum(mismatch)
 
     def run_trial(self, trial):
@@ -1231,8 +1241,8 @@ class MultiCalibration_Slow(Analyzer):
         try:
             global_pars = znu.pars_sampler(trial, self.global_calib_pars, self.par_samplers)
             local_pars = znu.pars_sampler(trial, self.local_calib_pars, self.par_samplers)
-            trial_pars = global_pars | local_pars
-            mismatch = self.run_multisim(trial_pars, self.run_args.n_reps, self.parallelize) 
+            sampled_pars = global_pars | local_pars
+            mismatch = self.run_multisim(sampled_pars, self.run_args.n_reps, self.parallelize) 
             return(mismatch)
         except Exception as E:
             if self.die:
@@ -1247,9 +1257,13 @@ class MultiCalibration_Slow(Analyzer):
         Run a single worker
         '''
         op = import_optuna()
+        lock_obj = op.storages.journal.JournalFileOpenLock(self.run_args.db_name)
+        #lock_obj = op.storages.journal.JournalFileSymlinkLock(self.run_args.db_name)
+        backend = op.storages.journal.JournalFileBackend(self.run_args.db_name, lock_obj)
+        local_storage = op.storages.JournalStorage(backend)
         op.logging.set_verbosity(op.logging.INFO)
         try: 
-            study =  op.load_study(storage=self.run_args.storage, study_name=self.run_args.name)  
+            study =  op.load_study(storage=local_storage, study_name=self.run_args.name)  
             output = study.optimize(self.run_trial, n_trials=self.run_args.n_trials)
         except Exception as E:
             if self.die:
@@ -1292,7 +1306,7 @@ class MultiCalibration_Slow(Analyzer):
                 else: # For all other runtime errors, raise the original exception
                     raise E
         else: # parallel_mode must be 'reps' so we serialize the workers.
-            self.parallelize = True
+            self.parallelize = True 
             output = [self.worker()]
         return output
 
@@ -1317,7 +1331,11 @@ class MultiCalibration_Slow(Analyzer):
         op = import_optuna()
         if not self.run_args.keep_db:
             self.remove_db()
-        output = op.create_study(storage=self.run_args.storage, study_name=self.run_args.name)
+        lock_obj = op.storages.journal.JournalFileOpenLock(self.run_args.db_name)
+        #lock_obj = op.storages.journal.JournalFileSymlinkLock(self.run_args.db_name)
+        backend = op.storages.journal.JournalFileBackend(self.run_args.db_name, lock_obj)
+        local_storage = op.storages.JournalStorage(backend)
+        output = op.create_study(storage=local_storage, study_name=self.run_args.name)
         return output
 
 

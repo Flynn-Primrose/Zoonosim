@@ -1538,7 +1538,10 @@ def multi_run(sim, n_runs=4, reseed=None, noise=0.0, noisepar=None, noisetype=No
         sims = zn.multi_run(sim, n_runs=6, noise=0.2)
     '''
     if verbose is None:
-        verbose = sim['verbose']
+        if isinstance(sim, list):
+            verbose = sim[0]['verbose']
+        else:
+            verbose = sim['verbose']
 
     # Handle inputs
     sim_args = sc.mergedicts(sim_args, kwargs) # Handle blank
