@@ -311,3 +311,4 @@ def custom_assignment(sim, pars):
     )
     sim.update_pars(equal_pars, recursive=True)
     return sim
+

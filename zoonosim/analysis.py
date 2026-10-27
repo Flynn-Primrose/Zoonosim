@@ -954,8 +954,8 @@ class Calibration(Analyzer):
         self.par_bounds    = sc.objdict(par_bounds)
         self.best_pars_flat = sc.objdict(self.study.best_params)
         self.best_pars = sc.objdict(znu.unflatten_pars(initial_pars, self.study.best_params))
-        self.before = self.run_sim(calib_pars=self.initial_pars, label='Before calibration', return_sim=True)
-        self.after  = self.run_sim(calib_pars=self.best_pars,    label='After calibration',  return_sim=True)
+        self.before = self.run_sim(calib_pars=self.initial_pars, label='Before calibration', return_sim=True, n_reps = self.run_args.n_reps)
+        self.after  = self.run_sim(calib_pars=self.best_pars,    label='After calibration',  return_sim=True, n_reps = self.run_args.n_reps)
         self.parse_study()
 
         # Tidy up
@@ -1369,7 +1369,10 @@ class MultiCalibration(Analyzer):
         t0 = sc.tic()
         self.make_study()
         self.run_workers()
-        self.study = op.load_study(storage=self.run_args.storage, study_name=self.run_args.name)
+        lock_obj = op.storages.journal.JournalFileOpenLock(self.run_args.db_name)
+        #lock_obj = op.storages.journal.JournalFileSymlinkLock(self.run_args.db_name)
+        backend = op.storages.journal.JournalFileBackend(self.run_args.db_name, lock_obj)
+        local_storage = op.storages.JournalStorage(backend)
 
         self.elapsed = sc.toc(t0, output=True)
 
