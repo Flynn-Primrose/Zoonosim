@@ -1373,6 +1373,7 @@ class MultiCalibration(Analyzer):
         #lock_obj = op.storages.journal.JournalFileSymlinkLock(self.run_args.db_name)
         backend = op.storages.journal.JournalFileBackend(self.run_args.db_name, lock_obj)
         local_storage = op.storages.JournalStorage(backend)
+        study =  op.load_study(storage=local_storage, study_name=self.run_args.name)
 
         self.elapsed = sc.toc(t0, output=True)
 
