@@ -1385,7 +1385,7 @@ class MultiCalibration(Analyzer):
         self.initial_pars = sc.objdict({**self.initial_global_pars, **self.initial_local_pars})
         self.global_par_bounds    = sc.objdict(global_par_bounds)
         self.local_par_bounds    = sc.objdict(local_par_bounds)
-        self.best_pars_flat = sc.objdict(self.study.best_params)
+        self.best_pars_flat = sc.objdict(study.best_params)
         self.best_pars = sc.objdict(znu.unflatten_pars(initial_global_pars, self.study.best_params))
         self.mismatch_before = self.run_multisim(trial_pars=self.initial_pars, parallelize=True)
         self.mismatch_after  = self.run_multisim(trial_pars=self.best_pars, parallelize=True)
