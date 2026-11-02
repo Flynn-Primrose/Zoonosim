@@ -1059,17 +1059,20 @@ class Sim(znb.BaseSim):
         date_series = pd.Series(pd.to_datetime(self.datevec))
         end_of_month_inds = date_series.dt.is_month_end.values.nonzero()[0] # Get the indices of the end of each month
 
-        for key,label in znd.human_calibration_flows.items():
-            self.results[f'monthly_new_human_{key}'] = init_res(f'{label}', color=human_dcols[key])  # Stock variables -- e.g. "Number of exposed humans per month"
+        # for key,label in znd.human_calibration_flows.items():
+        #     self.results[f'monthly_new_human_{key}'] = init_res(f'{label}', color=human_dcols[key])  # Stock variables -- e.g. "Number of exposed humans per month"
         for key,label in znd.flock_calibration_flows.items():
             for breed in self['poultry_pars']['breeds']:
                 self.results[f'monthly_new_{breed}_flock_{key}'] = init_res(f'{label} ({breed})', color=flock_breed_dcols[breed])  # Stock variables -- e.g. "Number of exposed flocks per month"
         #calculate monthly results for humans
-        for key in znd.human_calibration_flows.keys():
-            self.results[f'monthly_new_human_{key}'][end_of_month_inds] = znm.monthly_from_daily(self.results[f'new_human_{key}'][:], self.datevec)
+        # for key in znd.human_calibration_flows.keys():
+        #     self.results[f'monthly_new_human_{key}'][end_of_month_inds] = znm.monthly_from_daily(self.results[f'new_human_{key}'][:], self.datevec)
         for key in znd.flock_calibration_flows.keys():
             for breed in self['poultry_pars']['breeds']:
                 self.results[f'monthly_new_{breed}_flock_{key}'][end_of_month_inds] = znm.monthly_from_daily(self.results[f'new_{breed}_flock_{key}'][:], self.datevec)
+                if self.rescale:
+                    self.results[f'monthly_new_{breed}_flock_{key}'][end_of_month_inds] *= self.pop_scale
+                    
         self.finalize_interventions()
         self.finalize_analyzers() 
         # Final settings
