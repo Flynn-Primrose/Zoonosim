@@ -1386,9 +1386,9 @@ class MultiCalibration(Analyzer):
         self.global_par_bounds    = sc.objdict(global_par_bounds)
         self.local_par_bounds    = sc.objdict(local_par_bounds)
         self.best_pars_flat = sc.objdict(study.best_params)
-        self.best_pars = sc.objdict(znu.unflatten_pars(initial_global_pars, self.study.best_params))
-        self.mismatch_before = self.run_multisim(trial_pars=self.initial_pars, parallelize=True)
-        self.mismatch_after  = self.run_multisim(trial_pars=self.best_pars, parallelize=True)
+        self.best_pars = sc.objdict(znu.unflatten_pars(initial_global_pars, study.best_params))
+        self.mismatch_before = self.run_multisim(self.initial_pars, n_reps = self.run_args.n_reps,  parallelize=True)
+        self.mismatch_after  = self.run_multisim(self.best_pars, n_reps = self.run_args.n_reps, parallelize=True)
         self.parse_study()
 
         # Tidy up
@@ -1422,13 +1422,19 @@ class MultiCalibration(Analyzer):
 
     def parse_study(self):
         '''Parse the study into a data frame -- called automatically '''
+        op = import_optuna()
         best = self.best_pars_flat
+        lock_obj = op.storages.journal.JournalFileOpenLock(self.run_args.db_name)
+        #lock_obj = op.storages.journal.JournalFileSymlinkLock(self.run_args.db_name)
+        backend = op.storages.journal.JournalFileBackend(self.run_args.db_name, lock_obj)
+        local_storage = op.storages.JournalStorage(backend)
+        study =  op.load_study(storage=local_storage, study_name=self.run_args.name)
 
         print('Making results structure...')
         results = []
-        n_trials = len(self.study.trials)
+        n_trials = len(study.trials)
         failed_trials = []
-        for trial in self.study.trials:
+        for trial in study.trials:
             data = {'index':trial.number, 'mismatch': trial.value}
             for key,val in trial.params.items():
                 data[key] = val
