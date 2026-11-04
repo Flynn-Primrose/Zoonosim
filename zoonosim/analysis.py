@@ -1405,8 +1405,8 @@ class MultiCalibration(Analyzer):
         ''' Print out results from the calibration '''
         if self.calibrated:
             print(f'Calibration for {self.run_args.n_workers*self.run_args.n_trials} total trials completed in {self.elapsed:0.1f} s.')
-            before = self.before.fit.mismatch
-            after = self.after.fit.mismatch
+            before = self.mismatch_before
+            after = self.mismatch_after
             print('\nInitial parameter values:')
             print(self.initial_pars)
             print('\nBest parameter values:')

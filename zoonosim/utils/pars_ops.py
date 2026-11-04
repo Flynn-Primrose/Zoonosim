@@ -312,3 +312,17 @@ def custom_assignment(sim, pars):
     sim.update_pars(equal_pars, recursive=True)
     return sim
 
+def import_only_assignment(sim, pars):
+    '''
+    Change as needed to assign multiple pars the same calibration value
+    '''
+    equal_pars = dict(
+        n_imports = dict(
+            water = dict(
+                peak_day = pars['n_imports']['barn']['peak_day']
+            )
+        )
+    )
+    sim.update_pars(equal_pars, recursive=True)
+    return sim
+
